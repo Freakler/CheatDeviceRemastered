@@ -456,9 +456,8 @@ u32 saveprefix   = -1;
 /*********************************************************************************************************/
 #endif
 
-
 int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
-  
+  		
   #ifdef PREVIEW
   if( LCS && patchonce ) { //FOR TESTING ONLY
             
@@ -1515,7 +1514,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
   if( _lw(addr + 0x94) == 0x3C044754 && _lw(addr + 0xC4) == 0x30A500FF ) { // 0x00011E84 - ULUX ONLY VERSION (because DTZ func too different)
     #ifdef PATCHLOG
-    logPrintf("ULUX002 only DTZ load location (IPLs CFGs etc");
+    logPrintf("ptr_buildingsIPL, ptr_treadablesIPL, ptr_dummysIPL, ptr_handlingCFG, ptr_particleCFG, ptr_timecycDAT");
     #endif
     
     ptr_buildingsIPL = (_lh(addr+0xF8) * 0x10000) + (int16_t)_lh(addr+0xFC);
@@ -1535,6 +1534,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_particleCFGslots   = 82; // where to find?
     var_particleCFGslotsize = 0x94; // where to find?
     
+	ptr_timecycDAT = (_lh(addr+0x230) * 0x10000) + (int16_t)_lh(addr+0x234);
+	
     return 1;
   }
   
@@ -1888,7 +1889,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
   
   /// global_freezetimers
-  if(  _lw(addr + 0x14) == 0x2406FFFE && _lw(addr - 0x30) == 0x34050004 ) { // 0x00154400
+  if( _lw(addr + 0x14) == 0x2406FFFE && _lw(addr + 0x34) == 0x02402025 /*_lw(addr + 0x14) == 0x2406FFFE && _lw(addr - 0x30) == 0x34050004*/ ) { // 0x00154400
     /*******************************************************************
      *  0x00154400: 0x3C040039 '9..<' - lui        $a0, 0x39
      *  0x00154404: 0x2484E388 '...$' - addiu      $a0, $a0, -7288
@@ -1981,7 +1982,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   }
   /// LoadAllModelsNow
-  if( _lw(addr + 0x4) == 0x308400FF  && _lw(addr + 0x50) == 0x3C100002 ) {
+  if( (_lw(addr + 0x4) == 0x308400FF  && _lw(addr + 0x50) == 0x3C100002) /* || ULUX (func params diff) --> (_lw(addr + 0x4) == 0x308500FF  && _lw(addr + 0x44) == 0x0016B080) */ ) { // FUN_001c6f64_LoadAllRequestedModels
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
     #endif
@@ -2028,16 +2029,16 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULJM-05255 v1.01 | 
    * ULET-00361 v0.02 | 
    * ULET-00362 v0.01 |
-   * ULUX-80142 v0.02 | 
+   * ULUX-80142 v0.02 | func too different for my patch
    **************************************/ 
-   if( _lw(addr + 0x34) == 0x3C053E80 && _lw(addr + 0x18) == 0x3C044040 ) { // FUN_001bdbf8_DrawLoadingBar
+   if( _lw(addr + 0x34) == 0x3C053E80 && _lw(addr + 0x18) == 0x3C044040 ) { // FUN_001bdbf8_DrawLoadingBar 
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
     #endif
-    HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar);
+    HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar); // ULUX OK!
     return 1;
   } 
-  if( _lw(addr + 0x18) == 0x30F100FF && _lw(addr + 0x14) == 0x00C09825 ) { // FUN_001bde98_DrawLoadscreen 
+  if( _lh(addr + 0x18) == 0x00FF && _lw(addr + 0x14) == 0x00C09825 ) { // FUN_001bde98_DrawLoadscreen 
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
     #endif
@@ -2063,13 +2064,13 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// StartNewScript
   if( _lw(addr - 0xC) == 0x2402FFFF  && _lw(addr + 0x30) == 0x24C70001 && _lw(addr + 0x58) == 0x34040001 ) { // FUN_015415c
     #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
+    logPrintf("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
     #endif
     StartNewScript = (void*)(addr); // 0x15415c
     return 1;
   }
   /// globals: ScriptSpace & MainScriptSize
-  if(  _lw(addr + 0x2C) == 0xA224020E && _lw(addr + 0x28) == 0x34040001 ) { // 0x000E0FA0
+  if( _lw(addr - 0x34) == 0x26100008 && _lw(addr + 0x28) == 0x34040001 ) { // 0x000E0FA0
     /*******************************************************************
      *  0x000E0FA0: 0x3C100033 '3..<' - lui        $s0, 0x33
      *  0x000E0FA4: 0x8E054D7C '|M..' - lw         $a1, 19836($s0)
@@ -2089,13 +2090,16 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     #endif
 
     /// TODO ?
-    global_LargestMissionScriptSize = global_MainScriptSize - 0x18; 
+	if( mod_text_size == 0x0031F854 )
+		global_LargestMissionScriptSize = global_MainScriptSize - 0x4;  // ULUX
+	else
+		global_LargestMissionScriptSize = global_MainScriptSize - 0x18; 
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> global_LargestMissionScriptSize", global_LargestMissionScriptSize-text_addr, global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
     #endif
 
     return 1;
-  }
+  } // ULUX OK
 
 
   /// TankControl
@@ -2253,6 +2257,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   }
   
+  #ifdef PREVIEW
   /// wind
   if( _lw(addr + 0x34) == 0x2A440015 && _lw(addr + 0x48) == 0x2A440014 ) { // 0x001307FC
 	/*******************************************************************
@@ -2278,6 +2283,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 	
     return 1;
   }
+  #endif
+  
   
   return 0;
 }
@@ -3395,7 +3402,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// ped task function
   if( _lw(addr + 0x38) == 0x3405003A  && _lw(addr + 0x70) == 0x30840200 ) {
     #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
+    logPrintf("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
     #endif
     TaskCharWith = (void*)(addr);  // 0x002c9698
     return 1;
@@ -3687,7 +3694,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     return 1;
   }
   
-  
+  #ifdef PREVIEW
   /// wind
   if( _lw(addr + 0x14) == 0x3C053F33 && _lw(addr + 0x2C) == 0x28850015  ) { // 0x002F8E04
     /*******************************************************************
@@ -3710,7 +3717,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 	
     return 1;
   }
-  
+  #endif
   
   return 0;  
 }
@@ -7149,7 +7156,7 @@ void *tank(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes: 
@@ -7162,7 +7169,7 @@ void *driveonwater(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY:
-      if( pcar ) {
+      if( pcar && pcar_type == VEHICLE_CAR) { // only works for cars
         DoHoverSuspensionRatios(pcar);
       }
       break;
@@ -9330,7 +9337,7 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
 }
 
 
-
+#ifdef PREVIEW
 /** Wave height *****************************************************************************************************************************
  *
  * Completion:   
@@ -9359,17 +9366,17 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
       return (void *)retbuf;
 
     case FUNC_APPLY:
-      setFloat(global_WindClipped + (LCS ? 0 : gp), level); // necessary at all?
+      setWindClipped(level); // necessary at all?
       break;
 	  
     case FUNC_CHECK: 
       if( status == 0 ) { 
         ///// patched out before so taken care of here ///////// see 0x00130820 @ LCS US v3
-		setFloat(global_WindClipped + (LCS ? 0 : gp), 1.0f); 
-	    if( getFloat(global_Wind + (LCS ? 0 : gp)) <= 1.0)
-          setFloat(global_WindClipped + (LCS ? 0 : gp), getFloat(global_Wind + (LCS ? 0 : gp)));
+		setWindClipped(1.0f);
+	    if( getWind() <= 1.0)
+          setWindClipped(getWind());
 		////////////////////////////////////////////////////////
-		level = getFloat(global_Wind + (LCS ? 0 : gp));
+		level = getWind();
       } 
       break;
       
@@ -9408,7 +9415,7 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
 
   return NULL;
 }
-
+#endif
 
 /******************************************************************************************************************************************************
  *
@@ -9580,9 +9587,21 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { 
         if( !pcar ) {
-          SetActorSkinTo(pplayer, buf); // SetActorSkinTo
+          /// either via functions
+		  SetActorSkinTo(pplayer, buf); // SetActorSkinTo
           LoadAllModelsNow(0); // LoadAllModelsNow
           RefreshActorSkin(pplayer); // RefreshActorSkin
+		  
+		  /// or via script (for ULUX todo?)
+          /* static u8 script_loadmodel[] = {  // must be static for CustomScriptExecut()!
+            /// load_and_launch_mission_internal
+            0x1C, 0x04, 
+            0x07, // byte
+            0x3F, // mission_number
+            
+			/// terminate_this_script
+            0x4E, 0x00
+          }; CustomScriptExecute((int)&script_loadmodel); // make game execute it */
         }
         
       } else if( keypress == PSP_CTRL_LEFT && i > 0) { // LEFT
@@ -10380,7 +10399,9 @@ void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaul
                                "freeze position",   // 2
                                "unfreeze position", // 3
                                "unload now",        // 4
+                               #ifdef HEXEDITOR
                                "open in HexEditor", // 5
+                               #endif
                              };
                 
   static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
@@ -10413,21 +10434,23 @@ void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaul
           
         } else if( i == 4 ) { // 4
           if( LCS ) setPedFlagToUnload(addr);
-          if( VCS ) setFloat(addr+0x38, -250.0f); // move map bottom limit to make game take care of it automatically
-          
+          if( VCS ) {
+            setFloat(addr+0x30, 2000.0f); // move far away
+            setFloat(addr+0x34, 2000.0f); // 
+            setFloat(addr+0x38, -250.0f); // move map bottom limit to make game take care of it automatically
+          }
         /* } else if( i == 4 ) { // 4
           if( pcar ) { //player has car
             //TaskCharWith(addr, 0x11, pcar); // crashes
         } */
           
         } else if( i == 5 ) { // 5
+          #ifdef HEXEDITOR
           if( flag_menu_running == 0 ) {
-            #ifdef HEXEDITOR  
             hexeditor_create(addr, 1, addr, addr + var_pedobjsize, "> touched Pedestrian");
-            #endif
             flag_menu_start = 1;
           }
-          
+          #endif
         }
       }
       break;  
@@ -10470,8 +10493,10 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
                                "make peds exit",         // 9
                                "warp into as spectator", // 10
                                "warp into as driver",    // 11
-                               "open in HexEditor" };    // 12
-                
+                               #ifdef HEXEDITOR
+                               "open in HexEditor",      // 12
+                               #endif
+                             };
   static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
   static int addr;
   
@@ -10499,8 +10524,11 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
           
         } else if( i == 3 ) { // unload it
           if( LCS ) setVehicleFlagToUnload(addr);
-          if( VCS ) setFloat(addr+0x38, -250.0f); // move map bottom limit to make game take care of it automatically
-          
+          if( VCS ) {
+            setFloat(addr+0x30, 2000.0f); // move far away
+            setFloat(addr+0x34, 2000.0f); // 
+            setFloat(addr+0x38, -250.0f); // move map bottom limit to make game take care of it automatically
+          }
         } else if( i == 4 ) { // lock the doors
           setVehicleDoorsLocked(addr, TRUE);
           
@@ -10510,7 +10538,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
         } else if( i == 6 ) { // freeze position
           setPedOrVehicleFreezePosition(addr, TRUE);
         
-    } else if( i == 7 ) { // unfreeze position
+        } else if( i == 7 ) { // unfreeze position
           setPedOrVehicleFreezePosition(addr, FALSE);
           
         } else if( i == 8 ) { // enter as passenger
@@ -10541,12 +10569,12 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
             WarpPedIntoVehicle(pplayer, addr);
           }
         } else if( i == 12 ) { // open in HexEditor
+          #ifdef HEXEDITOR
           if( flag_menu_running == 0 ) {
-            #ifdef HEXEDITOR  
             hexeditor_create(addr, 1, addr, addr + var_vehobjsize, "> touched Vehicle");
-            #endif
             flag_menu_start = 1;
           }
+          #endif
         }
       }
       break;  
@@ -10578,7 +10606,10 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
 void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status, i = 0; // default position
   const char *list_names[] = { "unload it", 
-                               "open in HexEditor" };
+                               #ifdef HEXEDITOR
+                               "open in HexEditor" 
+                               #endif
+                             };
                 
   static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
   static int addr;
@@ -10600,12 +10631,12 @@ void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval
           setFloat(addr+0x38, -150.0f); // just move it under map
           
         } else if( i == 1 ) { // 1
+          #ifdef HEXEDITOR
           if( flag_menu_running == 0 ) {
-            #ifdef HEXEDITOR  
             hexeditor_create(addr, 1, addr, addr + var_wldobjsize, "> touched World Object");
-            #endif
             flag_menu_start = 1;
           }
+          #endif
         }
       }
       break;  
@@ -10762,6 +10793,13 @@ void *camera_centered(int calltype, int keypress, int defaultstatus) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
         status = 1 - status;
+		
+      } else if( keypress == PSP_CTRL_TRIANGLE ) {
+        #ifdef HEXEDITOR
+        hex_marker_clear();
+        hex_marker_addx(global_camera + (LCS ? 0x1AA : 0x113), sizeof(float)); // not ulux
+        hexeditor_create( global_camera + (LCS ? 0x1AA : 0x113), 0, memory_low, memory_high, "> centered");
+        #endif
       } 
       break;
       
@@ -10855,10 +10893,13 @@ void *camera_topdown(int calltype, int keypress, int defaultstatus) {
     case FUNC_APPLY:
       setFloat(global_camera + (LCS ? 0x0D4 : 0x854), 30.00f); // camera distance in Vehicle
       setFloat(global_camera + (LCS ? 0x13C : 0x890), 30.00f); // camera distance on foot
-      setFloat(global_camera + (LCS ? 0x24C : 0x0E8), -2.00f); // keep camera highest point possible
-      setFloat(global_camera + (LCS ? 0x250 : 0x194), -0.03f); // simulate camera move(necessary for vehicle)
-
-      break;  
+      if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
+        setFloat(global_camera + 0x23C, -2.00f); // keep camera highest point possible
+        setFloat(global_camera + 0x240, -0.03f); // simulate camera move(necessary for vehicle)
+	  } else {
+        setFloat(global_camera + (LCS ? 0x24C : 0x0E8), -2.00f); // keep camera highest point possible
+        setFloat(global_camera + (LCS ? 0x250 : 0x194), -0.03f); // simulate camera move(necessary for vehicle)
+      } break;
       
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
@@ -10869,11 +10910,11 @@ void *camera_topdown(int calltype, int keypress, int defaultstatus) {
         hex_marker_clear();
         hex_marker_addx(global_camera + (LCS ? 0x0D4 : 0x854), sizeof(float));
         hex_marker_addx(global_camera + (LCS ? 0x13C : 0x890), sizeof(float));
-        hex_marker_addx(global_camera + (LCS ? 0x24C : 0x0E8), sizeof(float));
-        hex_marker_addx(global_camera + (LCS ? 0x250 : 0x194), sizeof(float));
-        hexeditor_create( global_camera + (LCS ? 0x24C : 0x194), 0, memory_low, memory_high, "> FOV");
+        hex_marker_addx(global_camera + (LCS ? 0x24C : 0x0E8), sizeof(float)); // not ulux
+        hex_marker_addx(global_camera + (LCS ? 0x250 : 0x194), sizeof(float)); // not ulux
+        hexeditor_create( global_camera + (LCS ? 0x24C : 0x194), 0, memory_low, memory_high, "> TopDown camera");
         #endif
-      } 
+      }
       break;
       
     case FUNC_SET: 

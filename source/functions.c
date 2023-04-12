@@ -32,7 +32,9 @@
 #include "functions.h"
 
 
-register int gp asm("gp");  
+register int gp asm("gp"); 
+ 
+extern int mod_text_size; // for ulux fix
 
 /// externs from main.c
 extern int LCS;
@@ -110,12 +112,13 @@ extern u32 ptr_IDETable;
 extern u32 ptr_gxtloadadr;
 extern u32 ptr_radarIconList;
 extern u32 var_radios;
-//extern u32 savedatakey;
 extern u32 addr_heliheight;
 extern u32 global_bmxjumpmult;
 extern u32 addr_policechaseheli_1;
 extern u32 addr_policechaseheli_2;
 extern u32 addr_policechaseheli_3;
+extern u32 global_WindClipped;
+extern u32 global_Wind;
 
  
 /// Buttons for cheats 
@@ -1437,7 +1440,7 @@ u32 memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C
 
 int isInMemBounds(int valtocheck) {
   if( valtocheck >= memory_low && valtocheck < memory_high )     
-    return 1; // yes
+    return 1; // yes 
   return 0; // no  
 }
 
@@ -1453,7 +1456,7 @@ void setBit(int adr, char bit, char boolean) { // 1bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setBit()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setBit(0x%X, 0x%X, 0x%X)", getGametime(), adr, bit, boolean);
     #endif  
   }
@@ -1468,7 +1471,7 @@ int getBit(int adr, int bit) {
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getBit()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getBit(0x%X, %i)", getGametime(), adr, bit);
     #endif
   }
@@ -1484,7 +1487,7 @@ void setByte(int adr, unsigned char value) { // 8bit (unsigned 0-255)
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setByte()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setByte(0x%X, 0x%X)", getGametime(), adr, value);
     #endif  
   }
@@ -1499,7 +1502,7 @@ unsigned char getByte(int adr) { // 8bit (unsigned 0-255)
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getByte()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getByte(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1515,7 +1518,7 @@ void setNibbleLow(int adr, unsigned char value) { // set 4bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setNibbleLow()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setNibbleLow(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
@@ -1530,7 +1533,7 @@ unsigned char getNibbleLow(int adr) { //get lower 4bit converted to char
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getNibbleLow()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getNibbleLow(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1546,7 +1549,7 @@ void setNibbleHigh(int adr, unsigned char value) { //set 4bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setNibbleHigh()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setNibbleHigh(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
@@ -1561,7 +1564,7 @@ unsigned char getNibbleHigh(int adr) {
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getNibbleHigh()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getNibbleHigh(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1577,7 +1580,7 @@ void setChar(int adr, char value) { // 8bit (signed -128 to +127)
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setChar()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setChar(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
@@ -1592,7 +1595,7 @@ char getChar(int adr) { // 8bit (signed -128 to +127)
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getChar()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getChar(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1608,7 +1611,7 @@ void setShort(int adr, short value) { // 16bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setShort()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setShort(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
@@ -1623,7 +1626,7 @@ short getShort(int adr) { // 16bit
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getShort()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getShort(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1639,7 +1642,7 @@ void setInt(int adr, int value) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setInt()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setInt(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
@@ -1654,7 +1657,7 @@ int getInt(int adr) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getInt()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getInt(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1670,7 +1673,7 @@ void setFloat(int adr, float value) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setFloat()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setFloat(0x%X, %f)", getGametime(), adr, value);
     #endif
   }
@@ -1685,7 +1688,7 @@ float getFloat(int adr) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getFloat()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getFloat(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1709,7 +1712,7 @@ void setString(int adr, char* string, int mode) { // mode = 1 (where every secon
    #ifdef MEMCHECK  
   } else { 
     setTimedTextbox("~r~Error: setString()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: setString(0x%X)", getGametime(), adr);
     #endif
   }
@@ -1731,7 +1734,7 @@ char *getString(int adr, int mode) { // mode = 1 (where every second is a char)
   #ifdef MEMCHECK  
   } else { 
     setTimedTextbox("~r~Error: getString()", 5.00f);
-    #ifdef LOG
+    #ifdef MEMLOG
     logPrintf("[ERROR] %i: getString(0x%X)", getGametime(), adr);
     #endif
   }
@@ -2123,7 +2126,6 @@ void setVehicleNoPhysicalDamage(int vehicle_base_adr) {
 }
 
 void makeVehicleExplode(int vehicle_base_adr) {
-
   void (*makeVehExplode)(int vehicle_obj, int player_or_zero, int vcs_only); // if pplayer: it counts for stats
   makeVehExplode = (void*)( getInt(getInt(vehicle_base_adr + 0x5c) + (LCS ? 0x11c : 0x14C)));
   makeVehExplode(vehicle_base_adr, 0 /*or pplayer*/, 0); 
@@ -2134,6 +2136,9 @@ void makeVehicleExplode(int vehicle_base_adr) {
 }
 
 void setVehicleRadioStation(int vehicle_base_adr, char id) {
+  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
+	  setByte(vehicle_base_adr + 0x29C, id); 
+  } return;
   setByte(vehicle_base_adr + (LCS ? 0x2A0 : 0x2B7), id);
 }
 
@@ -2159,7 +2164,9 @@ float getVehicleSpeed(int vehicle_base_adr) {
 }
 
 char getVehicleCurrentGear(int vehicle_base_adr) {
-  return getByte(vehicle_base_adr + (LCS ? 0x270 : 0x284));
+  if( LCS && mod_text_size == 0x0031F854 ) // ULUX 0.02
+	  return getByte(vehicle_base_adr + 0x26C); 
+  return getByte(vehicle_base_adr + (LCS ? 0x270 : 0x284)); 
 }
 
 void setVehicleFlagToUnload(int vehicle_base_adr) { // aka: mark no longer needed 
@@ -2863,6 +2870,14 @@ int getMultiplayer() {
   return getInt(global_ismultiplayer + (LCS ? 0 : gp)); 
 }
 
+void setWindClipped(float wind) {
+  setFloat(global_WindClipped + (LCS ? 0 : gp), wind); 
+}
+
+float getWind() {
+  return getFloat(global_Wind + (LCS ? 0 : gp)); 
+}
+
 void setWaterLevel(float level) {
   int i, j;
   int levels = getInt(getInt(LCS ? global_ptr_water : global_ptr_water+gp)); // number of floats in waterlevel area
@@ -3209,14 +3224,22 @@ char *getRadioStationName(int no) { // for LCS: 0 = Head Radio, 1 = Double Clef,
 } */
 
 void setCameraCenterBehindPlayer() {
+  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
+	  setByte(global_camera + 0x19A, 0x1);
+  } return;
   setByte(global_camera + (LCS ? 0x1AA : 0x113), 0x1);
 }
 
 void setFieldOfView(float fov) {
+  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
+	  setFloat(global_camera + 0x244, fov);
+  } return;
   setFloat(global_camera + (LCS ? 0x254 : 0x198), fov);
 }
 
 float getFieldOfView() {
+  if( LCS && mod_text_size == 0x0031F854 ) // ULUX 0.02
+    return getFloat(global_camera + 0x244);
   return getFloat(global_camera + (LCS ? 0x254 : 0x198));
 }
 

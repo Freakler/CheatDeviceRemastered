@@ -217,8 +217,7 @@ const Menu_pack main_menu[] = {
   {"Button Up: "                      , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , up_button            , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Select a Cheat to quick toggle via button when in-game!" },
   {"Button Down: "                    , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , down_button          , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Select a Cheat to quick toggle via button when in-game!" },
   {""                                 , CAT_ALIAS   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-    
-    
+       
   // // CHEATS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
   {"Player"                           , CAT_PLAYER  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x245F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
@@ -255,13 +254,13 @@ const Menu_pack main_menu[] = {
   {"Warp out of Water automatically"  , CAT_VEHICL  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x1A49 , OFF , warp_out_water_veh   , "CROSS = Enable/Disable Cheat"      , ""                                   , "> If you fall into the ocean you will be teleported out automatically." },
   {"Cars drive on Water"              , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x15F7 , OFF , driveonwater         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Your car can drive on water." },
   {""                                 , CAT_VEHICL  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+
   {"Teleporting"                      , CAT_TELEP   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2B73 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
   {"Teleport: "                       , CAT_TELEP   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x18FA , OFF , teleporter           , "CROSS = Teleport to location"      , "LEFT/RIGHT = Select Location"       , "> Teleport yourself to a preset location on the map." },
   {"Teleport near marker"             , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1647 , -1  , teleport_marker      , "CROSS = Teleport"                  , ""                                   , "> Teleport near the custom marker" },
   {"Step Through Wall"                , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x195A , -1  , stepthroughwall      , "CROSS = Teleport one step forward" , ""                                   , "> With this you can easily step through walls get inside buildings etc" },
   {""                                 , CAT_TELEP   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+ 
   {"Vehicles"                         , CAT_TRFFIC  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x215F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Disable Traffic"                  , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x198C , OFF , traffic_density      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely disable the worlds traffic! (Parked vehicles still appear)"  },
   {"Freeze Traffic"                   , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x17EC , OFF , traffic_freeze       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely freeze the worlds vehicles except your own!"  },
@@ -270,7 +269,7 @@ const Menu_pack main_menu[] = {
   {"BMX Jump Height: "                , CAT_TRFFIC  , MENU_VALUE       , FALSE , TRUE  , TRUE  , TRUE  , 0x1BDE , OFF , bmxjumpheight        , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust multiplier"     , "> Adjust the BMXs jump height." },
   {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x15D3 , OFF , untouchable          , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Vehicles wont be able to get near you and will be pushed back." },
   {""                                 , CAT_TRFFIC  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+ 
   {"Pedestriants"                     , CAT_PEDS    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x28A4 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Disable Peds"                     , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1770 , OFF , peds_density         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely disable Pedestrians! (special ones might still appear)"  },
   {"Freeze Peds"                      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x191C , OFF , peds_freeze          , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Freeze Pedestrians current positions in the world."  },
@@ -279,7 +278,7 @@ const Menu_pack main_menu[] = {
   {"Kill everyone aiming at you"      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1611 , OFF , peds_killaiming      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Everyone aiming at you will be killed instantly!"  },
   {"Ped Walking Speed: "              , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x191A , OFF , pedwalking_speed     , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust the Pedestrians walking and sprinting speed." },
   {""                                 , CAT_PEDS    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+ 
   {"Missions"                         , CAT_MISSON  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x235B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Force OnMission bool: "           , CAT_MISSON  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x17B5 , OFF , onmission            , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Force OnMission check. Handle with care!"  },
   {"Freeze Mission Timers"            , CAT_MISSON  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x16EE , OFF , freeze_timers        , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Freeze side missions on screen timers."  },
@@ -288,7 +287,7 @@ const Menu_pack main_menu[] = {
   {"Teleport to next Objective"       , CAT_MISSON  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1762 , -1  , teleport_next        , "CROSS = Teleport"                  , ""                                   , "> Teleport to next marked destination, target or object" },
   {"Teleport to next Mission"         , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1799 , -1  , teleport_mission     , "CROSS = Teleport"                  , ""                                   , "> Teleport to next Story-Mission corona." },
   {""                                 , CAT_MISSON  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+
   {"Map"                              , CAT_MAP     , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2A11 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Mark on Map: "                    , CAT_MAP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x165F , OFF , markonmap            , "CROSS = Enable/Disable Cheat"      , "SQUARE = Cycle options"             , "> Select what should be displayed on the map and radar." },
   {""                                 , CAT_MAP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -342,7 +341,7 @@ const Menu_pack main_menu[] = {
   {"Display Coordinates"              , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1814 , OFF , coords_toggle        , "CROSS = Toggle Coordinates"        , ""                                   , "> Display your current xyz coordinates in the world." },
   {"Gather Spell"                     , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E35 , OFF , gather_spell         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Gather everything!! (There will be LAG.. but its worth it!)"  },
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+
   {"Multiplayer"                      , CAT_MULTI   , MENU_CATEGORY    , TRUE  , TRUE  , FALSE , TRUE  , 0x2D2A , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
   {"test"                             , CAT_MULTI   , MENU_SWITCH      , TRUE  , TRUE  , FALSE , TRUE  , 0x181C , OFF , mp_test              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> " },
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , FALSE , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -356,7 +355,7 @@ const Menu_pack main_menu[] = {
   {"Disable World Textures"           , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x17CF , OFF , disable_textures     , "CROSS = Enable/Disable"            , ""                                   , "> Stop World Textures from being applied to models." },
   {"Limit FPS to: "                   , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x16F0 , OFF , fps_cap              , "CROSS = Toggle FPS Limit"          , ""                                   , "> Limit the Games' Frames Per Second and enable 60 FPS!" },
   {""                                 , CAT_GAME    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+ 
   {"CheatDevice Options"              , CAT_CHDEV   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x285E , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
   {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS = Enable/Disable"            , ""                                   , "> Enabling will automatically start the CheatDevice after spawning." },
   #ifdef CONFIG
@@ -1904,7 +1903,7 @@ int userscripts_ctrl() {
                       #endif
                       
                       extern u32 ptr_gxtloadadr;
-                      if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + ((LCS) ? 0 : gp)), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) ) { // not found in GXT
+                      if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) ) { // not found in GXT
 
                         #if defined(LOG) || defined(USERSCRIPTLOG)
                         logPrintf("not found in GXT.."); // could be custom string or special string at this point
@@ -3156,7 +3155,7 @@ int editor_draw() {
       }
     }
     if( editor_menumode == EDITOR_MAPICONS  ) {
-      if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+((LCS) ? 0x14 : 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
+      if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
         drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
       }
     }
@@ -3246,7 +3245,7 @@ int editor_ctrl() {
       if( (editor_menumode == EDITOR_PICKUPS) && getFloat(editor_base_adr+0x0) != 0 && getPickupIsActive(editor_base_adr) ) { 
         editor_trigger = 1; // trigger teleport
       }
-      if( (editor_menumode == EDITOR_MAPICONS) && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+((LCS) ? 0x14 : 0x18)) != 0 || getMapiconType(editor_base_adr) < 4) ) { 
+      if( (editor_menumode == EDITOR_MAPICONS) && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0 || getMapiconType(editor_base_adr) < 4) ) { 
         editor_trigger = 1; // trigger teleport
       }
       if( editor_menumode == EDITOR_GARAGE && getFloat(editor_base_adr+0x4) != 0 ) {
@@ -3333,7 +3332,7 @@ int editor_ctrl() {
       
       if( editor_menumode == EDITOR_VEHWORLDSPAWNS ) {
         if( pcar )
-          createParkedVehicleSpawnViaSlot( editor_block_current, pcar_id, getFloat(pcar+0x30), getFloat(pcar+0x34), getFloat(pcar+0x38), (180.0f / M_PI) * getFloat(pplayer + ((LCS) ? 0x4E0 : 0x8D0)) + ((getFloat(pplayer + ((LCS) ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f),  lcs_getVehicleColorBase(pcar), lcs_getVehicleColorStripe(pcar), 0, 0);
+          createParkedVehicleSpawnViaSlot( editor_block_current, pcar_id, getFloat(pcar+0x30), getFloat(pcar+0x34), getFloat(pcar+0x38), (180.0f / M_PI) * getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + ((getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f),  lcs_getVehicleColorBase(pcar), lcs_getVehicleColorStripe(pcar), 0, 0);
       }
       //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     }
@@ -3650,7 +3649,7 @@ int editor_ctrl() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE: 
-        sprintf(buffer, "Garage Data (%s - Slot: %i)", ((LCS) ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]), editor_garageslot_current+1);
+        sprintf(buffer, "Garage Data (%s - Slot: %i)", (LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]), editor_garageslot_current+1);
         break;
         
       case EDITOR_PEDOBJ: 
@@ -3852,7 +3851,7 @@ int editor_ctrl() {
           }
         
         } else { // use coordinates in blip slot
-          teleport(getFloat(editor_base_adr+((LCS) ? 0xC : 0x10)), getFloat(editor_base_adr+((LCS) ? 0x10 : 0x14)), getFloat(editor_base_adr+((LCS) ? 0x14 : 0x18)) + 2.00f);
+          teleport(getFloat(editor_base_adr+(LCS ? 0xC : 0x10)), getFloat(editor_base_adr+(LCS ? 0x10 : 0x14)), getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) + 2.00f);
         }
         //closeMenu(); // close menugetFloat(editor_base_adr+)
         editor_trigger = 0; 
@@ -3978,13 +3977,16 @@ float cam_coord_x2, cam_coord_y2, cam_coord_z2;
 float radius, inclination, azimuth; 
 float movespeed = 0.40, turnspeed = 0.05;
 int printinfo = 1;
-
+int uluxfix = 0;
 extern u32 global_camera;
 
 int freecam_create() {
   #ifdef LOG
   logPrintf("[INFO] %i: freecam_create()", getGametime());
   #endif
+  
+  if( LCS && mod_text_size == 0x0031F854 ) // ULUX 0.02
+    uluxfix = -0x10;
   
   flag_freecam = 1; // only set here!
   printinfo = 1;
@@ -3999,19 +4001,19 @@ int freecam_draw() {
   float player_z = getFloat(pplayer+0x38);
   
   /// get camera values
-  if( getByte(global_camera + ((LCS) ? 0x6B : 0x81A) ) == 0x1 ) { // cutscene
-    camera_x = getFloat(global_camera + ((LCS) ? 0x9C0 : 0x7F0));
-    camera_y = getFloat(global_camera + ((LCS) ? 0x9C4 : 0x7F4));
-    camera_z = getFloat(global_camera + ((LCS) ? 0x9C8 : 0x7F8));
+  if( getByte(global_camera + (LCS ? 0x6B+uluxfix : 0x81A) ) == 0x1) { // cutscene
+    camera_x = getFloat(global_camera + (LCS ? 0x9C0+uluxfix : 0x7F0));
+    camera_y = getFloat(global_camera + (LCS ? 0x9C4+uluxfix : 0x7F4));
+    camera_z = getFloat(global_camera + (LCS ? 0x9C8+uluxfix : 0x7F8));
   } else {
-    camera_x = getFloat(global_camera + ((LCS) ? 0x340 : 0x90));
-    camera_y = getFloat(global_camera + ((LCS) ? 0x344 : 0x94));
-    camera_z = getFloat(global_camera + ((LCS) ? 0x348 : 0x98));
+    camera_x = getFloat(global_camera + (LCS ? 0x340+uluxfix : 0x90));
+    camera_y = getFloat(global_camera + (LCS ? 0x344+uluxfix : 0x94));
+    camera_z = getFloat(global_camera + (LCS ? 0x348+uluxfix : 0x98));
   }
-  fov = getFloat(global_camera + ((LCS) ? 0x254 : 0x198));
-  cam_coord_x1 = getFloat(global_camera + ((LCS) ? 0x330 : 0x80));
-  cam_coord_y1 = getFloat(global_camera + ((LCS) ? 0x334 : 0x84));
-  cam_coord_z1 = getFloat(global_camera + ((LCS) ? 0x338 : 0x88));
+  fov = getFloat(global_camera + (LCS ? 0x254+uluxfix : 0x198));
+  cam_coord_x1 = getFloat(global_camera + (LCS ? 0x330+uluxfix : 0x80));
+  cam_coord_y1 = getFloat(global_camera + (LCS ? 0x334+uluxfix : 0x84));
+  cam_coord_z1 = getFloat(global_camera + (LCS ? 0x338+uluxfix : 0x88));
   
 
   /// calculate
@@ -4115,25 +4117,25 @@ int freecam_draw() {
   /////////////////////////////////////////////////////////////////////////////////////
   
   /// write back new values
-  if( getByte(global_camera + (LCS) ? 0x6B : 0x81A) == 0x1 ) { // cutscene
-    setFloat(global_camera + (LCS ? 0x9C0 : 0x7F0), camera_x);
-    setFloat(global_camera + (LCS ? 0x9C4 : 0x7F4), camera_y);
-    setFloat(global_camera + (LCS ? 0x9C8 : 0x7F8), camera_z);
+  if( getByte(global_camera + (LCS ? 0x6B+uluxfix : 0x81A)) == 0x1 ) { // cutscene
+    setFloat(global_camera + (LCS ? 0x9C0+uluxfix : 0x7F0), camera_x);
+    setFloat(global_camera + (LCS ? 0x9C4+uluxfix : 0x7F4), camera_y);
+    setFloat(global_camera + (LCS ? 0x9C8+uluxfix : 0x7F8), camera_z);
   } else {
-    setFloat(global_camera + (LCS ? 0x340 : 0x90), camera_x);
-    setFloat(global_camera + (LCS ? 0x344 : 0x94), camera_y);
-    setFloat(global_camera + (LCS ? 0x348 : 0x98), camera_z);
+    setFloat(global_camera + (LCS ? 0x340+uluxfix : 0x90), camera_x);
+    setFloat(global_camera + (LCS ? 0x344+uluxfix : 0x94), camera_y);
+    setFloat(global_camera + (LCS ? 0x348+uluxfix : 0x98), camera_z);
   }
   
-  setFloat(global_camera + (LCS ? 0x254 : 0x198), fov);
+  setFloat(global_camera + (LCS ? 0x254+uluxfix : 0x198), fov);
   
-  setFloat(global_camera + (LCS ? 0x330 : 0x80), cam_coord_x1);
-  setFloat(global_camera + (LCS ? 0x334 : 0x84), cam_coord_y1);
-  setFloat(global_camera + (LCS ? 0x338 : 0x88), cam_coord_z1);
+  setFloat(global_camera + (LCS ? 0x330+uluxfix : 0x80), cam_coord_x1);
+  setFloat(global_camera + (LCS ? 0x334+uluxfix : 0x84), cam_coord_y1);
+  setFloat(global_camera + (LCS ? 0x338+uluxfix : 0x88), cam_coord_z1);
   
-  setFloat(global_camera + (LCS ? 0x360 : 0xD0), cam_coord_x2);
-  setFloat(global_camera + (LCS ? 0x364 : 0xD4), cam_coord_y2);
-  setFloat(global_camera + (LCS ? 0x368 : 0xD8), cam_coord_z2);
+  setFloat(global_camera + (LCS ? 0x360+uluxfix : 0xD0), cam_coord_x2);
+  setFloat(global_camera + (LCS ? 0x364+uluxfix : 0xD4), cam_coord_y2);
+  setFloat(global_camera + (LCS ? 0x368+uluxfix : 0xD8), cam_coord_z2);
   
   
   /////////////////////////////////////////////////////////////////////////////////////
@@ -4181,10 +4183,10 @@ int freecam_draw() {
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE);
     */
     
-    sprintf(buffer, "cutscene = %X", getByte( global_camera + (LCS ? 0x6B : 0x81A)) );
+    sprintf(buffer, "cutscene = %X", getByte( global_camera + (LCS ? 0x6B+uluxfix : 0x81A)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY);
     
-    sprintf(buffer, "camera = %X", getByte( global_camera + (LCS ? 0x64 : 0x816)) );
+    sprintf(buffer, "camera = %X", getByte( global_camera + (LCS ? 0x64+uluxfix : 0x816)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY);
     
 
@@ -6259,7 +6261,22 @@ static void CheckModules() { // PPSSPP only
         mod_data_size = info.data_size;
     
         /// with this approach the game continues to run when patch() is still in progress
-    
+		
+		// SKIP INTRO MOVIES /////////// TEMP /////////////////
+        #ifdef PREVIEW
+		if( mod_text_size == 0x0031F854 ) { // ULUX 
+		  MAKE_DUMMY_FUNCTION(mod_text_addr + 0x00076000, 0);
+          clearICacheFor(mod_text_addr + 0x00076000);
+          clearICacheFor(mod_text_addr + 0x00076004);
+        }
+		if( mod_text_size == 0x0032BFC4 ) { // US v3.00
+          MAKE_DUMMY_FUNCTION(mod_text_addr + 0x001BCFD0, 0);
+          clearICacheFor(mod_text_addr + 0x001BCFD0);
+          clearICacheFor(mod_text_addr + 0x001BCFD4);
+        }
+		#endif
+        ///////////////////////////////////////////////////////
+	
         initTextBlit(mod_text_addr, mod_text_size);  // see blit.c (HAS ITS OWN SEARCHING LOOP!)  
     
         int ret = patch();
@@ -6331,6 +6348,7 @@ int module_start(SceSize argc, void* argp) {
 
   /// check available memory (high memory layout)
   memory_high = getHighMemBound();
+  //memory_high = 0x0C000000;
   #ifdef LOG
   logPrintf("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   logPrintf("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);

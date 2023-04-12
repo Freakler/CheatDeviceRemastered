@@ -266,6 +266,8 @@ void setBmxJumpMultiplier(float value);
 /// World
 void setWaterLevel(float level);
 void resetWaterLevel();
+void setWindClipped(float wind);
+float getWind();
 int getWorldObjectIsActive(int worldobjs_base_adr);
 int getWorldActiveObjects(int worldobjs_base, int worldobjs_max, int worldobjs_size);
 
