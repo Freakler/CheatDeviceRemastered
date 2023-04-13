@@ -59,7 +59,7 @@ int doesFileExist(const char* path) {
     sceIoClose(dir);
     #ifdef LOG
     logPrintf("[INFO] doesFileExist('%s') -> yes", path);
-    #endif 	
+    #endif   
     return 1; // true
   }
   #ifdef LOG
@@ -75,7 +75,7 @@ int doesDirExist(const char* path) {
     #ifdef LOG
     logPrintf("[INFO] doesDirExist('%s') -> yes", path);
     #endif 
-	return 1; // true
+  return 1; // true
   }
   #ifdef LOG
   logPrintf("[INFO] doesDirExist('%s') -> no", path);

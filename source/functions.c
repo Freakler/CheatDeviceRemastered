@@ -1824,7 +1824,7 @@ void teleportFixForVehicle() { // teleporting with vehicle behaviour fix
 /// Pedestrian ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 float getPedFacingDirectionInDegree(int ped_base_adr) {
-  return ((180.0f / M_PI) * getFloat(ped_base_adr + ((LCS) ? 0x4E0 : 0x8D0)) + ((getFloat(ped_base_adr + ((LCS) ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f) ); //rad -pi through 0 to +pi !!!!!   -> degree
+  return ((180.0f / M_PI) * getFloat(ped_base_adr + (LCS ? 0x4E0 : 0x8D0)) + ((getFloat(ped_base_adr + (LCS ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f) ); //rad -pi through 0 to +pi !!!!!   -> degree
 }
 
 char getMaxHealthMultiplier() {
@@ -2011,18 +2011,18 @@ int getTypeFromAddress(int address) { // eg: if the address belongs to a vehicle
 /// replaced by IDE names
 /* char *getPedModelByID(char id) { // 0x00 player, 0x01 Cop...
   int i;
-  for( i = 0; i <= ((LCS) ? lcs_charactersize : vcs_charactersize); i++ ) {
-    if( id == (char)((LCS) ? lcs_characters[i].id : vcs_characters[i].id) ) 
-      return (void *)((LCS) ? lcs_characters[i].model : vcs_characters[i].model);
+  for( i = 0; i <= (LCS ? lcs_charactersize : vcs_charactersize); i++ ) {
+    if( id == (char)(LCS ? lcs_characters[i].id : vcs_characters[i].id) ) 
+      return (void *)(LCS ? lcs_characters[i].model : vcs_characters[i].model);
   }  
   return "unknown";
   
 }
 char *getPedNameByID(char id) { // 0x00 "Toni Cipriani", 0x17 "Mona Lott"...
   int i;
-  for( i = 0; i <= ((LCS) ? lcs_charactersize : vcs_charactersize); i++ ) {
-    if( id == (char)((LCS) ? lcs_characters[i].id : vcs_characters[i].id) ) 
-      return (void *)((LCS) ? lcs_characters[i].name : vcs_characters[i].name);
+  for( i = 0; i <= (LCS ? lcs_charactersize : vcs_charactersize); i++ ) {
+    if( id == (char)(LCS ? lcs_characters[i].id : vcs_characters[i].id) ) 
+      return (void *)(LCS ? lcs_characters[i].name : vcs_characters[i].name);
   }  
   return "unknown";
 } */
@@ -2069,7 +2069,7 @@ short getVehicleID(int vehicle_base_adr) {
 }
 
 short getVehicleTypeByID(short id) { // pcar_type 
-  char flag = getNibbleLow( getAddressOfHandlingSlotForID(id) + ((LCS) ? 0xD2 : 0xD3) );
+  char flag = getNibbleLow( getAddressOfHandlingSlotForID(id) + (LCS ? 0xD2 : 0xD3) );
   switch( flag ) { // 1: IS_BIKE    2: IS_HELI        4: IS_PLANE      8: IS_BOAT
     case 1: return VEHICLE_BIKE;
     case 2: return VEHICLE_HELI;
@@ -2137,8 +2137,9 @@ void makeVehicleExplode(int vehicle_base_adr) {
 
 void setVehicleRadioStation(int vehicle_base_adr, char id) {
   if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
-	  setByte(vehicle_base_adr + 0x29C, id); 
-  } return;
+    setByte(vehicle_base_adr + 0x29C, id); 
+	return;
+  } 
   setByte(vehicle_base_adr + (LCS ? 0x2A0 : 0x2B7), id);
 }
 
@@ -2165,7 +2166,7 @@ float getVehicleSpeed(int vehicle_base_adr) {
 
 char getVehicleCurrentGear(int vehicle_base_adr) {
   if( LCS && mod_text_size == 0x0031F854 ) // ULUX 0.02
-	  return getByte(vehicle_base_adr + 0x26C); 
+    return getByte(vehicle_base_adr + 0x26C); 
   return getByte(vehicle_base_adr + (LCS ? 0x270 : 0x284)); 
 }
 
@@ -2178,11 +2179,11 @@ void setVehicleDoorsLocked(int vehicle_base_adr, int boolean) {
 }
 
 int getVehicleAiStatus(int vehicle_base_adr) { // 3 = "Physiscs", 2 = "floating" / AI controlled
-  return (getInt(vehicle_base_adr + ((LCS) ? 0x44 : 0x48)) & 0x1f0) >> 4;
+  return (getInt(vehicle_base_adr + (LCS ? 0x44 : 0x48)) & 0x1f0) >> 4;
 }
 
 void setVehicleMakePhysical(int vehicle_base_adr) { // like game does it "FLOATING CAR TURNED INTO PHYSICS CAR"
-  setInt(vehicle_base_adr + ((LCS) ? 0x44 : 0x48), (getInt(vehicle_base_adr + ((LCS) ? 0x44 : 0x48)) & 0xfffffe0f) | 0x30 ); // set 3x xx xx xx
+  setInt(vehicle_base_adr + (LCS ? 0x44 : 0x48), (getInt(vehicle_base_adr + (LCS ? 0x44 : 0x48)) & 0xfffffe0f) | 0x30 ); // set 3x xx xx xx
 }
 
 void setVehicleRepairTyres(int vehicle_base_adr, short vehicle_type) {
@@ -2309,7 +2310,7 @@ void setPoliceChaseHeliModel(short model) {
   
 /// Pickups ///////////
 int getPickupIsActive(int pickup_base_adr) { // slot is in use (some pickups are one-time pickups others like weapons respawn after some time! -> slot is still used although nothing in world)
-  if( getChar(pickup_base_adr+((LCS)?0x32:0x38)) != 0 ) // just like ghidra
+  if( getChar(pickup_base_adr+(LCS?0x32:0x38)) != 0 ) // just like ghidra
     return 1; // true
   return 0; // false
 }
@@ -3225,15 +3226,17 @@ char *getRadioStationName(int no) { // for LCS: 0 = Head Radio, 1 = Double Clef,
 
 void setCameraCenterBehindPlayer() {
   if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
-	  setByte(global_camera + 0x19A, 0x1);
-  } return;
+    setByte(global_camera + 0x19A, 0x1);
+	return;
+  } 
   setByte(global_camera + (LCS ? 0x1AA : 0x113), 0x1);
 }
 
 void setFieldOfView(float fov) {
   if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
-	  setFloat(global_camera + 0x244, fov);
-  } return;
+    setFloat(global_camera + 0x244, fov);
+	return;
+  } 
   setFloat(global_camera + (LCS ? 0x254 : 0x198), fov);
 }
 
@@ -3254,7 +3257,6 @@ float getGamespeed() {
 int isPedCrouching(int ped) {
   if( getInt( pplayer + (LCS ? 0x198 : 0x1CC)) & (LCS ? 0x10 : 0x2000) ) // my check
     return 1;
-  
   return 0;
 }
 
@@ -3273,7 +3275,6 @@ void TaskDuck(int ped) {
 
 int removeIPLObjectsCollision(short id) { 
   int i, counter = 0, adr;
-  
   for( i = 0, adr = buildingsIPL_base; i < buildingsIPL_max; adr += var_buildingsIPLslotsize, i++ ) { // Buildings.ipl
     if(getShort(adr+0x58) == id) 
       setFloat(adr+0x38, -200.0f); // move below map
@@ -3284,8 +3285,6 @@ int removeIPLObjectsCollision(short id) {
       setFloat(adr+0x38, -200.0f); // move below map
       counter++;
   }
-  
-  ///dummys.ipl changes so not that one
   return counter;
 }
 

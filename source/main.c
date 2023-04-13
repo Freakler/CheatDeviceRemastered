@@ -85,8 +85,6 @@ int flag_keys_disable   = 0; // keys should be menu exlusive (set by button-open
 int flag_coll_cats      = 0; // makes categories become collapseable
 int flag_ui_blocking    = 0; // block UI elements like map & hud for a cleaner look when menu is displayed
 int flag_use_legend     = 0; // display the legend box on the bottom of the screen 
-int flag_small_legend   = 0; // make the legend box smaller allowing for another cheat row instead
-int flag_use_advancedui = 0; // draw more boxes around for a different look
 int flag_use_cataltfont = 0; // makes categories use a different font to make them stick out
 int flag_use_liveconfig = 0; // config will be written to everytime the menu is closed (#ifdef CONFIG)
 int flag_draw_FPS       = 0; // draw FPS counter bool
@@ -280,6 +278,7 @@ const Menu_pack main_menu[] = {
   {""                                 , CAT_PEDS    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
  
   {"Missions"                         , CAT_MISSON  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x235B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
+  {"Mission Selector"                 , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1F98 , -1  , mission_selector     , "CROSS = Open Menu"                 , ""                                   , "> Use the build-in level-skip menu to start missions." },
   {"Force OnMission bool: "           , CAT_MISSON  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x17B5 , OFF , onmission            , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Force OnMission check. Handle with care!"  },
   {"Freeze Mission Timers"            , CAT_MISSON  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x16EE , OFF , freeze_timers        , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Freeze side missions on screen timers."  },
   {"Kill / destroy all targets"       , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x18BC , -1  , kill_all_targets     , "CROSS = Execute Order 66"          , ""                                   , "> Kill all Targets marked red!" },
@@ -361,12 +360,10 @@ const Menu_pack main_menu[] = {
   #ifdef CONFIG
   {"Autosave Settings to Config"      , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3E81 , OFF , cdr_liveconfig       , "CROSS = Enable/Disable"            , ""                                   , "> All settings will be auto-saved to config when closing the menu." },
   #endif
-  {"Collapseable Categories"          , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365A , ON  , cdr_collapsecats     , "CROSS = Enable/Disable"            , ""                                   , "> Choose between collapseable or always expanded categories." },
+  {"Collapsible Categories"           , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365A , ON  , cdr_collapsecats     , "CROSS = Enable/Disable"            , ""                                   , "> Choose between collapsible or always expanded categories." },
   {"Show popular cheats on top"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3C42 , ON  , cdr_showpopular      , "CROSS = Enable/Disable"            , ""                                   , "> Enabling will show a preset selection of popular Cheats on top." },
   {"Hide some UserInterfaces in Menu" , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3881 , ON  , cdr_allowuiblocking  , "CROSS = Enable/Disable"            , ""                                   , "> Allow Games's UserInterface elements to be blocked in some menus etc" },
   {"Freeze Game when in Menu"         , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x3F9E , OFF , cdr_freezegameinmenu , "CROSS = Enable/Disable"            , ""                                   , "> Freeze the Game when the CheatDevice Menu is in use." },
-  {"Use advanced Menu UserInterface"  , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x31A9 , ON  , cdr_userinterface    , "CROSS = Enable/Disable"            , ""                                   , "> Enabling will add boxes for readability to some areas." },
-  {"Use smaller Button Legend box"    , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3230 , ON  , cdr_smallegend       , "CROSS = Enable/Disable"            , ""                                   , "> Use a smaller Legend box allowing for more options to be displayed." },
   {"Hide Button Legend & Info"        , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365B , OFF , cdr_uselegend        , "CROSS = Enable/Disable"            , ""                                   , "> Hide the button legend allowing for more space and menu displayed!" },
   {"Alternative font for Categories"  , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3846 , OFF , cdr_alternativefont  , "CROSS = Enable/Disable"            , ""                                   , "> Use an alternative font for categories just like the main menu does." },
   
@@ -438,17 +435,17 @@ const Menu_pack main_menu[] = {
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },  
   {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , exit_game            , "CROSS = Exit game"                 , ""                                   , "> Exit the game and return to the main menu." },
 
-  {NULL,0,0,-1,-1,-1,-1,-1,-1,NULL,NULL,NULL,NULL}
+  {"",0,0,-1,-1,-1,-1,-1,-1,NULL,NULL,NULL,NULL}
 }; int menu_size = (sizeof(main_menu)/sizeof(Menu_pack))-1;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void drawLegendBox(int rows, u32 color) {
-  drawBox(15.0f, 266.0f - (rows * (flag_small_legend ? 12.0f : 16.0f)), 450.0f, 4.0f + (rows * (flag_small_legend ? 12.0f : 16.0f)), color);
+  drawBox(15.0f, 266.0f - (rows * 12.0f), 450.0f, 4.0f + (rows * 12.0f), color);
 }
 
 void drawLegendMessage(char *str, int side, int pos, u32 color) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
-  drawString(str, ALIGN_FREE, FONT_DIALOG, flag_small_legend ? SIZE_SMALL : SIZE_NORMAL, SHADOW_OFF, side ? 240.0f : 20.0f, (flag_small_legend ? 256.0f - (pos * 12.0f) : 252.0f - (pos * 16.0f)), color);
+  drawString(str, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, side ? 240.0f : 20.0f, 256.0f - (pos * 12.0f), color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -526,7 +523,7 @@ int usercheats_create() {
   usercheat_selector = 1;   // cursor in txt selector (top menu) by default
   usercheat_draw_lower = 0; // disable drawing of lower menu by default
   usercheat_options = 0; 
-  usercheat_showoptions = (flag_use_legend ? (flag_small_legend ? 12 : 11) : 14) - usercheat_toptions;
+  usercheat_showoptions = (flag_use_legend ? 12 : 14) - usercheat_toptions;
   usercheat_selected_val = 0;
   usercheat_top = 0;
   
@@ -593,13 +590,11 @@ int usercheats_draw() {
   y = 35.0f; // vertical menu start
   
   /// draw UI 
-  if( flag_use_advancedui ) {
-    if( usercheat_toptions > 0 ) {
-      float topmenuheight = 20.0f;
-      drawUiBox(x-5.0f, y-2.0f, 410.0f, topmenuheight, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // x, y, width, height, border, color, color  
-    }
-    drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? (flag_small_legend ? 194.0f : 180.0f) : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
+  if( usercheat_toptions > 0 ) {
+    float topmenuheight = 20.0f;
+    drawUiBox(x-5.0f, y-2.0f, 410.0f, topmenuheight, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // x, y, width, height, border, color, color  
   }
+  drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? 194.0f : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
   /// draw the top menu
   sprintf(buffer_top, "File: %s", filename);
@@ -737,7 +732,7 @@ int usercheats_draw() {
         if( found_cheats_counter > 0)
           usercheat_draw_lower = 1; // allow lower menu to be accessed
         
-        usercheat_showoptions = (flag_use_legend ? (flag_small_legend ? 12 : 11) : 14) - usercheat_toptions; // reset
+        usercheat_showoptions = (flag_use_legend ? 12 : 14) - usercheat_toptions; // reset
         
         if ( usercheat_showoptions > usercheat_options ) 
           usercheat_showoptions = usercheat_options; // adjust showoptions (there can't be more showoptions than options itself)
@@ -775,11 +770,11 @@ int usercheats_draw() {
   
 
   /// draw Scrollbar
-  if( flag_use_advancedui && (usercheat_options > usercheat_showoptions) && usercheat_draw_lower ) { // draw only if there are more options than can be displayed
+  if( (usercheat_options > usercheat_showoptions) && usercheat_draw_lower ) { // draw only if there are more options than can be displayed
     float scrollbar_x = 455.0f;
     float scrollbar_y = 33.0f + ( usercheat_toptions ? ((usercheat_row_spacing * usercheat_toptions) + 8.0f) : 0.0f);
     float scrollbar_bg_width = 5.0f;
-    float scrollbar_bg_height = (flag_use_legend ? (flag_small_legend ? 194.0f : 180.0f) : 224.0f) - ( usercheat_toptions ? ((usercheat_row_spacing * usercheat_toptions) + 8.0f) : 0.0f);
+    float scrollbar_bg_height = (flag_use_legend ? 194.0f : 224.0f) - ( usercheat_toptions ? ((usercheat_row_spacing * usercheat_toptions) + 8.0f) : 0.0f);
     float scrollbar_cursor_height = scrollbar_bg_height * ((float)usercheat_showoptions/(float)(usercheat_options-1));  // 1.0 all visible and 0.2 when 20% visible  
     float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)usercheat_top) * 100.0f / ((float)(usercheat_options-usercheat_showoptions))) ); // scroll only when entries move (like it should be)
 
@@ -862,8 +857,7 @@ int usercheats_draw() {
   
   /// draw Legend box
   if( flag_use_legend ) {
-    if( flag_use_advancedui ) 
-      drawLegendBox(3, COLOR_BACKGROUND);
+    drawLegendBox(3, COLOR_BACKGROUND);
     
     if( usercheat_selector == 1 ) { // cursor in top menu (txt select)
       drawLegendMessage("L+UP/DOWN = Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
@@ -1068,7 +1062,7 @@ int userscripts_create() {
   userscript_selector = 0;   // cursor in txt selector (top menu) by default
   userscript_draw_lower = 0; // disable drawing of lower menu by default
   userscript_options = 0; 
-  userscript_showoptions = (flag_use_legend ? (flag_small_legend ? 12 : 11) : 14) - userscript_toptions;
+  userscript_showoptions = (flag_use_legend ? 12 : 14) - userscript_toptions;
   userscript_selected_val = 0;
   userscript_top = 0;
   
@@ -1118,9 +1112,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   y = 35.0f; // vertical menu start
   
   /// draw UI 
-  if( flag_use_advancedui ) {
-    drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? (flag_small_legend ? 190.0f : 175.0f) : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
-  }
+  drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? 190.0f : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
     
   
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// 
@@ -1128,18 +1120,18 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   if( userscript_options > 0 )
     userscript_draw_lower = 1;
   
-  userscript_showoptions = (flag_use_legend ? (flag_small_legend ? 12 : 11) : 14) - userscript_toptions; // reset
+  userscript_showoptions = (flag_use_legend ? 12 : 14) - userscript_toptions; // reset
         
   if ( userscript_showoptions > userscript_options ) 
     userscript_showoptions = userscript_options; // adjust showoptions (there can't be more showoptions than options itself)
         
 
   /// draw Scrollbar
-  if( flag_use_advancedui && (userscript_options > userscript_showoptions) && userscript_draw_lower ) { // draw only if there are more options than can be displayed
+  if( (userscript_options > userscript_showoptions) && userscript_draw_lower ) { // draw only if there are more options than can be displayed
     float scrollbar_x = 455.0f;
     float scrollbar_y = 33.0f + ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
     float scrollbar_bg_width = 5.0f;
-    float scrollbar_bg_height = (flag_use_legend ? (flag_small_legend ? 190.0f : 175.0f) : 224.0f) - ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
+    float scrollbar_bg_height = (flag_use_legend ? 190.0f : 224.0f) - ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
     float scrollbar_cursor_height = scrollbar_bg_height * ((float)userscript_showoptions/(float)(userscript_options-1)); // 1.0 wenn alles sichtbar  0.2 bei 20% sichtbar  
     float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)userscript_top) * 100.0f / ((float)(userscript_options-userscript_showoptions))) ); /// scroll only when entries move (like it should be)
 
@@ -1373,8 +1365,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   
   /// draw Legend box
   if( flag_use_legend ) {
-    if( flag_use_advancedui ) 
-      drawLegendBox(3, COLOR_BACKGROUND);
+    drawLegendBox(3, COLOR_BACKGROUND);
     
     /// draw button legend
     //drawLegendMessage("L+UP/DOWN = Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
@@ -1999,15 +1990,15 @@ int userscripts_ctrl() {
                       int adr = 0;                
                       
                       /****************************************
-                      01  0         int
-                      02  0.0        float
-                      03  XX        float (uppest byte)    2.0   = 03 40        0x40000000
-                      04  XX XX      float (upper half)    1.0    = 04 80 3F      0x3F800000
-                      05  XX XX XX    float           1337.5   = 05 30 A7 44    0x44A73000
-                      06  XX XX XX XX    int
-                      07  XX        int  -128 to 127
-                      08   XX XX       int 128 to ___
-                      09  XX XX XX XX    float          3.14152  = 09 AA 0E 49 40  0x40490EAA
+                      01  0             int
+                      02  0.0           float
+                      03  XX            float (uppest byte)    2.0   = 03 40        0x40000000
+                      04  XX XX         float (upper half)    1.0    = 04 80 3F     0x3F800000
+                      05  XX XX XX      float               1337.5   = 05 30 A7 44  0x44A73000
+                      06  XX XX XX XX   int
+                      07  XX            int  -128 to 127
+                      08  XX XX         int 128 to ___
+                      09  XX XX XX XX   float               3.14152  = 09 AA 0E 49 40  0x40490EAA
                       
                       0A  String VCS only?!?
                       ****************************************/
@@ -2428,12 +2419,12 @@ int flag_editor = 0;
 char editor_titlebuffer[64];
 const Editor_pack *editor_curmenu;
 
-int editor_menumode = -1;
-int editor_toptions = -1;
-int editor_firstobj = -1;  // first object 
-int editor_lastobj = -1;   // last object 
+int editor_menumode  = -1;
+int editor_toptions  = -1;
+int editor_firstobj  = -1; // first object 
+int editor_lastobj   = -1; // last object 
 int editor_blocksize = -1; // size of object
-int editor_blocks = -1;    // blocks available
+int editor_blocks    = -1; // blocks available
 
 /// editor position(s) saved globally (init with 0)
 int editor_pedobj_current        = 0;
@@ -2479,7 +2470,7 @@ int waittime = 0;
 
 void optionAdjust() {
   editor_options = 0;
-  editor_showoptions = (flag_use_legend ? (flag_small_legend ? 12 : 11) : 14) - editor_toptions; // the number of value rows that should be displayed at once (0 to 2 possible)  
+  editor_showoptions = (flag_use_legend ? 12 : 14) - editor_toptions; // the number of value rows that should be displayed at once (0 to 2 possible)  
   
   while( editor_curmenu[editor_options].name != NULL ) 
     editor_options++; // calculate number of editor_options
@@ -2542,23 +2533,16 @@ int editor_draw() {
   float y = 35.0f; // vertical menu start
     
   /// draw UI 
-  if( flag_use_advancedui ) {
-    if( editor_toptions > 0 ) {
-      float topmenuheight = 20.0f;
-      if( editor_menumode == EDITOR_GARAGE)
-        topmenuheight = 35.0f;
-      
-      drawUiBox(x-5.0f, y-2.0f, 410.0f, topmenuheight, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // x, y, width, height, border, color, color  
-    }
+  if( editor_toptions > 0 ) {
+    float topmenuheight = 20.0f;
+    if( editor_menumode == EDITOR_GARAGE)
+      topmenuheight = 35.0f;
+    drawUiBox(x-5.0f, y-2.0f, 410.0f, topmenuheight, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // x, y, width, height, border, color, color  
+  } drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? 194.0f : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
     
-    drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? (flag_small_legend ? 194.0f : 180.0f) : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
-  }
-    
-  
   //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
   
-  switch(editor_menumode) {
-        
+  switch(editor_menumode) {   
     case EDITOR_PEDOBJ: 
       editor_block_current = editor_pedobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
@@ -2752,7 +2736,6 @@ int editor_draw() {
           editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // todo (var_handlingcfgslotsize)
           editor_base_adr = getAddressOfHandlingSlotForID(editor_block_current);
           editor_draw_lower = 1;
-            
         } else { 
           sprintf(buffer_top0, "IDE: %i of %i", editor_block_current, editor_blocks ); // block menu  
           editor_draw_lower = 0; // not allowed to draw lower menu
@@ -2898,13 +2881,12 @@ int editor_draw() {
   }  
   
   /// draw Scrollbar
-  if( flag_use_advancedui && (editor_options > editor_showoptions) && editor_draw_lower ) { // draw only if there are more options than can be displayed
+  if( (editor_options > editor_showoptions) && editor_draw_lower ) { // draw only if there are more options than can be displayed
     float scrollbar_x = 455.0f;
     float scrollbar_y = 33.0f + ( editor_toptions ? ((editor_row_spacing * editor_toptions) + 8.0f) : 0.0f);
     float scrollbar_bg_width = 5.0f;
-    float scrollbar_bg_height = (flag_use_legend ? (flag_small_legend ? 194.0f : 180.0f) : 224.0f) - ( editor_toptions ? ((editor_row_spacing * editor_toptions) + 8.0f) : 0.0f);
+    float scrollbar_bg_height = (flag_use_legend ? 194.0f : 224.0f) - ( editor_toptions ? ((editor_row_spacing * editor_toptions) + 8.0f) : 0.0f);
     float scrollbar_cursor_height = scrollbar_bg_height * ((float)editor_showoptions/(float)(editor_options-1));  //1.0 wenn alles sichtbar   0.2 bei 20% sichtbar  
-    //float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)editor_selection_val) * 100.0f / ((float)(editor_options-1))) );  // scroll for each entry (old version)
     float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)editor_top) * 100.0f / ((float)(editor_options-editor_showoptions))) ); // scroll only when entries move (like it should be)
 
     if( editor_top+editor_showoptions >= editor_options-1 ) // when last item is visible -> cursor must be at bottom
@@ -2945,7 +2927,7 @@ int editor_draw() {
       #ifdef DEBUG
       if( flag_draw_DBGVALS ) {
         ///draw offset
-        if( /*!flag_use_advancedui &&*/ editor_curmenu[i].type != TYPE_DUMMY ) {
+        if( editor_curmenu[i].type != TYPE_DUMMY ) {
           sprintf(buffer, "0x%X", editor_curmenu[i].address );
           drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-5.0f, y+2.0f, RED);
         }
@@ -3027,7 +3009,7 @@ int editor_draw() {
   } else { // not allowed to draw
     
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
-    switch(editor_menumode) {
+    switch( editor_menumode ) {
       case EDITOR_GARAGE: // on VCS the vehicles are loaded into the garage on spawn!!!!! (TODO - can this be checked elsewhere?)
         drawString("No vehicle found or garage open!", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
         if( VCS ) drawString("Info: Vehicles are loaded on spawn! Open & close garage once.", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
@@ -3090,13 +3072,13 @@ int editor_draw() {
     
   /// draw Legend   
   if( flag_use_legend ) {
-    if( flag_use_advancedui ) drawLegendBox(flag_small_legend ? 2 : 3, COLOR_BACKGROUND); // only 2 lines in small legend mode
+    drawLegendBox(2, COLOR_BACKGROUND); // only 2 lines in small legend mode
     
-    if( !flag_small_legend) {
+    /* if( !flag_small_legend) {
       drawLegendMessage("UP/DOWN = Select Entry", 0, 2, COLOR_TEXT); // left side, first row
       drawLegendMessage("LEFT/RIGHT = Change Value", 1, 2, COLOR_TEXT); // right side, first row
-    }
-	
+    } */
+  
     //+//+// OPTION //+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//
     if( editor_menumode == EDITOR_VEHICLEOBJ ) {
       if( editor_selector && pcar && editor_base_adr != pcar ) {  
@@ -3212,23 +3194,23 @@ int editor_ctrl() {
   static int keypress;
   
   if( editor_selector ) { // top menu
-    
-    if ( hold_buttons & PSP_CTRL_DOWN) {
-      if (editor_selection_top <= 0 ) {
+  
+    if( hold_buttons & PSP_CTRL_DOWN ) {
+      if( editor_selection_top <= 0 ) {
         if(editor_draw_lower) editor_selector = 0; // switch to values
         editor_selection_top = 0; // to be sure
       } else editor_selection_top -= 1;  
     }
     
-    if ( hold_buttons & PSP_CTRL_UP) {
-      if(editor_toptions > 1) {
+    if( hold_buttons & PSP_CTRL_UP ) {
+      if( editor_toptions > 1 ) {
         if ( editor_selection_top >= 1 ) {
           editor_selection_top = 1;
         } else editor_selection_top += 1;
       }
     }
     
-    if(pressed_buttons & PSP_CTRL_SQUARE) {
+    if( pressed_buttons & PSP_CTRL_SQUARE ) {
       //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
       if( (editor_menumode == EDITOR_PEDOBJ) && getFloat(editor_base_adr+0x30) != 0 && getPedObjectIsActive(editor_base_adr) && editor_base_adr != pplayer ) {
         editor_trigger = 1; // trigger teleport
@@ -3261,7 +3243,7 @@ int editor_ctrl() {
       //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     }
     
-    if(pressed_buttons & PSP_CTRL_SELECT) {
+    if( pressed_buttons & PSP_CTRL_SELECT ) {
       //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
       if( (editor_menumode == EDITOR_PEDOBJ) && pplayer && editor_base_adr != pplayer ) {
         int tadr = -1, pos = 0;
@@ -3272,7 +3254,6 @@ int editor_ctrl() {
       }
       
       if( editor_menumode == EDITOR_VEHICLEOBJ ) {
-        
         if( pcar && editor_base_adr != pcar ) { // inside car & its not yet selected
           int tadr = -1, pos = 0;
           for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize) {
@@ -3299,7 +3280,7 @@ int editor_ctrl() {
       
       
       if( editor_menumode == EDITOR_HANDLINGCFG ) {
-        if(pcar) editor_trigger = 1; // trigger teleport
+        if( pcar ) editor_trigger = 1; // trigger teleport
       }
       
       if( editor_menumode == EDITOR_WEAPONDAT ) {
@@ -3649,7 +3630,7 @@ int editor_ctrl() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE: 
-        sprintf(buffer, "Garage Data (%s - Slot: %i)", (LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]), editor_garageslot_current+1);
+        sprintf(buffer, "Garage Data (%s - Slot: %i)", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current], editor_garageslot_current+1);
         break;
         
       case EDITOR_PEDOBJ: 
@@ -4207,7 +4188,7 @@ int freecam_draw() {
       
 
     if( flag_use_legend ) {
-      if( flag_use_advancedui ) drawLegendBox(3, COLOR_BACKGROUND);
+      drawLegendBox(3, COLOR_BACKGROUND);
       drawLegendMessage("D-PAD = Move Camera position",    0, 2, COLOR_TEXT); // left side, first row
       drawLegendMessage("TRIANGLE = Show/Hide text",       1, 2, COLOR_TEXT); // right side, first row
       drawLegendMessage("CROSS + D-PAD = Turn Camera",     0, 1, COLOR_TEXT); // left side, second row
@@ -4274,10 +4255,8 @@ int address_create() {
 }
 
 int address_draw() {
-  if( flag_use_advancedui ) {
-    drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
-    drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
-  }
+  drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
+  drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
   drawString("Enter Address", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 200.0f, 85.0f, COLOR_TITLE);
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
@@ -4359,39 +4338,28 @@ int address_draw() {
 
   return 0;
 }
+
 int address_ctrl() {
-  
   if( hold_buttons & PSP_CTRL_LEFT ) {
     if( addresspos < 6 ) 
       addresspos++;
   }
+  
   if( hold_buttons & PSP_CTRL_RIGHT ) {
     if( addresspos > 0 ) 
       addresspos--;
   }
+  
   if( hold_buttons & PSP_CTRL_DOWN ) {
-    switch( addresspos ) { // better pow()
-      case 0: tempaddress -= 0x1; break;
-      case 1: tempaddress -= 0x10; break;
-      case 2: tempaddress -= 0x100; break;
-      case 3: tempaddress -= 0x1000; break;
-      case 4: tempaddress -= 0x10000; break;
-      case 5: tempaddress -= 0x100000; break;
-      case 6: tempaddress -= 0x1000000; break;
-    } if ( tempaddress <= memory_low ) 
+    tempaddress -= pow(0x10, addresspos); // addresspos 0: -= 0x1, 1: -= 0x10, 2: -= 0x100, ....
+    if( tempaddress <= memory_low ) 
       tempaddress = memory_low;
     history_position = 0;
   }
+  
   if( hold_buttons & PSP_CTRL_UP ) {
-    switch( addresspos ) { // better pow()
-      case 0: tempaddress += 0x1; break;
-      case 1: tempaddress += 0x10; break;
-      case 2: tempaddress += 0x100; break;
-      case 3: tempaddress += 0x1000; break;
-      case 4: tempaddress += 0x10000; break;
-      case 5: tempaddress += 0x100000; break;
-      case 6: tempaddress += 0x1000000; break;
-    } if ( tempaddress >= memory_high ) 
+    tempaddress += pow(0x10, addresspos); // addresspos 0: += 0x1, 1: += 0x10, 2: += 0x100, ....
+  if ( tempaddress >= memory_high ) 
       tempaddress = memory_high;
     history_position = 0;
   }
@@ -4402,17 +4370,14 @@ int address_ctrl() {
   }
   
   if( pressed_buttons & PSP_CTRL_SELECT ) { // ultra secret backdoor lul
-    //category_index[CAT_DEBUG] = DEBUG = 1 - DEBUG; //outdated - but works for 1.0e and below ;)
+    //category_index[CAT_DEBUG] = DEBUG = 1 - DEBUG; // outdated - but works for 1.0e and below ;)
   }
   
   if( pressed_buttons & PSP_CTRL_LTRIGGER ) {
-
     if( history_position == 0 && adr_history[0] != 0 ) // make tempaddr histroy[0]
       add_adr_to_history(tempaddress);
-      
     if( history_position < ADR_HISTORY_SIZE-1 && adr_history[history_position+1] != 0 )
       tempaddress = adr_history[++history_position];
-
   }
   
   if( pressed_buttons & PSP_CTRL_RTRIGGER ) {
@@ -4455,10 +4420,8 @@ int editbyte_create() {
 }
 
 int editbyte_draw() {
-  if( flag_use_advancedui ) {
-    drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
-    drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
-  }
+  drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
+  drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
   drawString("Edit Byte", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 215.0f, 100.0f, COLOR_TITLE);
   
@@ -4720,9 +4683,7 @@ int hexeditor_draw() {
     y = vstart, x1 = hstarthex, x2=hstartascii;
     
     /// draw UI box
-    if( flag_use_advancedui ) {
-      drawUiBox( 5.0f, y-2.0f, 470.0f, (flag_use_legend) ? 171.0f : 199.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); //main  //x, y, width, height, border, color, color
-    }
+    drawUiBox( 5.0f, y-2.0f, 470.0f, (flag_use_legend) ? 171.0f : 199.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); //main  //x, y, width, height, border, color, color
 
     /// draw current address
     COLOR_TEMP = RED;
@@ -5593,27 +5554,19 @@ void applyOnce() { //called by hijacked game function
 
 void *category_toggle(int type, int cat, int set) {
   static char buffer[8];
-  
   if( type == FUNC_GET_STRING ) { // add indicator if category hidden
-    
     if( !flag_coll_cats ) 
-      return ""; // categories can't be expanded/collapsed -> don't show any indicator
-    
-    if( !category_index[cat] ) 
-      sprintf(buffer, " +");
-    else 
-      sprintf(buffer, " -");
-    
+		return ""; // categories can't be expanded/collapsed -> don't show any indicator
+  
+    sprintf(buffer, !category_index[cat] ? " +" : " -");
     return (void *)buffer;
   }
   
-  if( type == FUNC_CHANGE_VALUE ) { 
+  if( type == FUNC_CHANGE_VALUE )
     category_index[cat] = 1 - category_index[cat];
-  }
   
-  if( type == FUNC_SET ) { 
+  if( type == FUNC_SET )
     category_index[cat] = set;
-  }
   
   return NULL;
 }
@@ -5660,13 +5613,11 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   
   /// menu
   x = 65.0f; // horizontal menu draw start
-  y = (flag_use_legend && flag_small_legend) ? 28.0f : 30.0f; // vertical menu draw start
+  y = flag_use_legend ? 28.0f : 30.0f; // vertical menu draw start
   hidden = 0;
   
   /// ui box
-  /*if( flag_use_advancedui ) {
-    drawUiBox(x-50.0f, y-5.0f, 340.0f, flag_use_legend ? 190.0f : 235.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main  //x, y, width, height, border, color, color
-  }*/
+  // drawUiBox(x-50.0f, y-5.0f, 340.0f, flag_use_legend ? 190.0f : 235.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main  //x, y, width, height, border, color, color
   
   if( menu_sel > menu_max ) 
     menu_sel = 0; // fix for switching between Menus or other out of bounds bug  
@@ -5799,11 +5750,9 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   
   /// msg
   if( flag_use_legend ) {
-    if( flag_use_advancedui ) drawLegendBox(3, COLOR_BACKGROUND);
-    //if( !flag_small_legend ) {
-      drawLegendMessage("L+UP/DOWN = Toggle Menu", 0, 2, COLOR_TEXT);
-      drawLegendMessage("UP/DOWN = Navigate Cheats", 1, 2, COLOR_TEXT);
-    //}
+    drawLegendBox(3, COLOR_BACKGROUND);
+    drawLegendMessage("L+UP/DOWN = Toggle Menu", 0, 2, COLOR_TEXT);
+    drawLegendMessage("UP/DOWN = Navigate Cheats", 1, 2, COLOR_TEXT);
   }
   
   /// draw debug stuff (when enabled)
@@ -6261,22 +6210,22 @@ static void CheckModules() { // PPSSPP only
         mod_data_size = info.data_size;
     
         /// with this approach the game continues to run when patch() is still in progress
-		
-		// SKIP INTRO MOVIES /////////// TEMP /////////////////
+    
+        // SKIP INTRO MOVIES /////////// for PPSSPP /// TEMP ///
         #ifdef PREVIEW
-		if( mod_text_size == 0x0031F854 ) { // ULUX 
-		  MAKE_DUMMY_FUNCTION(mod_text_addr + 0x00076000, 0);
+        if( mod_text_size == 0x0031F854 ) { // ULUX 
+          MAKE_DUMMY_FUNCTION(mod_text_addr + 0x00076000, 0);
           clearICacheFor(mod_text_addr + 0x00076000);
           clearICacheFor(mod_text_addr + 0x00076004);
         }
-		if( mod_text_size == 0x0032BFC4 ) { // US v3.00
+        if( mod_text_size == 0x0032BFC4 ) { // LCS US v3.00
           MAKE_DUMMY_FUNCTION(mod_text_addr + 0x001BCFD0, 0);
           clearICacheFor(mod_text_addr + 0x001BCFD0);
           clearICacheFor(mod_text_addr + 0x001BCFD4);
         }
-		#endif
-        ///////////////////////////////////////////////////////
-	
+        #endif
+        ////////////////////////////////////////////////////////
+  
         initTextBlit(mod_text_addr, mod_text_size);  // see blit.c (HAS ITS OWN SEARCHING LOOP!)  
     
         int ret = patch();
@@ -6348,7 +6297,6 @@ int module_start(SceSize argc, void* argp) {
 
   /// check available memory (high memory layout)
   memory_high = getHighMemBound();
-  //memory_high = 0x0C000000;
   #ifdef LOG
   logPrintf("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   logPrintf("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);

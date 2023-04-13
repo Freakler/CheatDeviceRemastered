@@ -123,25 +123,25 @@ void (*SetSlantRefPoint)(float param_1, float param_2);
 
 
 /// colors (0xAABBGGRR)
-#define RED      0xFF0000FF
+#define RED     0xFF0000FF
 #define GREEN   0xFF00FF00
 #define BLUE    0xFFFF0000
 #define CYAN    0xFFffff00
 #define MAGENTA 0xFFff00ff
 #define YELLOW  0xFF00ffff
 #define AZURE   0xFFFF7F00
-#define VIOLET   0xFFFF007F
+#define VIOLET  0xFFFF007F
 #define ORANGE  0xFF007FFF
-#define GREY     0xFF808080
+#define GREY    0xFF808080
 #define LGREY   0xFFA0A0A0
 #define WHITE   0xFFFFFFFF
 #define BLACK   0xFF000000
 #define CLEAR   0x00000000
 
-#define ALPHABLACK   0x88000000 // used for help-box, map legend by game
-#define ALPHAWHITE   0x99FFFFFF // 
+#define ALPHABLACK  0x88000000 // used for help-box, map legend by game
+#define ALPHAWHITE  0x99FFFFFF // 
 
-#define LIGHTBLUE    0xFFFF9900
+#define LIGHTBLUE  0xFFFF9900
 
 #define ORANGERED  0xFF0055FF
 #define DARKGREEN  0xFF1BA000

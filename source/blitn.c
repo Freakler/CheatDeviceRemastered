@@ -761,7 +761,7 @@ int initTextBlit(u32 text_addr, u32 text_size) {
   int gta_version = -1;
   
   u32 i;
-  for (i = 0; i < text_size; i += 4) {
+  for( i = 0; i < text_size; i += 4 ) {
     u32 addr = text_addr + i;
     if ((gta_version == -1 || gta_version == 0) && FindPatchVCS(addr, text_addr)) {
       gta_version = 0;

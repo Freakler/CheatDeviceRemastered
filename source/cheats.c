@@ -437,7 +437,7 @@ u32 saveprefix   = -1;
   
     //static int last = -1;
     
-    if( ide == getAddressOfIdeSlotForID(0xC8) ) { //Aeroplane!
+    if( ide == getAddressOfIdeSlotForID(0xC8) ) { // Aeroplane!
       logPrintf("airtrain!!"); 
       *vectors = 0x3F800000;
       vectors[1] = 0x3F800000;
@@ -457,9 +457,9 @@ u32 saveprefix   = -1;
 #endif
 
 int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
-  		
+      
   #ifdef PREVIEW
-  if( LCS && patchonce ) { //FOR TESTING ONLY
+  if( LCS && patchonce ) { // FOR TESTING ONLY
             
     ///MAKE_DUMMY_FUNCTION(text_addr + 0xea5c0, 0); //
     
@@ -472,12 +472,14 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
     
-    /// Example ///// open trunc  /////////////////////////////////////
-    // FUN_00008bd0 = (void*)(text_addr + 0x08bd0); //opcode - open trunc?
+    /// Example ///// open trunk  /////////////////////////////////////
+    // FUN_00008bd0 = (void*)(text_addr + 0x08bd0); // opcode - open trunk?
     
+	
     /// Example ///// play Credits Cheat -> calling works //////////////
     // FUN_0028a9b8_CHEAT_ShowCredits = (void*)(text_addr + 0x28a9b8); 
     
+	
     /// Example ///// give player an AK47 //////////////////////////////
     // FUN_001c6c28(0x114,1); //requestModel
     //  //not needed FUN_001c6f64(0); //something register model
@@ -604,12 +606,6 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   //MAKE_DUMMY_FUNCTION(text_addr + 0x1a8d9c, 0); //FUN_001a8d9c_CPed_ProcessBuoyancy
   
   
-  /// adjust wave height
-  //setInt(text_addr + 0x00130828, 0); // nop gamecode to not
-  //setInt(text_addr + 0x0013082C, 0); // write value itself
-  //setFloat(text_addr + 0x35a570, -0.55f); // DAT_0035a570_WindClipped // -0.55f no waves, 4.0f big waves
-  
-  
   ////////////// /////////////// //////////// /////////// ///////////
   
   
@@ -638,7 +634,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   // // // // // // // // // // // // // // // // // // // // // // // // // // //  
     
     #ifdef PATCHLOG
-      logPrintf("[INFO] patchonce() LCS ran!");
+    logPrintf("[INFO] patchonce() LCS ran!");
     #endif
     patchonce = 0;
   } 
@@ -1534,8 +1530,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_particleCFGslots   = 82; // where to find?
     var_particleCFGslotsize = 0x94; // where to find?
     
-	ptr_timecycDAT = (_lh(addr+0x230) * 0x10000) + (int16_t)_lh(addr+0x234);
-	
+  ptr_timecycDAT = (_lh(addr+0x230) * 0x10000) + (int16_t)_lh(addr+0x234);
+  
     return 1;
   }
   
@@ -2090,10 +2086,10 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     #endif
 
     /// TODO ?
-	if( mod_text_size == 0x0031F854 )
-		global_LargestMissionScriptSize = global_MainScriptSize - 0x4;  // ULUX
-	else
-		global_LargestMissionScriptSize = global_MainScriptSize - 0x18; 
+  if( mod_text_size == 0x0031F854 )
+    global_LargestMissionScriptSize = global_MainScriptSize - 0x4;  // ULUX
+  else
+    global_LargestMissionScriptSize = global_MainScriptSize - 0x18; 
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> global_LargestMissionScriptSize", global_LargestMissionScriptSize-text_addr, global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
     #endif
@@ -2260,7 +2256,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   #ifdef PREVIEW
   /// wind
   if( _lw(addr + 0x34) == 0x2A440015 && _lw(addr + 0x48) == 0x2A440014 ) { // 0x001307FC
-	/*******************************************************************
+  /*******************************************************************
      *  0x001307FC: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0013081C: 0xE490A1F8 '....' - swc1       $fpr16, -24072($a0)
     *******************************************************************/
@@ -2268,7 +2264,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> global_Wind", global_Wind-text_addr, global_Wind); // DAT_0035a1f8_Wind
     #endif
-	
+  
     /*******************************************************************
      *  0x00130828: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0013082C: 0xE491A570 'p...' - swc1       $fpr17, -23184($a0)
@@ -2278,9 +2274,9 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     logPrintf("0x%08X (0x%08X) -> global_WindClipped", global_WindClipped-text_addr, global_WindClipped); // DAT_0035a570_WindClipped
     #endif
     /// nop out to stop game from setting it on its own (we take care of it in the cheat function)
-	_sw(0x00000000, addr + 0x2c);
-	_sw(0x00000000, addr + 0x30);
-	
+  _sw(0x00000000, addr + 0x2c);
+  _sw(0x00000000, addr + 0x30);
+  
     return 1;
   }
   #endif
@@ -3704,7 +3700,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     #ifdef PATCHLOG
     logPrintf("0x%08X -> global_Wind", global_Wind); // fGp0000209c
     #endif
-	
+  
     /*******************************************************************
      *  0x002F8E24: 0xE7901E50 'P...' - swc1       $fpr16, 7760($gp)
     *******************************************************************/
@@ -3712,9 +3708,10 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     #ifdef PATCHLOG
     logPrintf("0x%08X -> global_WindClipped", global_WindClipped); // fGp00001e50 
     #endif
-	/// nop out to stop game from setting it on its own (we take care of it in the cheat function)
-	_sw(0x00000000, addr + 0x20); // 0x002f8e24
-	
+    
+    /// nop out to stop game from setting it on its own (we take care of it in the cheat function)
+    _sw(0x00000000, addr + 0x20); // 0x002f8e24
+  
     return 1;
   }
   #endif
@@ -3886,7 +3883,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
   /// Currently used Objects
   pickups_cur   = getPickupsActiveObjects(global_pickups, var_pickupslots, var_pickupslotsize);
-  mapicons_cur  = getMapiconsActiveObjects((LCS) ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding), var_radarblipslots, var_radarblipslotsize);
+  mapicons_cur  = getMapiconsActiveObjects(LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding), var_radarblipslots, var_radarblipslotsize);
   vehspawns_cur = getVehicleWorldSpawnSlotActiveObjects(addr_vehiclesworldspawn);
   garage_cur    = getGarageVehicleActiveObjects(global_garagedata);
   
@@ -4024,7 +4021,7 @@ void achievements() {
           } break;
         
         case 0x102: /// "Welcome back from hell"
-          if( !pcar && (getFloat(pplayer+0x38) <= ((LCS) ? -80.0f : -237.0f)) && (getFloat(pplayer+(LCS?0x78:0x148)) <= -0.05f ) ) { // below limit and falling check
+          if( !pcar && (getFloat(pplayer+0x38) <= (LCS ? -80.0f : -237.0f)) && (getFloat(pplayer+(LCS?0x78:0x148)) <= -0.05f ) ) { // below limit and falling check
             achievement[i].unlocked = 2; // unlocked
           } break;
           
@@ -4473,13 +4470,13 @@ void freecam(int calltype, int keypress, int defaultstatus) {
 void *fps_toggle(int calltype, int keypress, int defaultstatus) {
   static int status;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
     case FUNC_CHANGE_VALUE:
-      if(keypress == PSP_CTRL_CROSS) { // CROSS
-        if(status) {
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        if( status ) {
           flag_draw_FPS = status = 0;
         } else {
           flag_draw_FPS = status = 1;
@@ -4502,12 +4499,12 @@ void *fps_toggle(int calltype, int keypress, int defaultstatus) {
 void *coords_toggle(int calltype, int keypress, int defaultstatus) {
   static int status;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
     case FUNC_CHANGE_VALUE:
-      if(keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if(status) {
           flag_draw_COORDS = status = 0;
         } else {
@@ -4529,7 +4526,7 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
   static int status;
   static int i = 0;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
     
@@ -4540,27 +4537,25 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
       return ( i ? "MP/H" : "KM/H");
       
     case FUNC_APPLY:
-      if(pcar) { 
-        
+      if( pcar ) { 
         /// speed
         sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), (getFloat(pcar + (LCS ? 0x124 : 0x108)) * 100) / 2 * (i ? 0.621371 : 1)); 
         
         /// gears
-        sprintf(gear, "Gear: %X", getVehicleCurrentGear(pcar) );
-
+        sprintf(gear, "Gear: %X", getVehicleCurrentGear( pcar ) );
       }
       break;
       
     case FUNC_CHANGE_VALUE:
-      if(keypress == PSP_CTRL_CROSS) { // CROSS
-        if(status) {
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        if( status ) {
           flag_draw_SPEEDO = status = 0;
         } else {
           flag_draw_SPEEDO = status = 1;
         }
-      } else if(keypress == PSP_CTRL_LEFT) { // LEFT
+      } else if( keypress == PSP_CTRL_LEFT ) { // LEFT
         i = 0;
-      } else if(keypress == PSP_CTRL_RIGHT) { // RIGHT
+      } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
         i = 1;
       } break;
       
@@ -4581,13 +4576,13 @@ extern int flag_draw_DBGVALS;
 void *debug_vars(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
     case FUNC_CHANGE_VALUE:
-      if(keypress == PSP_CTRL_CROSS) { // CROSS
-        if(status) {
+      if( keypress == PSP_CTRL_CROSS) { // CROSS
+        if( status ) {
           flag_draw_DBGVALS = status = 0;
         } else {
           flag_draw_DBGVALS = status = 1;
@@ -4614,7 +4609,7 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
                                "5" };     // 5            
   static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
@@ -4654,8 +4649,8 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, YELLOW);
             
             /// weather globals
-            if(LCS) sprintf(buffer, "weather: %i, %i, %i", getShort(global_weather),      getShort(global_weather + 0x2),      getShort(global_weather + 0x84) );
-            if(VCS) sprintf(buffer, "weather: %i, %i, %i", getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp) );
+            if( LCS ) sprintf(buffer, "weather: %i, %i, %i", getShort(global_weather),      getShort(global_weather + 0x2),      getShort(global_weather + 0x84) );
+            if( VCS ) sprintf(buffer, "weather: %i, %i, %i", getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, YELLOW);
           
             /// global_currentisland
@@ -4722,19 +4717,19 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
             sprintf(buffer, "pcar_type = 0x%02X", pcar_type);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, AZURE);
               
-            sprintf(buffer, "isVehicleInWater = %X", isVehicleInWater(pcar) );
+            sprintf(buffer, "isVehicleInWater = %X", isVehicleInWater( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE);
             
-            sprintf(buffer, "isVehicleInAir = %X", isVehicleInAir(pcar) );
+            sprintf(buffer, "isVehicleInAir = %X", isVehicleInAir( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, AZURE);
             
-            sprintf(buffer, "isVehicleUpsideDown = %X", isVehicleUpsideDown(pcar) );
+            sprintf(buffer, "isVehicleUpsideDown = %X", isVehicleUpsideDown( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, AZURE);
             
-            sprintf(buffer, "health = %.2f", getVehicleHealth(pcar) );
+            sprintf(buffer, "health = %.2f", getVehicleHealth( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, AZURE);
             
-            sprintf(buffer, "speed = %.2f", getVehicleSpeed(pcar) );
+            sprintf(buffer, "speed = %.2f", getVehicleSpeed( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 160.0f, AZURE);
           } 
       
@@ -4760,17 +4755,17 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
       break;  
       
     case FUNC_CHANGE_VALUE:
-      if(keypress == PSP_CTRL_CROSS) { // CROSS
-        if(status) {
+      if( keypress == PSP_CTRL_CROSS) { // CROSS
+        if( status ) {
           flag_draw_DEBUG = status = 0;
         } else {
           flag_draw_DEBUG = status = 1;
         }
         
-      } else if(keypress == PSP_CTRL_LEFT && i > 0) { // LEFT
+      } else if( keypress == PSP_CTRL_LEFT && i > 0) { // LEFT
         i--;
         
-      } else if(keypress == PSP_CTRL_RIGHT && i < list_size) { // RIGHT
+      } else if( keypress == PSP_CTRL_RIGHT && i < list_size) { // RIGHT
         i++;
       
       }   
@@ -4870,7 +4865,6 @@ void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus) {
 
 extern int showoptions;
 extern int flag_use_legend;
-extern int flag_small_legend;
 void *cdr_uselegend(int calltype, int keypress, int defaultstatus) {
   static int status;
   
@@ -4882,7 +4876,7 @@ void *cdr_uselegend(int calltype, int keypress, int defaultstatus) {
           //ini_puts("SETTINGS", "CDR_HIDELEGEND", "FALSE", config);
           uselegend_disable:
           flag_use_legend = 1;
-          showoptions = flag_small_legend ? 13 : 12;
+          showoptions = 13;
           status = 0;
         } else {
           //ini_puts("SETTINGS", "CDR_HIDELEGEND", "TRUE", config);
@@ -4897,71 +4891,6 @@ void *cdr_uselegend(int calltype, int keypress, int defaultstatus) {
       if( status ) 
         goto uselegend_enable;
       else goto uselegend_disable;
-      break;
-  }
-  
-  return NULL;
-}
-void *cdr_smallegend(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  
-  switch( calltype ) {
-    case FUNC_GET_STATUS: return (int*)status;
-    case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          //ini_puts("SETTINGS", "CDR_SMALLEGEND", "FALSE", config);
-          smallegend_disable:
-          flag_small_legend = 0;
-          showoptions = flag_use_legend ? 12 : 15;
-          status = 0;
-        } else {
-          //ini_puts("SETTINGS", "CDR_SMALLEGEND", "TRUE", config);
-          smallegend_enable:
-          flag_small_legend = 1;
-          showoptions = flag_use_legend ? 13 : 15;
-          status = 1;
-        }
-      } break;
-    case FUNC_SET: 
-      status = flag_small_legend = defaultstatus;
-      if( status ) 
-        goto smallegend_enable;
-      else goto smallegend_disable;
-      break;
-  }
-  
-  return NULL;
-}
-
-
-extern int flag_use_advancedui;
-void *cdr_userinterface(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  
-  switch( calltype ) {
-    case FUNC_GET_STATUS: return (int*)status;
-    case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          //ini_puts("SETTINGS", "CDR_USERINTERFACE", "FALSE", config);
-          advancedui_disable:
-          flag_use_advancedui = 0;
-          status = 0;  
-              
-        } else {
-          //ini_puts("SETTINGS", "CDR_USERINTERFACE", "TRUE", config);
-          advancedui_enable:
-          flag_use_advancedui = 1;
-          status = 1;
-          
-        }
-      } break;
-    case FUNC_SET: 
-      status = defaultstatus;
-      if( status ) 
-        goto advancedui_enable;
-      else goto advancedui_disable;
       break;
   }
   
@@ -5275,7 +5204,7 @@ void *gamespeed(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   static float speed = 1.0f; // game default
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
@@ -5345,7 +5274,7 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   static int i = 2; // 30 FPS (game default)
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
@@ -5357,7 +5286,7 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
       return retbuf;
       
     case FUNC_CHANGE_VALUE:
-      if(keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) { // disable
           fpscap_disable:
           if( addr_fpsCap > 0 ) {
@@ -5377,10 +5306,10 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
         }
       } else if( keypress == PSP_CTRL_LEFT && i < 7 ) { // LEFT
         i++;
-        if(status) goto fpscap_enable;
+        if( status ) goto fpscap_enable;
       } else if( keypress == PSP_CTRL_RIGHT && i > 1 ) { // RIGHT
         i--;
-        if(status) goto fpscap_enable;
+        if( status ) goto fpscap_enable;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR  
         hex_marker_clear();
@@ -5391,12 +5320,12 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
       
     case FUNC_SET: 
       status = defaultstatus;
-      if( defaultval > 0 && defaultval < 60) 
+      if( defaultval > 0 && defaultval < 60 ) 
         i = defaultval;
       else // fix for bad config value
         i = 2;
       
-      if(status) goto fpscap_enable;
+      if( status ) goto fpscap_enable;
       else goto fpscap_disable;
       
       break;
@@ -5420,13 +5349,13 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
   static int status;
   static u32 backup = 0;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
     
     case FUNC_APPLY: // see notes
       if( pcar && pcar_type == VEHICLE_BIKE )  {
-        if( backup == 0) backup = _lw(addr_neverFallOffBike_rollback); // backup jal reference for restoring
+        if( backup == 0 ) backup = _lw(addr_neverFallOffBike_rollback); // backup jal reference for restoring
         _sw(0x00000000, addr_neverFallOffBike_rollback); // don't fall off when rolling backwards
         _sw(0x00000000, addr_neverFallOffBike_hitobj); // don't fall off bike when hitting object
       } else {
@@ -5440,8 +5369,8 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
       break;
       
     case FUNC_CHANGE_VALUE:
-      if(keypress == PSP_CTRL_CROSS) { // CROSS
-        if(status) { // disable
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        if( status ) { // disable
           neverfalloffbike_disable:
           if( backup != 0 ) {
             _sw(backup, addr_neverFallOffBike_rollback); // fall off when rolling backwards
@@ -5461,7 +5390,7 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_SET: 
       status = defaultstatus;
-      if(status) goto neverfalloffbike_enable;
+      if( status ) goto neverfalloffbike_enable;
       else goto neverfalloffbike_disable;
       break;
   }
@@ -5482,7 +5411,7 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
 void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int i = 0;
   
-  switch(calltype) {
+  switch( calltype ) {
     
     case FUNC_GET_VALUE: // for config
       return (int*)i;
@@ -5503,7 +5432,7 @@ void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) 
         if( VCS ) teleport(vcs_teleports[i].xval, vcs_teleports[i].yval, vcs_teleports[i].zval);
         closeMenu();
       
-      } else if(keypress == PSP_CTRL_TRIANGLE ) {
+      } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR  
         hex_marker_clear();  
         hex_marker_addx(pobj+0x30, sizeof(float));
@@ -5518,7 +5447,7 @@ void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) 
       if( defaultval >= 0 && i <= (LCS ? lcs_teleportersize : vcs_teleportersize) ) 
         i = defaultval;
       else   
-        i = (LCS) ? 25 : 24; // default teleport location in list
+        i = LCS ? 25 : 24; // default teleport location in list
 
       break;
   }  
@@ -5585,9 +5514,9 @@ char * readMissionNameFromSCM(int mission_number) {
     return ret;
   
   FILE *fp = NULL;
-  if ( ( fp = fopen(LCS ? "disc0:/PSP_GAME/USRDIR/DATA/MAIN.SCM" : "disc0:/PSP_GAME/USRDIR/RUNDATA/MAIN.SCM", "rb")) == NULL ) {
-        sprintf(ret, "ERROR");
-    }
+  if( ( fp = fopen(LCS ? "disc0:/PSP_GAME/USRDIR/DATA/MAIN.SCM" : "disc0:/PSP_GAME/USRDIR/RUNDATA/MAIN.SCM", "rb")) == NULL ) {
+    sprintf(ret, "ERROR");
+  }
 
   offset = 0; // first chunk address
   fseek(fp, offset, SEEK_SET); // got to chunk
@@ -5597,7 +5526,6 @@ char * readMissionNameFromSCM(int mission_number) {
     goto msngetexit;
   } sprintf(valstr, "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address
   
-  
   offset = toValue(valstr); 
   fseek(fp, offset, SEEK_SET); // got to chunk
   fread(&buf, 0x10, 1, fp); // read in header
@@ -5605,7 +5533,6 @@ char * readMissionNameFromSCM(int mission_number) {
     sprintf(ret, "ERROR");
     goto msngetexit;
   } sprintf(valstr, "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address 
-  
   
   offset = toValue(valstr); 
   fseek(fp, offset, SEEK_SET); // got to chunk
@@ -5624,7 +5551,7 @@ char * readMissionNameFromSCM(int mission_number) {
   //logPrintf("total missions: %i", missions);
   
   
-  if(mission_number >= missions) {
+  if( mission_number >= missions ) {
     sprintf(ret, "ERROR");
     goto msngetexit;
   }
@@ -5632,7 +5559,7 @@ char * readMissionNameFromSCM(int mission_number) {
   /// loop mission offsets
   offset+=0x4; // first offset to mission
   for( i = 0; i < missions; i++, offset+=0x4 ) {
-    if( i == mission_number) {
+    if( i == mission_number ) {
       fseek(fp, offset, SEEK_SET);
       fread(&buf, 4, 1, fp); // read in header
       sprintf(valstr, "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); //next chunk address 
@@ -5646,7 +5573,7 @@ char * readMissionNameFromSCM(int mission_number) {
   fseek(fp, offset, SEEK_SET);
   fread(&buf, 256, 1, fp); // read in some script data (256 should be enough)
   sprintf(ret, "NONAME");
-  for(i = 0; i < 256; i++) { // search the first instructions for name_thread
+  for( i = 0; i < 256; i++ ) { // search the first instructions for name_thread
     if( buf[i] == (LCS ? 0xA9 : 0x38) && buf[i+1] == (LCS ? 0x03 : 0x02) ) { // name_thread opcode
       sprintf(ret, "%s", getString((int)&buf[i+2], 0)); // ugly but I was lazy
       //sprintf(ret, "%s", "DONE");
@@ -5659,11 +5586,11 @@ char * readMissionNameFromSCM(int mission_number) {
   return ret;
 }
 
-
+#ifdef PREVIEW
 void *mission_select(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int i = 0;
   
-  switch(calltype) {
+  switch( calltype ) {
     
     case FUNC_GET_VALUE: // for config
       return (int*)i;
@@ -5680,9 +5607,7 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
       } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
         i++;
         //todo get missions number
-        
-        
-        
+                
       } else if ( keypress == PSP_CTRL_CROSS ) { // CROSS
         /*
         LCS
@@ -5748,6 +5673,47 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
   }  
 
   return NULL;
+}
+#endif
+
+
+void mission_selector() {   
+  closeMenu();
+
+  static u8 script[10];
+  int pos = 0, temp = 0, address = 0;
+  int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
+  int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+  for(address = script_space; address < script_space + main_size; address++) {
+    if( *(u8*)address == 'L' && *(u8*)(address+1) == 'E' ) { // first because faster
+      if( strcmp("LEVSKIP", getString(address, 0)) == 0 ) {
+        #ifdef LOG
+        logPrintf("LEVSKIP found @ 0x%08X in mainscript", address - script_space);
+        #endif
+
+        temp = address - script_space - 2; // 2 is opcode length
+        if( VCS ) temp--; // vcs has additional 0xA as string identifier
+        address = (int)&temp; // fugglyyy
+
+        /// Opcode
+        script[pos++] = 0x02; 
+        script[pos++] = 0x00;
+    
+        /// integer (4 Bytes)
+        script[pos++] = 0x06;
+    
+        /// int value / address in main script
+        script[pos++] = *(unsigned char*)address;
+        script[pos++] = *(unsigned char*)(address+1);
+        script[pos++] = *(unsigned char*)(address+2);
+        script[pos++] = *(unsigned char*)(address+3);
+        
+        CustomScriptExecute((int)&script); // make game execute it
+        return;
+      }
+    }
+  }
+  setTimedTextbox("Error: LEVSKIP not found?!", 7.00f); // error
 }
 
 
@@ -5920,7 +5886,7 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
     0x4E, 0x00
   };
 
-  switch(calltype) {
+  switch( calltype ) {
     
     case FUNC_GET_VALUE: //for config
       return (int*)i;
@@ -6163,7 +6129,7 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
 void *skip_intros(int calltype, int keypress, int defaultstatus) {
   static int status;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
@@ -6202,13 +6168,13 @@ void *skip_intros(int calltype, int keypress, int defaultstatus) {
 void *debug_loadscreens(int calltype, int keypress, int defaultstatus) {
   static int status;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if(status) { // disable
+        if( status ) { // disable
           //ini_puts("CHEATS", "CHEAT_DebugLoadscreens", "FALSE", config);
           status = 0;
         } else { // enable
@@ -6525,7 +6491,7 @@ void *ignored(int calltype, int keypress, int defaultstatus) {
       break;  
       
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) { // disable
           setPedIgnoredByEveryone(pplayer, OFF);
           status = 0;
@@ -6612,7 +6578,7 @@ void *warp_out_water_veh(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY:
-      if( pcar && (pcar_type != VEHICLE_BOAT) && (isVehicleInWater(pcar) >= 1) && (gametimer > timer)) {
+      if( pcar && (pcar_type != VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1) && (gametimer > timer)) {
         setFloat(pcar+0x38, -200.0f); // let game take care of spawn point
         timer = gametimer + 2000; // 2 sec
       }
@@ -6657,7 +6623,7 @@ void *unlimited_ammo(int calltype, int keypress, int defaultstatus) {
       setPedAmmoForWeapon(pplayer, WEAPON_GRENADE,     0, 99999); // Grenades
       setPedAmmoForWeapon(pplayer, WEAPON_HANDGUN, 10000, 99999); // Handgun
       setPedAmmoForWeapon(pplayer, WEAPON_SHOTGUN, 10000, 99999); // Shotgun
-      setPedAmmoForWeapon(pplayer, WEAPON_SMG,      10000, 99999); // SMG
+      setPedAmmoForWeapon(pplayer, WEAPON_SMG,     10000, 99999); // SMG
       setPedAmmoForWeapon(pplayer, WEAPON_ASSAULT, 10000, 99999); // Assault
       setPedAmmoForWeapon(pplayer, WEAPON_ROCKET,  10000, 99999); // Rocket & Minigun
       setPedAmmoForWeapon(pplayer, WEAPON_SNIPER,  10000, 99999); // Sniper
@@ -6665,7 +6631,7 @@ void *unlimited_ammo(int calltype, int keypress, int defaultstatus) {
       break;  
       
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         status = 1 - status; 
         if(!status) { // reset default values once (these are not the default ones though TODO)
           setPedAmmoForWeapon(pplayer, WEAPON_GRENADE,   0, 200); // Grenades
@@ -6767,8 +6733,8 @@ void *heavy_player(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  90 :)
  * 
- * Todo:     - fix vehicle fall through water (isVehicleInWater() doesn't work)
- *        - disable when vehicle on roof (isVehicleUpsideDown(pcar) && !isVehicleInAir(pcar) )
+ * Todo:  - fix vehicle fall through water (isVehicleInWater() doesn't work)
+ *        - disable when vehicle on roof (isVehicleUpsideDown( pcar ) && !isVehicleInAir( pcar ) )
  * 
  * Notes:     
  **************************************************************************************************************************************/
@@ -6781,7 +6747,7 @@ void *heavy_vehicle(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY:
-      if(!pcar && lastcar) { // not in car anymore -> reset old car's stats
+      if( !pcar && lastcar ) { // not in car anymore -> reset old car's stats
         setFloat(lastcar + 0xD0, getFloat(lastcar+0xD0)/1000);
         setFloat(lastcar + 0xD4, getFloat(lastcar+0xD4)/1000);
         lastcar = 0;
@@ -6796,7 +6762,7 @@ void *heavy_vehicle(int calltype, int keypress, int defaultstatus) {
       break;
       
     case FUNC_CHANGE_VALUE:
-      if ( keypress == PSP_CTRL_CROSS ) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           if( pcar && pcar_type != VEHICLE_BOAT ) { // in vehicle (not boat) -> reset to normal stats
             setFloat(pcar + 0xD0, getFloat(pcar+0xD0)/1000); //
@@ -6834,7 +6800,7 @@ void *powerbrake(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY:
-      if( pcar && (current_buttons & PSP_CTRL_SQUARE) && (getVehicleCurrentGear(pcar) >= 0x2) ) { // activate power brake only if gear is 2 or higher
+      if( pcar && (current_buttons & PSP_CTRL_SQUARE) && (getVehicleCurrentGear( pcar ) >= 0x2) ) { // activate power brake only if gear is 2 or higher
         setFloat(pcar + (LCS ? 0x70 : 0x140), 0.0f);
         setFloat(pcar + (LCS ? 0x74 : 0x144), 0.0f);
         
@@ -6843,7 +6809,7 @@ void *powerbrake(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status; 
+        status = 1 - status;
       }
       break;
       
@@ -6859,7 +6825,7 @@ void *powerbrake(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes: 
@@ -6876,7 +6842,7 @@ void *nitro(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY:
-      if( pcar && (pressed_buttons & PSP_CTRL_CIRCLE) && (getVehicleCurrentGear(pcar) >= 0x2) && flag_menu_running == 0 ) { // activate nitro only if gear is 2 or higher
+      if( pcar && (pressed_buttons & PSP_CTRL_CIRCLE) && (getVehicleCurrentGear( pcar ) >= 0x2) && flag_menu_running == 0 ) { // activate nitro only if gear is 2 or higher
         nos_time = gametimer + 2000; // 2 sec
       }
       
@@ -6892,15 +6858,15 @@ void *nitro(int calltype, int keypress, int defaultstatus) {
           setInt( exhaust_offs + (LCS ? 0x70 : 0x60), 0x00CC1111 ); // blue-ish
         }
         
-        if( pcar && (current_buttons & PSP_CTRL_CROSS) && flag_menu_running == 0 && isVehicleInAir(pcar) == 0 && isVehicleUpsideDown(pcar) == 0 ) {
+        if( pcar && (current_buttons & PSP_CTRL_CROSS ) && flag_menu_running == 0 && isVehicleInAir( pcar ) == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
           
           /// FOV
           setFieldOfView( getFieldOfView() + 4.0f);
         
           /// SPEED
-          setFloat(pcar+((LCS)?0x70:0x140), getFloat(pcar+((LCS)?0x70:0x140)) + getFloat(pcar+0x10) * thrust );
-          setFloat(pcar+((LCS)?0x74:0x144), getFloat(pcar+((LCS)?0x74:0x144)) + getFloat(pcar+0x14) * thrust );
-          setFloat(pcar+((LCS)?0x78:0x148), getFloat(pcar+((LCS)?0x78:0x148)) + getFloat(pcar+0x18) * thrust );
+          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * thrust );
+          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * thrust );
+          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * thrust );
         }
         
         
@@ -6966,15 +6932,15 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
       return (void *)retbuf;
         
     case FUNC_APPLY:    
-      if( pcar && boost > 0 && (current_buttons & PSP_CTRL_CROSS) && flag_menu_running == 0 && isVehicleUpsideDown(pcar) == 0 ) {
+      if( pcar && boost > 0 && (current_buttons & PSP_CTRL_CROSS ) && flag_menu_running == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
         
         /// boats are inWater = true and inAir = true
-        if( (isVehicleInAir(pcar) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater(pcar) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
+        if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
           
           /// SPEED
-          setFloat(pcar+((LCS)?0x70:0x140), getFloat(pcar+((LCS)?0x70:0x140)) + getFloat(pcar+0x10) * (boost * thrust) );
-          setFloat(pcar+((LCS)?0x74:0x144), getFloat(pcar+((LCS)?0x74:0x144)) + getFloat(pcar+0x14) * (boost * thrust) );
-          setFloat(pcar+((LCS)?0x78:0x148), getFloat(pcar+((LCS)?0x78:0x148)) + getFloat(pcar+0x18) * (boost * thrust) );  
+          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * (boost * thrust) );
+          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * (boost * thrust) );
+          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * (boost * thrust) );  
         }
       }        
       break;
@@ -7128,9 +7094,9 @@ void *tank(int calltype, int keypress, int defaultstatus) {
         if( !PPSSPP && pcar_type == VEHICLE_BIKE ) // using on bike on real hardware crashes (but not on PPSSPP)
           break;
       
-        TankControl(pcar);
+        TankControl( pcar );
         if( toggle )
-          BlowupVehiclesInPath(pcar);
+          BlowupVehiclesInPath( pcar );
       
       }
       break;
@@ -7170,7 +7136,7 @@ void *driveonwater(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_APPLY:
       if( pcar && pcar_type == VEHICLE_CAR) { // only works for cars
-        DoHoverSuspensionRatios(pcar);
+        DoHoverSuspensionRatios( pcar );
       }
       break;
       
@@ -7193,7 +7159,7 @@ void *driveonwater(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes: 
@@ -7246,11 +7212,11 @@ void *automaticflipover(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  100% :D
  * 
- * Todo:     - maybe save health and restore (for special vehicles only? -> otherwise dumb idea probably)
+ * Todo:  - maybe save health and restore (for special vehicles only? -> otherwise dumb idea probably)
         -> or read directly from handling 
  *        - tanks!
-        - Maybe Press Circle to visibly repair vehicle like cheat does
-        - Opcode: 03F2   2   car handle, int   set upsidedown car not damaged 
+ *        - Maybe Press Circle to visibly repair vehicle like cheat does
+ *        - Opcode: 03F2   2   car handle, int   set upsidedown car not damaged 
  * 
  * Notes:     
  **************************************************************************************************************************************/
@@ -7266,7 +7232,7 @@ void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
       if( pcar ) { // in vehicle
         if( lastcar == 0 ) lastcar = pcar;
         setVehicleHealth(pcar, 1000000.0f);
-        setVehicleNoPhysicalDamage(pcar);
+        setVehicleNoPhysicalDamage( pcar );
         setVehicleRepairTyres(pcar, pcar_type);
         
       } else if( !pcar && lastcar ) { // not in car anymore -> reset old car's stats
@@ -7392,7 +7358,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       
       /// The Delorean  
       if( LCS && pcar && pcar_id == 187 ) { // its a V8 Ghost
-        if( lcs_getVehicleColorBase(pcar) == 13 && lcs_getVehicleColorStripe(pcar) == 0 ) { // color 
+        if( lcs_getVehicleColorBase( pcar ) == 13 && lcs_getVehicleColorStripe( pcar ) == 0 ) { // color 
           setInt(global_m_pVehicleNameToPrint, (int)&delo[0]); // redirect m_pVehicleNameToPrint
 
           if( hover_vehicle(FUNC_GET_STATUS, -1, -1) == 0 ) // only when real cheat is disabled (otherwise double apply)
@@ -7428,21 +7394,21 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       }
       
       if( pcar && !lastcar ) { // in new car -> backup car's values (this will be done only once)
-        wheels = getVehicleWheelCamber(pcar);    
+        wheels = getVehicleWheelCamber( pcar );    
         lastcar = pcar;
       }
       
       if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) { // in vehicle!
         /// read out speed
-        speed = getVehicleSpeed(pcar); // calculated by game (up/down counts too)
+        speed = getVehicleSpeed( pcar ); // calculated by game (up/down counts too)
         
         /// disable world gravity for vehicle
         setVehicleGravityApplies(pcar, FALSE);
         
         /// lower wheels slowly
-        if(pcar_type == VEHICLE_CAR) { // car
-          if(getVehicleWheelCamber(pcar) < 3.0000) { // 0x40400000 same as edison
-            setVehicleWheelCamber(pcar, getVehicleWheelCamber(pcar) + 0.05); 
+        if( pcar_type == VEHICLE_CAR ) { // car
+          if( getVehicleWheelCamber( pcar ) < 3.0000 ) { // 0x40400000 same as edison
+            setVehicleWheelCamber(pcar, getVehicleWheelCamber( pcar ) + 0.05); 
           }
         }
         
@@ -7464,9 +7430,9 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         
         ///manual hovering up/down
         if( current_buttons & PSP_CTRL_UP   && flag_menu_running == 0 ) 
-          setFloat(pcar+((LCS)?0x98:0x148), getFloat(pcar+((LCS)?0x98:0x148))+0.02); //0x98 vector when hitting object
+          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))+0.02); //0x98 vector when hitting object
         if( current_buttons & PSP_CTRL_DOWN && flag_menu_running == 0 ) {
-          setFloat(pcar+((LCS)?0x98:0x148), getFloat(pcar+((LCS)?0x98:0x148))-0.02); //0x98 vector when hitting object
+          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))-0.02); //0x98 vector when hitting object
         }
         
         /// hovering animation #could be smoother
@@ -7475,46 +7441,46 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
             if( gametimer >= hovermation_time + 1000 ) { // 1 sec
                hovermation_time = gametimer;
                hovermation = 2;
-            } else setFloat(pcar+((LCS)?0x98:0x148), getFloat(pcar+((LCS)?0x98:0x148))+0.001);
+            } else setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))+0.001);
           } else if( hovermation == 2 ) { // animation down
             if( gametimer >= hovermation_time + 1000 ) { // 1 sec
                hovermation_time = gametimer;
                hovermation = 1;
-            } else setFloat(pcar+((LCS)?0x98:0x148), getFloat(pcar+((LCS)?0x98:0x148))-0.001);
+            } else setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))-0.001);
           }
         }
         ///////////////////////////////////////////////////////////
         
         /// thrust, reverse & automatically slowing down
-        if(current_buttons & PSP_CTRL_CROSS && flag_menu_running == 0) {  ///forward
-          setFloat(pcar+((LCS)?0x70:0x140), getFloat(pcar+((LCS)?0x70:0x140)) + getFloat(pcar+0x10) * 0.012 );
-          setFloat(pcar+((LCS)?0x74:0x144), getFloat(pcar+((LCS)?0x74:0x144)) + getFloat(pcar+0x14) * 0.012 );
-          setFloat(pcar+((LCS)?0x78:0x148), getFloat(pcar+((LCS)?0x78:0x148)) + getFloat(pcar+0x18) * 0.024 );
+        if( current_buttons & PSP_CTRL_CROSS && flag_menu_running == 0 ) {  ///forward
+          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * 0.012 );
+          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * 0.012 );
+          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * 0.024 );
           
-        } else if(current_buttons & PSP_CTRL_SQUARE && flag_menu_running == 0) { ///reverse
-          setFloat(pcar+((LCS)?0x70:0x140), getFloat(pcar+((LCS)?0x70:0x140)) - getFloat(pcar+0x10) * 0.008 );
-          setFloat(pcar+((LCS)?0x74:0x144), getFloat(pcar+((LCS)?0x74:0x144)) - getFloat(pcar+0x14) * 0.008 );
-          setFloat(pcar+((LCS)?0x78:0x148), getFloat(pcar+((LCS)?0x78:0x148)) - getFloat(pcar+0x18) * 0.020 );
+        } else if( current_buttons & PSP_CTRL_SQUARE && flag_menu_running == 0 ) { ///reverse
+          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - getFloat(pcar+0x10) * 0.008 );
+          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - getFloat(pcar+0x14) * 0.008 );
+          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - getFloat(pcar+0x18) * 0.020 );
         
         } else { /// stopping in air (because there is no ground that would do that normally)  
           
-          if(speed > 0.01) { /// stopping depending on speed (the slower the faster)
-            setFloat(pcar+((LCS)?0x70:0x140), getFloat(pcar+((LCS)?0x70:0x140)) - (getFloat(pcar+((LCS)?0x70:0x140)) * (0.01/speed)) ); // 0.0003 the higher the faster
-            setFloat(pcar+((LCS)?0x74:0x144), getFloat(pcar+((LCS)?0x74:0x144)) - (getFloat(pcar+((LCS)?0x74:0x144)) * (0.01/speed)) );
-            setFloat(pcar+((LCS)?0x78:0x148), getFloat(pcar+((LCS)?0x78:0x148)) - (getFloat(pcar+((LCS)?0x78:0x148)) * (0.01/speed)) );
+          if( speed > 0.01 ) { /// stopping depending on speed (the slower the faster)
+            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - (getFloat(pcar+(LCS?0x70:0x140)) * (0.01/speed)) ); // 0.0003 the higher the faster
+            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - (getFloat(pcar+(LCS?0x74:0x144)) * (0.01/speed)) );
+            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - (getFloat(pcar+(LCS?0x78:0x148)) * (0.01/speed)) );
           }
         }
         
-        if(current_buttons & PSP_CTRL_RTRIGGER && flag_menu_running == 0) { /// handbrake
-          if(speed > 0.01) { /// stopping depending on speed (the slower the faster)
-            setFloat(pcar+((LCS)?0x70:0x140), getFloat(pcar+((LCS)?0x70:0x140)) - (getFloat(pcar+((LCS)?0x70:0x140)) * (0.04/speed)) ); // 0.0003 the higher the faster
-            setFloat(pcar+((LCS)?0x74:0x144), getFloat(pcar+((LCS)?0x74:0x144)) - (getFloat(pcar+((LCS)?0x74:0x144)) * (0.04/speed)) );
-            setFloat(pcar+((LCS)?0x78:0x148), getFloat(pcar+((LCS)?0x78:0x148)) - (getFloat(pcar+((LCS)?0x78:0x148)) * (0.02/speed)) );
+        if( current_buttons & PSP_CTRL_RTRIGGER && flag_menu_running == 0 ) { /// handbrake
+          if( speed > 0.01 ) { /// stopping depending on speed (the slower the faster)
+            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - (getFloat(pcar+(LCS?0x70:0x140)) * (0.04/speed)) ); // 0.0003 the higher the faster
+            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - (getFloat(pcar+(LCS?0x74:0x144)) * (0.04/speed)) );
+            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - (getFloat(pcar+(LCS?0x78:0x148)) * (0.02/speed)) );
           }
         }
 
 
-      //testfunc(pcar);
+      //testfunc( pcar );
       /*
         // waterbottles VCS cheat 
         static float Xdeg, Ydeg, Zdeg;
@@ -7524,7 +7490,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
          
          Zdeg += xstick * 0.15; //turning
          if(ystick) {
-          Xdeg = getFloat(pcar) * ystick;
+          Xdeg = getFloat( pcar ) * ystick;
           Ydeg = getFloat(pcar+4) * ystick;
          } else Ydeg = Xdeg = 0; 
          
@@ -7593,7 +7559,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   99%
  * 
- * Todo:     - make PEDs on Bikes fall off dramatically (not casually exit and die)
+ * Todo:  - make PEDs on Bikes fall off dramatically (not casually exit and die)
  *        - 
  * 
  * Notes:     
@@ -7633,7 +7599,7 @@ void *aim_of_death(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   100% :D
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes:     z coordinate is ignored here
@@ -7653,7 +7619,7 @@ void stepthroughwall() {
  * 
  * Todo:     - understand value 0x3C10 ?!
  * 
- * Notes:     LCS US v3.00   ->     0x0020A898: 0x3C053C03 '.<.<' - lui        $a1, 0x3C03
+ * Notes:   LCS US v3.00   ->     0x0020A898: 0x3C053C03 '.<.<' - lui        $a1, 0x3C03
  *          VCS US v1.05   ->     0x00263690: 0x3C053C03 '.<.<' - lui        $a1, 0x3C03
  * 
  * 0x3C03126F = 0.008f   = 1.0g
@@ -7676,7 +7642,7 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
 
   switch( calltype ) {
     case FUNC_GET_STATUS: 
-      if( keypress == 42) 
+      if( keypress == 42 ) 
         return (int*)gravity_reverse; // for config
       else return (int*)status; // for cheat status
 
@@ -7786,7 +7752,7 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
  *
  * Completion:  
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes: 
@@ -7862,8 +7828,8 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
         return (void *)retbuf;
       
       case FUNC_CHECK:
-        if( LCS ) lcs_color = lcs_getVehicleColorBase(pcar);
-        if( VCS ) vcs_color = vcs_getVehicleColorBase(pcar);
+        if( LCS ) lcs_color = lcs_getVehicleColorBase( pcar );
+        if( VCS ) vcs_color = vcs_getVehicleColorBase( pcar );
         break;
         
       case FUNC_CHANGE_VALUE:
@@ -7878,7 +7844,7 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
         #endif
         
         if( VCS ) {
-          if( keypress == PSP_CTRL_CROSS) { // CROSS
+          if( keypress == PSP_CTRL_CROSS ) { // CROSS
             pos--;
             if( pos < 0 ) pos = 2;
             break;
@@ -7937,8 +7903,8 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
         return (void *)retbuf;
       
       case FUNC_CHECK:
-        if( LCS ) lcs_color = lcs_getVehicleColorStripe(pcar);
-        if( VCS ) vcs_color = vcs_getVehicleColorStripe(pcar);
+        if( LCS ) lcs_color = lcs_getVehicleColorStripe( pcar );
+        if( VCS ) vcs_color = vcs_getVehicleColorStripe( pcar );
         break;
         
       case FUNC_CHANGE_VALUE:
@@ -7946,14 +7912,14 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
         if( keypress == PSP_CTRL_TRIANGLE ) {
           int temp = pcar + (LCS ? 0x1F1 : 0x228);
           hex_marker_clear();
-          hex_marker_addx(temp, ((LCS)?sizeof(char):sizeof(int)));
+          hex_marker_addx(temp, (LCS?sizeof(char):sizeof(int)));
           hexeditor_create(temp, 0, memory_low, memory_high, "> Secondary Color");
           break;
         }
         #endif
           
         if( VCS ) {
-          if( keypress == PSP_CTRL_CROSS) { // CROSS
+          if( keypress == PSP_CTRL_CROSS ) { // CROSS
             pos--;
             if( pos < 0) pos = 2;
             break;
@@ -8003,8 +7969,8 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
  * 
  * Todo:     - Checking for weather only checks one (first) global -> it can be "sunny" but with rain effect for example
  * 
- * Notes:     There are 3 weather values: 
-          First: Sky Color, Clouds          -> global_weather
+ * Notes: There are 3 weather values: 
+          First: Sky Color, Clouds -> global_weather
           Second: Effekt (like rain, fog, snow)
           Third: next & force weather when set (otherwise 0xFFFF for random cycle, "ReleaseWeather" sets 0xFFFF)
  **************************************************************************************************************************************/
@@ -8033,7 +7999,7 @@ void *world_weather(int calltype, int keypress, int defaultstatus, int defaultva
       return (void*)(LCS ? weather_lcs[i] : weather_vcs[i]);
       
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         status = 1 - status; // switch status
         if( status == 0 ) 
           ReleaseWeather();
@@ -8066,7 +8032,7 @@ void *world_weather(int calltype, int keypress, int defaultstatus, int defaultva
  *
  * Completion:  100% :D
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes:     global_trafficdensity
@@ -8128,29 +8094,29 @@ void *traffic_freeze(int calltype, int keypress, int defaultstatus) {
       for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
         if( base != pcar ) { // ignore player's current vehicle
           setVehicleMakePhysical(base);
-      setPedOrVehicleFreezePosition(base, TRUE); // fully freeze (needs reset)
+          setPedOrVehicleFreezePosition(base, TRUE); // fully freeze (needs reset)
       
-      // @ 0x44 -> make 44 82 19 to 44 8A 19 will disable / freeze in place until touched
-      
-      //setFloat(base+(LCS?0x70:0x140), 0.00f); // zero moving vectors -> results in slow-mo 
-      //setFloat(base+(LCS?0x74:0x144), 0.00f);
-      //setFloat(base+(LCS?0x78:0x148), 0.00f);
+          // @ 0x44 -> make 44 82 19 to 44 8A 19 will disable / freeze in place until touched
+
+          //setFloat(base+(LCS?0x70:0x140), 0.00f); // zero moving vectors -> results in slow-mo 
+          //setFloat(base+(LCS?0x74:0x144), 0.00f);
+          //setFloat(base+(LCS?0x78:0x148), 0.00f);
       
         } else { // reset when player entered already frozen vehicle
-      setPedOrVehicleFreezePosition(base, FALSE); // reset
-    }
+          setPedOrVehicleFreezePosition(base, FALSE); // reset
+        }
       }
       break;  
       
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
         status = 1 - status; // CROSS
-    if( status == 0 ) {
-        base = vehicles_base;
+        if( status == 0 ) {
+          base = vehicles_base;
           for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
-       setPedOrVehicleFreezePosition(base, FALSE); // reset
+            setPedOrVehicleFreezePosition(base, FALSE); // reset
           }
-    }
+        }
       } 
       break;
       
@@ -8166,7 +8132,7 @@ void *traffic_freeze(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  98% :D
  * 
- * Todo:     - LCS: avenging angels still spawning
+ * Todo:  - LCS: avenging angels still spawning
  *        - 
  * 
  * Notes:     global_peddensity
@@ -8212,7 +8178,7 @@ void *peds_density(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes:     
@@ -8298,7 +8264,7 @@ void *onmission(int calltype, int keypress, int defaultstatus, int defaultval) {
  *
  * Completion:  
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  * 
  * Notes:     
@@ -8345,7 +8311,7 @@ void *freeze_timers(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  90
  * 
- * Todo:     - FIst fighters don't count?!
+ * Todo:  - FIst fighters don't count?!
  *        - 
  * 
  * Notes:     
@@ -8407,7 +8373,7 @@ void *peds_killaiming(int calltype, int keypress, int defaultstatus) {
  *
  * Completion: 
  * 
- * Todo:     - disable all animation as well?
+ * Todo:  - disable all animation as well?
  *        - 
  * 
  * Notes:     
@@ -8461,7 +8427,7 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  
  * 
- * Todo:     - make the text stick to the aiming indicator somehow and not fixed on screen center
+ * Todo:  - make the text stick to the aiming indicator somehow and not fixed on screen center
  *        - 
  * 
  * Notes: 
@@ -8482,9 +8448,7 @@ void *peds_showstats(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_APPLY:
       base = peds_base;
-      curped = 0;
-      
-      curped = getInt(pplayer+((LCS)?0x6BC:0x81C));
+      curped = getInt(pplayer+(LCS?0x6BC:0x81C));
       
       if( curped > 0 ) {
         for( j = 0; j < peds_max; j++, base += var_pedobjsize ) {
@@ -8492,12 +8456,12 @@ void *peds_showstats(int calltype, int keypress, int defaultstatus) {
 
             /// Health
             sprintf(buffer1, "%.2f", getPedHealth(base));
-            drawString(buffer1, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 100.0f, ((LCS)?LCS_HEALTH:VCS_HEALTH) );
+            drawString(buffer1, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 100.0f, (LCS?LCS_HEALTH:VCS_HEALTH) );
             
             /// Armor
             if( getPedArmor(base) > 0.00f ) {
               sprintf(buffer2, "%.2f", getPedArmor(base));
-              drawString(buffer2, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 85.0f, ((LCS)?LCS_ARMOR:VCS_ARMOR) );
+              drawString(buffer2, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 85.0f, (LCS?LCS_ARMOR:VCS_ARMOR) );
             }
           }
         }
@@ -8525,7 +8489,7 @@ void *peds_showstats(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  100%
  * 
- * Todo:     - keep current health when changing multiplier
+ * Todo:  - keep current health when changing multiplier
  *        - 
  * 
  * Notes:     global_maxhealthmult
@@ -8573,7 +8537,7 @@ void *max_health(int calltype, int keypress) {
  *
  * Completion:  100%
  * 
- * Todo:     -  keep current armor when changing multiplier
+ * Todo:  -  keep current armor when changing multiplier
  *        - 
  * 
  * Notes:     global_maxarmormult
@@ -8622,10 +8586,10 @@ void *max_armor(int calltype, int keypress) {
  *
  * Completion:  
  * 
- * Todo:     - Other way to do it: patch FUN_0013f37c_sprinting
+ * Todo:  - Other way to do it: patch FUN_0013f37c_sprinting
  *        - 
  * 
- * Notes:      This is a flag set by the game as reward at some point.
+ * Notes: This is a flag set by the game as reward at some point.
  **************************************************************************************************************************************/
 void *unlimited_sprinting(int calltype, int keypress, int defaultstatus) {
   static int status;
@@ -8679,7 +8643,7 @@ void *unlimited_sprinting(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   99%
  * 
- * Todo:     - 
+ * Todo:  - 
  * 
  * Notes:     
  **************************************************************************************************************************************/
@@ -8756,7 +8720,7 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
  *
  * Completion:   99%
  * 
- * Todo:     - 
+ * Todo:  - 
  * 
  * Notes:     LCS
         0x4E0 current direction in rad
@@ -8777,7 +8741,7 @@ float pedwalkspd_mult = 1.00f;
 
 void (*UpdatePosition)(int handle);
 void UpdatePosition_patched(int handle) {
-  
+
   if( walking_speed(FUNC_GET_STATUS,-1,-1,-1) != 0 ) { // only if CHEAT status is ON
     //logPrintf("walking_speed is enabled");
     if( handle == pplayer && walkspd_mult != 1.00f ) { // only for Player
@@ -8838,7 +8802,7 @@ void *walking_speed(int calltype, int keypress, int defaultstatus, int defaultva
       status = defaultstatus;
       
       /// set Cheat's default value
-      if( defaultval > 0 && defaultval <= 2000) { // 20.0f is max here
+      if( defaultval > 0 && defaultval <= 2000 ) { // 20.0f is max here
         walkspd_mult = (float)((float)(defaultval)/100.0f);
       } else walkspd_mult = 1.0f;
       break;
@@ -8900,8 +8864,8 @@ void *pedwalking_speed(int calltype, int keypress, int defaultstatus, int defaul
  *
  * Completion:   /
  * 
- * Todo:     - it works but there must be a native freeze time like in E3 mode
-        - still fucks up weather
+ * Todo:  - it works but there must be a native freeze time like in E3 mode
+ *        - still fucks up weather
  * 
  * Notes:     /
  **************************************************************************************************************************************/
@@ -8932,7 +8896,7 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval) 
       break;  
       
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           worldtime_disable:
           setClockFreeze(OFF);
@@ -8986,17 +8950,17 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval) 
  *
  * Completion:  
  * 
- * Todo:     - 
+ * Todo:  - 
  *        
  * Notes:     
- global_bridgeState:
- 0 = is up permanent
- 1 = is up (bell)
- 2 = going down (bell)
- 3 = is down
- 4 = about to go up (bell)
- 5 = going up
- 6 = is down permanent
+ *   global_bridgeState:
+ *   0 = is up permanent
+ *   1 = is up (bell)
+ *   2 = going down (bell)
+ *   3 = is down
+ *   4 = about to go up (bell)
+ *   5 = going up
+ *   6 = is down permanent
  **************************************************************************************************************************************/
 void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status, state = 1;
@@ -9009,7 +8973,6 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
     case FUNC_GET_STRING: 
       sprintf(retbuf, " %s", state ? "down" : "up" );
       return retbuf;
-      
       
     case FUNC_APPLY:
       //setInt(global_bridgeState, state);
@@ -9026,7 +8989,7 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
       break;
       
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           setInt(global_bridgeState, 3); // to get back into cycle 
           SetBridgeState(2);
@@ -9057,7 +9020,6 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
   }
   
   return NULL;
-
 }
 
 
@@ -9065,9 +9027,9 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
  *
  * Completion:  99%
  * 
- * Todo:     - sync real time to game from time to time :P (but needs checking if clock cheat on/off changed etc..)
+ * Todo:  - sync real time to game from time to time :P (but needs checking if clock cheat on/off changed etc..)
  *        
- * Notes:     might break missions ?!
+ * Notes:   might break missions ?!
  **************************************************************************************************************************************/
 void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
   static int status;
@@ -9134,10 +9096,10 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  100 % :)
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - 
  *        
- * Notes:     When CHeats are used two globals (bool & counter) are set and will be saved / loaded from savegame!
+ * Notes:   When CHeats are used two globals (bool & counter) are set and will be saved / loaded from savegame!
  **************************************************************************************************************************************/
 void *no_cheating_warning(int calltype, int keypress, int defaultstatus) {
   static int status;
@@ -9160,7 +9122,7 @@ void *no_cheating_warning(int calltype, int keypress, int defaultstatus) {
       break;  
       
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS) { // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
         setByte(global_cheatusedboolean + gp_, 0);
         setInt(global_cheatusedcounter + gp_, 0);
         status = 0;
@@ -9185,7 +9147,7 @@ void *no_cheating_warning(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   100%
  * 
- * Todo:     - 
+ * Todo:  - 
  *        -
  * 
  * Notes:     
@@ -9213,7 +9175,7 @@ void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int de
     case FUNC_APPLY:
       base = vehicles_base;
       for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
-        if(base != pcar) { //ignore player's current vehicle
+        if( base != pcar ) { //ignore player's current vehicle
           setVehicleRadioStation(base, i);
         }
       }
@@ -9303,12 +9265,12 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
       
       } else if( keypress == PSP_CTRL_CIRCLE ) {
         status = 0;
-        level = (LCS) ? 0.00f : 6.00f;
+        level = LCS ? 0.00f : 6.00f;
         resetWaterLevel();
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR  
-        hexeditor_create( (LCS) ? global_ptr_water : global_ptr_water+gp, 0, memory_low, memory_high, "> water level");
+        hexeditor_create(LCS ? global_ptr_water : global_ptr_water+gp, 0, memory_low, memory_high, "> water level");
         #endif
       } 
       
@@ -9326,7 +9288,7 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
           if( status )onetimeapply = 1;
         
       } else { 
-        level = (LCS) ? 0.00f : 6.00f; // set default height
+        level = LCS ? 0.00f : 6.00f; // set default height
         if( !status && pplayer > 0 ) // only reset when game active and cheat off
           resetWaterLevel();
       }
@@ -9368,15 +9330,15 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
     case FUNC_APPLY:
       setWindClipped(level); // necessary at all?
       break;
-	  
+    
     case FUNC_CHECK: 
       if( status == 0 ) { 
         ///// patched out before so taken care of here ///////// see 0x00130820 @ LCS US v3
-		setWindClipped(1.0f);
-	    if( getWind() <= 1.0)
+    setWindClipped(1.0f);
+      if( getWind() <= 1.0)
           setWindClipped(getWind());
-		////////////////////////////////////////////////////////
-		level = getWind();
+    ////////////////////////////////////////////////////////
+    level = getWind();
       } 
       break;
       
@@ -9399,7 +9361,7 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR  
-        hexeditor_create( (LCS) ? global_WindClipped : global_WindClipped+gp, 0, memory_low, memory_high, "> wave height");
+        hexeditor_create(LCS ? global_WindClipped : global_WindClipped+gp, 0, memory_low, memory_high, "> wave height");
         #endif
       } 
       
@@ -9421,7 +9383,7 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
  *
  * Completion:   
  * 
- * Todo:     - 
+ * Todo:  - 
  *        -
  * 
  * Notes:     
@@ -9449,13 +9411,13 @@ void *pickup_spawner(int calltype, int keypress, int defaultstatus, int defaultv
       } else if( keypress == PSP_CTRL_CROSS || keypress == PSP_CTRL_SQUARE ) { 
         
         /// calculate coordinate in front of player
-        x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+((LCS)?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
-        y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+((LCS)?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
+        x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
+        y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
         z = getFloat(pplayer+0x38);
         
-        char type = 0x3; // ((LCS) ? lcs_pickups[i].type : vcs_pickups[i].type);
+        char type = 0x3; // (LCS ? lcs_pickups[i].type : vcs_pickups[i].type);
         if( keypress == PSP_CTRL_SQUARE ) {
-          type = (LCS) ? 0xF : 0xB; /// to NOT make it re-appear / a permanent pickup
+          type = LCS ? 0xF : 0xB; /// to NOT make it re-appear / a permanent pickup
         }
         
         /// money needs to be type 0x8 to work though
@@ -9484,7 +9446,7 @@ void *pickup_spawner(int calltype, int keypress, int defaultstatus, int defaultv
  *
  * Completion:   
  * 
- * Todo:     - 
+ * Todo:  - 
  *        -
  * 
  * Notes:     
@@ -9588,18 +9550,18 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
       if( keypress == PSP_CTRL_CROSS ) { 
         if( !pcar ) {
           /// either via functions
-		  SetActorSkinTo(pplayer, buf); // SetActorSkinTo
+          SetActorSkinTo(pplayer, buf); // SetActorSkinTo
           LoadAllModelsNow(0); // LoadAllModelsNow
           RefreshActorSkin(pplayer); // RefreshActorSkin
-		  
-		  /// or via script (for ULUX todo?)
+      
+          /// or via script (for ULUX todo?)
           /* static u8 script_loadmodel[] = {  // must be static for CustomScriptExecut()!
             /// load_and_launch_mission_internal
             0x1C, 0x04, 
             0x07, // byte
             0x3F, // mission_number
             
-			/// terminate_this_script
+            /// terminate_this_script
             0x4E, 0x00
           }; CustomScriptExecute((int)&script_loadmodel); // make game execute it */
         }
@@ -9635,7 +9597,7 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
  *
  * Completion:   95 %
  * 
- * Todo:     - 
+ * Todo:  - 
  *        - exclude those crashing?
  *        - check for blocking vehicle and unload (like debug version)
  * 
@@ -9708,7 +9670,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           static u8 script_becomevehicle[] = { // must be static for CustomScriptExecut()! 
             /// request_model
             0x4C, 0x02,
-            0x08,     // type = short
+            0x08, // type = short
             0xAC, 0x00, // vehicle_id
             
             /// load_all_models_now
@@ -9784,12 +9746,12 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
       } else if( keypress == PSP_CTRL_CROSS ) {
 
         /// calculate coordinate in front of player
-        x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+((LCS)?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
-        y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+((LCS)?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
+        x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
+        y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
         z = getFloat(pplayer+0x38); // z will be calculated by game though (via find ground)
                     
         /// calc degree (with driver door facing player!)
-        deg = (180.0f / M_PI) * getFloat(pplayer + ((LCS) ? 0x4E0 : 0x8D0)) + ((getFloat(pplayer + ((LCS) ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f);
+        deg = (180.0f / M_PI) * getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + ((getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f);
         deg += 90.0f;
         if( deg > 360.0f ) 
           deg -= 360.0f;
@@ -9914,9 +9876,9 @@ if( no destination icons && pay'n'spray icon is global map visible bool )  ?
 /// vcs races: blue arrows over other cars before destination sphere
 
 void teleport_next_sub() {
-  int i, type, slot, objbase, base = (LCS) ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int i, type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   
-  for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++) {
+  for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsVisible(base) && getMapiconID(base) == 0x00 ) { // && getMapiconColor(base) != 0x00 aka red (exclude targets) good idea?
       type = getMapiconType(base);
       slot = getMapiconLinkedObjectSlotNumber(base); // -1 if no slot when type is not an obj
@@ -9963,8 +9925,8 @@ void teleport_next_sub() {
           
         
         default: // use coordinates in blip slot
-          if( getFloat(base+((LCS) ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
-            teleport(getFloat(base+((LCS) ? 0xC : 0x10)), getFloat(base+((LCS) ? 0x10 : 0x14)), getFloat(base+((LCS) ? 0x14 : 0x18)) + 1.00f);
+          if( getFloat(base+(LCS ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
+            teleport(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
             return;
           }
         
@@ -10001,7 +9963,7 @@ void *teleport_next(int calltype, int keypress) {
 
 
 void teleport_mission() { // gets next mission host location from mapicon
-  int i, base = (LCS) ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int i, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconType(base) == 0x05 ) {
@@ -10009,8 +9971,8 @@ void teleport_mission() { // gets next mission host location from mapicon
       char icn = getMapiconID(base);
       
       if( (LCS && icn >= 31 && icn <= 40) || (VCS && icn >= 0x23 && icn <= 0x2E) ) {
-        if( getFloat(base+((LCS) ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
-          teleport(getFloat(base+((LCS) ? 0xC : 0x10)), getFloat(base+((LCS) ? 0x10 : 0x14)), getFloat(base+((LCS) ? 0x14 : 0x18)) + 1.00f);
+        if( getFloat(base+(LCS ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
+          teleport(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
           return;
         }
       }
@@ -10021,11 +9983,11 @@ void teleport_mission() { // gets next mission host location from mapicon
 
 /// TODO - get_ground_z_for_3d_coord (opcode: 02D3)
 void teleport_marker() {
-  int i, base = (LCS) ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int i, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++) {
-    if( getMapiconIsActive(base) && getMapiconID(base) == ((LCS) ? 49 : 0x10) ) {
-      teleport(getFloat(base+((LCS) ? 0xC : 0x10)), getFloat(base+((LCS) ? 0x10 : 0x14)), ((LCS) ? -150.0f : -250.0f)); // z is always 0 for marker sadly -> telep under map will reset player by game on street  TODO find z coordinate like debug build
+    if( getMapiconIsActive(base) && getMapiconID(base) == (LCS ? 49 : 0x10) ) {
+      teleport(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), (LCS ? -150.0f : -250.0f)); // z is always 0 for marker sadly -> telep under map will reset player by game on street  TODO find z coordinate like debug build
       return;
     }        
   }  
@@ -10040,7 +10002,7 @@ green    green  = Object / !pickup
 
 */
 void kill_all_targets() {
-  int i, type, slot, objbase, base = (LCS) ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int i, type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconID(base) == 0x00 && getMapiconColor(base) == 0x00 ) { // red == target
@@ -10087,7 +10049,7 @@ void kill_all_targets() {
 
 
 void freeze_all_targets() {
-  int i, type, slot, objbase, base = (LCS) ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int i, type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconID(base) == 0x00 && getMapiconColor(base) == 0x00 ) { // red == target
@@ -10173,12 +10135,12 @@ void buttonApplyOnce(int i) { // apply once on button press
     
   } else if( i == 5 ) { // toggle fps
     if( pcar ){
-      if( getByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8) == ((LCS) ? 0x1 : 0xB) ) { // custom tracks toggle is ON
+      if( getByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8) == (LCS ? 0x1 : 0xB) ) { // custom tracks toggle is ON
         setByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, LCS ? 0x0 : 0xA); // disable custom tracks toggle
         if( VCS ) setRadioStationNow(0); // re-enable radio playback (todo instead of 0 get last radio station played?)
       } else {
         setByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, LCS ? 0x1 : 0xB); // enable custom tracks toogle
-        setByte(global_radioarea + ((LCS) ? 0x350 : 0x578), 0x0); // trigger playback
+        setByte(global_radioarea + (LCS ? 0x350 : 0x578), 0x0); // trigger playback
       }
     }
     
@@ -10212,33 +10174,33 @@ void buttonApplyOnce(int i) { // apply once on button press
     }
     
   } else if( i == 13 ) { // Impuls
-  int j, base;
-  float radius = 50.0f; // in which force should be applied
-  float x1 = getFloat(pobj+0x30);
+    int j, base;
+    float radius = 50.0f; // in which force should be applied
+    float x1 = getFloat(pobj+0x30);
     float y1 = getFloat(pobj+0x34);
     float z1 = getFloat(pobj+0x38);
   
-  /// Vehicles
+    /// Vehicles
     base = vehicles_base;
-  for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
-    if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
-    float x2 = getFloat(base+0x30);
-    float y2 = getFloat(base+0x34);
-    float z2 = getFloat(base+0x38);
-    if( checkCoordinateInsideArea(x1, y1, z1, x2, y2, z2, radius) ) { // is in radius
-      /// "wake vehicle up" aka turn AI controlled "floating" to "physical" vehicle
-      setVehicleMakePhysical(base);
-      /// set vectors
-      float distance = distanceBetweenCoordinates3d(x1, y1, z1, x2, y2, z2); 
-      float forcemult = distance * 30.0f / radius; // the lower the faster
-      float x_obj = (x2 - x1) / forcemult;
-      float y_obj = (y2 - y1) / forcemult;
-      //float z_obj = (z2 - z1) / forcemult;
-      setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
-      setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
-      //setFloat(base+(LCS?0x78:0x148), getFloat(base+(LCS?0x78:0x148)) + z_obj);
-      setFloat(base+(LCS?0x78:0x148), 0.2f);
-    }
+    for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
+      if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
+      float x2 = getFloat(base+0x30);
+      float y2 = getFloat(base+0x34);
+      float z2 = getFloat(base+0x38);
+      if( checkCoordinateInsideArea(x1, y1, z1, x2, y2, z2, radius) ) { // is in radius
+        /// "wake vehicle up" aka turn AI controlled "floating" to "physical" vehicle
+        setVehicleMakePhysical(base);
+        /// set vectors
+        float distance = distanceBetweenCoordinates3d(x1, y1, z1, x2, y2, z2); 
+        float forcemult = distance * 30.0f / radius; // the lower the faster
+        float x_obj = (x2 - x1) / forcemult;
+        float y_obj = (y2 - y1) / forcemult;
+        //float z_obj = (z2 - z1) / forcemult;
+        setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
+        setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
+        //setFloat(base+(LCS?0x78:0x148), getFloat(base+(LCS?0x78:0x148)) + z_obj);
+        setFloat(base+(LCS?0x78:0x148), 0.2f);
+      }
     }
   }
   
@@ -10287,7 +10249,7 @@ void buttonApplyOnce(int i) { // apply once on button press
   }*/
       
   } else if( i == 14 ) { 
-    if( pcar && !isVehicleInAir(pcar) && !isVehicleUpsideDown(pcar) ) 
+    if( pcar && !isVehicleInAir( pcar ) && !isVehicleUpsideDown( pcar ) ) 
     setFloat(pcar+(LCS?0x78:0x148), 0.3f);
   
   } else if( i == 15 ) { 
@@ -10669,13 +10631,13 @@ void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval
 
 
 /********************
-- mark OBJECTS on radar
-  - pickups
-  - weapons like in multiplayer`? (with radius?)
-  - stunt jumps -> VCS use icon! or green / red for completed or not?!
-  - baloons (VCS) -> use icon!
-  - players vehicle(s)
-  - 
+mark OBJECTS on radar
+ - pickups
+ - weapons like in multiplayer`? (with radius?)
+ - stunt jumps -> VCS use icon! or green / red for completed or not?!
+ - baloons (VCS) -> use icon!
+ - players vehicle(s)
+ - 
 ****/
 void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status, j = 0, i = 0; // default position
@@ -10690,7 +10652,7 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     
     case FUNC_GET_STRING: 
       if( j == 0 ) { // pickups
-        sprintf(retbuf, "Pickups - %s (%i)", ((LCS) ? lcs_pickups[i].name : vcs_pickups[i].name), getPickupsActiveObjectsWithID(((LCS) ? lcs_pickups[i].id : vcs_pickups[i].id)) );
+        sprintf(retbuf, "Pickups - %s (%i)", (LCS ? lcs_pickups[i].name : vcs_pickups[i].name), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
           
       } else if( j == 1 ) { // weapons in range
         if( status ) 
@@ -10712,7 +10674,7 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     case FUNC_APPLY:
       removeAllCustomMapIcons(); // remove all custom created ones
       if( j == 0 ) { // pickups
-        createCustomMapIconsForPickupsWithID(((LCS) ? lcs_pickups[i].id : vcs_pickups[i].id), 0, 4); //3 is white, 4 is yellow
+        createCustomMapIconsForPickupsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id), 0, 4); //3 is white, 4 is yellow
         
       } else if( j == 1 ) { // weapons in range
         //drawString("todo - weapons in range", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
@@ -10751,7 +10713,7 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
           i--;
         //removeAllCustomMapIcons();
       } else if( keypress == PSP_CTRL_RIGHT /* && i < todo*/ ) { // RIGHT
-        if( j == 0 && i < ((LCS) ? lcs_pickupsize : vcs_pickupsize) ) // pickups
+        if( j == 0 && i < (LCS ? lcs_pickupsize : vcs_pickupsize) ) // pickups
           i++;
         //removeAllCustomMapIcons();
       }   
@@ -10774,7 +10736,7 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
  *
  * Completion: 
  * 
- * Todo:     - 
+ * Todo:  - 
  * 
  * Notes:   global_camera  
  **************************************************************************************************************************************/
@@ -10793,7 +10755,7 @@ void *camera_centered(int calltype, int keypress, int defaultstatus) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
         status = 1 - status;
-		
+    
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
@@ -10812,11 +10774,11 @@ void *camera_centered(int calltype, int keypress, int defaultstatus) {
 }
 
 
-/** Field Of Viewl *****************************************************************************************************************************
+/** Field Of View *************************************************************************************************************************************
  *
  * Completion:   
  * 
- * Todo:     -  
+ * Todo:  -  
  * 
  * Notes:     
  ******************************************************************************************************************************************************/
@@ -10865,8 +10827,8 @@ void *fieldofview(int calltype, int keypress, int defaultstatus, int defaultval)
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR  
         hex_marker_clear();
-        hex_marker_addx(global_camera + ((LCS) ? 0x254 : 0x198), sizeof(float));
-        hexeditor_create( global_camera + ((LCS) ? 0x254 : 0x198), 0, memory_low, memory_high, "> FOV");
+        hex_marker_addx(global_camera + (LCS ? 0x254 : 0x198), sizeof(float));
+        hexeditor_create( global_camera + (LCS ? 0x254 : 0x198), 0, memory_low, memory_high, "> FOV");
         #endif
       } 
       break;
@@ -10896,7 +10858,7 @@ void *camera_topdown(int calltype, int keypress, int defaultstatus) {
       if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
         setFloat(global_camera + 0x23C, -2.00f); // keep camera highest point possible
         setFloat(global_camera + 0x240, -0.03f); // simulate camera move(necessary for vehicle)
-	  } else {
+      } else {
         setFloat(global_camera + (LCS ? 0x24C : 0x0E8), -2.00f); // keep camera highest point possible
         setFloat(global_camera + (LCS ? 0x250 : 0x194), -0.03f); // simulate camera move(necessary for vehicle)
       } break;
@@ -10932,10 +10894,10 @@ void *camera_topdown(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  
  * 
- * Todo:     - 
- *           - 
+ * Todo:  - 
+ *        - 
  * 
- * Notes:     developer flag -> spawns at debug area on "new game" & Multiplayer can be started without enough players
+ * Notes:   developer flag -> spawns at debug area on "new game" & Multiplayer can be started without enough players
  **************************************************************************************************************************************/
 void *dev_flag(int calltype, int keypress, int defaultstatus) {
   static int status;
@@ -10988,11 +10950,10 @@ void *dev_flag(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   
  * 
- * Todo:     -  
+ * Todo:  -  
  * 
  * Notes:     
  ******************************************************************************************************************************************************/
-
 void gather_helper(int base, float x, float y, float z) {
   int speed = 30; // the lower the faster
   
@@ -11006,7 +10967,6 @@ void gather_helper(int base, float x, float y, float z) {
   setFloat(base+(LCS?0x74:0x144), -y_obj);
   setFloat(base+(LCS?0x78:0x148), -z_obj);
 }
-
 void *gather_spell(int calltype, int keypress, int defaultstatus) {
   static int status = 0; 
   
@@ -11019,28 +10979,27 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY: 
-    
       /// calculate position to gather too
-      x = getFloat(pobj+0x30) + ( cos( getFloat(pplayer + ((LCS) ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
-      y = getFloat(pobj+0x34) + ( sin( getFloat(pplayer + ((LCS) ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
+      x = getFloat(pobj+0x30) + ( cos( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
+      y = getFloat(pobj+0x34) + ( sin( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
       z = getFloat(pobj+0x38) + 6.00f;
       
       /// Vehicles
       int base = vehicles_base;
-      for(j = 0; j < vehicles_max; j++, base += var_vehobjsize) 
-        if(getVehicleObjectIsActive(base) && base != pcar) // ignore player's current vehicle
+      for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) 
+        if( getVehicleObjectIsActive(base) && base != pcar ) // ignore player's current vehicle
           gather_helper(base, x, y, z);
       
       /// Pedestrians
       base = peds_base;
       for( j = 0; j < peds_max; j++, base += var_pedobjsize ) 
-        if(getPedObjectIsActive(base) && base != pplayer) // ignore player
+        if( getPedObjectIsActive(base) && base != pplayer ) // ignore player
           gather_helper(base, x, y, z);
       
       /// World Objects
       base = worldobjs_base;
       for( j = 0; j < worldobjs_max; j++, base += var_wldobjsize ) 
-        if(getWorldObjectIsActive(base)) 
+        if( getWorldObjectIsActive(base) ) 
           gather_helper(base, x, y, z);
         
       break;
@@ -11073,7 +11032,7 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
   static float mult = 1.0f;
   static float defval = 0.06f; // game default (EU v1.03 at least)
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
@@ -11163,7 +11122,7 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
   static int list_size_lcs = (sizeof(list_value_lcs)/sizeof(*list_value_lcs))-1;
   static int list_size_vcs = (sizeof(list_value_vcs)/sizeof(*list_value_vcs))-1;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STATUS: 
       return (int*)status;
       
@@ -11260,11 +11219,11 @@ void test_func() { //for testing only
   ///  LCS: Trigger Function test (see patchonce)
   //setTimedTextbox("LCS test Open Trunk!", 3);
   //if(LCS && pcar) 
-    //FUN_00008bd0(pcar); //open trunk
+    //FUN_00008bd0( pcar ); //open trunk
   
   ///  VCS: Backup water level areas
   /*logPrintf("Water: ");
-  int i, j, startofwater = getInt((LCS) ? global_ptr_water : global_ptr_water+gp) + 0xC;
+  int i, j, startofwater = getInt(LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
   for( i = startofwater, j = 0; i < startofwater+0x5000; i += 0x01, j++ ) //set water everywhere  
     if( *(unsigned char*)i == 0x80 ) 
       logPrintf("0x%X, ", j);
@@ -11370,7 +11329,6 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY:
-      
       drawString("test_switch() is ON", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
       
       //sprintf(retbuf, "Test: 0x%08X & %d = 0x%08X", global_mp_parameters, 2, global_mp_parameters & 2); // DAT_0037d768 & 2
@@ -11382,8 +11340,6 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
       y = getFloat(pplayer+0x34);
       z = getFloat(pplayer+0x38);      
       ret = FUN_000bc6d4_checkForGround(&x,auStack48,&iStack16,'\x01','\0','\0',0,0,0,0,'\0');
-      
-      
       
       sprintf(retbuf, "ret: %i, 0x%08X -> 0x%08X 0x%08X", ret, auStack48, &iStack16);
       
@@ -11410,8 +11366,8 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
       //setByte(testoffs, 0x00);
       
       //if( pcar ) {
-      //  testfunc2(pcar);
-      //  testfunc3(pcar);
+      //  testfunc2( pcar );
+      //  testfunc3( pcar );
       //}
       
       /*if(key_to_pad) {
@@ -11426,7 +11382,7 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
     
     //FUN_123(pobj); 
             
-      if( abc ) { // ulgy apply once
+      if( abc ) { // quick apply once
         abc = 0;
       }  
     

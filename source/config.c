@@ -71,9 +71,9 @@ extern u32 var_weaponDATslotsize;*/
 
 /******************************************************************
 
-Cheat    0x1xxx    xCHT
+Cheat     0x1xxx    xCHT
 Category  0x2xxx    xCAT
-Setting    0x3xxx    SETT
+Setting   0x3xxx    SETT
 
 Custom VehSpawns  ?
 Custom Pickups    ?
@@ -399,11 +399,11 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
   for( i = 0; i < menu_max; i++ ) {
     if( (LCS && menu_list[i].LC == TRUE) || (VCS && menu_list[i].VC == TRUE) ) { // only if this is meant for the game version
       func = (void *)(menu_list[i].value);
-	  
+    
       #ifdef LOG  
       logPrintf("[CONFIG] for: 0x%04X", menu_list[i].conf_id);
       #endif
-	  
+    
       if( menu_list[i].def_stat != -1 ) {
         
         /// CHEATS //////////////////////////////

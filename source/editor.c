@@ -252,8 +252,7 @@ const Editor_pack vcs_garage_menu[] = {
 void *garage_vehicle(int calltype, int keypress, int base_address, int address) { 
   static char buffer[32];
   
-  switch(calltype) {
-    
+  switch( calltype ) {
     case FUNC_GET_STRING:
       sprintf(buffer, "%s", getRealVehicleNameViaID(getShort(address))); // on error print hex
       if( buffer[0] == '\0' ) // some vehicles don't have translations..
@@ -265,12 +264,9 @@ void *garage_vehicle(int calltype, int keypress, int base_address, int address) 
       if( keypress ) {
         if ( keypress == PSP_CTRL_LEFT && getShort(address) > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
           setShort(address, getShort(address) - 1);
-
         } else if ( keypress == PSP_CTRL_RIGHT && getShort(address) < getLastIdeOfType(MODELINFO_VEHICLE) ) { // RIGHT
           setShort(address, getShort(address) + 1);
-          
         }
-        
       }
       break;
   }
@@ -281,8 +277,7 @@ void *radiostation(int calltype, int keypress, int base_address, int address) {
   static int i = 0;  
   static char buffer[16];
   
-  switch(calltype) {
-    
+  switch( calltype ) {
     case FUNC_GET_STRING:
       i = getByte(address);
       sprintf(buffer, "%s", getRadioStationName(i));
@@ -291,9 +286,9 @@ void *radiostation(int calltype, int keypress, int base_address, int address) {
     case FUNC_CHANGE_VALUE:
       if( keypress ) {
         i = getByte(address);
-        if ( keypress == PSP_CTRL_LEFT && i > 0 ) { ///LEFT
+        if( keypress == PSP_CTRL_LEFT && i > 0 ) { ///LEFT
           i--;
-        } else if ( keypress == PSP_CTRL_RIGHT ) { ///RIGHT
+        } else if( keypress == PSP_CTRL_RIGHT ) { ///RIGHT
           if( i < var_radios ) 
             i++;
         }
@@ -308,8 +303,7 @@ void *pedstatname(int calltype, int keypress, int base_address, int address) {
   static int i = 0;  
   static char buffer[16];
   
-  switch(calltype) {
-    
+  switch( calltype ) {
     case FUNC_GET_STRING:
       i = getByte(address);
       sprintf(buffer, "%s", getPedstatName(i) );
@@ -318,9 +312,9 @@ void *pedstatname(int calltype, int keypress, int base_address, int address) {
     case FUNC_CHANGE_VALUE:
       if( keypress ) {
         i = getByte(address);
-        if ( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
+        if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
+        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
           if( i < var_pedstatDATslots - 1 )
             i++;
         }
@@ -345,7 +339,6 @@ const Editor_pack lcs_pedobj_menu[] = {
   
 //  {"PED to ?"                      , ""      , 0x10C     , FALSE    , TYPE_INTEGER    , HEX    , 0            , 1      , INT_MIN  , INT_MAX   },
   
-  
 //  {"0x197 Flags"                   , ""      , 0x197     , TRUE    , TYPE_BIT      , 0      , 0            , 0      , 0      , 0     },
 //  {"0x197 Flags"                   , ""      , 0x197     , TRUE    , TYPE_BIT      , 1      , 0            , 0      , 0      , 0     },
   {"Bleeding bool"                   , ""      , 0x197     , TRUE    , TYPE_BIT      , 2      , 0            , 0      , 0      , 0     },
@@ -364,7 +357,6 @@ const Editor_pack lcs_pedobj_menu[] = {
   {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 6      , 0            , 0      , 0      , 0     }, */
   {"Invisible bool"                  , ""      , 0x19A     , TRUE    , TYPE_BIT      , 7      , 0            , 0      , 0      , 0     },
   
-  
   {"Bloody footprints"               , ""      , 0x198     , FALSE    , TYPE_BYTE      , HEX    , 0            , 0x1    , 0x00    , 0x40     },
   
   {"PED to focus?"                   , ""      , 0x258     , FALSE    , TYPE_INTEGER   , HEX    , 0            , 1      , INT_MIN  , INT_MAX },
@@ -372,7 +364,6 @@ const Editor_pack lcs_pedobj_menu[] = {
   {"PED to follow?"                  , ""      , 0x274     , FALSE    , TYPE_INTEGER   , HEX    , 0            , 1      , INT_MIN  , INT_MAX },
   
   {"PED to ?"                        , ""      , 0x310     , FALSE    , TYPE_INTEGER   , HEX    , 0            , 1      , INT_MIN  , INT_MAX },
-  
   
   {"Movement Status"                 , ""      , 0x354     , FALSE    , TYPE_BYTE      , HEX    , 0            , 0x1    , 0x0000  , 0xFFFF   }, // 0x01 = standing, 0x02 = walking, 0x04 = running, 0x05 = sprinting
   
@@ -442,8 +433,7 @@ const Editor_pack vcs_pedobj_menu[] = {
   {"World Coordinate Z"             , ""       , 0x38      , TRUE    , TYPE_FLOAT      , 2      , 0            , 0.1    , -4000    , 4000    },
 
   {"Identifier"                     , ""       , 0x58      , FALSE   , TYPE_BYTE       , DEC    , 0            , 0x1    , 0x0000  , 0xFFFF   },
-  
-  
+
   {"Weight 1"                       , ""      , 0xD0       , TRUE    , TYPE_FLOAT      , 2      , 0            , 1      , 0       , 999999   },
   {"Weight 2"                       , ""      , 0xD4       , TRUE    , TYPE_FLOAT      , 2      , 0            , 1      , 0       , 999999   },
 
@@ -633,21 +623,19 @@ const Editor_pack vcs_pickups_menu[] = {
 icon  Color  "0x4"  "0x8"    
 -----------------------------------
 0    2    1    0x1101     "friend" blue vehicle with vincenzo on passaenger seat
-            0x1201
-            0x1000 -> vehicle on slot 16
-            
-            
-0    4    4    0      "destination" yellow location with sphere
-40    2    5    0      Vincenzo Icon
+               0x1201
+               0x1000     -> vehicle on slot 16
+                    
+0    4    4    0          "destination" yellow location with sphere
+40   2    5    0          Vincenzo Icon
 0    0    2    0x1614     "Threat" red PED enemy to kill  (world coordinates are NOT updated)
 0    0    2    0x2D04     "Threat" red PED enemy to kill  (world coordinates are NOT updated)
 0    0    2    0x3601     "Threat" red PED enemy to kill  (world coordinates are NOT updated)
 
-                          "0x4"  "coords"  ""      "Display"  
-018B add blip for car         ->  FUN_001640b0(1,    DAT_val,  0,      3);
-018C add blip for char        ->  FUN_001640b0(2,    DAT_val,  0,      3);
-018D add blip for object       ->  FUN_001640b0(3,    DAT_val,  1,      3);
-018F add blip for coordinate     ->  FUN_00163e40(4,    &local_b0,  4)
+018B add blip for car               ->  FUN_001640b0(1,    DAT_val,  0,      3);
+018C add blip for char              ->  FUN_001640b0(2,    DAT_val,  0,      3);
+018D add blip for object            ->  FUN_001640b0(3,    DAT_val,  1,      3);
+018F add blip for coordinate        ->  FUN_00163e40(4,    &local_b0,  4)
 018E blip with sphere to coordinate ->  FUN_00163e40(5,    &local_b0,  5);
 ****/
 const Editor_pack lcs_mapicons_menu[] = {
@@ -717,7 +705,6 @@ void *mapicon_color(int calltype, int keypress, int base_address, int address) {
   static char buffer[16];
   
   switch( calltype ) {
-    
     case FUNC_GET_STRING:
       if( getMapiconColor(base_address) >= 0 && getMapiconColor(base_address) <= 8 ) 
         sprintf(buffer, "%s", getMapiconColorName(base_address));
@@ -727,7 +714,7 @@ void *mapicon_color(int calltype, int keypress, int base_address, int address) {
       
     case FUNC_CHANGE_VALUE:
       if( keypress && getMapiconColor(base_address) >= 0 && getMapiconColor(base_address) <= 8 ) {
-        if ( keypress == PSP_CTRL_LEFT && color > 0 ) { ///LEFT
+        if( keypress == PSP_CTRL_LEFT && color > 0 ) { ///LEFT
           color--;
         } else if ( keypress == PSP_CTRL_RIGHT && color < 8 ) { ///RIGHT
           color++;
@@ -756,14 +743,12 @@ void *mapicon_slot(int calltype, int keypress, int base_address, int address) {
   static char buffer[16];
   
   switch( calltype ) {
-    
     case FUNC_GET_STRING:
       if( getMapiconLinkedObjectSlotNumber(base_address) != -1 ) 
         sprintf(buffer, "#%i", getMapiconLinkedObjectSlotNumber(base_address)+1);
       else 
         sprintf(buffer, "/");
       return (void *)buffer;
-
   }
   return NULL;
 }
@@ -1024,10 +1009,10 @@ void *vehicle_flag2(int calltype, int keypress, int base_address, int address) {
   
   if( calltype == FUNC_CHANGE_VALUE ) {
     if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
+      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
         nibble--;
         
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
+      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
       setNibbleHigh(address, nibble);
@@ -1042,7 +1027,7 @@ void *vehicle_flag3(int calltype, int keypress, int base_address, int address) {
   char nibble = getNibbleLow(address);
   
   if( calltype == FUNC_GET_STRING ) {
-    switch(nibble) { 
+    switch( nibble ) { 
       case 0x1: return "DBL_EXHAUST";
       case 0x2: return "TAILGATE_BOOT";
       case 0x4: return "NOSWING_BOOT";
@@ -1088,10 +1073,10 @@ void *vehicle_flag4(int calltype, int keypress, int base_address, int address) {
   
   if( calltype == FUNC_CHANGE_VALUE ) {
     if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
+      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
         nibble--;
         
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
+      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
       setNibbleHigh(address, nibble);
@@ -1120,10 +1105,10 @@ void *vehicle_flag5(int calltype, int keypress, int base_address, int address) {
   
   if( calltype == FUNC_CHANGE_VALUE ) {
     if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
+      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
         nibble--;
         
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
+      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
       setNibbleLow(address, nibble);
@@ -1150,12 +1135,12 @@ void *vehicle_flag6(int calltype, int keypress, int base_address, int address) {
     }
   }
   
-  if(calltype == FUNC_CHANGE_VALUE) {
+  if( calltype == FUNC_CHANGE_VALUE ) {
     if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
+      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
         nibble--;
         
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
+      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
       setNibbleHigh(address, nibble);
@@ -1169,7 +1154,7 @@ void *vehicle_flag7(int calltype, int keypress, int base_address, int address) {
   static char buffer[8];
   char nibble = getNibbleLow(address);
   
-  if(calltype == FUNC_GET_STRING) {
+  if( calltype == FUNC_GET_STRING ) {
     switch(nibble) {
       case 0x1: return "FAT_REARW";
       case 0x2: return "NARROW_FRONTW";
@@ -1183,10 +1168,10 @@ void *vehicle_flag7(int calltype, int keypress, int base_address, int address) {
   
   if( calltype == FUNC_CHANGE_VALUE ) {
     if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
+      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
         nibble--;
         
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
+      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
       setNibbleLow(address, nibble);
@@ -1212,10 +1197,10 @@ void *vehicle_flag8(int calltype, int keypress, int base_address, int address) {
   
   if( calltype == FUNC_CHANGE_VALUE ) {
     if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
+      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
         nibble--;
         
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
+      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
       setNibbleHigh(address, nibble);
@@ -1233,12 +1218,12 @@ void *vehicle_enginetype(int calltype, int keypress, int base_address, int addre
   static char buffer[16];
   unsigned char current;
   
-  switch(calltype) {
+  switch( calltype ) {
     
     case FUNC_GET_STRING:
       current = getByte(address);
-      for ( i = 0; i < list_size; i++ ) {
-        if ( current == list_val[i] ) break;
+      for( i = 0; i < list_size; i++ ) {
+        if( current == list_val[i] ) break;
       }
       if( i == list_size && current != list_val[i-1]) {
         i = -1; // error - not found in list
@@ -1250,9 +1235,9 @@ void *vehicle_enginetype(int calltype, int keypress, int base_address, int addre
   
     case FUNC_CHANGE_VALUE:
       if( keypress ) {
-        if ( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
+        if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
+        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
           if( LCS && i < list_size-1 ) 
             i++;
         }
@@ -1271,12 +1256,12 @@ void *vehicle_lights_front(int calltype, int keypress, int base_address, int add
   static char buffer[16];
   unsigned char current;
   
-  switch(calltype) {
+  switch( calltype ) {
     
     case FUNC_GET_STRING:
       current = getByte(address);
-      for ( i = 0; i < list_size; i++ ) {
-        if ( current == list_val[i] ) break;
+      for( i = 0; i < list_size; i++ ) {
+        if( current == list_val[i] ) break;
       }
       if( i == list_size && current != list_val[i-1]) {
         i = -1; // error - not found in list
@@ -1288,9 +1273,9 @@ void *vehicle_lights_front(int calltype, int keypress, int base_address, int add
   
     case FUNC_CHANGE_VALUE:
       if( keypress ) {
-        if ( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
+        if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
+        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
           if( LCS && i < list_size-1 ) 
             i++;
         }
@@ -1309,12 +1294,12 @@ void *vehicle_lights_rear(int calltype, int keypress, int base_address, int addr
   static char buffer[16];
   unsigned char current;
   
-  switch(calltype) {
+  switch( calltype ) {
     
     case FUNC_GET_STRING:
       current = getByte(address);
-      for ( i = 0; i < list_size; i++ ) {
-        if ( current == list_val[i] ) break;
+      for( i = 0; i < list_size; i++ ) {
+        if( current == list_val[i] ) break;
       }
       if( i == list_size && current != list_val[i-1]) {
         i = -1; // error - not found in list
@@ -1326,9 +1311,9 @@ void *vehicle_lights_rear(int calltype, int keypress, int base_address, int addr
   
     case FUNC_CHANGE_VALUE:
       if( keypress ) {
-        if ( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
+        if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
+        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
           if( LCS && i < list_size-1 ) 
             i++;
         }
@@ -1347,7 +1332,7 @@ void *vehicle_transtype(int calltype, int keypress, int base_address, int addres
   static char buffer[16];
   unsigned char current;
   
-  switch(calltype) {
+  switch( calltype ) {
     case FUNC_GET_STRING:
       current = getByte(address);
       for( i = 0; i < list_size; i++ ) {
@@ -1964,11 +1949,11 @@ const Editor_pack vcs_weapondat_menu[] = {
 
 
 
-//    Amb        Amb_Obj    Amb_bl    Amb_Obj_bl  Dir        Sky top    Sky bot    SunCore    SunCorona  SunSz  SprSz  SprBght    Shdw  LightShd  PoleShd    FarClip    FogSt  LightOnGround  LowCloudsRGB  TopCloudRGB    BottomCloudRGB  BlurRGB      WaterRGBA
-//     178  183  255    95 95 95    20  20 20    63 63  51  92 92 97    0 0 5    16 16 29  255 255 0  5  0  0  1.0    1.3    1.0      239    99      0      900.0    100.0  1.5        30  20  0    23  32  33    3 3 3      18  26  23    80 92 99 80
+//     Amb        Amb_Obj    Amb_bl    Amb_Obj_bl  Dir        Sky top    Sky bot    SunCore    SunCorona  SunSz  SprSz  SprBght    Shdw  LightShd  PoleShd    FarClip    FogSt  LightOnGround  LowCloudsRGB  TopCloudRGB    BottomCloudRGB  BlurRGB      WaterRGBA
+//    178  183  255    95 95 95    20  20 20    63 63  51  92 92 97    0 0 5    16 16 29  255 255 0  5  0  0  1.0    1.3    1.0      239    99      0      900.0    100.0  1.5        30  20  0    23  32  33    3 3 3      18  26  23    80 92 99 80
 
 // LC   Amb       Amb_Obj    Amb_bl    Amb_Obj_bl  Dir        Sky top    Sky bot    SunCore    SunCorona  SunSz  SprSz  SprBght    Shdw  LightShd  PoleShdw  FarClp    FogSt  LightOnGround  LowCloudsRGB  TopCloudRGB    BottomCloudRGB  BlurRGB      WaterRGBA
-// GTA3 AMB        XXXX    XXXX    XXXX    DIR        SKY TOP    SKY BOT    SUNCORE   SUNCORONA  SUNSZ    SPRSZ  SPRBGHT   SHDW  LIGHTSHD  TREESHD    FARCLP    FOGST  LIGHTONGROUND  LOWCLOUDSRGB  TOPCLOUDRGB    BOTTOMCLOUDRGB  XXXX      WATERRGBA
+// GTA3 AMB        XXXX      XXXX      XXXX        DIR        SKY TOP    SKY BOT    SUNCORE   SUNCORONA  SUNSZ    SPRSZ  SPRBGHT   SHDW  LIGHTSHD  TREESHD    FARCLP    FOGST  LIGHTONGROUND  LOWCLOUDSRGB  TOPCLOUDRGB    BOTTOMCLOUDRGB  XXXX      WATERRGBA
 //    55 55 45     95 95 95   55 55 45  55 55 45  255 255 255    0 0 5    05 05 05   255 255 0  5 0 0    1.0    1.0    1.0      200    100      0      2000.0    100.0  1.0        30 20 0      23 32 33    3 3 3      056  038  000  85  85  65  192
 
 const Editor_pack timecycdat_menu[] = { 
@@ -2130,15 +2115,15 @@ void *editor_garage(int calltype, int value) {
     sprintf(buffer, " (%i/%i)", garage_cur, var_garageslots );
     return (void *)buffer;
 
-  } else if(calltype == FUNC_GET_VALUE ) {
+  } else if( calltype == FUNC_GET_VALUE ) {
     return (int*)editor_garage_current;
   
-  } else if(calltype == FUNC_SET ) {
+  } else if( calltype == FUNC_SET ) {
     editor_garage_current = value;
     return 0;
   }
   
-  editor_create(EDITOR_GARAGE, 2, "Garage", ((LCS) ? lcs_garage_menu : vcs_garage_menu), global_garagedata, var_garageslotsize, var_garageslots);
+  editor_create(EDITOR_GARAGE, 2, "Garage", (LCS ? lcs_garage_menu : vcs_garage_menu), global_garagedata, var_garageslotsize, var_garageslots);
   return NULL;
 }
 
@@ -2156,7 +2141,7 @@ void *editor_pedobj(int calltype, int value) {
     editor_pedobj_current = value;
     return 0;
   }
-  editor_create(EDITOR_PEDOBJ, 1, "People Objects", ((LCS) ? lcs_pedobj_menu : vcs_pedobj_menu), peds_base, var_pedobjsize, peds_max);
+  editor_create(EDITOR_PEDOBJ, 1, "People Objects", (LCS ? lcs_pedobj_menu : vcs_pedobj_menu), peds_base, var_pedobjsize, peds_max);
   return NULL;
 }
 
@@ -2173,7 +2158,7 @@ void *editor_vehicleobj(int calltype, int value) {
     editor_vehicleobj_current = value;
     return 0;
   }
-  editor_create(EDITOR_VEHICLEOBJ, 1, "Vehicle Objects", ((LCS) ? lcs_vehicleobj_menu : vcs_vehicleobj_menu), vehicles_base, var_vehobjsize, vehicles_max);
+  editor_create(EDITOR_VEHICLEOBJ, 1, "Vehicle Objects", (LCS ? lcs_vehicleobj_menu : vcs_vehicleobj_menu), vehicles_base, var_vehobjsize, vehicles_max);
   return NULL;
 }
 
@@ -2191,7 +2176,7 @@ void *editor_worldobj(int calltype, int value) {
     editor_worldobj_current = value;
     return 0;
   }
-  editor_create(EDITOR_WORLDOBJ, 1, "World Objects", ((LCS) ? lcs_worldobj_menu : vcs_worldobj_menu), worldobjs_base, var_wldobjsize, worldobjs_max);
+  editor_create(EDITOR_WORLDOBJ, 1, "World Objects", (LCS ? lcs_worldobj_menu : vcs_worldobj_menu), worldobjs_base, var_wldobjsize, worldobjs_max);
   return NULL;
 }
 
@@ -2226,7 +2211,7 @@ void *editor_pickups(int calltype, int value) {
     editor_pickup_current = value;
     return 0;
   }
-  editor_create(EDITOR_PICKUPS, 1, "Pickups", ((LCS) ? lcs_pickups_menu : vcs_pickups_menu), global_pickups, var_pickupslotsize, var_pickupslots);
+  editor_create(EDITOR_PICKUPS, 1, "Pickups", (LCS ? lcs_pickups_menu : vcs_pickups_menu), global_pickups, var_pickupslotsize, var_pickupslots);
   return NULL;
 }
 
@@ -2244,7 +2229,7 @@ void *editor_mapicons(int calltype, int value) {
     editor_mapicon_current = value;
     return 0;
   }
-  editor_create(EDITOR_MAPICONS, 1, "Mapicons", ((LCS) ? lcs_mapicons_menu : vcs_mapicons_menu), ((LCS) ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)), var_radarblipslotsize, var_radarblipslots);
+  editor_create(EDITOR_MAPICONS, 1, "Mapicons", (LCS ? lcs_mapicons_menu : vcs_mapicons_menu), (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)), var_radarblipslotsize, var_radarblipslots);
   return NULL;
 }
 
@@ -2262,7 +2247,7 @@ void *editor_vehspawns(int calltype, int value) {
     editor_vehiclespawn_current = value;
     return 0;
   }
-  editor_create(EDITOR_VEHWORLDSPAWNS, 1, "Parked Vehicle Spawns", ((LCS) ? lcs_vehiclespawns_menu : vcs_vehiclespawns_menu), addr_vehiclesworldspawn, var_vehiclesworldspawnslotsize, var_vehiclesworldspawnslots);
+  editor_create(EDITOR_VEHWORLDSPAWNS, 1, "Parked Vehicle Spawns", (LCS ? lcs_vehiclespawns_menu : vcs_vehiclespawns_menu), addr_vehiclesworldspawn, var_vehiclesworldspawnslotsize, var_vehiclesworldspawnslots);
   return NULL;
 }
 
@@ -2282,7 +2267,7 @@ void *editor_ide(int calltype, int value) {
     return 0;
   }
   
-  editor_create(EDITOR_IDE, 1, "IDEs", (LCS ? lcs_ide_menu : vcs_ide_menu), getInt(ptr_IDETable+((LCS)?0x0:gp)), 0x4, getInt(ptr_IDEs+((LCS)?0x0:gp))); // this is special as its a pointer table thus 0x4 for one pointer
+  editor_create(EDITOR_IDE, 1, "IDEs", (LCS ? lcs_ide_menu : vcs_ide_menu), getInt(ptr_IDETable+(LCS?0x0:gp)), 0x4, getInt(ptr_IDEs+(LCS?0x0:gp))); // this is special as its a pointer table thus 0x4 for one pointer
   return NULL;
 }
 

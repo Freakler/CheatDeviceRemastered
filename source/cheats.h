@@ -204,6 +204,7 @@ void teleport_marker();
 void teleport_mission();
 void kill_all_targets();
 void freeze_all_targets();
+void mission_selector();
 void *down_button(int calltype, int keypress, int defaultstatus, int defaultval);
 void *up_button(int calltype, int keypress, int defaultstatus, int defaultval);
 void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval);
@@ -257,9 +258,7 @@ void *cdr_alternativefont(int calltype, int keypress, int defaultstatus);
 void *cdr_autostartmenu(int calltype, int keypress, int defaultstatus);
 void *cdr_freezegameinmenu(int calltype, int keypress, int defaultstatus);
 void *cdr_uselegend(int calltype, int keypress, int defaultstatus);
-void *cdr_smallegend(int calltype, int keypress, int defaultstatus);
 void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus);
-void *cdr_userinterface(int calltype, int keypress, int defaultstatus);
 void *cdr_liveconfig(int calltype, int keypress, int defaultstatus);
 void *cdr_advancedconfig(int calltype, int keypress, int defaultstatus);
 

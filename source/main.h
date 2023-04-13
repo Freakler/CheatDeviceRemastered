@@ -32,15 +32,15 @@
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
-#define NAMERESOLV // (10KB) name resolver system for translating hashes (can also remove minIni from makefile if off)
+#define NAMERESOLV // (~10KB) name resolver system for translating hashes (can also remove minIni from makefile if off)
 
-#define FREECAM // (21KB)
-#define EDITORS // (100KB)
-#define USERSCRIPTS // (19KB)
-#define HEXEDITOR // (30KB)
-#define CONFIG // (8KB)
+#define FREECAM // (~21KB)
+#define EDITORS // (~100KB)
+#define USERSCRIPTS // (~19KB)
+#define HEXEDITOR // (~30KB)
+#define CONFIG // (~8KB)
 
-//#define ACHIEVEMENTS // (4KB) discontinued
+//#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed
 
 /**********************************************************************************************************************/
