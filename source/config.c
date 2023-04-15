@@ -627,7 +627,7 @@ int workBlock(SceUID file, const Menu_pack *menu_list, int menu_max, int identif
         
         } else { /// "FUNC_GET_STATUS"
           if( identifier == 2 ) { // Categories
-            writeBool(file, menu_list[i].conf_id, category_index[menu_list[i].cat]); // get category bools directly from array
+            writeBool(file, menu_list[i].conf_id, category_index[(short)menu_list[i].cat]); // get category bools directly from array
           
           } else // everything else
             writeBool(file, menu_list[i].conf_id, (int)func(FUNC_GET_STATUS, 42)); // some cheats like "world_gravity" return a different value than the normal status to store (thus 42 as identifier for that)

@@ -175,7 +175,6 @@ void *traffic_freeze(int calltype, int keypress, int defaultstatus);
 void *peds_density(int calltype, int keypress, int defaultstatus);
 void *peds_killaiming(int calltype, int keypress, int defaultstatus);
 void *peds_freeze(int calltype, int keypress, int defaultstatus);
-void *peds_showstats(int calltype, int keypress, int defaultstatus);
 void *max_health(int calltype, int keypress);
 void *max_armor(int calltype, int keypress);
 void *powerjump(int calltype, int keypress, int defaultstatus);

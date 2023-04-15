@@ -32,10 +32,10 @@
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
-#define NAMERESOLV // (~10KB) name resolver system for translating hashes (can also remove minIni from makefile if off)
+#define NAMERESOLV // (~1KB) name resolver system for translating hashes (can also remove minIni from makefile if off)
 
-#define FREECAM // (~21KB)
-#define EDITORS // (~100KB)
+#define FREECAM // (~22KB)
+#define EDITORS // (~105KB)
 #define USERSCRIPTS // (~19KB)
 #define HEXEDITOR // (~30KB)
 #define CONFIG // (~8KB)
@@ -52,14 +52,14 @@ enum{
 
 typedef struct {
   char *path;
-  short cat;
-  short type;
-  short LC; // for Liberty City Stories
-  short VC; // for Vice City Stories
-  short SP; // for Singleplayer
-  short MP; // for Multiplayer
+  char cat;
+  char type;
+  char LC; // for Liberty City Stories
+  char VC; // for Vice City Stories
+  char SP; // for Singleplayer
+  char MP; // for Multiplayer
   short conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
-  short def_stat;
+  char def_stat;
   void *value;
   char *msg1;
   char *msg2;

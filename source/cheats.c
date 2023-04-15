@@ -4520,8 +4520,8 @@ void *coords_toggle(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-char speed[16];
-char gear[16];
+char speed[10];
+char gear[10];
 void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   static int i = 0;
@@ -8432,7 +8432,7 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
  * 
  * Notes: 
  **************************************************************************************************************************************/
-void *peds_showstats(int calltype, int keypress, int defaultstatus) {
+/*void *peds_showstats(int calltype, int keypress, int defaultstatus) {
   static int status;
   static int j;
   
@@ -8481,7 +8481,7 @@ void *peds_showstats(int calltype, int keypress, int defaultstatus) {
    
   return NULL;
   
-}
+}*/
 
 
 
@@ -10098,7 +10098,7 @@ const char *buttonCheatNames[] = {
   "Reverse Gravity",
   "Toggle GatherSpell", 
   "Toggle Slowmo", 
-  "Impuls", 
+  "Impulse", 
   "Jump with Vehicle", 
   //Zoom out minimap
   //
@@ -10173,7 +10173,7 @@ void buttonApplyOnce(int i) { // apply once on button press
       gamespeed(FUNC_CHANGE_VALUE, PSP_CTRL_CIRCLE, 0, 0);
     }
     
-  } else if( i == 13 ) { // Impuls
+  } else if( i == 13 ) { // Impulse
     int j, base;
     float radius = 50.0f; // in which force should be applied
     float x1 = getFloat(pobj+0x30);

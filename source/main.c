@@ -169,7 +169,7 @@ extern const char *weather_vcs[];
 
 const Menu_pack main_menu[] = {
   
-  /// char *path                         short cat    short type        short LC  VC   SP     MP       conf_id   def_stat  void *value        char *msg1                char *msg2              char *desc
+  /// char *path                        cat           type               LC      VC      SP      MP     conf_id  def_stat  void *value        char *msg1                          char *msg2                              char *desc
   
   // // DEBUG // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
@@ -272,7 +272,6 @@ const Menu_pack main_menu[] = {
   {"Disable Peds"                     , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1770 , OFF , peds_density         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely disable Pedestrians! (special ones might still appear)"  },
   {"Freeze Peds"                      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x191C , OFF , peds_freeze          , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Freeze Pedestrians current positions in the world."  },
   {"Touch Ped to: "                   , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x14BA , OFF , touch_pedestrian     , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Decide what should happen with a Ped as soon as you touch it." },
-  {"Show Ped's Stats when aimed"      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x17A4 , OFF , peds_showstats       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Aiming at a Pedestrian will display its stats."  },
   {"Kill everyone aiming at you"      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1611 , OFF , peds_killaiming      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Everyone aiming at you will be killed instantly!"  },
   {"Ped Walking Speed: "              , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x191A , OFF , pedwalking_speed     , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust the Pedestrians walking and sprinting speed." },
   {""                                 , CAT_PEDS    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -2942,59 +2941,67 @@ int editor_draw() {
         val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].address+editor_base_adr);
         sprintf(buffer, "%s%s", val, editor_curmenu[i].postfix );
         
-      } else { // plain value editing  
+      } else { // plain value editing 
+        int adr = editor_curmenu[i].address+editor_base_adr;
+        char pre = editor_curmenu[i].precision;	  
+        char* fix = editor_curmenu[i].postfix;	  
         switch( editor_curmenu[i].type ) {
           case TYPE_BYTE:
-            sprintf(buffer, editor_curmenu[i].precision ? "%i%s" : "0x%02X%s", *(unsigned char*)(editor_curmenu[i].address+editor_base_adr), editor_curmenu[i].postfix);
+            sprintf(buffer, pre ? "%i%s" : "0x%02X%s", *(unsigned char*)(adr), fix);
             break;
           
           case TYPE_BYTE_AS_FLT:
-            sprintf(buffer, "%.*f%s", editor_curmenu[i].precision, (float)(*(unsigned char*)(editor_curmenu[i].address+editor_base_adr)) / 10, editor_curmenu[i].postfix); // used in timecycle for example
+            sprintf(buffer, "%.*f%s", pre, (float)(*(unsigned char*)(adr)) / 10, fix); // used in timecycle for example
             break;
             
           case TYPE_SHORT:
-            sprintf(buffer, editor_curmenu[i].precision ? "%i%s" : "0x%X%s", *(short*)(editor_curmenu[i].address+editor_base_adr), editor_curmenu[i].postfix);
+            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(short*)(adr), fix);
             break;
             
           case TYPE_INTEGER:
-            sprintf(buffer, editor_curmenu[i].precision ? "%i%s" : "0x%X%s", *(int*)(editor_curmenu[i].address+editor_base_adr), editor_curmenu[i].postfix);
+            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(int*)(adr), fix);
             break;
           
           case TYPE_FLOAT:
-            sprintf(buffer, "%.*f%s", editor_curmenu[i].precision, *(float*)(editor_curmenu[i].address+editor_base_adr), editor_curmenu[i].postfix); // argument-supplied precision
+            sprintf(buffer, "%.*f%s", pre, *(float*)(adr), fix); // argument-supplied precision
             break;
             
           case TYPE_BOOL:
-            if( *(unsigned char*)(editor_curmenu[i].address+editor_base_adr) == editor_curmenu[i].max ) { // max must be the true value
+            /*if( *(unsigned char*)(adr) == editor_curmenu[i].max ) { // max must be the true value
               sprintf(buffer, "TRUE");
-            } else if(*(unsigned char*)(editor_curmenu[i].address+editor_base_adr) == editor_curmenu[i].min ) { // min must be the false value
+            } else if(*(unsigned char*)(adr) == editor_curmenu[i].min ) { // min must be the false value
+              sprintf(buffer, "FALSE");
+            } else sprintf(buffer, "ERROR");*/
+			if( *(unsigned char*)(adr) == 1 ) {
+              sprintf(buffer, "TRUE");
+            } else if(*(unsigned char*)(adr) == 0 ) {
               sprintf(buffer, "FALSE");
             } else sprintf(buffer, "ERROR");
             break;
             
           case TYPE_BIT:
-            if( *(char*)(editor_curmenu[i].address+editor_base_adr) & (1 << editor_curmenu[i].precision) ) {
+            if( *(char*)(adr) & (1 << pre) ) {
               sprintf(buffer, "TRUE"); // bit is set
             } else sprintf(buffer, "FALSE");
             break;
             
           case TYPE_NIBBLE_LOW:  // eg: 0xE6  -> 6  0110
-            sprintf(buffer, editor_curmenu[i].precision ? "%i%s" : "0x%X%s", *(unsigned char*)(editor_curmenu[i].address+editor_base_adr) & 0xF, editor_curmenu[i].postfix);
+            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) & 0xF, fix);
             break;
             
           case TYPE_NIBBLE_HIGH: // eg: 0xE6  -> E  1110
-            sprintf(buffer, editor_curmenu[i].precision ? "%i%s" : "0x%X%s", *(unsigned char*)(editor_curmenu[i].address+editor_base_adr) >> 4, editor_curmenu[i].postfix);
+            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) >> 4, fix);
             break;
             
           case TYPE_STRING: 
             sprintf(buffer, "'");
-            for( str_pos = 0; str_pos < editor_curmenu[i].precision && getByte(editor_curmenu[i].address+editor_base_adr+str_pos) != 0x00; str_pos++ ) {
-              sprintf(buffer, "%s%c", buffer, *(char*)(editor_curmenu[i].address+editor_base_adr+str_pos));
-            } sprintf(buffer, "%s'%s", buffer, editor_curmenu[i].postfix);
+            for( str_pos = 0; str_pos < pre && getByte(adr+str_pos) != 0x00; str_pos++ ) {
+              sprintf(buffer, "%s%c", buffer, *(char*)(adr+str_pos));
+            } sprintf(buffer, "%s'%s", buffer, fix);
             break;
           
           case TYPE_DUMMY: 
-            sprintf(buffer, "%s", editor_curmenu[i].postfix);
+            sprintf(buffer, "%s", fix);
             break;
         }
       }
@@ -3424,57 +3431,53 @@ int editor_ctrl() {
         } else {
           
           char c, c_new;
-          
+          int adr = editor_curmenu[editor_selection_val].address+editor_base_adr;
+          char pre = editor_curmenu[editor_selection_val].precision;
+		  
           if( (current_buttons & PSP_CTRL_RTRIGGER) == 0 ) { // not R Trigger
-          
             if( hold_buttons & PSP_CTRL_LEFT ) {          
               switch( editor_cur_type ) {
                 case TYPE_BYTE: case TYPE_BYTE_AS_FLT:
-                  if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].min ) *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr)-=editor_curmenu[editor_selection_val].steps;
-                  else if ( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].min ) *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].min;
+                  *(char*)(adr)-=editor_curmenu[editor_selection_val].steps;
                   break;
                   
                 case TYPE_SHORT:
-                  if( getShort(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].min ) *(short*)(editor_curmenu[editor_selection_val].address+editor_base_adr)-=editor_curmenu[editor_selection_val].steps;
-                  else if( getShort(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].min ) *(short*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].min;
+                  *(short*)(adr)-=editor_curmenu[editor_selection_val].steps;
                   break;
                   
                 case TYPE_INTEGER:
-                  if( getInt(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].min ) *(int*)(editor_curmenu[editor_selection_val].address+editor_base_adr)-=editor_curmenu[editor_selection_val].steps;
-                  else if( getInt(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].min ) *(int*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].min;
+                  *(int*)(adr)-=editor_curmenu[editor_selection_val].steps;
                   break;
                   
                 case TYPE_FLOAT:
-                  if( getFloat(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].min ) *(float*)(editor_curmenu[editor_selection_val].address+editor_base_adr)-=editor_curmenu[editor_selection_val].steps;
-                  else if( getFloat(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].min ) *(float*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].min;
+                  *(float*)(adr)-=editor_curmenu[editor_selection_val].steps;
                   break;
                   
                 case TYPE_BIT:        
-                  if( *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) & (1 << editor_curmenu[editor_selection_val].precision) ) { // BIT TRUE
-                    *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) &= ~(1 << editor_curmenu[editor_selection_val].precision); // flip bit OFF at index .precision
+                  if( *(char*)(adr) & (1 << pre) ) { // BIT TRUE
+                    *(char*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
                   } else { // BIT FALSE
-                    *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) |= (1 << editor_curmenu[editor_selection_val].precision); // flip bit ON at index .precision
+                    *(char*)(adr) |= (1 << pre); // flip bit ON at index .precision
                   }  
                   break;
                   
                 case TYPE_BOOL:
-                  if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) == editor_curmenu[editor_selection_val].min ) *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].max;
-                  else if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) == editor_curmenu[editor_selection_val].max ) *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].min;
+                  *(char*)(adr) = 1 - *(char*)(adr);
                   break;
                   
                 case TYPE_NIBBLE_LOW: // eg: 0xE6 & 0xF    -> 0x6    = 0x 0000 0110
-                  c = getByte(editor_curmenu[editor_selection_val].address+editor_base_adr);
-                  if( (c & 0xF) > editor_curmenu[editor_selection_val].min ) { //0x6 > 0x0
+                  c = getByte(adr);
+                  if( (c & 0xF) > 0 ) { //0x6 > 0x0
                     c_new = (c & 0xF) - editor_curmenu[editor_selection_val].steps;
-                    *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
+                    *(char*)(adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
                   }
                   break;
                   
                 case TYPE_NIBBLE_HIGH: // eg: 0xE6 >> 4    -> 0xE    = 0x 0000 1110
                   c = getByte(editor_curmenu[editor_selection_val].address+editor_base_adr);
-                  if( ((c >> 4) & 0xF) > editor_curmenu[editor_selection_val].min ) { //0xE6 -> 0x?E -> 0x0E    >     0x0
+                  if( ((c >> 4) & 0xF) > 0 ) { //0xE6 -> 0x?E -> 0x0E    >     0x0
                      c_new = (c >> 4) - editor_curmenu[editor_selection_val].steps;
-                     *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
+                     *(char*)(adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
                   }
                   break;
               }
@@ -3484,51 +3487,46 @@ int editor_ctrl() {
             if( hold_buttons & PSP_CTRL_RIGHT ) {
               switch( editor_cur_type ) {
                 case TYPE_BYTE: case TYPE_BYTE_AS_FLT:
-                  if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].max ) *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr)+=editor_curmenu[editor_selection_val].steps;
-                  else if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].max ) *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].max;
+                  *(char*)(adr)+=editor_curmenu[editor_selection_val].steps;
                   break;
                   
                 case TYPE_SHORT:
-                  if( getShort(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].max ) *(short*)(editor_curmenu[editor_selection_val].address+editor_base_adr)+=editor_curmenu[editor_selection_val].steps;
-                  else if( getShort(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].max ) *(short*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].max;
+                  *(short*)(adr)+=editor_curmenu[editor_selection_val].steps;
                   break;
                     
                 case TYPE_INTEGER:
-                  if( getInt(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].max ) *(int*)(editor_curmenu[editor_selection_val].address+editor_base_adr)+=editor_curmenu[editor_selection_val].steps;
-                  else if( getInt(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].max ) *(int*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].max;
+                  *(int*)(adr)+=editor_curmenu[editor_selection_val].steps;
                   break;
                   
                 case TYPE_FLOAT:
-                  if( getFloat(editor_curmenu[editor_selection_val].address+editor_base_adr) < editor_curmenu[editor_selection_val].max ) *(float*)(editor_curmenu[editor_selection_val].address+editor_base_adr)+=editor_curmenu[editor_selection_val].steps;
-                  else if( getFloat(editor_curmenu[editor_selection_val].address+editor_base_adr) > editor_curmenu[editor_selection_val].max ) *(float*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].max;
+                  *(float*)(adr)+=editor_curmenu[editor_selection_val].steps;
                   break;
                   
                 case TYPE_BIT:        
-                  if( *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) & (1 << editor_curmenu[editor_selection_val].precision) ) { // BIT TRUE
-                    *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) &= ~(1 << editor_curmenu[editor_selection_val].precision); // flip bit OFF at index .precision
+                  if( *(char*)(adr) & (1 << pre) ) { // BIT TRUE
+                    *(char*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
                   } else { //BIT FALSE
-                    *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) |= (1 << editor_curmenu[editor_selection_val].precision); // flip bit ON at index .precision
+                    *(char*)(adr) |= (1 << pre); // flip bit ON at index .precision
                   }  
                   break;  
                   
                 case TYPE_BOOL:
-                  if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) == editor_curmenu[editor_selection_val].min ) *(unsigned char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].max;
-                  else if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) == editor_curmenu[editor_selection_val].max ) *(unsigned char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].min;
-                  break;  
+                  *(char*)(adr) = 1 - *(char*)(adr);
+				  break;  
                   
                 case TYPE_NIBBLE_LOW: // eg: 0xE6 & 0xF    -> 0x6    = 0x 0000 0110
-                  c = getByte(editor_curmenu[editor_selection_val].address+editor_base_adr);
-                  if( (c & 0xF) < editor_curmenu[editor_selection_val].max ) { //0x6 < 0xF
+                  c = getByte(adr);
+                  if( (c & 0xF) < 0xF ) { //0x6 < 0xF
                     c_new = (c & 0xF) + editor_curmenu[editor_selection_val].steps;
-                    *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
+                    *(char*)(adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
                   }
                   break;
                   
                 case TYPE_NIBBLE_HIGH: // eg: 0xE6 >> 4    -> 0xE    = 0x 0000 1110
-                  c = getByte(editor_curmenu[editor_selection_val].address+editor_base_adr);
-                  if( ((c >> 4) & 0xF) < editor_curmenu[editor_selection_val].max ) { // 0xE6 -> 0x?E -> 0x0E    <     0xF    
+                  c = getByte(adr);
+                  if( ((c >> 4) & 0xF) < 0xF ) { // 0xE6 -> 0x?E -> 0x0E    <     0xF    
                      c_new = (c >> 4) + editor_curmenu[editor_selection_val].steps;
-                     *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
+                     *(char*)(adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
                   }
                   break;
               }
@@ -3540,16 +3538,15 @@ int editor_ctrl() {
           if( hold_buttons & PSP_CTRL_CROSS ) {
             switch( editor_cur_type ) {
               case TYPE_BOOL:
-                if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) == editor_curmenu[editor_selection_val].min ) *(unsigned char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].max;
-                else if( getByte(editor_curmenu[editor_selection_val].address+editor_base_adr) == editor_curmenu[editor_selection_val].max ) *(unsigned char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) = editor_curmenu[editor_selection_val].min;
+                *(unsigned char*)(adr) = 1 - *(unsigned char*)(adr);
                 editor_wasused++;
                 break;
               
               case TYPE_BIT:
-                if( *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) & (1 << editor_curmenu[editor_selection_val].precision) ) { // BIT TRUE
-                  *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) &= ~(1 << editor_curmenu[editor_selection_val].precision); // flip bit OFF at index .precision
+                if( *(char*)(adr) & (1 << pre) ) { // BIT TRUE
+                  *(char*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
                 } else { // BIT FALSE
-                  *(char*)(editor_curmenu[editor_selection_val].address+editor_base_adr) |= (1 << editor_curmenu[editor_selection_val].precision); // flip bit ON at index .precision
+                  *(char*)(adr) |= (1 << pre); // flip bit ON at index .precision
                 }  
                 editor_wasused++;
                 break;  
@@ -5572,7 +5569,7 @@ void *category_toggle(int type, int cat, int set) {
 }
 
 int checkMenuEntryAllowedToBeDisplayed(const Menu_pack *menu_list, int entry) {
-  if( (menu_list[entry].type != MENU_CATEGORY && !category_index[menu_list[entry].cat]) || 
+  if( (menu_list[entry].type != MENU_CATEGORY && !category_index[(short)menu_list[entry].cat]) || 
     (LCS && menu_list[entry].LC == FALSE) || 
     (VCS && menu_list[entry].VC == FALSE) || 
     (!multiplayer && menu_list[entry].SP == FALSE) || 
