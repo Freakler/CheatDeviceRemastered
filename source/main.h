@@ -32,7 +32,7 @@
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
-#define NAMERESOLV // (~1KB) name resolver system for translating hashes (can also remove minIni from makefile if off)
+#define NAMERESOLV // (~10KB) name resolver system for translating hashes (also remove minIni from makefile if off)
 
 #define FREECAM // (~22KB)
 #define EDITORS // (~105KB)
@@ -43,16 +43,20 @@
 //#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed
 
+//#define MEMORY  // display memory usage on screen (LCS US v3.00 only)
+//#define GAMELOG // display developer logs on screen + to file (LCS US v3.00 only)
+
+
 /**********************************************************************************************************************/
 
-enum{
+enum {
   OFF, // 0
   ON   // 1
 };
 
 typedef struct {
   char *path;
-  char cat;
+  short cat;
   char type;
   char LC; // for Liberty City Stories
   char VC; // for Vice City Stories
@@ -66,6 +70,7 @@ typedef struct {
   char *desc;
 } Menu_pack;
 
+
 enum { 
   FUNC_GET_STATUS,
   FUNC_GET_STRING,
@@ -77,7 +82,7 @@ enum {
   FUNC_SET
 };
 
-enum{
+enum {
   TYPE_DUMMY,
   TYPE_BIT,
   TYPE_NIBBLE_LOW,

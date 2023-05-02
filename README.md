@@ -38,6 +38,8 @@ This will NOT work with mobile versions!
 You can create basic UserScripts saved in plain text which currently is the next best thing to the original UserCheats. Everything from simply changing the weather to creating whole new missions is possible! 
 
 A compilation of UserScripts can be found here: https://github.com/Freakler/CheatDeviceRemastered-UserScripts
+
+A guide to get started in UserScripting here: https://github.com/Freakler/CheatDeviceRemastered-UserScripts/wiki/UserScript-Tutorial---Part-1,-Getting-Started
 <br /><br />
 
 
@@ -159,7 +161,7 @@ A compilation of UserScripts can be found here: https://github.com/Freakler/Chea
 <br />
 
 ## Thanks & Greetings
-Edison Carter, vettefan88, Waterbottle, Jeremie Blanc, ADePSP, Joek2100, PSPHacker108, Sousanator, Rasal, Mister Enchilada, Skiller, theY4Kman, Noru, KING_REY-S, thehambone, the NSA, gtaforums.com, gtamods.com, gtamodding.ru, TheFlow, aap, Firehead, Silent, neur0n, Samilop "Cimmerian" Iter, darkdraggy, hrydgard, unknownbrackets
+Edison Carter, vettefan88, Waterbottle, Jeremie Blanc, ADePSP, Joek2100, PSPHacker108, Sousanator, Rasal, Mister Enchilada, Skiller, theY4Kman, Noru, KING_REY-S, thehambone, the NSA, gtaforums.com, gtamods.com, gtamodding.ru, TheFlow, aap, Firehead, Silent, neur0n, Samilop "Cimmerian" Iter, darkdraggy, hrydgard, unknownbrackets, Micsuit, NielsB, metehan989, DenielX
 
 People on the [CheatDeviceRemastered Discord Server](https://discord.gg/7DERFmkgYq) and everyone else contributing and supporting!
 

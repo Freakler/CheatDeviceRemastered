@@ -145,6 +145,7 @@ void *debug_vars(int calltype, int keypress, int defaultstatus, int defaultval);
 void *customtracks(int calltype, int keypress, int defaultstatus);
 
 void *fps_toggle(int calltype, int keypress, int defaultstatus);
+void *mem_toggle(int calltype, int keypress, int defaultstatus);
 void *coords_toggle(int calltype, int keypress, int defaultstatus);
 void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defaultval);
 
@@ -238,7 +239,7 @@ void bttncht_weaponset2();
 void bttncht_weaponset3();
 void bttncht_carsonwater(); // LCS only
 void bttncht_playcredits(); // LCS only
-void bttncht_randomplayer(); // LCS only
+void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus, int defaultval); // LCS only
 void bttncht_unlockmult100();
 void bttncht_perftraction();
 void bttncht_blowupcars();
@@ -262,7 +263,6 @@ void *cdr_liveconfig(int calltype, int keypress, int defaultstatus);
 void *cdr_advancedconfig(int calltype, int keypress, int defaultstatus);
 
 
-//void save_config();
 void load_defaults();
 void exit_game();
 
@@ -274,12 +274,22 @@ void hexeditor();
 void hexeditpplayer();
 void hexeditpcar();
 
+void *mp_test(int calltype, int keypress, int defaultstatus);
+
+// ACHIEVMENTS
 void achievements();
 void achievements_reset();
 
+// PREVIEW
 void test_func();
 void *test_switch(int calltype, int keypress, int defaultstatus);
 
-void *mp_test(int calltype, int keypress, int defaultstatus);
+// GAMELOG
+void (*debugprint)(const char *text, ...); 
+void debugprint_patched(const char *text, ...);
+void drawGameLog();
+
+// MEMORY
+void drawMemoryUsage();
 
 #endif

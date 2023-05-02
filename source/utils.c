@@ -299,7 +299,17 @@ int getHighMemBound() { // thx Acid_Snake :)
   // PPSSPP (with "memory = 93") -> 0x0DD00000
   
   SceUID block = sceKernelAllocPartitionMemory(2, "test", PSP_SMEM_High, 100, NULL);
-  return (int)sceKernelGetBlockHeadAddr(block)+0x100;
+  int address = (int)sceKernelGetBlockHeadAddr(block)+0x100; // still not perfect though
+  sceKernelFreePartitionMemory(block);
+  
+  // sigh!
+  if( address == 0x09FC0000 ) 
+    address = 0x0A000000;
+
+  if( adrenalineCheck() ) 
+    address = 0x0C000000;
+  
+  return address;
 }
 
 int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius) {
@@ -310,4 +320,16 @@ int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float
 
 float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2) {
   return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2) * 1.0);
+}
+
+void getSizeString(char string[16], uint64_t size) { 
+  double double_size = (double)size;
+
+  int i = 0;
+  static char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+  while( double_size >= 1024.0 ) {
+    double_size /= 1024.0;
+    i++;
+  }
+  snprintf(string, 16, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
 }

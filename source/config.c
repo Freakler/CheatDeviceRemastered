@@ -35,12 +35,11 @@ extern const Menu_pack main_menu[];
 extern achievement_pack achievement[];
 extern int achievement_size;
 extern int menu_size;
-extern int LCS;
-extern int VCS;
-extern int flag_coll_cats;
+extern int LCS, VCS;
+extern short flag_coll_cats;
 extern char category_index[];
 
-//extern int flag_use_advaconfig;
+//extern char flag_use_advaconfig;
 extern int hex_adr;
 
 /*extern int addr_vehiclesworldspawn;

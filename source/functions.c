@@ -33,12 +33,11 @@
 
 
 register int gp asm("gp"); 
- 
+
 extern int mod_text_size; // for ulux fix
 
 /// externs from main.c
-extern int LCS;
-extern int VCS;
+extern int LCS, VCS;
 
 
 /// externs from cheats.c
@@ -114,11 +113,14 @@ extern u32 ptr_radarIconList;
 extern u32 var_radios;
 extern u32 addr_heliheight;
 extern u32 global_bmxjumpmult;
+#ifdef PREVIEW
 extern u32 addr_policechaseheli_1;
 extern u32 addr_policechaseheli_2;
 extern u32 addr_policechaseheli_3;
+#endif
 extern u32 global_WindClipped;
 extern u32 global_Wind;
+extern u32 addr_randompedcheat;
 
  
 /// Buttons for cheats 
@@ -1572,37 +1574,6 @@ unsigned char getNibbleHigh(int adr) {
   #endif
 }
 
-void setChar(int adr, char value) { // 8bit (signed -128 to +127)
-  #ifdef MEMCHECK
-  if( isInMemBounds(adr) ) {
-  #endif  
-    *(char*)adr = value;
-  #ifdef MEMCHECK
-  } else {
-    setTimedTextbox("~r~Error: setChar()", 5.00f);
-    #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setChar(0x%X, 0x%X)", getGametime(), adr, value);
-    #endif
-  }
-  #endif
-}
-
-char getChar(int adr) { // 8bit (signed -128 to +127)
-  #ifdef MEMCHECK
-  if( isInMemBounds(adr) ) {
-  #endif
-    return *(char*)adr;
-  #ifdef MEMCHECK
-  } else { 
-    setTimedTextbox("~r~Error: getChar()", 5.00f);
-    #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getChar(0x%X)", getGametime(), adr);
-    #endif
-  }
-  return 0;
-  #endif
-}
-
 void setShort(int adr, short value) { // 16bit
   #ifdef MEMCHECK
   if( isInMemBounds(adr) && (adr % 2 == 0) ) {
@@ -2138,7 +2109,7 @@ void makeVehicleExplode(int vehicle_base_adr) {
 void setVehicleRadioStation(int vehicle_base_adr, char id) {
   if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
     setByte(vehicle_base_adr + 0x29C, id); 
-	return;
+  return;
   } 
   setByte(vehicle_base_adr + (LCS ? 0x2A0 : 0x2B7), id);
 }
@@ -2296,6 +2267,7 @@ void setHeliHeightLimit(float height) { // LCS only currently
   clearICacheFor(addr_heliheight); // needed for PPSSPP
 }
 
+#ifdef PREVIEW
 void setPoliceChaseHeliModel(short model) {
   setShort(addr_policechaseheli_1, model);
   clearICacheFor(addr_policechaseheli_1); // needed for PPSSPP
@@ -2306,11 +2278,11 @@ void setPoliceChaseHeliModel(short model) {
   setShort(addr_policechaseheli_3, model);
   clearICacheFor(addr_policechaseheli_3); // needed for PPSSPP
 }
-  
+#endif 
   
 /// Pickups ///////////
 int getPickupIsActive(int pickup_base_adr) { // slot is in use (some pickups are one-time pickups others like weapons respawn after some time! -> slot is still used although nothing in world)
-  if( getChar(pickup_base_adr+(LCS?0x32:0x38)) != 0 ) // just like ghidra
+  if( getByte(pickup_base_adr+(LCS?0x32:0x38)) != 0 ) // just like ghidra
     return 1; // true
   return 0; // false
 }
@@ -3227,7 +3199,7 @@ char *getRadioStationName(int no) { // for LCS: 0 = Head Radio, 1 = Double Clef,
 void setCameraCenterBehindPlayer() {
   if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
     setByte(global_camera + 0x19A, 0x1);
-	return;
+  return;
   } 
   setByte(global_camera + (LCS ? 0x1AA : 0x113), 0x1);
 }
@@ -3235,7 +3207,7 @@ void setCameraCenterBehindPlayer() {
 void setFieldOfView(float fov) {
   if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
     setFloat(global_camera + 0x244, fov);
-	return;
+  return;
   } 
   setFloat(global_camera + (LCS ? 0x254 : 0x198), fov);
 }
@@ -3352,4 +3324,16 @@ void CustomScriptExecute(int address) {
   int loadadr = address - getInt(global_ScriptSpace + (LCS ? 0 : gp)); // address of script relative to script space (negative not intended but works! as long as no jumps!!!)
   //logPrintf("StartNewScript @ 0x%08X (0x%08X)", loadadr, address);
   StartNewScript(loadadr);
+}
+
+void setRandomPedCheat(char id) {
+  if( id == -1 ) {
+    setInt(addr_randompedcheat, 0xDFFF1112); // default random
+  } else {
+    setByte(addr_randompedcheat + 0x0, id);
+    setByte(addr_randompedcheat + 0x1, 0x00);
+    setByte(addr_randompedcheat + 0x2, 0x10);
+    setByte(addr_randompedcheat + 0x3, 0x34);
+  }
+  clearICacheFor(addr_randompedcheat);
 }

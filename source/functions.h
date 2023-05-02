@@ -348,6 +348,8 @@ int getLanguage();
 int isPedCrouching(int ped);
 void TaskDuck(int ped);
 
+void setRandomPedCheat(char id);
+
 
 /// Parked Vehicle Spawns
 int getVehicleWorldSpawnSlotIsActive(int base);

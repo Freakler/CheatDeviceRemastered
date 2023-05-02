@@ -19,6 +19,8 @@
 #ifndef MININI_H
 #define MININI_H
 
+#define INI_READONLY // 
+
 #include "minGlue.h"
 
 #if (defined _UNICODE || defined __UNICODE__ || defined UNICODE) && !defined INI_ANSIONLY

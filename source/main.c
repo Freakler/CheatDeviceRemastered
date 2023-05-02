@@ -38,7 +38,7 @@
 #include "functions.h"
 
 #ifdef NAMERESOLV
-#include "minIni.h"
+  #include "minIni.h"
 #endif
 
 #define VERSION "v1.0g" // displayed in title
@@ -47,12 +47,12 @@ PSP_MODULE_INFO("CheatDeviceRemastered", 0, 1, 0); // user
 
 
 /// settings
-int menuopendelay  = 2000;  // wait ~2 seconds before showing menu & applying after spawning
-int showoptions    = 12;    // the number of options / lines that should be displayed at once
-float row_spacing  = 15.0f; // pixels between rows
-u32 open_key       = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
-u32 open_key_alt   = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
-char welcometext[] = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
+int menuopendelay = 2000;  // wait ~2 seconds before showing menu & applying after spawning
+short showoptions = 12;    // the number of options / lines that should be displayed at once
+float row_spacing = 15.0f; // pixels between rows
+u32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
+u32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
+char welcomemsg[] = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
 
 const char *basefolder  = "ms0:/PSP/PLUGINS/cheatdevice_remastered/";
 
@@ -78,24 +78,25 @@ char folder_textures[] = "TEXTURES/"; // inside basefolder
 
 
 /// flags (shouldn't be set here)
-int flag_menu_start     = 0; // menu will be started automatically like the original (2 for don't-eat-keys mode)
-int flag_menu_show      = 0; // menu is allowed to be openend / shown boolean (don't set here)
-int flag_menu_running   = 0; // menu is currently running boolean (don't set here)
-int flag_keys_disable   = 0; // keys should be menu exlusive (set by button-open-combo, don't set here)
-int flag_coll_cats      = 0; // makes categories become collapseable
-int flag_ui_blocking    = 0; // block UI elements like map & hud for a cleaner look when menu is displayed
-int flag_use_legend     = 0; // display the legend box on the bottom of the screen 
-int flag_use_cataltfont = 0; // makes categories use a different font to make them stick out
-int flag_use_liveconfig = 0; // config will be written to everytime the menu is closed (#ifdef CONFIG)
-int flag_draw_FPS       = 0; // draw FPS counter bool
-int flag_draw_DEBUG     = 0; // draw Debug monitor bool
-int flag_draw_DBGVALS   = 0; // draw Debug values bool
-int flag_draw_COORDS    = 0; // draw player coordinates bool
-int flag_draw_SPEEDO    = 0; // draw speedometer and gear monitor bool
-int flag_draw_welcomsg  = 0; // lets the welcome message appear after spawning the first time
-int flag_customusic     = 0; // number of custom tracks found for custom music cheat
-int flag_hudwashidden   = 0; // keeps track of previously hidden HUD (for re-enabling if necessary)
-int flag_mapwashidden   = 0; // keeps track of previously hidden MAP (for re-enabling if necessary)
+short flag_menu_start     = 0; // menu will be started automatically like the original (2 for don't-eat-keys mode)
+short flag_menu_show      = 0; // menu is allowed to be openend / shown boolean (don't set here)
+short flag_menu_running   = 0; // menu is currently running boolean (don't set here)
+short flag_keys_disable   = 0; // keys should be menu exlusive (set by button-open-combo, don't set here)
+short flag_coll_cats      = 0; // makes categories become collapseable
+short flag_ui_blocking    = 0; // block UI elements like map & hud for a cleaner look when menu is displayed
+short flag_use_legend     = 0; // display the legend box on the bottom of the screen 
+short flag_use_cataltfont = 0; // makes categories use a different font to make them stick out
+short flag_use_liveconfig = 0; // config will be written to everytime the menu is closed (#ifdef CONFIG)
+short flag_draw_FPS       = 0; // draw FPS counter bool
+short flag_draw_MEM       = 0; // draw memory usage (main free)
+short flag_draw_DEBUG     = 0; // draw Debug monitor bool
+short flag_draw_DBGVALS   = 0; // draw Debug values bool
+short flag_draw_COORDS    = 0; // draw player coordinates bool
+short flag_draw_SPEEDO    = 0; // draw speedometer and gear monitor bool
+short flag_draw_welcomsg  = 0; // lets the welcome message appear after spawning the first time
+short flag_customusic     = 0; // number of custom tracks found for custom music cheat
+short flag_hudwashidden   = 0; // keeps track of previously hidden HUD (for re-enabling if necessary)
+short flag_mapwashidden   = 0; // keeps track of previously hidden MAP (for re-enabling if necessary)
 
 
 /// color definitions 
@@ -159,8 +160,9 @@ extern char speed[];
 extern char gear[];
 extern char *lcs_garagenames[];          
 extern char *vcs_garagenames[];
-extern short pcar_id; 
+extern int pcar_id; 
 extern float fps;
+extern int memory_main_free;
 extern const char *weather_lcs[];
 extern const char *weather_vcs[];
 
@@ -204,7 +206,7 @@ const Menu_pack main_menu[] = {
   #endif
   
   // // ALIAS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
-  
+
   {"Infinite Health & Armor"          , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , godmode              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You are immune to explosions, gunshots, fall damage, fire etc.." },
   {"Wanted Level: "                   , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , wanted_level         , "CROSS = Enable/Disable Cheat"      , "SQUARE = Set current as max"        , "> Adjust your Wanted Level and set the Maximum Level possible." },
   {"Time: "                           , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , world_time           , "CROSS = Freeze/Unfreeze time"      , "LEFT/RIGHT = Adjust hour"           , "> Adjust the Worlds time and freeze it completely." },
@@ -285,7 +287,7 @@ const Menu_pack main_menu[] = {
   {"Teleport to next Objective"       , CAT_MISSON  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1762 , -1  , teleport_next        , "CROSS = Teleport"                  , ""                                   , "> Teleport to next marked destination, target or object" },
   {"Teleport to next Mission"         , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1799 , -1  , teleport_mission     , "CROSS = Teleport"                  , ""                                   , "> Teleport to next Story-Mission corona." },
   {""                                 , CAT_MISSON  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-
+  
   {"Map"                              , CAT_MAP     , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2A11 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Mark on Map: "                    , CAT_MAP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x165F , OFF , markonmap            , "CROSS = Enable/Disable Cheat"      , "SQUARE = Cycle options"             , "> Select what should be displayed on the map and radar." },
   {""                                 , CAT_MAP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -306,7 +308,7 @@ const Menu_pack main_menu[] = {
   {"Spawn Rhino"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x122B , -1  , bttncht_spawnrhino   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
   {"Cars drive on Water"              , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x187A , -1  , bttncht_carsonwater  , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
   {"Blow up all nearby Vehicles"      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x138D , -1  , bttncht_blowupcars   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Random Player Model"              , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x1D45 , -1  , bttncht_randomplayer , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Change Player Model to "          , CAT_STCKCHT , MENU_VALUE       , TRUE  , FALSE , TRUE  , FALSE , 0x1D45 , OFF , bttncht_randomplayer , "CROSS = Trigger Stock Cheat"       , "LEFT/RIGHT = Adjust model"          , ""  },
   {"Perfect Traction & Jumping"       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1654 , -1  , bttncht_perftraction , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
   {"Unlock 100% Multiplayer"          , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1D80 , -1  , bttncht_unlockmult100, "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
   {"Bubble Heads"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x146A , -1  , bttncht_bubblehead   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
@@ -335,11 +337,12 @@ const Menu_pack main_menu[] = {
   {"Vehicle Spawner: "                , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x18FF , OFF , vehicle_spawner      , "CROSS/SQUARE = Spawn Vehicle"      , "LEFT/RIGHT = Adjust"                , "> Spawns a Vehicle in front of you." },
   {"Reset Button Cheats history"      , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , no_cheating_warning  , "CROSS = Reset"                     , ""                                   , "> Remove all evidence of stock Cheats ever being used. Safe saving!" },
   {"Vehicle Speedometer: "            , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1507 , OFF , speedometer_toggle   , "CROSS = Toggle Speedometer"        , ""                                   , "> Display a Speed'O'Meter when inside a Vehicle to monitor speed." },
-  {"Display FPS"                      , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179A , OFF , fps_toggle           , "CROSS = Toggle FPS Display"        , ""                                   , "> Display the Games' Frames Per Second" },
+  {"Display FPS"                      , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179A , OFF , fps_toggle           , "CROSS = Toggle Display"            , ""                                   , "> Display the Games' Frames Per Second" },
+  {"Display Memory Usage"             , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179B , OFF , mem_toggle           , "CROSS = Toggle Display"            , ""                                   , "> Display the Games' free main memory" },
   {"Display Coordinates"              , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1814 , OFF , coords_toggle        , "CROSS = Toggle Coordinates"        , ""                                   , "> Display your current xyz coordinates in the world." },
   {"Gather Spell"                     , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E35 , OFF , gather_spell         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Gather everything!! (There will be LAG.. but its worth it!)"  },
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-
+  
   {"Multiplayer"                      , CAT_MULTI   , MENU_CATEGORY    , TRUE  , TRUE  , FALSE , TRUE  , 0x2D2A , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
   {"test"                             , CAT_MULTI   , MENU_SWITCH      , TRUE  , TRUE  , FALSE , TRUE  , 0x181C , OFF , mp_test              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> " },
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , FALSE , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -353,7 +356,7 @@ const Menu_pack main_menu[] = {
   {"Disable World Textures"           , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x17CF , OFF , disable_textures     , "CROSS = Enable/Disable"            , ""                                   , "> Stop World Textures from being applied to models." },
   {"Limit FPS to: "                   , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x16F0 , OFF , fps_cap              , "CROSS = Toggle FPS Limit"          , ""                                   , "> Limit the Games' Frames Per Second and enable 60 FPS!" },
   {""                                 , CAT_GAME    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
- 
+  
   {"CheatDevice Options"              , CAT_CHDEV   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x285E , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
   {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS = Enable/Disable"            , ""                                   , "> Enabling will automatically start the CheatDevice after spawning." },
   #ifdef CONFIG
@@ -368,7 +371,6 @@ const Menu_pack main_menu[] = {
   
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
   #ifdef USERSCRIPTS
@@ -377,7 +379,7 @@ const Menu_pack main_menu[] = {
   #endif
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //   
-
+  
   #ifdef HEXEDITOR
   {"Hex Editor"                       , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditor            , "CROSS = Open HexEditor"            , ""                                   , "> A fully fledged HexEditor to directly monitor and work in memory!" },
   {"Hex Edit 'pplayer'"               , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditpplayer       , "CROSS = Open HexEditor"            , ""                                   , "> Open Object in Hex Editor" },
@@ -409,7 +411,7 @@ const Menu_pack main_menu[] = {
   
   {"IDEs"                             , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x437E , -1  , editor_ide           , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemDefinitions' of Peds, Vehicles, Ojects etc " },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-   
+  
   {"Buildings.ipl"                    , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x45AB , -1  , editor_buildingsipl  , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemPlacement' of Buildings" },
   {"Treadables.ipl"                   , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , FALSE , TRUE  , TRUE  , 0x44D7 , -1  , editor_treadablesipl , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemPlacement' of Roads, Grounds etc" },
   {"Dummys.ipl"                       , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D78 , -1  , editor_dummysipl     , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemPlacement' of Doors, Objects etc" },
@@ -424,16 +426,16 @@ const Menu_pack main_menu[] = {
   #endif
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
- 
+  
   #ifdef CONFIG
   {"Save Settings to Config"          , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , save_config          , "CROSS = Save settings to config"   , ""                                   , "> Save your current preferences to the config file." },
   {"Load Settings from Config"        , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_config          , "CROSS = Reload config"             , ""                                   , "> Load custom saved settings from the config file." },
   #endif
   {"Restore default Settings"         , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_defaults        , "CROSS = Reset cheats to default"   , ""                                   , "> Reset all cheats to their default disabled values." },
-
+  
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },  
   {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , exit_game            , "CROSS = Exit game"                 , ""                                   , "> Exit the game and return to the main menu." },
-
+  
   {"",0,0,-1,-1,-1,-1,-1,-1,NULL,NULL,NULL,NULL}
 }; int menu_size = (sizeof(main_menu)/sizeof(Menu_pack))-1;
 
@@ -483,7 +485,7 @@ void resetMeta() {  // clear
 *********************************************************************************************************/
 
 #ifdef PREVIEW
-int flag_usercheats = 0;
+short flag_usercheats = 0;
 
 float usercheat_row_spacing = 15.f;  // pixels between rows
 
@@ -1012,7 +1014,7 @@ int usercheats_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef USERSCRIPTS
-int flag_userscripts = 0;
+short flag_userscripts = 0;
 
 float userscript_row_spacing = 15.0f; // pixels between rows
 
@@ -1159,11 +1161,10 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
       }
       
       for(i = userscript_top; i < userscript_showoptions + userscript_top; i++, y += userscript_row_spacing) {
-        
-    //    do { //skip folders (old)
-    //      sceIoDread(fd, &d_dir);
-    //    } while( FIO_SO_ISDIR(d_dir.d_stat.st_attr) );
-        do { //skip "." entries
+    //  do { // skip folders (old)
+    //    sceIoDread(fd, &d_dir);
+    //  } while( FIO_SO_ISDIR(d_dir.d_stat.st_attr) );
+        do { // skip "." entries
           sceIoDread(fd, &d_dir);
         } while(d_dir.d_name[0] == '.');
       
@@ -1191,7 +1192,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
         COLOR_TEMP = COLOR_CHEAT_OFF;
         if( stricmp(extension, ".txt") ) {
            
-          if( d_dir.d_stat.st_attr & FIO_SO_IFDIR ) {  // check folder
+          if( d_dir.d_stat.st_attr & FIO_SO_IFDIR ) { // check folder
             
             sprintf(buffer, "%s%s", script_workfldr, filename);
             if( countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0) )
@@ -1200,7 +1201,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
             else // folder is empty
               COLOR_TEMP = GREY;
             
-            sprintf(filename, "%s/", filename);  // add slash because looks nicer
+            sprintf(filename, "%s/", filename); // add slash because looks nicer
             
           } else   
             COLOR_TEMP = GREY; // not a valid txt file (grey out)
@@ -1375,7 +1376,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     //drawLegendMessage("CIRCLE = Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
     
     
-    /// draw Cheat data instead
+    /// draw data instead
     sprintf(buffer, "%s%s", script_workfldr, currentfile);
     //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 10.0f, RED);
     if( doesFileExist(buffer) == 1 ) { // its a file
@@ -1399,12 +1400,12 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     
     } else { //its a folder
       if( countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) {
-        drawLegendMessage("CROSS = Enter Folder",       1, 2, COLOR_TEXT); // right side, first row
-        drawLegendMessage("TRIANGLE = Leave Folder",     1, 1, COLOR_TEXT); // right side, second row
-        drawLegendMessage("CIRCLE = Exit to Menu",       1, 0, COLOR_TEXT); // right side, third row
+        drawLegendMessage("CROSS = Enter Folder",    1, 2, COLOR_TEXT); // right side, first row
+        drawLegendMessage("TRIANGLE = Leave Folder", 1, 1, COLOR_TEXT); // right side, second row
+        drawLegendMessage("CIRCLE = Exit to Menu",   1, 0, COLOR_TEXT); // right side, third row
           
       } else {
-        drawLegendMessage("This folder is empty!", 0, 2, COLOR_TEXT); // left side, first row
+        drawLegendMessage("This folder is empty!",   0, 2, COLOR_TEXT); // left side, first row
       }
     }
   }
@@ -1413,10 +1414,8 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
 }
 
 int userscripts_ctrl() {
-  
   if( hold_buttons & PSP_CTRL_UP ) {
     if( userscript_selected_val <= 0 ) {
-      
     } else userscript_selected_val -= 1;  
     
     if( userscript_top > 1 ) { // scroll
@@ -1462,11 +1461,10 @@ int userscripts_ctrl() {
   }
   
   if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
-  
     sprintf(buffer, "%s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
     if( strcmp(buffer, script_workfldr) != 0 || script_subfldrs[0] != 0x00) { // we are not yet back in root..
   
-      // remove last folder from working path string 
+      /// remove last folder from working path string 
       int i; 
       for(i = strlen(script_subfldrs); i >= 0; i--) {
         if( script_subfldrs[i] == '/' ) {
@@ -1477,8 +1475,8 @@ int userscripts_ctrl() {
       sprintf(script_workfldr, "%s%s%s", buffer, script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/");
 
     } else { // reset to be save
-    memset(script_subfldrs, 0, sizeof(script_subfldrs)); // clear
-    sprintf(script_workfldr, "%s", buffer); 
+      memset(script_subfldrs, 0, sizeof(script_subfldrs)); // clear
+      sprintf(script_workfldr, "%s", buffer); 
     }
   
     userscript_selected_val = 0;
@@ -1487,7 +1485,6 @@ int userscripts_ctrl() {
     
     
     if( pressed_buttons & PSP_CTRL_CROSS ) { // toggle cheat
-      
       sprintf(buffer, "%s%s", script_workfldr, currentfile);
       if( doesFileExist(buffer) != 1 && (countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) ) {  // check folder + not empty
         sprintf(script_subfldrs, "%s%s%s", script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/", currentfile);
@@ -2414,7 +2411,7 @@ int userscripts_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef EDITORS
-int flag_editor = 0;
+short flag_editor = 0;
 char editor_titlebuffer[64];
 const Editor_pack *editor_curmenu;
 
@@ -2686,7 +2683,6 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       
       if( getInt(editor_base_adr) ){ // there is a pointer here
-
         sprintf(buffer_top0, "No: %i of %i      Type: '%s'   Name: %s", editor_block_current, editor_blocks-1, getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
         editor_draw_lower = 1; 
     
@@ -2943,8 +2939,8 @@ int editor_draw() {
         
       } else { // plain value editing 
         int adr = editor_curmenu[i].address+editor_base_adr;
-        char pre = editor_curmenu[i].precision;	  
-        char* fix = editor_curmenu[i].postfix;	  
+        char pre = editor_curmenu[i].precision;    
+        char* fix = editor_curmenu[i].postfix;    
         switch( editor_curmenu[i].type ) {
           case TYPE_BYTE:
             sprintf(buffer, pre ? "%i%s" : "0x%02X%s", *(unsigned char*)(adr), fix);
@@ -2972,7 +2968,7 @@ int editor_draw() {
             } else if(*(unsigned char*)(adr) == editor_curmenu[i].min ) { // min must be the false value
               sprintf(buffer, "FALSE");
             } else sprintf(buffer, "ERROR");*/
-			if( *(unsigned char*)(adr) == 1 ) {
+      if( *(unsigned char*)(adr) == 1 ) {
               sprintf(buffer, "TRUE");
             } else if(*(unsigned char*)(adr) == 0 ) {
               sprintf(buffer, "FALSE");
@@ -3433,7 +3429,7 @@ int editor_ctrl() {
           char c, c_new;
           int adr = editor_curmenu[editor_selection_val].address+editor_base_adr;
           char pre = editor_curmenu[editor_selection_val].precision;
-		  
+      
           if( (current_buttons & PSP_CTRL_RTRIGGER) == 0 ) { // not R Trigger
             if( hold_buttons & PSP_CTRL_LEFT ) {          
               switch( editor_cur_type ) {
@@ -3512,7 +3508,7 @@ int editor_ctrl() {
                   
                 case TYPE_BOOL:
                   *(char*)(adr) = 1 - *(char*)(adr);
-				  break;  
+          break;  
                   
                 case TYPE_NIBBLE_LOW: // eg: 0xE6 & 0xF    -> 0x6    = 0x 0000 0110
                   c = getByte(adr);
@@ -3946,7 +3942,7 @@ int editor_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef FREECAM
-int flag_freecam = 0;
+short flag_freecam = 0;
 
 float camera_x, camera_y, camera_z; // camera xyz position in world
 float fov;
@@ -4222,7 +4218,7 @@ int freecam_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef HEXEDITOR
-int flag_address = 0;
+short flag_address = 0;
 int tempaddress = -1; // stores the temp address which may or may not be hex_addr later
 int addresspos = -1;  // position of cursor to digit to be adjusted
 
@@ -4405,7 +4401,7 @@ int address_ctrl() {
 * Edit Byte for HexEditor
 *
 *********************************************************************************************************/
-int flag_editbyte = 0;
+short flag_editbyte = 0;
 unsigned char editbyte_current = -1;
 unsigned char editbyte_pos = -1;
 
@@ -4484,7 +4480,7 @@ int editbyte_ctrl() {
 * TODO: mode 1 with address higher than low bound and not ending with 0x....0
 *
 *********************************************************************************************************/
-int flag_hexeditor = 0;
+short flag_hexeditor = 0;
 
 /// settings
 int hexeditor_maxlines   = 14;      // the maximum number of lines that can be displayed - considering max text possible by the game is 512 we are pretty maxed out already
@@ -4721,7 +4717,7 @@ int hexeditor_draw() {
       
       
     /// print hex & ascii
-    scounter=0;
+    scounter = 0;
     while( scounter < 0x10 && ((hexeditor_address + ( (counter*0x10) + scounter ) ) < hexeditor_highbound ) ) {
       current = *((unsigned char*)((hexeditor_address+(counter*0x10))+scounter));
       
@@ -4818,7 +4814,6 @@ int hexeditor_draw() {
   } 
 
   switch( hex_adr % 0x10 ) {
-    
     case 0x0: case 0x4: case 0x8: case 0xC:
       sprintf(buffer, "%d", *((short*)(hex_adr)) );
       if( flag_use_legend ) 
@@ -4862,10 +4857,10 @@ int hexeditor_draw() {
   if( flag_use_legend && !flag_draw_DBGVALS ) {
     #ifndef DEBUG
     drawBox(320, 220, 155, 50, COLOR_BACKGROUND);
-    drawString("CROSS = Edit selected Byte", ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
-    drawString("SQUARE = Set Byte to 0x00",  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
-    drawString("TRIANGLE = Open Address",    ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
-    drawString("CIRCLE = Exit HexEditor",    ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
+    drawString("CROSS = Edit selected Byte",  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
+    drawString("SQUARE = Set Byte to 0x00",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
+    drawString("TRIANGLE = Open Address",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
+    drawString("CIRCLE = Exit HexEditor",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
     
     drawBox(160, 220, 155, 50, COLOR_BACKGROUND);
     drawString("R + CROSS = Mark selected",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
@@ -5060,6 +5055,7 @@ void showRadar() { // only show if it was enabled before
 }
 
 
+
 void draw() { // called by hijacked game function
   flag_menu_show = 1; // menu is allowed
   
@@ -5072,13 +5068,14 @@ void draw() { // called by hijacked game function
   #ifdef PREVIEW
   drawString("PREVIEW", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, WHITE);
   #endif
+  
 
   /// draw welcome message in textbox (only when menu autostart is disabled!)
   if( flag_draw_welcomsg ) {
     #ifdef LOG
     logPrintf("[INFO] %i: drawing welcome message", getGametime());
     #endif  
-    setTimedTextbox(welcometext, 7.00f);
+    setTimedTextbox(welcomemsg, 7.00f);
     flag_draw_welcomsg = 0;
   }
 
@@ -5209,12 +5206,22 @@ void draw() { // called by hijacked game function
     drawString( gear, ALIGN_FREE, FONT_NAMES, SIZE_BIG, SHADOW_ON, speedo_x, 245.0f, WHITE);
   }
   
+  
+  /// free Memory (when enabled)
+  if( flag_draw_MEM == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
+  getSizeString(buffer, memory_main_free);
+    drawString("MEM:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 48.0f, 5.0f, (memory_main_free < 150*1000 ? (memory_main_free < 100*1000 ? (memory_main_free < 50*1000 ? RED : ORANGE) : YELLOW) : GREEN) );
+  }
+  
+  
   /// FPS indicator (when enabled)
   if( flag_draw_FPS == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
     sprintf(buffer, "%.0f", fps);
-    drawString("FPS:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f, (fps < 29.9f ? (fps < 19.9f ? (fps < 14.9f ? RED : ORANGE) : YELLOW) : GREEN) );
+    drawString("FPS:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 30.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN) );
   }
+  
   
   /// Config saveing
   #ifdef DEBUG
@@ -5279,6 +5286,12 @@ void stopMenu() { // called by hijacked game function
 
 #define Rx Rsrv[0] // for readability
 #define Ry Rsrv[1] // right stick support
+
+/**
+current_buttons = "currently pressed"
+pressed_buttons = "on button down"
+hold_buttons    = for scrolling
+**/
 
 void buttonInput() { // called by hijacked game function
   sceCtrlPeekBufferPositive(&pad, 1);
@@ -5451,7 +5464,7 @@ void applyCheats() { // called by hijacked game function
 
 void applyOnce() { //called by hijacked game function
   #ifdef LOG
-  logPrintf("[INFO] %i: applyOnce() ran", getGametime());
+  logPrintf("[INFO] %i: applyOnce()", getGametime());
   #endif
   
   #ifdef PREVIEW
@@ -5462,11 +5475,11 @@ void applyOnce() { //called by hijacked game function
   
   /// make RC Cars drivable (this sets "model flag 2" in handling.cfg to "NO_DOORS")
   if( LCS ) {
-    setByte( getAddressOfHandlingSlotForID(0xC7) + 0xD0, 16); // HELI (tiny inv. heli)
-    setByte( getAddressOfHandlingSlotForID(0xA9) + 0xD0, 16); // RCBANDIT
-    setByte( getAddressOfHandlingSlotForID(0xD3) + 0xD0, 16); // RCGOBLIN
-    setByte( getAddressOfHandlingSlotForID(0xD4) + 0xD0, 16); // RCRAIDER
-    setByte( getAddressOfHandlingSlotForID(201) + 0xD0, 16); // "DeadDodo"
+    setByte(getAddressOfHandlingSlotForID(0xC7) + 0xD0, 16); // HELI (tiny inv. heli)
+    setByte(getAddressOfHandlingSlotForID(0xA9) + 0xD0, 16); // RCBANDIT
+    setByte(getAddressOfHandlingSlotForID(0xD3) + 0xD0, 16); // RCGOBLIN
+    setByte(getAddressOfHandlingSlotForID(0xD4) + 0xD0, 16); // RCRAIDER
+    setByte(getAddressOfHandlingSlotForID(201) + 0xD0, 16); // "DeadDodo"
   }
   
   /// disable map legend by default
@@ -5544,6 +5557,10 @@ void applyOnce() { //called by hijacked game function
   ///Custom pickup spawns in world
   //if( LCS )
     //spawnPickup(0x10F, 0x3, 0xA, float x, float y, float z); // teargas in ssv pool like in alpha
+
+  #ifdef LOG
+  logPrintf("[INFO] %i: applyOnce() done!", getGametime());
+  #endif
 }
 
 
@@ -5553,7 +5570,7 @@ void *category_toggle(int type, int cat, int set) {
   static char buffer[8];
   if( type == FUNC_GET_STRING ) { // add indicator if category hidden
     if( !flag_coll_cats ) 
-		return ""; // categories can't be expanded/collapsed -> don't show any indicator
+    return ""; // categories can't be expanded/collapsed -> don't show any indicator
   
     sprintf(buffer, !category_index[cat] ? " +" : " -");
     return (void *)buffer;
@@ -5569,7 +5586,7 @@ void *category_toggle(int type, int cat, int set) {
 }
 
 int checkMenuEntryAllowedToBeDisplayed(const Menu_pack *menu_list, int entry) {
-  if( (menu_list[entry].type != MENU_CATEGORY && !category_index[(short)menu_list[entry].cat]) || 
+  if( (menu_list[entry].type != MENU_CATEGORY && !category_index[menu_list[entry].cat]) || 
     (LCS && menu_list[entry].LC == FALSE) || 
     (VCS && menu_list[entry].VC == FALSE) || 
     (!multiplayer && menu_list[entry].SP == FALSE) || 
@@ -5776,49 +5793,91 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
 int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons check "buttonsToActionPatched()" in cheats.c
   static int keypress;
   int last_sel = 0;
-  
-    if( !(current_buttons & PSP_CTRL_LTRIGGER) ) { // fix unwanted scrolling with open menu combo
+
+  if( !(current_buttons & PSP_CTRL_LTRIGGER) ) { // fix unwanted scrolling with open menu combo
       
-      /// Navigation UP ////////////////////////////////////////
-      if( hold_buttons & PSP_CTRL_UP ) {
-        last_sel = menu_sel;
+    /// Navigation UP ////////////////////////////////////////
+    if( hold_buttons & PSP_CTRL_UP && !(current_buttons & PSP_CTRL_RTRIGGER) ) {
+      #ifdef DEBUG
+      drawString("hold_buttons PSP_CTRL_UP", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 140.0f, 50.0f, RED);
+      #endif
+    
+      last_sel = menu_sel;
         
-        if( menu_sel <= 0 ) {
-          menu_sel = 0;
-          toption = 0; // scroll
-        } else menu_sel -= 1;
-        
-        /// skip dummy & disabled on the way up
-        while( checkMenuEntryAllowedToBeDisplayed(menu_list, menu_sel) == 0 || menu_list[menu_sel].type == MENU_DUMMY || (!flag_coll_cats ? menu_list[menu_sel].type == MENU_CATEGORY : 0) ) { 
-          menu_sel -= 1;
+      if( menu_sel <= 0 ) {
+        menu_sel = 0;
+        toption = 0; // scroll
+      } else menu_sel--;
+    
+      /// skip dummy & disabled on the way up
+      while( checkMenuEntryAllowedToBeDisplayed(menu_list, menu_sel) == 0 || menu_list[menu_sel].type == MENU_DUMMY || (!flag_coll_cats ? menu_list[menu_sel].type == MENU_CATEGORY : 0) ) {
+        menu_sel--;
+                   
+      if( menu_sel < 0 ) { // go back to last working if only disabled on top of cheatslist
+        menu_sel = last_sel; 
+        break;
+      }
           
-          if( menu_sel < 0 ) { // go back to last working if only disabled on top of cheatslist
+      if( toption > 1 && menu_sel == 1 ) // scroll up for each dummy / disabled entry
+        toption--; 
+      }
+
+      if( toption > 1 && menu_sel == 1 ) // scroll up one more time
+        toption--; 
+      
+    }
+  
+    /// Navigation DOWN //////////////////////////////////////   
+    if( (hold_buttons & PSP_CTRL_DOWN) && !(current_buttons & PSP_CTRL_RTRIGGER) ) {
+      #ifdef DEBUG
+      drawString("hold_buttons PSP_CTRL_DOWN", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 140.0f, 50.0f, RED);
+      #endif
+    
+      last_sel = menu_sel;
+    
+      if( menu_sel < menu_max-1 ) 
+        menu_sel++;
+      }
+    
+    //////////////////////////////////////////////////////////////////
+    
+    /// category scrolling
+    if( current_buttons & PSP_CTRL_RTRIGGER ) {
+      
+      if( pressed_buttons & PSP_CTRL_UP ) { 
+        last_sel = menu_sel;
+        do {
+          do { 
+            menu_sel--;
+          } while( checkMenuEntryAllowedToBeDisplayed(menu_list, menu_sel) == 0 || menu_list[menu_sel].type == MENU_DUMMY );
+          if( menu_sel < 0 ) { // go back to last working
             menu_sel = last_sel; 
             break;
           }
-          
-          if( toption > 1 && menu_sel == 1 ) // scroll up for each dummy / disabled entry
-            toption--; 
-        }
-        if( toption > 1 && menu_sel == 1 ) // scroll up one more time
-          toption--; 
-      }
-  
-  
-      /// Navigation DOWN //////////////////////////////////////
-      if( hold_buttons & PSP_CTRL_DOWN) {
-        last_sel = menu_sel;
-        
-        if( menu_sel < menu_max-1 ) 
-          menu_sel++;
-
+        } while( menu_list[menu_sel].type != MENU_CATEGORY );
       }
       
-    }
+      if( pressed_buttons & PSP_CTRL_DOWN ) {
+        last_sel = menu_sel;
+        do {
+          if( menu_sel < menu_max-1 ) 
+            menu_sel++;
+          if( menu_sel >= menu_max-1 ) { // go back to last working
+            menu_sel = last_sel;
+            break;
+          }
+        } while( menu_list[menu_sel].type != MENU_CATEGORY );
+    toption = menu_sel; // set always on top
+      }
 
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////
     
     /// skip dummy & disabled on the way down (out of navigation-if to handle hidden/disabled on top of menu struct)
-    while( checkMenuEntryAllowedToBeDisplayed(menu_list, menu_sel) == 0 || menu_list[menu_sel].type == MENU_DUMMY || (!flag_coll_cats ? menu_list[menu_sel].type == MENU_CATEGORY : 0) ) { 
+    while( checkMenuEntryAllowedToBeDisplayed(menu_list, menu_sel) == 0 || menu_list[menu_sel].type == MENU_DUMMY || (!flag_coll_cats ? menu_list[menu_sel].type == MENU_CATEGORY : 0) ) {
       menu_sel++;
       
       if( menu_sel > menu_max-1 ) { // go back to last working if only disabled on bottom of cheatslist
@@ -6042,12 +6101,12 @@ int patch() {
     u32 addr = mod_text_addr + i;
     
     // first hit decides on version -> yes, potentially dangerous
-    if( (LCS == 1 || (LCS == VCS)) && PatchLCS(addr, mod_text_addr)) {
+    if( (LCS == 1 || (LCS == VCS)) && PatchLCS(addr, mod_text_addr) ) {
       lcs_counter++;
       LCS = 1;
       continue;
     }
-    if( (VCS == 1 || (LCS == VCS)) && PatchVCS(addr, mod_text_addr)) {
+    if( (VCS == 1 || (LCS == VCS)) && PatchVCS(addr, mod_text_addr) ) {
       vcs_counter++;
       VCS = 1;
       continue;
@@ -6292,8 +6351,9 @@ int module_start(SceSize argc, void* argp) {
     category_index[i] = 1;
 
 
-  /// check available memory (high memory layout)
+  /// check available memory (high memory layout)                                         
   memory_high = getHighMemBound();
+  // memory_high = 0x0C000000;
   #ifdef LOG
   logPrintf("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   logPrintf("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);

@@ -36,9 +36,7 @@ register int gp asm("gp"); // for VCS
 int gp_ = 0; // helper (also used in configs extern)
 
 /// externs 
-extern int PPSSPP;
-extern int ADRENALINE;
-extern int LCS, VCS;
+extern int LCS, VCS, PPSSPP, ADRENALINE;
 
 extern int menuopendelay;
 extern u32 mod_text_addr;
@@ -63,23 +61,28 @@ extern int vcs_pickupsize;
 
 /**//**//**//**//**//**//**//**//**//**//**//**//**//**//**/
 
+extern short showoptions;
 extern char category_index[];
 
 extern u32 current_buttons, pressed_buttons, hold_buttons;
 extern float xstick, ystick, xstick_, ystick_;
 
-extern int flag_menu_start;
-extern int flag_menu_show;
-extern int flag_menu_running;
-extern int flag_keys_disable;  
-extern int flag_draw_FPS;
-extern int flag_draw_COORDS;
-extern int flag_draw_SPEEDO;
-extern int flag_draw_DEBUG;
-extern int flag_use_liveconfig; // #ifdef CONFIG
-extern int flag_customusic;
-extern int flag_coll_cats;
-extern int flag_freecam;
+extern short flag_menu_start;
+extern short flag_menu_show;
+extern short flag_menu_running;
+extern short flag_keys_disable;  
+extern short flag_draw_FPS;
+extern short flag_draw_MEM;
+extern short flag_draw_COORDS;
+extern short flag_draw_SPEEDO;
+extern short flag_draw_DEBUG;
+extern short flag_use_liveconfig; // #ifdef CONFIG
+extern short flag_customusic;
+extern short flag_coll_cats;
+extern short flag_freecam;
+extern short flag_use_cataltfont;
+extern short flag_ui_blocking;
+extern short flag_use_legend;
 
 extern u32 memory_low;
 extern u32 memory_high;
@@ -97,8 +100,8 @@ char retbuf[64]; // return string for cheats
 int pplayer = 0;
 int pcar = 0;
 int pobj = 0;
-short pcar_id = 0;
-short pcar_type = 0;
+int pcar_id = 0;
+int pcar_type = 0;
 int gametimer = 0;
 int island = 0;
 int language = 0;
@@ -138,9 +141,12 @@ u32 addr_worldgravity               = -1;
 u32 addr_fpsCap                     = -1;
 u32 addr_buttoncheat                = -1;
 u32 addr_heliheight                 = -1;
+#ifdef PREVIEW
 u32 addr_policechaseheli_1          = -1;
 u32 addr_policechaseheli_2          = -1;
 u32 addr_policechaseheli_3          = -1;
+#endif
+u32 addr_randompedcheat             = -1;
 
 u32 global_weather          = -1;
 u32 global_trafficdensity   = -1;
@@ -273,6 +279,9 @@ u32 ptr_radarIconList         = -1;
 
 u32 var_radios                = -1;
 u32 render                    = -1;
+
+u32 ptr_memory_main           = -1;
+
 
 /// savedataeditor - scraped since not working on emu and save space
 #ifdef SAVEDITOR 
@@ -452,7 +461,8 @@ u32 saveprefix   = -1;
   }
     
   void (*FUN_123)(int vehicle);
-  
+
+
 /*********************************************************************************************************/
 #endif
 
@@ -475,11 +485,11 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     /// Example ///// open trunk  /////////////////////////////////////
     // FUN_00008bd0 = (void*)(text_addr + 0x08bd0); // opcode - open trunk?
     
-	
+  
     /// Example ///// play Credits Cheat -> calling works //////////////
     // FUN_0028a9b8_CHEAT_ShowCredits = (void*)(text_addr + 0x28a9b8); 
     
-	
+  
     /// Example ///// give player an AK47 //////////////////////////////
     // FUN_001c6c28(0x114,1); //requestModel
     //  //not needed FUN_001c6f64(0); //something register model
@@ -631,6 +641,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   //MAKE_DUMMY_FUNCTION(text_addr + 0x2ae900, 0); // FUN_00
 
   
+  
+  
   // // // // // // // // // // // // // // // // // // // // // // // // // // //  
     
     #ifdef PATCHLOG
@@ -641,6 +653,87 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   #endif
   
   
+  #ifdef GAMELOG
+  static int patchlogonce = 1; 
+  if( LCS && patchlogonce && mod_text_size == 0x0032BFC4 && mod_data_size == 0x0002E110 ) { // ULUS-10041_v3.00
+  
+    /// Debug Prints ////////////////////////////////////////////
+    HIJACK_FUNCTION(text_addr + 0x2f6558, debugprint_patched, debugprint); // error in cpp
+    HIJACK_FUNCTION(text_addr + 0x2f59bc, debugprint_patched, debugprint); // general? opcodes etc?! 134
+    HIJACK_FUNCTION(text_addr + 0x2e2e48, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2d28d4, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2d1090, debugprint_patched, debugprint); // error mpeg
+    HIJACK_FUNCTION(text_addr + 0x2cc578, debugprint_patched, debugprint); // multiplayer
+    HIJACK_FUNCTION(text_addr + 0x2c2f2c, debugprint_patched, debugprint); // UMD File IO
+    HIJACK_FUNCTION(text_addr + 0x2bfdb8, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2b3148, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2b9664, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2aee08, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2a12d8, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x29f0b4, debugprint_patched, debugprint); // memory error prints HEAP
+    HIJACK_FUNCTION(text_addr + 0x299050, debugprint_patched, debugprint); // ped density
+    HIJACK_FUNCTION(text_addr + 0x28a378, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x288400, debugprint_patched, debugprint); // CGameLogic
+    HIJACK_FUNCTION(text_addr + 0x287dfc, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x27ccc0, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2566f8, debugprint_patched, debugprint); // entity 
+    HIJACK_FUNCTION(text_addr + 0x2566cc, debugprint_patched, debugprint); // create xyz
+    HIJACK_FUNCTION(text_addr + 0x255a24, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x229bec, debugprint_patched, debugprint); // FindNthNodeClosestToCoor / CheckObjectSpawnPosition
+    HIJACK_FUNCTION(text_addr + 0x2297c8, debugprint_patched, debugprint); 
+    HIJACK_FUNCTION(text_addr + 0x207768, debugprint_patched, debugprint); // StreamingHeap
+    HIJACK_FUNCTION(text_addr + 0x203cc8, debugprint_patched, debugprint); // adhoc
+    HIJACK_FUNCTION(text_addr + 0x2035ec, debugprint_patched, debugprint); // frame
+    HIJACK_FUNCTION(text_addr + 0x1d15f4, debugprint_patched, debugprint); // car transfer / carjack
+    HIJACK_FUNCTION(text_addr + 0x1d1380, debugprint_patched, debugprint); // volatile ram
+    HIJACK_FUNCTION(text_addr + 0x1c15d8, debugprint_patched, debugprint); // anim, models "STREAM MODEL xyz"
+    HIJACK_FUNCTION(text_addr + 0x1bc8cc, debugprint_patched, debugprint); // Files, Loadscreen etc
+    HIJACK_FUNCTION(text_addr + 0x1bc098, debugprint_patched, debugprint); // cInterestZoneManager
+    HIJACK_FUNCTION(text_addr + 0x19af68, debugprint_patched, debugprint); // weapon model
+    HIJACK_FUNCTION(text_addr + 0x198dcc, debugprint_patched, debugprint); // ClearWaitState
+    HIJACK_FUNCTION(text_addr + 0x193810, debugprint_patched, debugprint); // splash screen
+    HIJACK_FUNCTION(text_addr + 0x1816b0, debugprint_patched, debugprint); // collision
+    HIJACK_FUNCTION(text_addr + 0x17e524, debugprint_patched, debugprint); // "  anim %i: blend %f %f time %f spd %f anm %i, %i flags %i"
+    HIJACK_FUNCTION(text_addr + 0x17e4f8, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x17b738, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x17149c, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x1708d4, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x16fecc, debugprint_patched, debugprint); // SCE Errors
+    HIJACK_FUNCTION(text_addr + 0x16af14, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x162528, debugprint_patched, debugprint); // marker
+    HIJACK_FUNCTION(text_addr + 0x152f0c, debugprint_patched, debugprint); // CTheScripts 
+    HIJACK_FUNCTION(text_addr + 0x14bddc, debugprint_patched, debugprint); // cWorldStream
+    HIJACK_FUNCTION(text_addr + 0x131774, debugprint_patched, debugprint); //media mp?
+    HIJACK_FUNCTION(text_addr + 0x11bfb8, debugprint_patched, debugprint); // car transfer
+    HIJACK_FUNCTION(text_addr + 0x119080, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x1157b8, debugprint_patched, debugprint); // pickups
+    HIJACK_FUNCTION(text_addr + 0x109aac, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0xe635c, debugprint_patched, debugprint); //camera & fade screen
+    HIJACK_FUNCTION(text_addr + 0xd0484, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0xb65d4, debugprint_patched, debugprint); // custom tracks
+    HIJACK_FUNCTION(text_addr + 0xb4180, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0xb14a0, debugprint_patched, debugprint); // libwav
+    HIJACK_FUNCTION(text_addr + 0xac6c0, debugprint_patched, debugprint); // savedata stuff
+    HIJACK_FUNCTION(text_addr + 0xa7c34, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0xa2fc8, debugprint_patched, debugprint); // mp?
+    HIJACK_FUNCTION(text_addr + 0x80810, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x74e38, debugprint_patched, debugprint); // heap info
+    HIJACK_FUNCTION(text_addr + 0x6f1dc, debugprint_patched, debugprint); // "main: %i %i %i  streaming: %i %i  volatile: %i %i  kernel: %i  FPS: %.1f  GPU%%: %.1f  ptrnode: %i\n"
+    HIJACK_FUNCTION(text_addr + 0x690d8, debugprint_patched, debugprint); // Adhoc
+    HIJACK_FUNCTION(text_addr + 0x671a4, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x3f62c, debugprint_patched, debugprint); // audio stuff sound thread libwav
+    HIJACK_FUNCTION(text_addr + 0x3f23c, debugprint_patched, debugprint); // audio stuff
+    HIJACK_FUNCTION(text_addr + 0x38e64, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x35aac, debugprint_patched, debugprint); // cannot find with name
+    HIJACK_FUNCTION(text_addr + 0x340cc, debugprint_patched, debugprint);
+    HIJACK_FUNCTION(text_addr + 0x2786c, debugprint_patched, debugprint); // adhoc
+  
+    #ifdef PATCHLOG
+    logPrintf("[INFO] patchlogonce() LCS ran!");
+    #endif
+    patchlogonce = 0;
+  } 
+  #endif
   
   /// /// /// ULTRA CRITICAL ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  /// 
   
@@ -839,7 +932,6 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   } // ULUX-002 OK
   
-
   /// world gravity
   if( _lw(addr - 0x18) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
     #ifdef PATCHLOG
@@ -1439,6 +1531,16 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    **************************************/ 
   if( _lw(addr + 0x98) == 0x3C044754 && _lw(addr + 0xC0) == 0x30A500FF ) {  // FUN_000673bc
     /*******************************************************************
+     *  0x000673E4: 0x3C040038 '8..<' - lui        $a0, 0x38
+     *  0x000673F0: 0x2484D640 '@..$' - addiu      $a0, $a0, -10688
+    *******************************************************************/
+    ptr_memory_main = (_lh(addr+0x28) * 0x10000) + (int16_t)_lh(addr+0x34);
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_0037d640
+    #endif
+
+    
+     /*******************************************************************
      *  0x000675B8: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x000675BC: 0xACA41F14 '....' - sw         $a0, 7956($a1)
     *******************************************************************/
@@ -1510,9 +1612,11 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
   if( _lw(addr + 0x94) == 0x3C044754 && _lw(addr + 0xC4) == 0x30A500FF ) { // 0x00011E84 - ULUX ONLY VERSION (because DTZ func too different)
     #ifdef PATCHLOG
-    logPrintf("ptr_buildingsIPL, ptr_treadablesIPL, ptr_dummysIPL, ptr_handlingCFG, ptr_particleCFG, ptr_timecycDAT");
+    logPrintf("ptr_buildingsIPL, ptr_treadablesIPL, ptr_dummysIPL, ptr_handlingCFG, ptr_particleCFG, ptr_timecycDAT, ptr_memory_main");
     #endif
     
+    ptr_memory_main = (_lh(addr+0x24) * 0x10000) + (int16_t)_lh(addr+0x30);
+  
     ptr_buildingsIPL = (_lh(addr+0xF8) * 0x10000) + (int16_t)_lh(addr+0xFC);
     var_buildingsIPLslotsize = 0x60; // todo?!
     
@@ -1530,7 +1634,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_particleCFGslots   = 82; // where to find?
     var_particleCFGslotsize = 0x94; // where to find?
     
-  ptr_timecycDAT = (_lh(addr+0x230) * 0x10000) + (int16_t)_lh(addr+0x234);
+    ptr_timecycDAT = (_lh(addr+0x230) * 0x10000) + (int16_t)_lh(addr+0x234);
   
     return 1;
   }
@@ -1709,9 +1813,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     logPrintf("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
     #endif
     LoadStringFromGXT = (void*)(addr); // FUN_0010fad4_loadStringFromGXT
-    
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
-    
     return 1;
   }
   if(  _lw(addr + 0x28) == 0x0040B025 && _lw(addr + 0x64) == 0x2408FFFF ) { // 0x00028EDC near "MP_SNEW"
@@ -2280,6 +2382,18 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   }
   #endif
+  
+  /// addr_randompedcheat
+  if( _lw(addr - 0x14) == 0x2A04006D ) {  // 0x00290928
+    /*******************************************************************
+     *  0x00290928: 0x1211FFDF '....' - beq        $s0, $s1, loc_002908A8
+    *******************************************************************/
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> addr_randompedcheat", addr-text_addr, addr);
+    #endif
+    addr_randompedcheat = addr; // 0
+    return 1;
+  } 
   
   
   return 0;
@@ -3171,6 +3285,15 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// GAME.DTZ - FUN_0024f6f0_loadGAMEDTZ (contains pointers to all files packed in the dtz) (GAME.DTZ is loaded to 0x   )
   if( _lw(addr + 0xA4) == 0x3C044754 && _lw(addr + 0xCC) == 0x308400FF ) { // FUN_0024f6f0
     /*******************************************************************
+     *  0x0024F720: 0x3C04003C '<..<' - lui        $a0, 0x3C
+     *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
+    *******************************************************************/
+    ptr_memory_main = (_lh(addr+0x30) * 0x10000) + (int16_t)_lh(addr+0x3C);
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_003c2500
+    #endif
+  
+  /*******************************************************************
      *  0x0024F940: 0xAF842700 '.'..' - sw         $a0, 9984($gp)
      * Handling isn't linked in VCS????      I need these for config though
     *******************************************************************/
@@ -3720,13 +3843,117 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef GAMELOG
+#define loglines 14
+char logstr[loglines][128] = { "a","b","c","","","","","","","","","x","y","z" }; // a = newest log
+
+void debugprint_patched(const char *text, ...) { 
+  va_list list;
+  char string[128];
+
+  va_start(list, text);
+  vsprintf(string, text, list);
+  va_end(list);
+
+  /// add to log array
+  int i = loglines; 
+  while( i > 0 ) { 
+    sprintf(logstr[i], "%s", logstr[i-1]); 
+  i--;
+  } sprintf(logstr[0], "%s", string);
+  
+  /// print to log.txt as well
+  logPrintf(string); 
+  
+  //sceKernelPrintf(string);  
+}
+
+void drawGameLog() { // print log array
+  int i = loglines; 
+  u32 step = 0x08000000;
+  u32 color = WHITE - (loglines * step); 
+  float textsize = 0.5f;
+  float x = 470.0f, y = 75.0f, pad = 10.0f;
+  while( i >= 0 )
+    drawString(logstr[--i], ALIGN_RIGHT, FONT_DIALOG, textsize, SHADOW_OFF, x, y+=pad, color+=step);
+}
+#endif
+
+#ifdef MEMORY
+int (*FUN_0029febc)(int param_1); // calc "free"
+int (*FUN_0029fed4)(int param_1); // calc "largest free"
+
+extern char buffer[256];
+
+void drawMemoryUsage() {
+  char sizestr[16];
+  getSizeString(sizestr, sceKernelTotalFreeMemSize());
+  sprintf(buffer, "sceKernelTotalFreeMemSize = %s", sizestr);
+  drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 20.0f, RED);
+
+  getSizeString(sizestr, sceKernelMaxFreeMemSize());
+  sprintf(buffer, "sceKernelMaxFreeMemSize = %s", sizestr);
+  drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 35.0f, RED);
 
 
+  FUN_0029febc = (void*)(mod_text_addr + 0x29febc); // calc "free"
+  FUN_0029fed4 = (void*)(mod_text_addr + 0x29fed4); // calc "largest free"
+
+  int _main = mod_text_addr + 0x37d640; // DAT_0037d640 "ptr_memory_main"
+  drawString("main", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 40.0f, WHITE);
+
+  getSizeString(sizestr, getInt(_main));
+  sprintf(buffer, "total: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 50.0f, RED);
+
+  getSizeString(sizestr, FUN_0029febc(_main));
+  sprintf(buffer, "free: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 60.0f, RED);
+
+  getSizeString(sizestr, FUN_0029fed4(_main));
+  sprintf(buffer, "largest: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 70.0f, RED);
+
+
+  int _streaming = mod_text_addr + 0x385870; // DAT_00385870
+  drawString("streaming", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 90.0f, WHITE);
+
+  getSizeString(sizestr, getInt(_streaming));
+  sprintf(buffer, "total: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 100.0f, RED);
+
+  getSizeString(sizestr, FUN_0029febc(_streaming));
+  sprintf(buffer, "free: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 110.0f, RED);
+
+  getSizeString(sizestr, FUN_0029fed4(_streaming));
+  sprintf(buffer, "largest: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 120.0f, RED);
+
+
+  int _volatile = mod_text_addr + 0x3859a0; // DAT_003859a0
+  drawString("volatile", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 140.0f, WHITE);
+
+  getSizeString(sizestr, getInt(_volatile));
+  sprintf(buffer, "total: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 150.0f, RED);
+
+  getSizeString(sizestr, FUN_0029febc(_volatile));
+  sprintf(buffer, "free: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 160.0f, RED);
+
+  getSizeString(sizestr, FUN_0029fed4(_volatile));
+  sprintf(buffer, "largest: %s", sizestr);
+  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 170.0f, RED);
+}
+#endif
+  
 /// Game's Function Calls & Hijacks //////////////////////////////////////////////////////////////////////////////////////////////////
 
 SceInt64 cur_micros = 0, delta_micros = 0, last_micros = 0;
 u32 frames = 0;
 float fps = 0.0f;
+int memory_main_free = 0;
 
 SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   SceInt64 cur_micros = sceKernelGetSystemTimeWide();
@@ -3736,6 +3963,8 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
     fps = (frames / (double)delta_micros) * 1000000.0f;
     frames = 0;
   } frames++;
+  
+  memory_main_free = getInt(ptr_memory_main + 0x10) - getInt(ptr_memory_main + 0xC) - getInt(ptr_memory_main + 0x14); // basically what FUN_0029febc does
 
   #ifdef LOG
   static int debug_skgstwp = 1;
@@ -3750,7 +3979,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   }
   #endif
   
-  
+
   /// Value Getter / Checker //////////////////
   
   gp_ = LCS ? 0 : gp; // helper: zero for LCS, $gp for VCS
@@ -4209,6 +4438,16 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
   }
   #endif
   
+  #ifdef GAMELOG
+  if( mode == 0 )
+    drawGameLog(); // todo - move to different hooked func
+  #endif
+  
+  #ifdef MEMORY
+  if( mode == 0 )
+    drawMemoryUsage(); // todo - move to different hooked func
+  #endif
+  
   if( mode == 0 )
     if( gametimer >= menuopendelay) // delay after new game
       draw();
@@ -4495,6 +4734,34 @@ void *fps_toggle(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
+void *mem_toggle(int calltype, int keypress, int defaultstatus) {
+  static int status;
+  
+  switch( calltype ) {
+    case FUNC_GET_STATUS: 
+      return (int*)status;
+      
+    case FUNC_CHANGE_VALUE:
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        if( status ) {
+          flag_draw_MEM = status = 0;
+        } else {
+          flag_draw_MEM = status = 1;
+        }
+      } break;
+    
+    case FUNC_TOGGLE_CHEAT:
+      status = flag_draw_MEM = keypress; // keypress reused as on/off boolean
+      break;
+    
+    case FUNC_SET: 
+      status = flag_draw_MEM = defaultstatus;
+      break;
+  }
+  
+  return NULL;
+}
+
 
 void *coords_toggle(int calltype, int keypress, int defaultstatus) {
   static int status;
@@ -4520,8 +4787,8 @@ void *coords_toggle(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-char speed[10];
-char gear[10];
+char speed[16];
+char gear[16];
 void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   static int i = 0;
@@ -4572,7 +4839,7 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
 
 
 #ifdef DEBUG
-extern int flag_draw_DBGVALS;
+extern short flag_draw_DBGVALS;
 void *debug_vars(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   
@@ -4833,7 +5100,7 @@ void *cdr_freezegameinmenu(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-extern int flag_ui_blocking;
+
 void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus) { 
   static int status;
   
@@ -4863,8 +5130,7 @@ void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-extern int showoptions;
-extern int flag_use_legend;
+
 void *cdr_uselegend(int calltype, int keypress, int defaultstatus) {
   static int status;
   
@@ -4898,7 +5164,6 @@ void *cdr_uselegend(int calltype, int keypress, int defaultstatus) {
 }
 
 
-extern int flag_use_cataltfont;
 void *cdr_alternativefont(int calltype, int keypress, int defaultstatus) {
   static int status;
   
@@ -5154,8 +5419,65 @@ void bttncht_spawnrhino() {
 void bttncht_playcredits() {
   if( LCS ) activateCheatCode(L, R, L, R, UP, DOWN, L, R);
 }
-void bttncht_randomplayer() {
+/* void bttncht_randomplayer() {
   if( LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, SQUARE, TRIANGLE);
+} */
+void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus, int defaultval) {
+  static int model = -1;
+  
+  switch( calltype ) {
+    case FUNC_GET_VALUE: // for config
+      return (int*)model; 
+    
+    case FUNC_GET_STRING: 
+      if( model == -1 ) {
+        sprintf(retbuf, "Random");
+      } else {
+        sprintf(retbuf, "%d", model);
+        #ifdef NAMERESOLV
+      sprintf(retbuf, "%d (%s)", model, getModelNameViaID(model, -1));
+      #endif
+      } return (void *)retbuf;
+            
+    case FUNC_CHANGE_VALUE:
+      if( keypress == PSP_CTRL_LEFT && model > -1) { // LEFT
+        model--;
+    if( model == 8 ) model = 7; // skip crashing
+    if( model == 78 ) model = 68;
+    
+      } else if( keypress == PSP_CTRL_RIGHT && model < 104) { // RIGHT
+        model++;
+    if( model == 8 ) model = 9; // skip crashing
+    if( model == 69 ) model = 79;
+    
+      } else if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        activateCheatCode(L, L, LEFT, L, L, RIGHT, SQUARE, TRIANGLE);
+      
+      } else if( keypress == PSP_CTRL_CIRCLE ) { // CIRCLE
+        model = -1; // random
+      
+      } else if( keypress == PSP_CTRL_SQUARE ) {
+        // todo - unstuck player
+      
+      } else if( keypress == PSP_CTRL_TRIANGLE ) {
+        #ifdef HEXEDITOR  
+        hex_marker_clear();
+        hex_marker_addx(addr_randompedcheat, sizeof(int));
+        hexeditor_create(addr_randompedcheat, 0, memory_low, memory_high, "");
+        #endif
+      } 
+    setRandomPedCheat(model);
+      break;
+      
+    case FUNC_SET: 
+      if( defaultval >= 0 && defaultval <= 104 ) { // todo
+        model = defaultval;
+    setRandomPedCheat(model);
+      } else model = -1;
+      break;
+  }
+  
+  return NULL;
 }
 
 void bttncht_bubblehead() {
@@ -5447,7 +5769,7 @@ void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) 
       if( defaultval >= 0 && i <= (LCS ? lcs_teleportersize : vcs_teleportersize) ) 
         i = defaultval;
       else   
-        i = LCS ? 25 : 24; // default teleport location in list
+        i = LCS ? 26 : 27; // default teleport location in list
 
       break;
   }  
@@ -9850,8 +10172,9 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
       break;
       
     case FUNC_SET:
-      if( defaultval >= 0 ) 
+      if( defaultval > 0 ) 
         id = defaultval;
+    else id = 172;
       break;
   }  
 
@@ -11117,8 +11440,8 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
   static int status;
   static int pos = 1;
                 //  0 Dis  1 Def  2+ Customs....
-  const short list_value_lcs[] = { 0x00,  0xD7,   0xD3, 0xD5, 0xD6, 0xD7, 0xD8 };
-  const short list_value_vcs[] = { 0x00, 0x105,  0xAD, 0xBC, 0xBD, 0xD5, 0x104, 0x105, 0x106, 0x107, 0x113 };
+  const short list_value_lcs[] = { 0x00,  0xD7, 0xD3, 0xD5, 0xD6, 0xD7, 0xD8 };
+  const short list_value_vcs[] = { 0x00, 0x105, 0xAD, 0xBC, 0xBD, 0xD5, 0x104, 0x105, 0x106, 0x107, 0x113 };
   static int list_size_lcs = (sizeof(list_value_lcs)/sizeof(*list_value_lcs))-1;
   static int list_size_vcs = (sizeof(list_value_vcs)/sizeof(*list_value_vcs))-1;
   
@@ -11312,6 +11635,109 @@ void test_func() { //for testing only
   
 }
 
+/*struct node { 
+  //char *string;
+  int time;
+  struct node *next;
+};
+
+struct node *head = NULL;
+  
+void print_list() {
+    struct node *current = head;
+  char string[256];
+
+    while(current != NULL) {
+        //printf("%d\n", current->val);
+    sprintf(string, "Gametime: %d", current->time); 
+    drawString(string, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 40.0f, WHITE); 
+    
+        current = current->next;
+    }
+}
+
+//insertion at the beginning
+void insertatbegin(int time){
+
+   //create a link
+   struct node *lk = (struct node*) malloc(sizeof(struct node));
+   lk->time = time;
+
+   // point it to old first node
+   lk->next = head;
+
+   //point first to new first node
+   head = lk;
+}
+void insertatend(int time){
+
+   //create a link
+   struct node *lk = (struct node*) malloc(sizeof(struct node));
+   lk->time = time;
+   struct node *linkedlist = head;
+
+   // point it to old first node
+   while(linkedlist->next != NULL)
+      linkedlist = linkedlist->next;
+
+   //point first to new first node
+   linkedlist->next = lk;
+}
+void insertafternode(struct node *list, int time){
+   struct node *lk = (struct node*) malloc(sizeof(struct node));
+   lk->time = time;
+   lk->next = list->next;
+   list->next = lk;
+}
+void deleteatbegin(){
+   head = head->next;
+}
+void deleteatend(){
+   struct node *linkedlist = head;
+   while (linkedlist->next->next != NULL)
+      linkedlist = linkedlist->next;
+   linkedlist->next = NULL;
+}
+void deletenode(int key){
+   struct node *temp = head, *prev = NULL;
+   if (temp != NULL && temp->time == key) {
+      head = temp->next;
+      return;
+   }
+
+   // Find the key to be deleted
+   while (temp != NULL && temp->time != key) {
+      prev = temp;
+      temp = temp->next;
+   }
+
+   // If the key is not present
+   if (temp == NULL) return;
+
+   // Remove the node
+   prev->next = temp->next;
+}
+int searchlist(int key){
+   struct node *temp = head;
+   while(temp != NULL) {
+      if(temp->time == key) {
+         return 1;
+      }
+      temp=temp->next;
+   }
+   return 0;
+}
+int getsize(){
+   int counter = 0;
+   struct node *temp = head;
+   while(temp != NULL) {
+      counter++;
+      temp=temp->next;
+   }
+   return counter;
+}
+*/
+
 
 void *test_switch(int calltype, int keypress, int defaultstatus) {
   static int status;
@@ -11377,9 +11803,9 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
       
       
     //  setFloat(mod_text_addr + 0x37F4DC, -0.75f);
-      
-      
     
+    //drawGameLog();
+  
     //FUN_123(pobj); 
             
       if( abc ) { // quick apply once
@@ -11497,3 +11923,4 @@ void *mp_test(int calltype, int keypress, int defaultstatus) {
    
   return NULL;
 }
+

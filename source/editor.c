@@ -16,7 +16,6 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -32,8 +31,7 @@
 #ifdef EDITORS
 register int gp asm("gp");
 
-extern int LCS;
-extern int VCS;
+extern int LCS, VCS;
 extern int multiplayer;
 
 /// from cheats.c
@@ -130,7 +128,7 @@ extern int vcs_pickupsize;
 const Editor_pack lcs_garage_menu[] = {  
   //name                        //postfix      //address    //edit_bool  //type      //precision  //*value         //steps   
   {"Vehicle Identifier"             , ""        , 0x00      , TRUE    , TYPE_INTEGER  , DEC    , garage_vehicle      , 1      },
-
+  
   {"X position"                     , ""        , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0                   , 0.1    },
   {"Y position"                     , ""        , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0                   , 0.1    },
   {"Z position"                     , ""        , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0                   , 0.1    },
@@ -171,7 +169,7 @@ const Editor_pack lcs_garage_menu[] = {
 
   {"Variation 1"                    , ""        , 0x27      , TRUE    , TYPE_BYTE     , 0 /*hex*/ , 0                , 1      },
   {"Variation 2"                    , ""        , 0x28      , TRUE    , TYPE_BYTE     , 0 /*hex*/ , 0                , 1      },
-           
+          
 
   /// Variations:   set one of both (doesn't matter which, the other 0xFF), or even both for 2 addons!!
   
@@ -348,13 +346,13 @@ const Editor_pack lcs_pedobj_menu[] = {
 //  {"0x197 Flags"                   , ""      , 0x197     , TRUE    , TYPE_BIT      , 6      , 0            , 0      },
 //  {"0x197 Flags"                   , ""      , 0x197     , TRUE    , TYPE_BIT      , 7      , 0            , 0      },
   
-/*  {"0x19A Flags"                   , ""      , 0x19A     , TRUE    , TYPE_BIT      , 0      , 0            , 0      },
-  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 1      , 0            , 0      },
-  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 2      , 0            , 0      },
-  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 3      , 0            , 0      },
-  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 4      , 0            , 0      },
-  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 5      , 0            , 0      },
-  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 6      , 0            , 0      }, */
+//  {"0x19A Flags"                   , ""      , 0x19A     , TRUE    , TYPE_BIT      , 0      , 0            , 0      },
+//  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 1      , 0            , 0      },
+//  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 2      , 0            , 0      },
+//  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 3      , 0            , 0      },
+//  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 4      , 0            , 0      },
+//  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 5      , 0            , 0      },
+//  {"0x19A Flags"                     , ""      , 0x19A     , TRUE    , TYPE_BIT      , 6      , 0            , 0      },
   {"Invisible bool"                  , ""      , 0x19A     , TRUE    , TYPE_BIT      , 7      , 0            , 0      },
   
   {"Bloody footprints"               , ""      , 0x198     , FALSE   , TYPE_BYTE     , HEX    , 0            , 0x1    },
@@ -664,7 +662,6 @@ const Editor_pack lcs_mapicons_menu[] = {
   {"Display"                           , ""      , 0x3E      , TRUE    , TYPE_SHORT    , DEC    , 0            , 0x1    },
   {"Icon"                              , ""      , 0x40      , TRUE    , TYPE_SHORT    , DEC    , 0            , 0x1    }, // short?!
   {"?"                                 , ""      , 0x42      , TRUE    , TYPE_SHORT    , HEX    , 0            , 0x1    },
-  
   {NULL,NULL,0,0,0,0,0}
 };
 
@@ -1389,7 +1386,6 @@ const Editor_pack lcs_vehiclespawns_menu[] = {
   {"bool (can spawn when -1)"       , ""      , 0x28      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // -1 to allow spawn (inside time window which is different for slots)
   {"bool (cannot spawn when 1)"     , ""      , 0x2A      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      }, // 0 to allow spawn (enough time since last spawn passed and nothing blocking in world)
 
-
   // TODO spawn in specific time period only? how handled???
 
   {NULL,NULL,0,0,0,0,0}
@@ -1819,7 +1815,7 @@ const Editor_pack lcs_pedstatsdat_menu[] = {
   {"1HitKnockdown"         , ""      , 0x30      , TRUE    , TYPE_BIT      , 5     , 0            , 0      }, 
   {"ShoppingBags"          , ""      , 0x30      , TRUE    , TYPE_BIT      , 6     , 0            , 0      }, 
   {"GunPanic"              , ""      , 0x30      , TRUE    , TYPE_BIT      , 7     , 0            , 0      }, 
-    
+   
   {NULL,NULL,0,0,0,0,0}
 };
 
@@ -1828,7 +1824,7 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
   //name                     //postfix    //address //edit_bool  //type  //precision  //*value     //steps    //min    //max  
 //  {"No"                     , ""      , 0x00      , FALSE   , TYPE_INTEGER  , DEC   , 0            , 1      , INT_MIN , INT_MAX  },
   {"PedStat Type Name"        , ""      , 0x1A      , TRUE    , TYPE_STRING   , 20    , 0            , 0      }, // A:  PedStat type name
-  
+ 
   {"Flee Distance"            , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 0     , 0            , 1.0f   }, // B:  Flee distance
   {"Heading change rate "     , " Deg"  , 0x08      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // C:  Heading change rate
   
@@ -2022,9 +2018,9 @@ const Editor_pack timecycdat_menu[] = {  // ~3KB
   {"BottomCloud G"        , ""      , 0x21C0     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // 
   {"BottomCloud B"        , ""      , 0x2280     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // 
  
-  {"Blur R"               , ""      , 0x2340     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // BlurRGB
-  {"Blur G"               , ""      , 0x2400     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // 
-  {"Blur B"               , ""      , 0x24C0     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // 
+  {"Blur R"               , ""      , 0x2400     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // BlurRGB
+  {"Blur G"               , ""      , 0x24C0     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // 
+  {"Blur B"               , ""      , 0x2340     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // 
   
   {"Water R"              , ""      , 0x2580     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // WaterRGBA
   {"Water G"              , ""      , 0x2640     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // 
