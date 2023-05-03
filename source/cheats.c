@@ -11309,10 +11309,12 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
       
       /// Vehicles
       int base = vehicles_base;
-      for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) 
-        if( getVehicleObjectIsActive(base) && base != pcar ) // ignore player's current vehicle
-          gather_helper(base, x, y, z);
-      
+      for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) { 
+        if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
+          setVehicleMakePhysical(base);
+		  gather_helper(base, x, y, z);
+        }
+      }
       /// Pedestrians
       base = peds_base;
       for( j = 0; j < peds_max; j++, base += var_pedobjsize ) 
