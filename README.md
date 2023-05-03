@@ -20,8 +20,12 @@ Copy the whole ```cheatdevice_remastered``` folder into the ```/PSP/PLUGINS/``` 
 ### PSP & Adrenaline
 1. Move ```cheatdevice_remastered.prx``` to ```/seplugins/``` folder
 2. Edit ```ms0:/seplugins/GAME.TXT``` file (create it if not already there) and add the line ```ms0:seplugins/cheatdevice_remastered.prx 1``` <br />
-(If you are using the [native resolution patch by TheFloW](https://github.com/TheOfficialFloW/GTANativeRes) make sure to load the CheatDevice first!)
+(If you are using the [native resolution patch by TheFloW](https://github.com/TheOfficialFloW/GTANativeRes) make sure to load the CheatDevice first) (Vita only!)
 3. In the VSH-menu enable 333Mhz in Game-mode for a smoother experience.
+4. Enable extra RAM in Recovery Menu (aka. "Force High Memory Layout")
+
+:warning: **If you are using a PSP 1000 (Fat) model**<br>
+Please use ```cheatdevice_remastered_lite.prx``` instead.
 <br /><br />
 
 
@@ -44,6 +48,28 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 
 
 ## Changelog
+<details><summary>v1.0g "The Open Source Release" (4th May 2023)</summary><ul>
+<li>fixed newline bug in UserScripts
+<li>better "high memory layout" detection
+<li>added Cheat "Untouchable"
+<li>added Cheat "Freeze Traffic"
+<li>added Cheat "Cars drive on water"
+<li>added Cheat "Mission Selector"
+<li>added Action-buttons Cheat "Impuls"
+<li>added Action-buttons Cheat "Jump with Vehicle"
+<li>added "unfreeze" option for ped/vehicle to touch cheats
+<li>added option to adjust player model of stock cheat for LCS
+<li>added option to display free main memory 
+<li>fixed bug in loading last touched ped/vehicle/object position
+<li>added Timecycle Editor (thanks to @DenielX)
+<li>removed the "bigger legend box" option
+<li>removed the "disable advanced UI" option
+<li>removed the "show Ped's stats when aimed at" cheat
+<li>removed min and max bounds for editors
+<li>you can now use R + UP/DOWN to fast scroll through categories
+<li>even more bug fixes and code cleaning for opensourceing
+</ul></details>
+
 <details><summary>v1.0f "The late Anniversary Release" (29th Dez. 2022)</summary><ul>
 <li>added lite version of plugin without advanced features for casual cheaters
 <li>moved "CDR/" folder from root to "PSP/PLUGINS/cheatdevice_remastered/"
