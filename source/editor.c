@@ -173,14 +173,14 @@ const Editor_pack lcs_garage_menu[] = {
 
   /// Variations:   set one of both (doesn't matter which, the other 0xFF), or even both for 2 addons!!
   
-  // Landstalker    0x00 = roofrack
-  //          0x01 = boxes in back 
-  //          0xFF = nothing
+  // Landstalker  0x00 = roofrack
+  //              0x01 = boxes in back 
+  //              0xFF = nothing
   
-  // Partriot      0x00 = low tarp 
-  //          0x01 = high tarp
-  //          0x02 = pipes
-  //          0xFF = nothing
+  // Partriot     0x00 = low tarp 
+  //              0x01 = high tarp
+  //              0x02 = pipes
+  //              0xFF = nothing
   
   /// Variation Vehivcles: Mule / Yankee / Hearse / BARRACKS OL / Stallion / Phobos VT / Deimos / Stinger / Manana / ..
   
