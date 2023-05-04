@@ -17,7 +17,7 @@ Happy Cheating! :)
 ## Installation
 Copy the whole ```cheatdevice_remastered``` folder into the ```/PSP/PLUGINS/``` directory. 
 
-### PSP & Adrenaline
+### PSP & Adrenaline *(extra steps)*
 1. Move ```cheatdevice_remastered.prx``` to ```/seplugins/``` folder
 2. Edit ```ms0:/seplugins/GAME.TXT``` file (create it if not already there) and add the line ```ms0:seplugins/cheatdevice_remastered.prx 1``` <br />
 (If you are using the [native resolution patch by TheFloW](https://github.com/TheOfficialFloW/GTANativeRes) make sure to load the CheatDevice first) (Vita only!)
@@ -183,6 +183,12 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 <li>added side mission timer freeze
 <li>added debug loadscreen messages 
 </ul></details>
+
+<br />
+
+## See also
+- Right analog stick control *(for [PPSSPP](https://github.com/Freakler/ppsspp-GTARemastered), for [Adrenaline](https://github.com/TheOfficialFloW/RemasteredControls/releases/tag/GTARemastered))*
+- Native Resolution Patch *(for [Adrenaline](https://github.com/TheOfficialFloW/GTANativeRes))*
 
 <br />
 
