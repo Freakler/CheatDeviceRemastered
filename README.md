@@ -55,7 +55,7 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 <li>added Cheat "Freeze Traffic"
 <li>added Cheat "Cars drive on water"
 <li>added Cheat "Mission Selector"
-<li>added Action-buttons Cheat "Impuls"
+<li>added Action-buttons Cheat "Impulse"
 <li>added Action-buttons Cheat "Jump with Vehicle"
 <li>added "unfreeze" option for ped/vehicle to touch cheats
 <li>added option to adjust player model of stock cheat for LCS
@@ -67,7 +67,7 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 <li>removed the "show Ped's stats when aimed at" cheat
 <li>removed min and max bounds for editors
 <li>you can now use R + UP/DOWN to fast scroll through categories
-<li>even more bug fixes and code cleaning for opensourceing
+<li>even more bug fixes and code cleaning for open-sourcing
 </ul></details>
 
 <details><summary>v1.0f "The late Anniversary Release" (29th Dez. 2022)</summary><ul>
