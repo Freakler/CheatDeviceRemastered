@@ -542,7 +542,7 @@ int usercheats_draw() {
   char buffer_top[128]; // top option
   char buffer_top2[16]; // top option right
   
-  sprintf(buffer, "%s%s%s/", basefolder, folder_cheats, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
+  snprintf(buffer, sizeof(buffer), "%s%s%s/", basefolder, folder_cheats, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
   
   /// draw title  
   drawString("User Cheats", ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
@@ -598,8 +598,8 @@ int usercheats_draw() {
   drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? 194.0f : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
   /// draw the top menu
-  sprintf(buffer_top, "File: %s", filename);
-  sprintf(buffer_top2, "%d of %d", usercheat_dirno+1, cur_dirno);
+  snprintf(buffer, sizeof(buffer)_top, "File: %s", filename);
+  snprintf(buffer, sizeof(buffer)_top2, "%d of %d", usercheat_dirno+1, cur_dirno);
   if(usercheat_selector == 1) { // cursor in top menu (txt select)
     drawString(buffer_top, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_ON);
     drawString(buffer_top2, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+400.0f, y, COLOR_CHEAT_ON);
@@ -801,7 +801,7 @@ int usercheats_draw() {
       ///draw number
       #ifdef DEBUG
       if( flag_draw_DBGVALS ) {
-        sprintf(buffer, "%d", i+1);
+        snprintf(buffer, sizeof(buffer), "%d", i+1);
         drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED);
       }
       #endif
@@ -819,7 +819,7 @@ int usercheats_draw() {
         COLOR_TEMP = COLOR_CHEAT_OFF;
         drawString("OFF", ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+24.0f, y, COLOR_TEMP);
       }
-      sprintf(buffer, "%s", cheatnames[i]); 
+      snprintf(buffer, sizeof(buffer), "%s", cheatnames[i]); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+30.0f, y, COLOR_TEMP);      
     }
     
@@ -828,29 +828,29 @@ int usercheats_draw() {
 
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {  
-    sprintf(buffer, "usercheat_dirno = %d", usercheat_dirno );
+    snprintf(buffer, sizeof(buffer), "usercheat_dirno = %d", usercheat_dirno );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 60.0f, RED);
     
-    sprintf(buffer, "cur_dirno = %d", cur_dirno );
+    snprintf(buffer, sizeof(buffer), "cur_dirno = %d", cur_dirno );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 80.0f, RED);
   
   
-    sprintf(buffer, "usercheat_selector = %d", usercheat_selector );
+    snprintf(buffer, sizeof(buffer), "usercheat_selector = %d", usercheat_selector );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED);
     
-    sprintf(buffer, "usercheat_top = %d", usercheat_top );
+    snprintf(buffer, sizeof(buffer), "usercheat_top = %d", usercheat_top );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 140.0f, RED);
         
-    sprintf(buffer, "usercheat_selected_val = %i", usercheat_selected_val );
+    snprintf(buffer, sizeof(buffer), "usercheat_selected_val = %i", usercheat_selected_val );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 160.0f, RED);
     
-    sprintf(buffer, "usercheat_options = %i", usercheat_options );
+    snprintf(buffer, sizeof(buffer), "usercheat_options = %i", usercheat_options );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 180.0f, RED);
     
-    sprintf(buffer, "usercheat_showoptions = %i", usercheat_showoptions );
+    snprintf(buffer, sizeof(buffer), "usercheat_showoptions = %i", usercheat_showoptions );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED);
 
-    sprintf(buffer, "usercheat_draw_lower = %i", usercheat_draw_lower );
+    snprintf(buffer, sizeof(buffer), "usercheat_draw_lower = %i", usercheat_draw_lower );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED);
   }
   #endif
@@ -869,19 +869,19 @@ int usercheats_draw() {
       drawLegendMessage("CIRCLE = Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
     
     } else { /// draw Cheat data instead
-      sprintf(buffer, "Author: %s", meta_author );
+      snprintf(buffer, sizeof(buffer), "Author: %s", meta_author );
       drawLegendMessage(buffer, 0, 2, COLOR_TEXT); // left side, first row
       
-      sprintf(buffer, "Version: %s", meta_version );
+      snprintf(buffer, sizeof(buffer), "Version: %s", meta_version );
       drawLegendMessage(buffer, 1, 2, COLOR_TEXT); // right side, first row
       
-      sprintf(buffer, "Category: %s", meta_category );
+      snprintf(buffer, sizeof(buffer), "Category: %s", meta_category );
       drawLegendMessage(buffer, 0, 1, COLOR_TEXT); // left side, second row
       
-      sprintf(buffer, "Date: %s", meta_date );
+      snprintf(buffer, sizeof(buffer), "Date: %s", meta_date );
       drawLegendMessage(buffer, 1, 1, COLOR_TEXT); // right side, second row
       
-      sprintf(buffer, "Description: %s", meta_description );
+      snprintf(buffer, sizeof(buffer), "Description: %s", meta_description );
       drawLegendMessage(buffer, 0, 0, COLOR_TEXT); // left side, third row
     }
     
@@ -1087,7 +1087,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   
   /// draw folder  
   if( script_subfldrs[0] != 0x00 ) {
-    sprintf(buffer, "/%s", script_subfldrs);
+    snprintf(buffer, sizeof(buffer), "/%s", script_subfldrs);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 120.0f, 7.0f, COLOR_TEXT);
   }
   
@@ -1097,14 +1097,14 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     // no longer needed as we auto-create the path and folder
     /* if( userscript_options == 0x80010002 ) { // no folder (doesn't work like this anymore since + countFolder... anyways)
       drawString("No user scripts folder found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
-      sprintf(buffer, "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"));
+      snprintf(buffer, sizeof(buffer), "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"));
       drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
       return -1; // no cheats folder
     } */
     
     if( userscript_options == 0 ) { // folder found but empty
       drawString("No UserScript files found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
-      sprintf(buffer, "Place .txt files to '%s%s%s/'", basefolder, folder_scripts, LCS ? "LCS" : "VCS");
+      snprintf(buffer, sizeof(buffer), "Place .txt files to '%s%s%s/'", basefolder, folder_scripts, LCS ? "LCS" : "VCS");
       drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
       return -1; // no cheats folder
     }
@@ -1174,7 +1174,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
         #ifdef DEBUG
         if( flag_draw_DBGVALS ) {
           ///draw number
-          sprintf(buffer, "%d", i+1);
+          snprintf(buffer, sizeof(buffer), "%d", i+1);
           drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED);
         }
         #endif
@@ -1194,7 +1194,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
            
           if( d_dir.d_stat.st_attr & FIO_SO_IFDIR ) { // check folder
             
-            sprintf(buffer, "%s%s", script_workfldr, filename);
+            snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, filename);
             if( countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0) )
               COLOR_TEMP = WHITE;
             
@@ -1209,7 +1209,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
         } else
           filename[strlen(filename)-4] = '\0'; // remove .txt from displayed name
         
-        sprintf(buffer, "%s", filename); 
+        snprintf(buffer, sizeof(buffer), "%s", filename); 
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);      
       }
     
@@ -1227,7 +1227,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
       resetMeta();
       userscript_waittime = 0;
       
-      sprintf(buffer, "%s%s", script_workfldr, currentfile);
+      snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
       SceUID file = sceIoOpen(buffer, PSP_O_RDONLY, 0777);
       if(file >= 0) {
         
@@ -1319,45 +1319,45 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {      
-    sprintf(buffer, "countFilesInFolder = %d", countFilesInFolder(script_workfldr) );
+    snprintf(buffer, sizeof(buffer), "countFilesInFolder = %d", countFilesInFolder(script_workfldr) );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 30.0f, RED);
   
-    sprintf(buffer, "countFoldersInFolder = %d", countFoldersInFolder(script_workfldr) );
+    snprintf(buffer, sizeof(buffer), "countFoldersInFolder = %d", countFoldersInFolder(script_workfldr) );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 40.0f, RED);
     
     
-    sprintf(buffer, "userscript_waittime = %d", userscript_waittime );
+    snprintf(buffer, sizeof(buffer), "userscript_waittime = %d", userscript_waittime );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 55.0f, RED);
     
-    sprintf(buffer, "gametime = %d", getGametime() );
+    snprintf(buffer, sizeof(buffer), "gametime = %d", getGametime() );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 70.0f, RED);
 
     
-    sprintf(buffer, "counter = %d", counter );
+    snprintf(buffer, sizeof(buffer), "counter = %d", counter );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED);
     
-    sprintf(buffer, "userscript_top = %d", userscript_top );
+    snprintf(buffer, sizeof(buffer), "userscript_top = %d", userscript_top );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 140.0f, RED);
         
-    sprintf(buffer, "userscript_selected_val = %i", userscript_selected_val );
+    snprintf(buffer, sizeof(buffer), "userscript_selected_val = %i", userscript_selected_val );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 160.0f, RED);
     
-    sprintf(buffer, "userscript_options = %i", userscript_options );
+    snprintf(buffer, sizeof(buffer), "userscript_options = %i", userscript_options );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 180.0f, RED);
     
-    sprintf(buffer, "userscript_showoptions = %i", userscript_showoptions );
+    snprintf(buffer, sizeof(buffer), "userscript_showoptions = %i", userscript_showoptions );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED);
 
-    //sprintf(buffer, "userscript_draw_lower = %i", userscript_draw_lower );
+    //snprintf(buffer, sizeof(buffer), "userscript_draw_lower = %i", userscript_draw_lower );
     //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED);
     
-    sprintf(buffer, "scripts_folder = %s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS")); // "../SCRIPTS/xCS/"  
+    snprintf(buffer, sizeof(buffer), "scripts_folder = %s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS")); // "../SCRIPTS/xCS/"  
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED);
     
-    sprintf(buffer, "script_workfldr = %s", script_workfldr );
+    snprintf(buffer, sizeof(buffer), "script_workfldr = %s", script_workfldr );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 235.0f, RED);
     
-    sprintf(buffer, "currentfile = %s", currentfile );
+    snprintf(buffer, sizeof(buffer), "currentfile = %s", currentfile );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 250.0f, RED);
   }
   #endif
@@ -1377,23 +1377,23 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     
     
     /// draw data instead
-    sprintf(buffer, "%s%s", script_workfldr, currentfile);
+    snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
     //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 10.0f, RED);
     if( doesFileExist(buffer) == 1 ) { // its a file
       if( !stricmp(currentexten, ".txt") ) { // and its a txt
-        sprintf(buffer, "Author: %s", meta_author );
+        snprintf(buffer, sizeof(buffer), "Author: %s", meta_author );
         drawLegendMessage(buffer, 0, 2, COLOR_TEXT); // left side, first row
           
-        sprintf(buffer, "Version: %s", meta_version );
+        snprintf(buffer, sizeof(buffer), "Version: %s", meta_version );
         drawLegendMessage(buffer, 1, 2, COLOR_TEXT); // right side, first row
           
-        sprintf(buffer, "Category: %s", meta_category );
+        snprintf(buffer, sizeof(buffer), "Category: %s", meta_category );
         drawLegendMessage(buffer, 0, 1, COLOR_TEXT); // left side, second row
           
-        sprintf(buffer, "Date: %s", meta_date );
+        snprintf(buffer, sizeof(buffer), "Date: %s", meta_date );
         drawLegendMessage(buffer, 1, 1, COLOR_TEXT); // right side, second row
           
-        sprintf(buffer, "Description: %s", meta_description );
+        snprintf(buffer, sizeof(buffer), "Description: %s", meta_description );
         drawLegendMessage(buffer, 0, 0, COLOR_TEXT); // left side, third row
           
       } else drawLegendMessage("This is not a valid .txt file!", 0, 2, COLOR_TEXT); // left side, first row
@@ -1461,7 +1461,7 @@ int userscripts_ctrl() {
   }
   
   if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
-    sprintf(buffer, "%s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
+    snprintf(buffer, sizeof(buffer), "%s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
     if( strcmp(buffer, script_workfldr) != 0 || script_subfldrs[0] != 0x00) { // we are not yet back in root..
   
       /// remove last folder from working path string 
@@ -1485,7 +1485,7 @@ int userscripts_ctrl() {
     
     
     if( pressed_buttons & PSP_CTRL_CROSS ) { // toggle cheat
-      sprintf(buffer, "%s%s", script_workfldr, currentfile);
+      snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
       if( doesFileExist(buffer) != 1 && (countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) ) {  // check folder + not empty
         sprintf(script_subfldrs, "%s%s%s", script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/", currentfile);
         sprintf(script_workfldr, "%s%s%s/%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs);
@@ -1538,7 +1538,7 @@ int userscripts_ctrl() {
 
         // // // // // // // // // // // // // // // // // // // // // // //
         
-        sprintf(buffer, "%s%s", script_workfldr, currentfile);
+        snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
         SceUID file = sceIoOpen(buffer, PSP_O_RDONLY, 0777);
         if( file >= 0 ) {
           
@@ -1596,7 +1596,7 @@ int userscripts_ctrl() {
 
             /// error exit - script too big
             if( pos >= SCRIPT_SIZE ) {
-              sprintf(buffer, "~r~Error: Script exceeds currently supported size! Sorry");
+              snprintf(buffer, sizeof(buffer), "~r~Error: Script exceeds currently supported size! Sorry");
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -1720,7 +1720,7 @@ int userscripts_ctrl() {
                         utoken = strtok_r(NULL, " ", &saveptrsub);
                       }
                       
-                      //sprintf(buffer, "~r~Error: '%s' in line %i not yet supported!", token, line);
+                      //snprintf(buffer, sizeof(buffer), "~r~Error: '%s' in line %i not yet supported!", token, line);
                       //setTimedTextbox(buffer, 7.00f); //
                       //sceIoClose(file);
                       //goto scripterror_exit;
@@ -1776,7 +1776,7 @@ int userscripts_ctrl() {
                       /// TODO
                       //eg: " 024C: request_model #SCRIPT_SALCHAIR "
                       
-                      sprintf(buffer, "~r~Error: '%s' in line %i not yet supported!", token, line);
+                      snprintf(buffer, sizeof(buffer), "~r~Error: '%s' in line %i not yet supported!", token, line);
                       setTimedTextbox(buffer, 7.00f); //
                       sceIoClose(file);
                       goto scripterror_exit;
@@ -1788,7 +1788,7 @@ int userscripts_ctrl() {
                       
                         /// error 
                         if ( VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
-                          sprintf(buffer, "~r~Error: Label '%s' in line %i needs to be 3 or more chars!", token, line);
+                          snprintf(buffer, sizeof(buffer), "~r~Error: Label '%s' in line %i needs to be 3 or more chars!", token, line);
                           setTimedTextbox(buffer, 7.00f); //
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -1945,7 +1945,7 @@ int userscripts_ctrl() {
                             
                             customtextcounter++;
                           } else {
-                            sprintf(buffer, "~r~Error: Custom strings limit of %i reached.", CSTGXTS);
+                            snprintf(buffer, sizeof(buffer), "~r~Error: Custom strings limit of %i reached.", CSTGXTS);
                             setTimedTextbox(buffer, 7.00f); //
                             sceIoClose(file);
                             goto scripterror_exit;
@@ -1966,7 +1966,7 @@ int userscripts_ctrl() {
                         ctr++;
 
                         if( ctr > 7 ) { // a gxt id string can't be longer than 7 chars!!
-                          sprintf(buffer, "~r~Error: String '%s' in line %i too long!", identifier, line);
+                          snprintf(buffer, sizeof(buffer), "~r~Error: String '%s' in line %i too long!", identifier, line);
                           setTimedTextbox(buffer, 7.00f);
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -2181,7 +2181,7 @@ int userscripts_ctrl() {
               
               /// error check: SUPPORT_LABEL count
               if( label_pos_cur >= SUPPORT_LABEL ) { //label matches
-                sprintf(buffer, "~r~Error: Too many labels. (%i is max)", SUPPORT_LABEL);
+                snprintf(buffer, sizeof(buffer), "~r~Error: Too many labels. (%i is max)", SUPPORT_LABEL);
                 setTimedTextbox(buffer, 7.00f); //
                 sceIoClose(file);
                 goto scripterror_exit;
@@ -2194,7 +2194,7 @@ int userscripts_ctrl() {
                 logPrintf("comparing for doubles: '%s' with '%s'", token, label_ch_arr[k]);
                 #endif  
                 if( strcmp(token, label_ch_arr[k]) == 0 ) { // label matches
-                  sprintf(buffer, "~r~Error: Found already used label '%s' in line %i?", token, line);
+                  snprintf(buffer, sizeof(buffer), "~r~Error: Found already used label '%s' in line %i?", token, line);
                   setTimedTextbox(buffer, 7.00f); //
                   sceIoClose(file);
                   goto scripterror_exit;
@@ -2222,7 +2222,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 04 00   DB E7   07 01   //$4071 = 1 
               
-              sprintf(buffer, "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2233,7 +2233,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 39 00   2F     07 02    //35@ == 2   
               
-              sprintf(buffer, "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2250,7 +2250,7 @@ int userscripts_ctrl() {
               //can be (eg: 33@ = 1)
                 //TODO
               
-                /*sprintf(buffer, "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); //$... 
+                /*snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); //$... 
                 setTimedTextbox(buffer, 7.00f); //
                 sceIoClose(file);
                 goto scripterror_exit;*/
@@ -2268,7 +2268,7 @@ int userscripts_ctrl() {
                   int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp)); 
                   int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp)); 
                   for(address = script_space; address < script_space + main_size; address++) {
-                    if( *(u8*)(address+0) == 0x4D &&
+                    if( *(u8*)(address) == 0x4D &&
                       *(u8*)(address+15) == 0x0F &&
                       *(u8*)(address+31) == 0x07 &&
                       *(u8*)(address+52) == 0x0F ) {
@@ -2278,7 +2278,7 @@ int userscripts_ctrl() {
                         
                         
                       logPrintf("found @ 0x%08X in mainscript", address - script_space);
-                      //sprintf(buffer, "found @ 0x%08X in mainscript", address - script_space);
+                      //snprintf(buffer, sizeof(buffer), "found @ 0x%08X in mainscript", address - script_space);
                       //setTimedTextbox(buffer, 7.00f); //
                       //break;
                     }
@@ -2297,13 +2297,13 @@ int userscripts_ctrl() {
 
 
           #if defined(LOG) || defined(USERSCRIPTLOG)
-          logPrintf("\nLABELs: %i of %i", label_pos_cur, SUPPORT_LABEL);
+          logPrintf("\nLABELs: %i/%i", label_pos_cur, SUPPORT_LABEL);
           for( i = 0; i < SUPPORT_LABEL; i++ ) {
             if( strlen(label_ch_arr[i]) == 0 ) break;
             ///logPrintf("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], 0 - label_pos_arr[i]); // negative offsets in mission script
             logPrintf("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], roff + label_pos_arr[i]); // now positive jump offest
           }
-          logPrintf("\nUNKNOWN LABELs: %i of %i", unk_label_pos_cur, SUPPORT_LABEL);
+          logPrintf("\nUNKNOWN LABELs: %i/%i", unk_label_pos_cur, SUPPORT_LABEL);
           for( i = 0; i < SUPPORT_LABEL; i++ ) {
             if( strlen(unk_label[i]) == 0 ) break;
             logPrintf("unk_label[%i]: '%s' (0x%08X)", i, unk_label[i], placeholder + i);
@@ -2356,7 +2356,7 @@ int userscripts_ctrl() {
                   
                   /// error goto label not found in Labels
                   if( tempint == placeholder + j ) { // if tempint not overwriten (ugly)
-                    sprintf(buffer, "~r~Error: Label '%s' not found?!!", unk_label[j]);
+                    snprintf(buffer, sizeof(buffer), "~r~Error: Label '%s' not found?!!", unk_label[j]);
                     setTimedTextbox(buffer, 7.00f); //
                     goto scripterror_exit;
                   }
@@ -2368,7 +2368,7 @@ int userscripts_ctrl() {
           }
           
           #if defined(LOG) || defined(USERSCRIPTLOG)
-          logPrintf("\nscript size: %i of %i", pos, SCRIPT_SIZE);
+          logPrintf("\nscript size: %i/%i", pos, SCRIPT_SIZE);
           #endif  
           
           CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
@@ -2385,7 +2385,7 @@ int userscripts_ctrl() {
         }
         
         // // // // // // // // // // // // // // // // // // // // 
-        //sprintf(buffer, "Success: '%s' executed!", currentfile);
+        //snprintf(buffer, sizeof(buffer), "Success: '%s' executed!", currentfile);
         //setTimedTextbox(buffer, 7.00f); //
       }
       
@@ -2543,10 +2543,10 @@ int editor_draw() {
       editor_block_current = editor_pedobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPedObjectIsActive(editor_base_adr) ) {
-        sprintf(buffer_top0, "Slot: %i of %i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getPedID(editor_base_adr), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getPedID(editor_base_adr), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
         editor_draw_lower = 1; // there is a PED here 
       } else { 
-        sprintf(buffer_top0, "Slot: %i of %i", editor_block_current+1, editor_blocks); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks); // block menu  
         editor_draw_lower = 0;  // no active PED -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2556,16 +2556,16 @@ int editor_draw() {
       editor_block_current = editor_vehicleobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
-        sprintf(buffer_top0, "Slot: %i of %i      ID: %i    Name: ", editor_block_current+1, editor_blocks, getVehicleID(editor_base_adr)); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: ", editor_block_current+1, editor_blocks, getVehicleID(editor_base_adr)); // block menu
         
-        sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
-        sprintf(buffer_top0, "%s%s", buffer_top0, buffer_top1);
+          snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s%s", buffer_top0, buffer_top1);
         
         editor_draw_lower = 1; // there is a Vehicle here 
       } else { 
-        sprintf(buffer_top0, "Slot: %i of %i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active Vehicle here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2575,10 +2575,10 @@ int editor_draw() {
       editor_block_current = editor_worldobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        sprintf(buffer_top0, "Slot: %i of %i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        sprintf(buffer_top0, "Slot: %i of %i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2588,10 +2588,10 @@ int editor_draw() {
       editor_block_current = editor_businessobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        sprintf(buffer_top0, "Slot: %i of %i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        sprintf(buffer_top0, "Slot: %i of %i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2601,10 +2601,10 @@ int editor_draw() {
       editor_block_current = editor_pickup_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPickupIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        sprintf(buffer_top0, "Slot: %i of %i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getPickupID(editor_base_adr), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getPickupID(editor_base_adr), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, "Slot: %i of %i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2615,12 +2615,12 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getMapiconIsActive(editor_base_adr) ){
         if( getMapiconID(editor_base_adr) == 0 ) // objective (destination, enemy, etc)
-          sprintf(buffer_top0, "Slot: %i of %i      Icon: %s   Type: %s", editor_block_current+1, editor_blocks, getMapiconNameByID(getMapiconID(editor_base_adr)), getMapiconTypeName(editor_base_adr) ); //block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      Icon: %s   Type: %s", editor_block_current+1, editor_blocks, getMapiconNameByID(getMapiconID(editor_base_adr)), getMapiconTypeName(editor_base_adr) ); //block menu  
         else
-          sprintf(buffer_top0, "Slot: %i of %i      Icon: %s", editor_block_current+1, editor_blocks, getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      Icon: %s", editor_block_current+1, editor_blocks, getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, "Slot: %i of %i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2634,13 +2634,13 @@ int editor_draw() {
       // garage doesn't use editor_block_current but 2 globals directly
       editor_base_adr = editor_firstobj + (editor_garage_current * editor_blocksize * 4) + (editor_garageslot_current * editor_blocksize); // calc base address
     
-      sprintf(buffer_top0, "Slot: %i", editor_garageslot_current+1 );
+      snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i", editor_garageslot_current+1 );
       if( getGarageVehicleSlotIsActive(editor_base_adr) ){ // vehicle id for detecting if slot is used
         ///print vehicle name
-        /*sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        /*snprintf(buffer, sizeof(buffer)_top1, "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getShort(editor_base_adr))); // ..use the GXT identifier-name then
-        sprintf(buffer_top0, "%s     '%s'", buffer_top0, buffer_top1);*/
+          snprintf(buffer, sizeof(buffer)_top1, "%s", getGxtIdentifierForVehicleViaID(getShort(editor_base_adr))); // ..use the GXT identifier-name then
+        snprintf(buffer, sizeof(buffer)_top0, "%s     '%s'", buffer_top0, buffer_top1);*/
         editor_draw_lower = 1; // allowed
     
       } else { 
@@ -2648,28 +2648,28 @@ int editor_draw() {
         editor_selector = 1; // don't allow going to down_menu
       }
       
-      sprintf(buffer_top1, "Garage: %s", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
+      snprintf(buffer_top1, sizeof(buffer_top1), "Garage: %s", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
       break;
         
     case EDITOR_VEHWORLDSPAWNS: 
       editor_block_current = editor_vehiclespawn_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleWorldSpawnSlotIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        sprintf(buffer_top0, "Slot: %i of %i      ID: %i", editor_block_current+1, editor_blocks, getInt(editor_base_adr)); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i", editor_block_current+1, editor_blocks, getInt(editor_base_adr)); // block menu
         
         ///add vehicle name
-        sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        snprintf(buffer_top0, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
-        sprintf(buffer_top0, "%s    Name: %s", buffer_top0, buffer_top1);
+          snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s    Name: %s", buffer_top0, buffer_top1);
         
         ///add custom created indicator
         if( isCustomParkedVehicleSpawnViaSlot(editor_block_current) )
-          sprintf(buffer_top0, "%s    (custom)", buffer_top0);
+          snprintf(buffer_top0, sizeof(buffer_top0), "%s    (custom)", buffer_top0);
           
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, "Slot: %i of %i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2683,7 +2683,7 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       
       if( getInt(editor_base_adr) ){ // there is a pointer here
-        sprintf(buffer_top0, "No: %i of %i      Type: '%s'   Name: %s", editor_block_current, editor_blocks-1, getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      Type: '%s'   Name: %s", editor_block_current, editor_blocks-1, getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
         editor_draw_lower = 1; 
     
         editor_base_adr = getInt(editor_base_adr);
@@ -2706,7 +2706,7 @@ int editor_draw() {
         optionAdjust(); // "re-adjust"  
 
       } else { 
-        sprintf(buffer_top0, "No: %i of %i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
         editor_temp_blocksize = 0x4; // size of pointer
@@ -2726,13 +2726,13 @@ int editor_draw() {
         editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
           
         if( getInt(editor_base_adr) && getByte( getInt(editor_base_adr) + 0x10 ) == MODELINFO_VEHICLE ) { // there is a pointer here AND its vehicle type
-          sprintf(buffer_top0, "ID: %i    GXT: %s", editor_block_current, getGxtIdentifierForVehicleViaID(editor_block_current)); 
-          sprintf(buffer_top0, "%s    Name: %s", buffer_top0, getRealVehicleNameViaID(editor_block_current)); // fix  
+          snprintf(buffer_top0, sizeof(buffer_top0), "ID: %i    GXT: %s", editor_block_current, getGxtIdentifierForVehicleViaID(editor_block_current)); 
+          snprintf(buffer_top0, sizeof(buffer_top0), "%s    Name: %s", buffer_top0, getRealVehicleNameViaID(editor_block_current)); // fix  
           editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // todo (var_handlingcfgslotsize)
           editor_base_adr = getAddressOfHandlingSlotForID(editor_block_current);
           editor_draw_lower = 1;
         } else { 
-          sprintf(buffer_top0, "IDE: %i of %i", editor_block_current, editor_blocks ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), "IDE: %i/%i", editor_block_current, editor_blocks ); // block menu  
           editor_draw_lower = 0; // not allowed to draw lower menu
           editor_selector = 1; // don't allow going to down_menu
           editor_temp_blocksize = 0x4; // back to size of pointer
@@ -2744,10 +2744,10 @@ int editor_draw() {
       editor_block_current = editor_buildingsIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        sprintf(buffer_top0, "No: %i of %i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, "No: %i of %i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2757,10 +2757,10 @@ int editor_draw() {
       editor_block_current = editor_treadablesIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        sprintf(buffer_top0, "No: %i of %i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, "No: %i of %i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2770,10 +2770,10 @@ int editor_draw() {
       editor_block_current = editor_dummysIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        sprintf(buffer_top0, "No: %i of %i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, "No: %i of %i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2782,7 +2782,7 @@ int editor_draw() {
     case EDITOR_CARCOLSDAT:
       editor_block_current = editor_carcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      sprintf(buffer_top0, "Color: %i of %i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), "Color: %i/%i", editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2799,7 +2799,7 @@ int editor_draw() {
     case EDITOR_PEDCOLSDAT: //VCS only
       editor_block_current = editor_pedcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      sprintf(buffer_top0, "Color: %i of %i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), "Color: %i/%i", editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2813,21 +2813,21 @@ int editor_draw() {
     case EDITOR_PARTICLECFG:
       editor_block_current = editor_particleCFG_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      sprintf(buffer_top0, "No: %i of %i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_PEDSTATSDAT:
       editor_block_current = editor_pedstatsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      sprintf(buffer_top0, "No: %i of %i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_WEAPONDAT:
       editor_block_current = editor_weaponDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      sprintf(buffer_top0, "No: %i of %i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x60), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x60), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
       editor_draw_lower = 1; 
       break;
      
@@ -2836,7 +2836,7 @@ int editor_draw() {
     int weather = editor_block_current / 24;
     int time = editor_block_current % 24;
     editor_base_adr = editor_firstobj + (8 * time) + weather;
-      sprintf(buffer_top0, "Weather: %s   Time: %02i:00", LCS ? weather_lcs[weather] : weather_vcs[weather], time); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), "Weather: %s   Time: %02i:00", LCS ? weather_lcs[weather] : weather_vcs[weather], time); //block menu  
       editor_draw_lower = 1; 
     editor_temp_blocksize = 0x2bf0; // LCS & VCS! todo?
       break;
@@ -2923,7 +2923,7 @@ int editor_draw() {
       if( flag_draw_DBGVALS ) {
         ///draw offset
         if( editor_curmenu[i].type != TYPE_DUMMY ) {
-          sprintf(buffer, "0x%X", editor_curmenu[i].address );
+          snprintf(buffer, sizeof(buffer), "0x%X", editor_curmenu[i].address );
           drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-5.0f, y+2.0f, RED);
         }
       }
@@ -2935,7 +2935,7 @@ int editor_draw() {
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything    
         func = editor_curmenu[i].value;
         val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].address+editor_base_adr);
-        sprintf(buffer, "%s%s", val, editor_curmenu[i].postfix );
+        snprintf(buffer, sizeof(buffer), "%s%s", val, editor_curmenu[i].postfix );
         
       } else { // plain value editing 
         int adr = editor_curmenu[i].address+editor_base_adr;
@@ -2943,61 +2943,61 @@ int editor_draw() {
         char* fix = editor_curmenu[i].postfix;    
         switch( editor_curmenu[i].type ) {
           case TYPE_BYTE:
-            sprintf(buffer, pre ? "%i%s" : "0x%02X%s", *(unsigned char*)(adr), fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%02X%s", *(unsigned char*)(adr), fix);
             break;
           
           case TYPE_BYTE_AS_FLT:
-            sprintf(buffer, "%.*f%s", pre, (float)(*(unsigned char*)(adr)) / 10, fix); // used in timecycle for example
+            snprintf(buffer, sizeof(buffer), "%.*f%s", pre, (float)(*(unsigned char*)(adr)) / 10, fix); // used in timecycle for example
             break;
             
           case TYPE_SHORT:
-            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(short*)(adr), fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(short*)(adr), fix);
             break;
             
           case TYPE_INTEGER:
-            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(int*)(adr), fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(int*)(adr), fix);
             break;
           
           case TYPE_FLOAT:
-            sprintf(buffer, "%.*f%s", pre, *(float*)(adr), fix); // argument-supplied precision
+            snprintf(buffer, sizeof(buffer), "%.*f%s", pre, *(float*)(adr), fix); // argument-supplied precision
             break;
             
           case TYPE_BOOL:
             /*if( *(unsigned char*)(adr) == editor_curmenu[i].max ) { // max must be the true value
-              sprintf(buffer, "TRUE");
+              snprintf(buffer, sizeof(buffer), "TRUE");
             } else if(*(unsigned char*)(adr) == editor_curmenu[i].min ) { // min must be the false value
-              sprintf(buffer, "FALSE");
-            } else sprintf(buffer, "ERROR");*/
+              snprintf(buffer, sizeof(buffer), "FALSE");
+            } else snprintf(buffer, sizeof(buffer), "ERROR");*/
       if( *(unsigned char*)(adr) == 1 ) {
-              sprintf(buffer, "TRUE");
+              snprintf(buffer, sizeof(buffer), "TRUE");
             } else if(*(unsigned char*)(adr) == 0 ) {
-              sprintf(buffer, "FALSE");
-            } else sprintf(buffer, "ERROR");
+              snprintf(buffer, sizeof(buffer), "FALSE");
+            } else snprintf(buffer, sizeof(buffer), "ERROR");
             break;
             
           case TYPE_BIT:
             if( *(char*)(adr) & (1 << pre) ) {
-              sprintf(buffer, "TRUE"); // bit is set
-            } else sprintf(buffer, "FALSE");
+              snprintf(buffer, sizeof(buffer), "TRUE"); // bit is set
+            } else snprintf(buffer, sizeof(buffer), "FALSE");
             break;
             
           case TYPE_NIBBLE_LOW:  // eg: 0xE6  -> 6  0110
-            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) & 0xF, fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) & 0xF, fix);
             break;
             
           case TYPE_NIBBLE_HIGH: // eg: 0xE6  -> E  1110
-            sprintf(buffer, pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) >> 4, fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) >> 4, fix);
             break;
             
           case TYPE_STRING: 
-            sprintf(buffer, "'");
+            snprintf(buffer, sizeof(buffer), "'");
             for( str_pos = 0; str_pos < pre && getByte(adr+str_pos) != 0x00; str_pos++ ) {
-              sprintf(buffer, "%s%c", buffer, *(char*)(adr+str_pos));
-            } sprintf(buffer, "%s'%s", buffer, fix);
+              snprintf(buffer, sizeof(buffer), "%s%c", buffer, *(char*)(adr+str_pos));
+            } snprintf(buffer, sizeof(buffer), "%s'%s", buffer, fix);
             break;
           
           case TYPE_DUMMY: 
-            sprintf(buffer, "%s", fix);
+            snprintf(buffer, sizeof(buffer), "%s", fix);
             break;
         }
       }
@@ -3046,28 +3046,28 @@ int editor_draw() {
     
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {    
-    sprintf(buffer, "editor_selector = %d", editor_selector );
+    snprintf(buffer, sizeof(buffer), "editor_selector = %d", editor_selector );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 80.0f, RED);
     
-    sprintf(buffer, "editor_top = %d", editor_top );
+    snprintf(buffer, sizeof(buffer), "editor_top = %d", editor_top );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 100.0f, RED);
     
-    sprintf(buffer, "editor_selection_top = %d", editor_selection_top );
+    snprintf(buffer, sizeof(buffer), "editor_selection_top = %d", editor_selection_top );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 120.0f, RED);
     
-    sprintf(buffer, "editor_base_adr = 0x%08X", editor_base_adr );
+    snprintf(buffer, sizeof(buffer), "editor_base_adr = 0x%08X", editor_base_adr );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 140.0f, RED);
     
-    sprintf(buffer, "editor_wasused = %i", editor_wasused );
+    snprintf(buffer, sizeof(buffer), "editor_wasused = %i", editor_wasused );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED);
     
-    sprintf(buffer, "editor_selection_val = %i", editor_selection_val );
+    snprintf(buffer, sizeof(buffer), "editor_selection_val = %i", editor_selection_val );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 180.0f, RED);
     
-    sprintf(buffer, "editor_options = %i", editor_options );
+    snprintf(buffer, sizeof(buffer), "editor_options = %i", editor_options );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 200.0f, RED);
     
-    sprintf(buffer, "editor_toptions = %i", editor_toptions );
+    snprintf(buffer, sizeof(buffer), "editor_toptions = %i", editor_toptions );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 220.0f, RED);
   }
   #endif
@@ -3135,7 +3135,7 @@ int editor_draw() {
       }
     }
     if( editor_menumode == EDITOR_PICKUPS  ) {
-      if( editor_selector && getFloat(editor_base_adr+0x0) != 0 && getPickupIsActive(editor_base_adr) ) {
+      if( editor_selector && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) {
         drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
       }
     }
@@ -3227,7 +3227,7 @@ int editor_ctrl() {
       if( (editor_menumode == EDITOR_BUSINESSOBJ) && getFloat(editor_base_adr+0x30) != 0 ) { 
         editor_trigger = 1; // trigger teleport
       }
-      if( (editor_menumode == EDITOR_PICKUPS) && getFloat(editor_base_adr+0x0) != 0 && getPickupIsActive(editor_base_adr) ) { 
+      if( (editor_menumode == EDITOR_PICKUPS) && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) { 
         editor_trigger = 1; // trigger teleport
       }
       if( (editor_menumode == EDITOR_MAPICONS) && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0 || getMapiconType(editor_base_adr) < 4) ) { 
@@ -3623,86 +3623,86 @@ int editor_ctrl() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE: 
-        sprintf(buffer, "Garage Data (%s - Slot: %i)", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current], editor_garageslot_current+1);
+        snprintf(buffer, sizeof(buffer), "Garage Data (%s - Slot: %i)", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current], editor_garageslot_current+1);
         break;
         
       case EDITOR_PEDOBJ: 
-        sprintf(buffer, "Pedestrian Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedestrian Object %i/%i", editor_block_current+1, editor_blocks);
         break;
           
       case EDITOR_VEHICLEOBJ: 
-        sprintf(buffer, "Vehicle Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Vehicle Object %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_WORLDOBJ: 
-        sprintf(buffer, "World Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "World Object %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_BUSINESSOBJ: 
-        sprintf(buffer, "Business Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Business Object %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_PICKUPS: 
-        sprintf(buffer, "Pickup %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pickup %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_MAPICONS: 
-        sprintf(buffer, "Mapicon %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Mapicon %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_VEHWORLDSPAWNS: 
-        sprintf(buffer, "Parked Vehicle Spawn %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Parked Vehicle Spawn %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       /// /// /// /// /// 
       
       case EDITOR_HANDLINGCFG: 
-        //sprintf(buffer, "handling.cfg (ID: %i  Name: %s)", lcs_vehicles[editor_block_current].id, lcs_vehicles[editor_block_current].name); //editor_block_current, editor_blocks
+        //snprintf(buffer, sizeof(buffer), "handling.cfg (ID: %i  Name: %s)", lcs_vehicles[editor_block_current].id, lcs_vehicles[editor_block_current].name); //editor_block_current, editor_blocks
         // if( LCS )
-          // sprintf(buffer, "handling.cfg (Slot %i)", lcs_vehicles[editor_block_current].hndlng_no); //alternative
-        sprintf(buffer, "Handling.cfg");
+          // snprintf(buffer, sizeof(buffer), "handling.cfg (Slot %i)", lcs_vehicles[editor_block_current].hndlng_no); //alternative
+        snprintf(buffer, sizeof(buffer), "Handling.cfg");
         break;
       
       case EDITOR_BUILDINGSIPL:
-        sprintf(buffer, "Buildings.ipl %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Buildings.ipl %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_TREADABLESIPL: 
-        sprintf(buffer, "Treadables.ipl %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Treadables.ipl %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_DUMMYSIPL: 
-        sprintf(buffer, "Dummys.ipl %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Dummys.ipl %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_CARCOLSDAT: 
-        sprintf(buffer, "Carcols.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Carcols.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_PEDCOLSDAT: 
-        sprintf(buffer, "Pedcols.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedcols.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_IDE: 
         //editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); //hex to ptr instead
         //editor_temp_blocksize = 0x4;
-        sprintf(buffer, "IDEs %i/%i", editor_block_current, editor_blocks-1);
+        snprintf(buffer, sizeof(buffer), "IDEs %i/%i", editor_block_current, editor_blocks-1);
         break;
         
       case EDITOR_PARTICLECFG: 
-        sprintf(buffer, "Particle.cfg %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Particle.cfg %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_PEDSTATSDAT: 
-        sprintf(buffer, "Pedstats.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedstats.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_WEAPONDAT: 
-        sprintf(buffer, "Weapon.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Weapon.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
     
       case EDITOR_TIMECYCDAT: 
-      sprintf(buffer, "Timecyc.dat - %s / %02i:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
+      snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02i:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
         break;
                 
       default: 
@@ -3714,6 +3714,7 @@ int editor_ctrl() {
     editor_mode = 1;
     editor_wasused++; // we can't really know but..
     
+    #ifdef HEXMARKERS
     hex_marker_clear();
     
     if( !editor_selector ) { // we are in lower menu - add marker to hex location
@@ -3729,6 +3730,8 @@ int editor_ctrl() {
       }
       hex_marker_addx(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].address), markerlength);
     }
+
+    #endif
     
     if( editor_menumode == EDITOR_IDE || editor_menumode == EDITOR_HANDLINGCFG || editor_menumode == EDITOR_TIMECYCDAT ) {
       hexeditor_create(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].address), editor_mode, editor_base_adr, editor_base_adr + editor_temp_blocksize, buffer);
@@ -3781,7 +3784,7 @@ int editor_ctrl() {
     case EDITOR_PICKUPS: 
       editor_pickup_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x0), getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8) + 1.00f);
+        teleport(getFloat(editor_base_adr), getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8) + 1.00f);
         //closeMenu(); // close menu
         editor_trigger = 0; 
       }
@@ -4125,58 +4128,58 @@ int freecam_draw() {
     drawString("Free Camera", ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
     
     drawString("Player position:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
-      sprintf(buffer, "x: %.2f", player_x);
+      snprintf(buffer, sizeof(buffer), "x: %.2f", player_x);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE);
-      sprintf(buffer, "y: %.2f", player_y);
+      snprintf(buffer, sizeof(buffer), "y: %.2f", player_y);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 70.0f, COLOR_VALUE);
-      sprintf(buffer, "z: %.2f", player_z);
+      snprintf(buffer, sizeof(buffer), "z: %.2f", player_z);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE);
       
       
     drawString("Camera position:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
-      sprintf(buffer, "x: %.2f", camera_x); 
+      snprintf(buffer, sizeof(buffer), "x: %.2f", camera_x); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE);
-      sprintf(buffer, "y: %.2f", camera_y);
+      snprintf(buffer, sizeof(buffer), "y: %.2f", camera_y);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, COLOR_VALUE);
-      sprintf(buffer, "z: %.2f", camera_z);
+      snprintf(buffer, sizeof(buffer), "z: %.2f", camera_z);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 165.0f, COLOR_VALUE);
     
 
-    /*sprintf(buffer, "cam_coord_x1 = %.2f", cam_coord_x1); //D0
+    /*snprintf(buffer, sizeof(buffer), "cam_coord_x1 = %.2f", cam_coord_x1); //D0
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 20.0f, COLOR_VALUE);
-    sprintf(buffer, "cam_coord_y1 = %.2f", cam_coord_y1); //D4
+    snprintf(buffer, sizeof(buffer), "cam_coord_y1 = %.2f", cam_coord_y1); //D4
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 40.0f, COLOR_VALUE);   
-    sprintf(buffer, "cam_coord_z1 = %.2f", cam_coord_z1); //D8
+    snprintf(buffer, sizeof(buffer), "cam_coord_z1 = %.2f", cam_coord_z1); //D8
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 60.0f, COLOR_VALUE);
     
-    sprintf(buffer, "cam_coord_x2 = %.2f", cam_coord_x2); //E8
+    snprintf(buffer, sizeof(buffer), "cam_coord_x2 = %.2f", cam_coord_x2); //E8
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 90.0f, COLOR_VALUE);
-    sprintf(buffer, "cam_coord_y2 = %.2f", cam_coord_y2); //EC
+    snprintf(buffer, sizeof(buffer), "cam_coord_y2 = %.2f", cam_coord_y2); //EC
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 110.0f, COLOR_VALUE);
-    sprintf(buffer, "cam_coord_z2 = %.2f", cam_coord_z2); //F0
+    snprintf(buffer, sizeof(buffer), "cam_coord_z2 = %.2f", cam_coord_z2); //F0
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE);
     */
     
-    sprintf(buffer, "cutscene = %X", getByte( global_camera + (LCS ? 0x6B+uluxfix : 0x81A)) );
+    snprintf(buffer, sizeof(buffer), "cutscene = %X", getByte( global_camera + (LCS ? 0x6B+uluxfix : 0x81A)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY);
     
-    sprintf(buffer, "camera = %X", getByte( global_camera + (LCS ? 0x64+uluxfix : 0x816)) );
+    snprintf(buffer, sizeof(buffer), "camera = %X", getByte( global_camera + (LCS ? 0x64+uluxfix : 0x816)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY);
     
 
-    sprintf(buffer, "FOV = %.2f", fov);
+    snprintf(buffer, sizeof(buffer), "FOV = %.2f", fov);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, GREY);
     
-    sprintf(buffer, "movespeed = %.2f", movespeed);
+    snprintf(buffer, sizeof(buffer), "movespeed = %.2f", movespeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 125.0f, GREY);
-    sprintf(buffer, "turnspeed = %.3f", turnspeed);
+    snprintf(buffer, sizeof(buffer), "turnspeed = %.3f", turnspeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, GREY);
       
-    sprintf(buffer, "radius = %.2f", radius);
+    snprintf(buffer, sizeof(buffer), "radius = %.2f", radius);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 170.0f, GREY);
-    sprintf(buffer, "inclination = %.2f", inclination);
+    snprintf(buffer, sizeof(buffer), "inclination = %.2f", inclination);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 185.0f, GREY);
-    sprintf(buffer, "azimuth = %.2f", azimuth);
+    snprintf(buffer, sizeof(buffer), "azimuth = %.2f", azimuth);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 200.0f, GREY);
       
 
@@ -4258,7 +4261,7 @@ int address_draw() {
   unsigned int i = 0, x = 320, y = 130, temp = tempaddress; // x = 290
   drawString("physical:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
   while( temp ) {
-    sprintf(buffer, "%X", temp % 0x10);
+    snprintf(buffer, sizeof(buffer), "%X", temp % 0x10);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, COLOR_TEXT);
     if( i == addresspos ) { //cursor
       drawString("v", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, COLOR_TEXT);
@@ -4272,7 +4275,7 @@ int address_draw() {
     i = 0, x = 320, y += 45, temp = tempaddress - mod_text_addr;
     drawString("text_addr:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, YELLOW);
     while( temp ) {
-      sprintf(buffer, "%X", temp % 0x10); 
+      snprintf(buffer, sizeof(buffer), "%X", temp % 0x10); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, YELLOW);
       if( i == addresspos ) { // cursor
         drawString("v", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, YELLOW);
@@ -4287,7 +4290,7 @@ int address_draw() {
     i = 0, x = 320, y += 45, temp = tempaddress - gp;
     drawString("to $gp:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
     while( temp ) {
-      sprintf(buffer, "%X", temp % 0x10); 
+      snprintf(buffer, sizeof(buffer), "%X", temp % 0x10); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, ORANGE);
       if( i == addresspos ) { // cursor
         drawString("v", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, ORANGE);
@@ -4300,27 +4303,27 @@ int address_draw() {
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {
     /// draw info
-    sprintf(buffer, "addresspos = %i", addresspos);
+    snprintf(buffer, sizeof(buffer), "addresspos = %i", addresspos);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, RED);
     
-    sprintf(buffer, "phy: 0x%08X", tempaddress);
+    snprintf(buffer, sizeof(buffer), "phy: 0x%08X", tempaddress);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, RED);
       
-    sprintf(buffer, "mod: 0x%08X", tempaddress - mod_text_addr);
+    snprintf(buffer, sizeof(buffer), "mod: 0x%08X", tempaddress - mod_text_addr);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 160.0f, RED);
     
-    sprintf(buffer, "$gp: 0x%08X", tempaddress  - gp);
+    snprintf(buffer, sizeof(buffer), "$gp: 0x%08X", tempaddress  - gp);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 180.0f, RED);
   
       
     /// draw history
     y = 20.0f;
-    sprintf(buffer, "ADR_HISTORY_SIZE = %i", ADR_HISTORY_SIZE);
+    snprintf(buffer, sizeof(buffer), "ADR_HISTORY_SIZE = %i", ADR_HISTORY_SIZE);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, y+=15, RED);
-    sprintf(buffer, "history_position = %i", history_position);
+    snprintf(buffer, sizeof(buffer), "history_position = %i", history_position);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, y+=15, RED);
     for( i = 0; i < ADR_HISTORY_SIZE && i < 12 && adr_history[i] != 0; i++ ) { // max of about 12
-      sprintf(buffer, "%i - 0x%08X", i, adr_history[i]);
+      snprintf(buffer, sizeof(buffer), "%i - 0x%08X", i, adr_history[i]);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 30.0f, y+=15, RED);
     }
   }  
@@ -4420,7 +4423,7 @@ int editbyte_draw() {
   
   int x = 225, y = 140;
 
-  sprintf(buffer, "0x%02X", editbyte_current);
+  snprintf(buffer, sizeof(buffer), "0x%02X", editbyte_current);
   drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)x, (float)y, COLOR_TEXT);
 
   if( LCS ) // graphical fix
@@ -4503,7 +4506,10 @@ int hexeditor_browse_y; // cursor y
 
 int hex_addressmode = 0; // 0 = physical address, module load address, global pointer register
 
+
+#ifdef HEXMARKERS
 #define MARKERS 128
+
 int hex_markers[MARKERS];
   
 void hex_marker_add(u32 address) {
@@ -4554,6 +4560,8 @@ void hex_marker_clear() {
   for( i = 0; i < MARKERS; i++ ) 
     hex_markers[i] = 0;
 }  
+
+#endif
   
   
 int hexeditor_create(int address, int mode, int low, int high, const char *infostring) { // init HexEditor
@@ -4568,7 +4576,7 @@ int hexeditor_create(int address, int mode, int low, int high, const char *infos
   hexeditor_mode = mode;
   hexeditor_lowbound = low;
   hexeditor_highbound = high;
-  sprintf(hexeditor_infobuffer, "%s", infostring);
+  snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "%s", infostring);
   
   hexeditor_lines = (hexeditor_highbound - hexeditor_lowbound) / 0x10;
   if( ((hexeditor_highbound - hexeditor_lowbound) % 0x10) > 0 )
@@ -4681,17 +4689,17 @@ int hexeditor_draw() {
     /// draw current address
     COLOR_TEMP = RED;
     if( hex_addressmode == 1 ) {
-      sprintf(buffer, "%X", hex_adr - mod_text_addr);
+      snprintf(buffer, sizeof(buffer), "%X", hex_adr - mod_text_addr);
       COLOR_TEMP = YELLOW;
     } else if( hex_addressmode == 2 ) {
-      sprintf(buffer, "%X", hex_adr - gp);
+      snprintf(buffer, sizeof(buffer), "%X", hex_adr - gp);
       COLOR_TEMP = ORANGE;
-    } else sprintf(buffer, "%X", hex_adr);
+    } else snprintf(buffer, sizeof(buffer), "%X", hex_adr);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8, y-line_spaceing-8, COLOR_TEMP);
     
     /// draw 0 to F legend
     for( i = 0x0; i <= 0xF; i++, x1+=hex_spaceing ) {
-      sprintf(buffer, "%X", i);
+      snprintf(buffer, sizeof(buffer), "%X", i);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x1+5, y-line_spaceing-8, COLOR_TEXT); // *16
     } x1 = hstarthex;
     
@@ -4703,15 +4711,15 @@ int hexeditor_draw() {
           
       /// print address (left)
       if( hexeditor_mode ) {  // for editor mode 1 and 2
-        sprintf(buffer, "0x%08X", (hexeditor_showadr+(counter*0x10)) ); // draw 0x000000+ 
+        snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_showadr+(counter*0x10)) ); // draw 0x000000+ 
   
      } else {
         if( hex_addressmode == 1 ) 
-          sprintf(buffer, "0x%08X", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
+          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
         else if( hex_addressmode == 2 ) 
-          sprintf(buffer, "0x%08X", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
+          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
         else 
-          sprintf(buffer, "0x%08X", (hexeditor_address+(counter*0x10)) ); // display physical address "0x%08X"
+          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) ); // display physical address "0x%08X"
          
      } drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, 8, y, COLOR_TEXT);
       
@@ -4761,6 +4769,7 @@ int hexeditor_draw() {
         }  
 
 
+      #ifdef HEXMARKERS
       /// draw markers
       for( i = 0; i < MARKERS; i++ ) {
         if( hex_markers[i] == ((hexeditor_address+(counter*0x10))+scounter)) {
@@ -4768,10 +4777,11 @@ int hexeditor_draw() {
           //drawBox(x2-2, y, 8, 11, COLOR_HEX_MARKER); // on ascii
           break;
         }
-      }  
+      }
+      #endif
 
       /// draw hex      
-      sprintf(buffer, "%02X", current );
+      snprintf(buffer, sizeof(buffer), "%02X", current );
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, x1, y, SOMECOLOR); // todo color
       
       hexeditor_memory[counter][scounter] = current; // save same or new value in memory array
@@ -4785,7 +4795,7 @@ int hexeditor_draw() {
       } else SOMECOLOR = COLOR_TEXT; // normal
       
       ///draw Ascii
-      sprintf(buffer, "%c", current);
+      snprintf(buffer, sizeof(buffer), "%c", current);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, x2, y, SOMECOLOR); //draw if in bound
       
       scounter++;
@@ -4815,19 +4825,19 @@ int hexeditor_draw() {
 
   switch( hex_adr % 0x10 ) {
     case 0x0: case 0x4: case 0x8: case 0xC:
-      sprintf(buffer, "%d", *((short*)(hex_adr)) );
+      snprintf(buffer, sizeof(buffer), "%d", *((short*)(hex_adr)) );
       if( flag_use_legend ) 
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 222.0f, RED);
       else     
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 45.0f, 255.0f, RED);
       
-      sprintf(buffer, "%d", *((int*)(hex_adr)) );
+      snprintf(buffer, sizeof(buffer), "%d", *((int*)(hex_adr)) );
       if( flag_use_legend ) 
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 233.0f, RED);
       else     
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 155.0f, 255.0f, RED);
       
-      sprintf(buffer, "%f", *((float*)(hex_adr)));
+      snprintf(buffer, sizeof(buffer), "%f", *((float*)(hex_adr)));
       if( flag_use_legend ) 
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 244.0f, RED);
       else
@@ -4835,7 +4845,7 @@ int hexeditor_draw() {
       
       
       if( *((int*)(hex_adr)) > memory_low && *((int*)(hex_adr)) < memory_high) { // link to accessible memory
-        sprintf(buffer, "0x%08X", *((int*)(hex_adr)) );
+        snprintf(buffer, sizeof(buffer), "0x%08X", *((int*)(hex_adr)) );
         if( flag_use_legend ) 
           drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 255.0f, RED);
         else
@@ -4844,7 +4854,7 @@ int hexeditor_draw() {
       break;
       
     case 0x2: case 0x6: case 0xA: case 0xE:
-      sprintf(buffer, "%d", *((short*)(hex_adr)) );
+      snprintf(buffer, sizeof(buffer), "%d", *((short*)(hex_adr)) );
       if( flag_use_legend ) 
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 222.0f, RED);
       else     
@@ -4863,31 +4873,33 @@ int hexeditor_draw() {
     drawString("CIRCLE = Exit HexEditor",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
     
     drawBox(160, 220, 155, 50, COLOR_BACKGROUND);
-    drawString("R + CROSS = Mark selected",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
     drawString("R + SQUARE = Zero 4 Bytes",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
     drawString("R + TRIANGLE = Teleport xyz", ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
     drawString("SELECT = Cycle Baseadr.",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
+    #endif
+    #ifdef HEXMARKERS
+    drawString("R + CROSS = Mark selected",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
     #endif
   }
   
   
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {
-    sprintf(buffer, "hexeditor_lines = %i", hexeditor_lines );
+    snprintf(buffer, sizeof(buffer), "hexeditor_lines = %i", hexeditor_lines );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 222.0f, RED);
     
-    sprintf(buffer, "hexeditor_address = 0x%08X", hexeditor_address );
+    snprintf(buffer, sizeof(buffer), "hexeditor_address = 0x%08X", hexeditor_address );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 233.0f, RED);
     
-    sprintf(buffer, "hexeditor_showadr = 0x%08X", hexeditor_showadr );
+    snprintf(buffer, sizeof(buffer), "hexeditor_showadr = 0x%08X", hexeditor_showadr );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 244.0f, RED);
             
-    sprintf(buffer, "hex_adr = 0x%08X", hex_adr );
+    snprintf(buffer, sizeof(buffer), "hex_adr = 0x%08X", hex_adr );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 255.0f, RED);
 
     /*int u, e = hstartascii, r = 80;
     for(u = 0; u < MARKERS; u++, r+=20) {
-      sprintf(buffer, "%d: 0x%08X", u, hex_markers[u] );
+      snprintf(buffer, sizeof(buffer), "%d: 0x%08X", u, hex_markers[u] );
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, e, r, ORANGE);
     }*/
   }
@@ -4963,6 +4975,7 @@ int hexeditor_ctrl() {
       else hex_addressmode = 0;
     }
     
+    #ifdef HEXMARKERS
     if( pressed_buttons & PSP_CTRL_CROSS ) {
       if( current_buttons & PSP_CTRL_RTRIGGER ) { // mark
         if( hex_marker_check(hex_adr) ) 
@@ -4971,6 +4984,7 @@ int hexeditor_ctrl() {
         //setTimedTextbox("Test in hex! delete", 3);
       } else editbyte_create(); // edit byte
     }
+    #endif
     
     if( hold_buttons & PSP_CTRL_SQUARE ) { // set zero
       if( current_buttons & PSP_CTRL_RTRIGGER ) {
@@ -5217,7 +5231,7 @@ void draw() { // called by hijacked game function
   
   /// FPS indicator (when enabled)
   if( flag_draw_FPS == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
-    sprintf(buffer, "%.0f", fps);
+    snprintf(buffer, sizeof(buffer), "%.0f", fps);
     drawString("FPS:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 30.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN) );
   }
@@ -5234,13 +5248,13 @@ void draw() { // called by hijacked game function
   /// Coordinates (when enabled)
   if( flag_draw_COORDS == 1 && flag_draw_DEBUG == 0 ) {
     if( pplayer > 0 ) {
-      sprintf(buffer, "x: %.2f", getFloat(pplayer+0x30));
+      snprintf(buffer, sizeof(buffer), "x: %.2f", getFloat(pplayer+0x30));
       drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 100.0f, COLOR_VALUE);
-      sprintf(buffer, "y: %.2f", getFloat(pplayer+0x34));
+      snprintf(buffer, sizeof(buffer), "y: %.2f", getFloat(pplayer+0x34));
       drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 120.0f, COLOR_VALUE);
-      sprintf(buffer, "z: %.2f", getFloat(pplayer+0x38));
+      snprintf(buffer, sizeof(buffer), "z: %.2f", getFloat(pplayer+0x38));
       drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 140.0f, COLOR_VALUE);
-      sprintf(buffer, "%.0f", getPedFacingDirectionInDegree(pplayer) );
+      snprintf(buffer, sizeof(buffer), "%.0f", getPedFacingDirectionInDegree(pplayer) );
       drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 165.0f, COLOR_VALUE);
     }
   }
@@ -5572,7 +5586,7 @@ void *category_toggle(int type, int cat, int set) {
     if( !flag_coll_cats ) 
     return ""; // categories can't be expanded/collapsed -> don't show any indicator
   
-    sprintf(buffer, !category_index[cat] ? " +" : " -");
+    snprintf(buffer, sizeof(buffer), !category_index[cat] ? " +" : " -");
     return (void *)buffer;
   }
   
@@ -5610,17 +5624,17 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   void *(* surrent_get)();
   
   /// title
-  sprintf(buffer, "CheatDevice Remastered %s by Freakler", VERSION);
+  snprintf(buffer, sizeof(buffer), "CheatDevice Remastered %s by Freakler", VERSION);
   drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE);
   
   /// GameID & version
-  //sprintf(buffer, "%s v%s", buf_titleid, buf_version);
+  //snprintf(buffer, sizeof(buffer), "%s v%s", buf_titleid, buf_version);
   //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 8.0f, 15.0f, LGREY);
     
   /// fps counter (in menu)
   #ifdef DEBUG
   if( flag_draw_FPS ) {
-    sprintf(buffer, "FPS: %.0f", fps);
+    snprintf(buffer, sizeof(buffer), "FPS: %.0f", fps);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 420.0f, 85.0f, WHITE);
   }
   #endif
@@ -5736,7 +5750,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       /// draw menu
       //if( menu_list[i].type != MENU_DUMMY ) {
         memset(&buffer[0], 0, sizeof(buffer));
-        sprintf(buffer, "%s%s", menu_list[i].path, val);
+        snprintf(buffer, sizeof(buffer), "%s%s", menu_list[i].path, val);
         if( flag_use_cataltfont && menu_list[i].type == MENU_CATEGORY ) // alternative font
           drawString(buffer, ALIGN_FREE, FONT_GTA, LCS ? 0.9 : 0.33, SHADOW_ON, x, y, color);
         else
@@ -5744,7 +5758,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
         
         #ifdef DEBUG
         if( flag_draw_DBGVALS ) {
-          sprintf(buffer, "%i", i);
+          snprintf(buffer, sizeof(buffer), "%i", i);
           drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5, y, RED);
         }
         #endif
@@ -5772,16 +5786,16 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   /// draw debug stuff (when enabled)
   #ifdef DEBUG //menu specific for debugging
   if( flag_draw_DBGVALS ) {
-    sprintf(buffer, "toption: %i", toption);
+    snprintf(buffer, sizeof(buffer), "toption: %i", toption);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 100.0f, RED);
-    sprintf(buffer, "menu_sel: %i", menu_sel);
+    snprintf(buffer, sizeof(buffer), "menu_sel: %i", menu_sel);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 120.0f, RED);
-    sprintf(buffer, "hidden: %i", hidden);
+    snprintf(buffer, sizeof(buffer), "hidden: %i", hidden);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 140.0f, RED);
-    sprintf(buffer, "menu_size: %i", menu_size);
+    snprintf(buffer, sizeof(buffer), "menu_size: %i", menu_size);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED);
     
-    sprintf(buffer, "mod_text_addr: 0x%08X", mod_text_addr);
+    snprintf(buffer, sizeof(buffer), "mod_text_addr: 0x%08X", mod_text_addr);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 252.0f, RED);
   }
   #endif
@@ -6011,7 +6025,7 @@ int name_resolver(SceSize args, void *argp) {
   while( 1 ) {
     if( hash_to_check != last_hash ) {
       sprintf(hashstr, "0x%08X", hash_to_check); //0x%08X
-      sprintf(buffer, "%s%s", basefolder, LCS ? file_names_lcs: file_names_vcs); //ini file
+      snprintf(buffer, sizeof(buffer), "%s%s", basefolder, LCS ? file_names_lcs: file_names_vcs); //ini file
       
       ini_gets( LCS ? "NAMES_LCS" : "NAMES_VCS", hashstr, "unknown", hashbuffer, 32, buffer); //
       
@@ -6182,25 +6196,25 @@ int patch() {
 
   /// create sub folders for the noobs
   #ifdef PREVIEW
-  sprintf(buffer, "%s%s%s", basefolder, folder_cheats, LCS ? "LCS" : "VCS"); // "../CHEATS/xCS"
+  snprintf(buffer, sizeof(buffer), "%s%s%s", basefolder, folder_cheats, LCS ? "LCS" : "VCS"); // "../CHEATS/xCS"
   sceIoMkdir(buffer, 0777);
   #endif
   
   #ifdef USERSCRIPTS
-  sprintf(buffer, "%s%s%s", basefolder, folder_scripts, LCS ? "LCS" : "VCS"); // "../SCRIPTS/xCS"
+  snprintf(buffer, sizeof(buffer), "%s%s%s", basefolder, folder_scripts, LCS ? "LCS" : "VCS"); // "../SCRIPTS/xCS"
   makedirs(buffer);
   #endif 
   
-  //sprintf(buffer, "%s%s", basefolder, folder_textures); // "../TEXTURES/"
+  //snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_textures); // "../TEXTURES/"
   //sceIoMkdir(buffer, 0777);
   
-  //sprintf(buffer, "%s%s", basefolder, folder_translations); // "../TRANSLATIONS/"
+  //snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_translations); // "../TRANSLATIONS/"
   //sceIoMkdir(buffer, 0777);
     
 
   /// create name resolver thread (if .ini found)
   #ifdef NAMERESOLV
-  sprintf(buffer, "%s%s", basefolder, LCS ? file_names_lcs: file_names_vcs);
+  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, LCS ? file_names_lcs: file_names_vcs);
   if( doesFileExist(buffer) ) {
     
     #ifdef LOG
@@ -6323,7 +6337,7 @@ int module_start(SceSize argc, void* argp) {
   sceCtrlPeekBufferPositive(&pad, 1);
 
   /// remove old log file (if there is one)
-  sprintf(buffer, "%s%s", basefolder, file_log);
+  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, file_log);
   sceIoRemove(buffer); // delete old logfile
   
   /// create basefolder to be save (for logfile this early)

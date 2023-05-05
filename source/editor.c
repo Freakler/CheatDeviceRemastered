@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <pspctrl.h>
 #include <limits.h>
+#include <psptypes.h> // VS Code is annoying and keeps spamming "u32" undefined errors
 
 #include "cheats.h"
 #include "main.h"
@@ -252,10 +253,10 @@ void *garage_vehicle(int calltype, int keypress, int base_address, int address) 
   
   switch( calltype ) {
     case FUNC_GET_STRING:
-      sprintf(buffer, "%s", getRealVehicleNameViaID(getShort(address))); // on error print hex
+      snprintf(buffer, sizeof(buffer), "%s", getRealVehicleNameViaID(getShort(address))); // on error print hex
       if( buffer[0] == '\0' ) // some vehicles don't have translations..
-        sprintf(buffer, "%s", getGxtIdentifierForVehicleViaID(getShort(address))); // on error print hex  
-      // sprintf(buffer, "%s - %i", getShort(address), buffer); //on error print hex
+        snprintf(buffer, sizeof(buffer), "%s", getGxtIdentifierForVehicleViaID(getShort(address))); // on error print hex  
+      // snprintf(buffer, sizeof(buffer), "%s - %i", getShort(address), buffer); //on error print hex
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:
@@ -278,7 +279,7 @@ void *radiostation(int calltype, int keypress, int base_address, int address) {
   switch( calltype ) {
     case FUNC_GET_STRING:
       i = getByte(address);
-      sprintf(buffer, "%s", getRadioStationName(i));
+      snprintf(buffer, sizeof(buffer), "%s", getRadioStationName(i));
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:
@@ -304,7 +305,7 @@ void *pedstatname(int calltype, int keypress, int base_address, int address) {
   switch( calltype ) {
     case FUNC_GET_STRING:
       i = getByte(address);
-      sprintf(buffer, "%s", getPedstatName(i) );
+      snprintf(buffer, sizeof(buffer), "%s", getPedstatName(i) );
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:
@@ -326,9 +327,9 @@ void *pedstatname(int calltype, int keypress, int base_address, int address) {
 
 const Editor_pack lcs_pedobj_menu[] = {
   //name                          //postfix    //address     //edit_bool  //type   //precision  //*value    //steps   
-  {"World Coordinate X"              , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"              , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"              , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"              , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"              , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"              , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
 
   {"Identifier"                      , ""      , 0x58      , FALSE   , TYPE_BYTE     , DEC    , 0            , 0x1    },
   
@@ -413,7 +414,7 @@ const Editor_pack lcs_pedobj_menu[] = {
   {"Ped in range #2"                 , ""      , 0x728     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
   //..
   {"Ped in range #10 (farest)"       , ""      , 0x748     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
-  {"Ped in range counter"            , " of 10", 0x74C     , FALSE   , TYPE_BYTE      , DEC    , 0            , 1      }, 
+  {"Ped in range counter"            , "/10", 0x74C     , FALSE   , TYPE_BYTE      , DEC    , 0            , 1      }, 
   
   {"Ped ??"                          , ""      , 0x780     , FALSE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   
@@ -426,9 +427,9 @@ const Editor_pack lcs_pedobj_menu[] = {
 
 const Editor_pack vcs_pedobj_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value         //steps      //min    //max    
-  {"World Coordinate X"             , ""       , 0x30      , TRUE    , TYPE_FLOAT      , 2      , 0            , 0.1    },
-  {"World Coordinate Y"             , ""       , 0x34      , TRUE    , TYPE_FLOAT      , 2      , 0            , 0.1    },
-  {"World Coordinate Z"             , ""       , 0x38      , TRUE    , TYPE_FLOAT      , 2      , 0            , 0.1    },
+  {"World Coord X"             , ""       , 0x30      , TRUE    , TYPE_FLOAT      , 2      , 0            , 0.1    },
+  {"World Coord Y"             , ""       , 0x34      , TRUE    , TYPE_FLOAT      , 2      , 0            , 0.1    },
+  {"World Coord Z"             , ""       , 0x38      , TRUE    , TYPE_FLOAT      , 2      , 0            , 0.1    },
 
   {"Identifier"                     , ""       , 0x58      , FALSE   , TYPE_BYTE       , DEC    , 0            , 0x1    },
 
@@ -452,9 +453,9 @@ const Editor_pack vcs_pedobj_menu[] = {
 const Editor_pack lcs_vehicleobj_menu[] = {
   
   //name                      //postfix    //address     //edit_bool  //type   //precision  //*value      //steps      //min    //max  
-  {"World Coordinate X"            , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"            , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"            , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"            , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"            , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"            , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
 //{"0x44 Flag 0"                   , ""      , 0x44      , TRUE    , TYPE_BIT      , 0      , 0            , 0      },
 //{"0x44 Flag 1"                   , ""      , 0x44      , TRUE    , TYPE_BIT      , 1      , 0            , 0      },
@@ -536,9 +537,9 @@ const Editor_pack lcs_vehicleobj_menu[] = {
 
 const Editor_pack vcs_vehicleobj_menu[] = {
   //name                  //postfix     //address     //edit_bool  //type      //precision  //*value     //steps    //min    //max  
-  {"World Coordinate X"        , ""        , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"        , ""        , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"        , ""        , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"        , ""        , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"        , ""        , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"        , ""        , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
   {"Identifier"                , ""        , 0x58      , FALSE   , TYPE_SHORT    , DEC    , 0            , 0x1    }, // garage_vehicle
   
@@ -555,9 +556,9 @@ const Editor_pack vcs_vehicleobj_menu[] = {
 
 const Editor_pack lcs_worldobj_menu[] = {
   //name                  //postfix     //address     //edit_bool  //type      //precision  //*value      //steps    //min    //max  
-  {"World Coordinate X"        , ""        , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"        , ""        , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"        , ""        , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"        , ""        , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"        , ""        , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"        , ""        , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
   {"Identifier"                , ""        , 0x58      , FALSE   , TYPE_SHORT    , DEC    , 0            , 0x1    },
   
@@ -572,9 +573,9 @@ const Editor_pack lcs_worldobj_menu[] = {
 
 const Editor_pack vcs_worldobj_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type      //precision  //*value    //steps      //min    //max  
-  {"World Coordinate X"        , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"        , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"        , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"        , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"        , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"        , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
   {"Identifier"                , ""      , 0x58      , FALSE   , TYPE_SHORT    , DEC    , 0            , 0x1    },
   
@@ -583,9 +584,9 @@ const Editor_pack vcs_worldobj_menu[] = {
 
 const Editor_pack lcs_pickups_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value    //steps    //min    //max  
-  {"World Coordinate X"          , ""      , 0x00      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"          , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"          , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"          , ""      , 0x00      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"          , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"          , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
 //{"pointer to world object"     , ""      , 0x14      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"Ammo/Amount"                 , ""      , 0x1C      , TRUE    , TYPE_SHORT    , DEC    , 0            , 0.1    },
   
@@ -601,9 +602,9 @@ const Editor_pack lcs_pickups_menu[] = {
 
 const Editor_pack vcs_pickups_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type     //precision  //*value      //steps    //min    //max  
-  {"World Coordinate X"          , ""      , 0x00      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"          , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"          , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"          , ""      , 0x00      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"          , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"          , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
   {"Ammo/Amount"                 , ""      , 0x2C      , TRUE    , TYPE_SHORT    , DEC    , 0            , 0.1    },
   
@@ -642,13 +643,13 @@ const Editor_pack lcs_mapicons_menu[] = {
   {"Linked Object Type"                , ""      , 0x04      , FALSE   , TYPE_INTEGER  , 0      , mapicon_type , 0      }, // 1 = car, 2 = Ped, 3 = world obj, 4 = coordinate, 5 = sphere to coordinate
   {"Linked Object Slot"                , ""      , 0x08      , FALSE   , TYPE_INTEGER  , 0      , mapicon_slot , 0      }, // shift by >> 8 to get Slot number of Vehicle / Pedestrian / World Obj
   
-  {"World Coordinate X"                , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    }, // only for coordinate type(s)
-  {"World Coordinate Y"                , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"                , ""      , 0x14      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"                , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    }, // only for coordinate type(s)
+  {"World Coord Y"                , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"                , ""      , 0x14      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
-  {"? Coordinate X"                    , ""      , 0x20      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"? Coordinate Y"                    , ""      , 0x24      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"? Coordinate Z"                    , ""      , 0x28      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"? Coord X"                    , ""      , 0x20      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"? Coord Y"                    , ""      , 0x24      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"? Coord Z"                    , ""      , 0x28      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
   {"mp counter ?"                      , ""      , 0x30      , TRUE    , TYPE_SHORT    , HEX    , 0            , 0x1    },
   
@@ -673,9 +674,9 @@ const Editor_pack vcs_mapicons_menu[] = {
   
   {"?"                                 , ""      , 0x0C      , TRUE    , TYPE_INTEGER  , HEX   , 0            , 1      },
   
-  {"World Coordinate X"                , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2     , 0            , 0.1    },
-  {"World Coordinate Y"                , ""      , 0x14      , TRUE    , TYPE_FLOAT    , 2     , 0            , 0.1    },
-  {"World Coordinate Z"                , ""      , 0x18      , TRUE    , TYPE_FLOAT    , 2     , 0            , 0.1    },
+  {"World Coord X"                , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2     , 0            , 0.1    },
+  {"World Coord Y"                , ""      , 0x14      , TRUE    , TYPE_FLOAT    , 2     , 0            , 0.1    },
+  {"World Coord Z"                , ""      , 0x18      , TRUE    , TYPE_FLOAT    , 2     , 0            , 0.1    },
   
   {"display bool ?"                    , ""      , 0x20      , TRUE    , TYPE_BIT      , 0     , 0            , 0      },
   {"Brightness"                        , ""      , 0x20      , TRUE    , TYPE_BIT      , 1     , 0            , 0      },
@@ -704,9 +705,9 @@ void *mapicon_color(int calltype, int keypress, int base_address, int address) {
   switch( calltype ) {
     case FUNC_GET_STRING:
       if( getMapiconColor(base_address) >= 0 && getMapiconColor(base_address) <= 8 ) 
-        sprintf(buffer, "%s", getMapiconColorName(base_address));
+        snprintf(buffer, sizeof(buffer), "%s", getMapiconColorName(base_address));
       else  
-        sprintf(buffer, "RGBA: %08X", getMapiconColor(base_address));
+        snprintf(buffer, sizeof(buffer), "RGBA: %08X", getMapiconColor(base_address));
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:
@@ -729,7 +730,7 @@ void *mapicon_type(int calltype, int keypress, int base_address, int address) {
   switch( calltype ) {
     
     case FUNC_GET_STRING:
-      sprintf(buffer, "%s", getMapiconTypeName(base_address));
+      snprintf(buffer, sizeof(buffer), "%s", getMapiconTypeName(base_address));
       return (void *)buffer;
       
   }
@@ -742,9 +743,9 @@ void *mapicon_slot(int calltype, int keypress, int base_address, int address) {
   switch( calltype ) {
     case FUNC_GET_STRING:
       if( getMapiconLinkedObjectSlotNumber(base_address) != -1 ) 
-        sprintf(buffer, "#%i", getMapiconLinkedObjectSlotNumber(base_address)+1);
+        snprintf(buffer, sizeof(buffer), "#%i", getMapiconLinkedObjectSlotNumber(base_address)+1);
       else 
-        sprintf(buffer, "/");
+        snprintf(buffer, sizeof(buffer), "/");
       return (void *)buffer;
   }
   return NULL;
@@ -967,7 +968,7 @@ void *vehicle_flag1(int calltype, int keypress, int base_address, int address) {
       case 0x8: return "HANGING_BOOT";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -999,7 +1000,7 @@ void *vehicle_flag2(int calltype, int keypress, int base_address, int address) {
       case 0x8: return "IS_LOW";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -1031,7 +1032,7 @@ void *vehicle_flag3(int calltype, int keypress, int base_address, int address) {
       case 0x8: return "NONPLAYER_STABILISER";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -1063,7 +1064,7 @@ void *vehicle_flag4(int calltype, int keypress, int base_address, int address) {
       case 0x8: return "HALOGEN_LIGHTS";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -1095,7 +1096,7 @@ void *vehicle_flag5(int calltype, int keypress, int base_address, int address) {
       case 0x8: return "IS_BOAT";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -1127,7 +1128,7 @@ void *vehicle_flag6(int calltype, int keypress, int base_address, int address) {
       case 0x8: return "SIT_IN_BOAT";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -1158,7 +1159,7 @@ void *vehicle_flag7(int calltype, int keypress, int base_address, int address) {
       case 0x4: return "GOOD_INSAND";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -1187,7 +1188,7 @@ void *vehicle_flag8(int calltype, int keypress, int base_address, int address) {
       case 0x1: return "FORCE_GRND_CLR";
       
       default: 
-        sprintf(buffer, "%i", nibble);
+        snprintf(buffer, sizeof(buffer), "%i", nibble);
         return (void *)buffer;  
     }
   }
@@ -1225,7 +1226,7 @@ void *vehicle_enginetype(int calltype, int keypress, int base_address, int addre
       if( i == list_size && current != list_val[i-1]) {
         i = -1; // error - not found in list
         // else unknown -> output id
-        sprintf(buffer, "0x%X", current);
+        snprintf(buffer, sizeof(buffer), "0x%X", current);
         return (void *)buffer;
       }
       return (void *)list_name[i];
@@ -1263,7 +1264,7 @@ void *vehicle_lights_front(int calltype, int keypress, int base_address, int add
       if( i == list_size && current != list_val[i-1]) {
         i = -1; // error - not found in list
         // else unknown -> output id
-        sprintf(buffer, "0x%X", current);
+        snprintf(buffer, sizeof(buffer), "0x%X", current);
         return (void *)buffer;
       }
       return (void *)list_name[i];
@@ -1301,7 +1302,7 @@ void *vehicle_lights_rear(int calltype, int keypress, int base_address, int addr
       if( i == list_size && current != list_val[i-1]) {
         i = -1; // error - not found in list
         // else unknown -> output id
-        sprintf(buffer, "0x%X", current);
+        snprintf(buffer, sizeof(buffer), "0x%X", current);
         return (void *)buffer;
       }
       return (void *)list_name[i];
@@ -1338,7 +1339,7 @@ void *vehicle_transtype(int calltype, int keypress, int base_address, int addres
       if( i == list_size && current != list_val[i-1]) {
         i = -1; // error - not found in list
         // else unknown -> output id
-        sprintf(buffer, "0x%X", current);
+        snprintf(buffer, sizeof(buffer), "0x%X", current);
         return (void *)buffer;
       }
       return (void *)list_name[i];
@@ -1364,9 +1365,9 @@ const Editor_pack lcs_vehiclespawns_menu[] = {
   //name                        //postfix    //address   //edit_bool  //type      //precision  //*value      //steps    //min    //max  
   {"Identifier"                     , ""      , 0x00      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      /*, 0x82      , 0xD8  */   },
   
-  {"World Coordinate X"             , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
-  {"World Coordinate Y"             , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
-  {"World Coordinate Z"             , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
+  {"World Coord X"             , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
+  {"World Coord Y"             , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
+  {"World Coord Z"             , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
   
   {"Rotation"                       , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   
@@ -1394,9 +1395,9 @@ const Editor_pack lcs_vehiclespawns_menu[] = {
 const Editor_pack vcs_vehiclespawns_menu[] = {
   //name                          //postfix    //address     //edit_bool  //type   //precision  //*value   //steps    //min    //max  
   {"Identifier"                     , ""      , 0x00      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
-  {"World Coordinate X"             , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"             , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"             , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"             , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"             , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"             , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
   {"Rotation"                       , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   
@@ -1420,25 +1421,25 @@ const Editor_pack vcs_vehiclespawns_menu[] = {
 
 const Editor_pack lcs_colsdat_menu[] = {
   //name                    //postfix    //address    //edit_bool //type        //precision  //*value     //steps    //min    //max  
-  {"Red value"              , " of 255"    , 0x00      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
-  {"Green value"            , " of 255"    , 0x01      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
-  {"Blue value"             , " of 255"    , 0x02      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
-  {"Alpha value"            , " of 255"    , 0x03      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
+  {"Red value"              , "/255"    , 0x00      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
+  {"Green value"            , "/255"    , 0x01      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
+  {"Blue value"             , "/255"    , 0x02      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
+  {"Alpha value"            , "/255"    , 0x03      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {NULL,NULL,0,0,0,0,0}
 };
 const Editor_pack vcs_colsdat_menu[] = {
   //name                    //postfix    //address    //edit_bool //type        //precision  //*value      //steps    //min    //max  
-  {"Red value"              , " of 255"    , 0x00      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
-  {"Green value"            , " of 255"    , 0x01      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
-  {"Blue value"             , " of 255"    , 0x02      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
+  {"Red value"              , "/255"    , 0x00      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
+  {"Green value"            , "/255"    , 0x01      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
+  {"Blue value"             , "/255"    , 0x02      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {NULL,NULL,0,0,0,0,0}
 };
 
 const Editor_pack lcs_ipl_menu[] = { // todo for rotation : https://gtamods.com/wiki/Game.dtz#Generating_IPL_in_text_format
   //name                  //postfix       //address     //edit_bool  //type     //precision  //*value      //steps    //min    //max  
-  {"World Coordinate X"     , ""          , 0x30       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
-  {"World Coordinate Y"     , ""          , 0x34       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
-  {"World Coordinate Z"     , ""          , 0x38       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
+  {"World Coord X"     , ""          , 0x30       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
+  {"World Coord Y"     , ""          , 0x34       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
+  {"World Coord Z"     , ""          , 0x38       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
   
   {"Identifier"             , ""          , 0x58       , TRUE    , TYPE_SHORT    , DEC    , 0            , 1       },
 
@@ -1651,9 +1652,9 @@ const Editor_pack lcs_particlecfg_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value         //steps    //min    //max  
   {"Particle Type Name"                   , ""        , 0x04      , TRUE    , TYPE_STRING    , 20    , 0            , 0      }, // A
   
-  {"Render Colouring R"                   , " of 255" , 0x70      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // B
-  {"Render Colouring G"                   , " of 255" , 0x71      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // C
-  {"Render Colouring B"                   , " of 255" , 0x72      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // D
+  {"Render Colouring R"                   , "/255" , 0x70      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // B
+  {"Render Colouring G"                   , "/255" , 0x71      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // C
+  {"Render Colouring B"                   , "/255" , 0x72      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // D
   {"Initial Color Variation"              , ""        , 0x74      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // CV (for r,g,b only, in %) (0-100);
   
   {"0x18 ?"                               , ""        , 0x18      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.00f  }, //
@@ -1662,12 +1663,12 @@ const Editor_pack lcs_particlecfg_menu[] = {
   {"Expansion Rate"                       , ""        , 0x20      , TRUE    , TYPE_FLOAT    , 4      , 0            , 0.001f }, // F
 
   ///Color "Fade-to-Black" options:
-  {"Initial Intensity (0-255)"            , " of 255" , 0x36      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // G
+  {"Initial Intensity (0-255)"            , "/255" , 0x36      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // G
   {"Fade Time"                            , ""        , 0x34      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // H
   {"Fade Amount (-255 to 255)"            , ""        , 0x38      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // I
 
   ///"Fade Alpha" options:
-  {"Initial Intensity (alpha)"            , " of 255" , 0x3A      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // GA
+  {"Initial Intensity (alpha)"            , "/255" , 0x3A      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // GA
   {"Fade Time (alpha)"                    , ""        , 0x3C      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // HA
   {"Fade Amount (alpha)"                  , ""        , 0x3E      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // IA
   
@@ -1727,9 +1728,9 @@ const Editor_pack vcs_particlecfg_menu[] = {
   //name                                 //postfix    //address     //edit_bool  //type      //precision  //*value  //steps    //min    //max  
   {"Particle Type Name"                   , ""         , 0x04      , TRUE    , TYPE_STRING   , 20    , 0            , 0       },
   
-  {"Render Colouring R"                   , " of 255"  , 0x60      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // B
-  {"Render Colouring G"                   , " of 255"  , 0x61      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // C
-  {"Render Colouring B"                   , " of 255"  , 0x62      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // D
+  {"Render Colouring R"                   , "/255"  , 0x60      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // B
+  {"Render Colouring G"                   , "/255"  , 0x61      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // C
+  {"Render Colouring B"                   , "/255"  , 0x62      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // D
   {"Initial Color Variation"              , ""         , 0x64      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // CV (for r,g,b only, in %) (0-100);
   
   {"0x18 ?"                               , ""         , 0x18      , TRUE    , TYPE_FLOAT    , 2      , 0           , 1.00f   }, //
@@ -1738,12 +1739,12 @@ const Editor_pack vcs_particlecfg_menu[] = {
   {"Expansion Rate"                       , ""         , 0x20      , TRUE    , TYPE_FLOAT    , 4      , 0           , 0.001f  }, // F LCS
 
   ///Color "Fade-to-Black" options:
-  {"Initial Intensity (0-255)"            , " of 255" , 0x26      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // G
+  {"Initial Intensity (0-255)"            , "/255" , 0x26      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // G
   {"Fade Time"                            , ""        , 0x24      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // H
   {"Fade Amount (-255 to 255)"            , ""        , 0x28      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // I
   
   ///"Fade Alpha" options:
-  {"Initial Intensity (alpha)"            , " of 255" , 0x2A      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // GA
+  {"Initial Intensity (alpha)"            , "/255" , 0x2A      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // GA
   {"Fade Time (alpha)"                    , ""        , 0x2C      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // HA
   {"Fade Amount (alpha)"                  , ""        , 0x2E      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // IA
    
@@ -1852,9 +1853,9 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
 
 const Editor_pack vcs_businessobj_menu[] = { 
   //name                  //postfix    //address  //edit_bool  //type  //precision  //*value       //steps    //min    //max  
-  {"World Coordinate X"      , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Y"      , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coordinate Z"      , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"      , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"      , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"      , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
   {"Identifier"              , ""      , 0x58      , FALSE    , TYPE_SHORT   , DEC    , 0            , 0x1    },
   
@@ -2108,7 +2109,7 @@ extern int editor_garageslot_current; // not used here
 void *editor_garage(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", garage_cur, var_garageslots );
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", garage_cur, var_garageslots );
     return (void *)buffer;
 
   } else if( calltype == FUNC_GET_VALUE ) {
@@ -2127,7 +2128,7 @@ extern int editor_pedobj_current;
 void *editor_pedobj(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", peds_cur, peds_max);
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", peds_cur, peds_max);
     return (void *)buffer;
     
   } else if( calltype == FUNC_GET_VALUE ) { 
@@ -2145,7 +2146,7 @@ extern int editor_vehicleobj_current;
 void *editor_vehicleobj(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", vehicles_cur, vehicles_max);
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", vehicles_cur, vehicles_max);
     return (void *)buffer;
   } else if( calltype == FUNC_GET_VALUE ) {
     return (int*)editor_vehicleobj_current;
@@ -2162,7 +2163,7 @@ extern int editor_worldobj_current;
 void *editor_worldobj(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", worldobjs_cur, worldobjs_max);
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", worldobjs_cur, worldobjs_max);
     return (void *)buffer;
     
   } else if( calltype == FUNC_GET_VALUE ) {
@@ -2180,7 +2181,7 @@ extern int editor_businessobj_current;
 void *editor_businessobj(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", businessobjs_cur, businessobjs_max);
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", businessobjs_cur, businessobjs_max);
     return (void *)buffer;
     
   } else if( calltype == FUNC_GET_VALUE ) {
@@ -2198,7 +2199,7 @@ extern int editor_pickup_current;
 void *editor_pickups(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", pickups_cur, var_pickupslots);
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", pickups_cur, var_pickupslots);
     return (void *)buffer;
   } else if( calltype == FUNC_GET_VALUE ) {
     return (int*)editor_pickup_current;
@@ -2215,7 +2216,7 @@ extern int editor_mapicon_current;
 void *editor_mapicons(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", mapicons_cur, var_radarblipslots);
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", mapicons_cur, var_radarblipslots);
     return (void *)buffer;
     
   } else if(calltype == FUNC_GET_VALUE ) {
@@ -2233,7 +2234,7 @@ extern int editor_vehiclespawn_current;
 void *editor_vehspawns(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    sprintf(buffer, " (%i/%i)", vehspawns_cur, var_vehiclesworldspawnslots);
+    snprintf(buffer, sizeof(buffer), " (%i/%i)", vehspawns_cur, var_vehiclesworldspawnslots);
     return (void *)buffer;
 
   } else if( calltype == FUNC_GET_VALUE ) {

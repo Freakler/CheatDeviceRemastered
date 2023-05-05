@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <malloc.h>
-#include <psprtc.h>
 #include <math.h>
 
 #include "utils.h"
@@ -41,7 +40,7 @@ int logPrintf(const char *text, ...) {
   va_end(list);
 
   char buffer[128];
-  sprintf(buffer, "%s%s", basefolder, file_log);
+  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, file_log);
 
   SceUID fd = sceIoOpen(buffer, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
   if( fd >= 0 ) {
@@ -54,7 +53,7 @@ int logPrintf(const char *text, ...) {
 }
 
 int doesFileExist(const char* path) {
-  SceUID dir = sceIoOpen(path, PSP_O_RDONLY, 0777); 
+  SceUID dir = sceIoOpen(path, PSP_O_RDONLY, 0777);
   if( dir >= 0 ) {
     sceIoClose(dir);
     #ifdef LOG
@@ -313,9 +312,7 @@ int getHighMemBound() { // thx Acid_Snake :)
 }
 
 int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius) {
-  if( sqrt(pow(a-x, 2) + pow(b-y, 2) + pow(c-z, 2)) <= radius ) // let the sphere's centre coordinates be (x,y,z) and its radius r, then point (a,b,c) is in the sphere if (a−x)^2 + (b−y)^2 + (c−z)^2 < r^2.
-    return 1; // true
-  return 0; // false
+  return (sqrt(pow(a-x, 2) + pow(b-y, 2) + pow(c-z, 2)) <= radius);
 }
 
 float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2) {

@@ -1441,9 +1441,7 @@ u32 memory_low  = 0x08400000; // memory bounds
 u32 memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C000000) dyanmic overwritten in module_start
 
 int isInMemBounds(int valtocheck) {
-  if( valtocheck >= memory_low && valtocheck < memory_high )     
-    return 1; // yes 
-  return 0; // no  
+  return (valtocheck >= memory_low && valtocheck < memory_high);
 }
 
 void setBit(int adr, char bit, char boolean) { // 1bit
@@ -2000,9 +1998,8 @@ char *getPedNameByID(char id) { // 0x00 "Toni Cipriani", 0x17 "Mona Lott"...
 
 
 int getPedObjectIsActive(int ped_base_adr) {
-  if( isInMemBounds(getInt(ped_base_adr+0x40)) ) // ugly way, todo
-    return 1; // true
-  return 0; // false
+  // Better way of doing it? Don't need "getInt" func for it
+  return isInMemBounds(*(int*)(ped_base_adr+0x40));
 }
 
 int getPedActiveObjects(int peds_base, int peds_max, int peds_size) {
@@ -2015,9 +2012,8 @@ int getPedActiveObjects(int peds_base, int peds_max, int peds_size) {
 }
 
 int checkPedIsInWater(int ped_base_adr) { // todo VCS
-  if( (getByte(ped_base_adr + 0x142) & 0x10) != 0 ) // just like ghidra (LCS)
-    return 1; // true
-  return 0;
+  return ((getByte(ped_base_adr + 0x142) & 0x10) != 0); // true
+
 }
 
 int getPedDrowning(int ped_base_adr) { // not in car!
@@ -2027,9 +2023,6 @@ int getPedDrowning(int ped_base_adr) { // not in car!
     return getInt(ped_base_adr + 0x8b4) == 0x44; // 0x3A if drowned ?! 
   return 0;
 }
-
-
-
 
 /// Vehicles ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2190,21 +2183,15 @@ int isVehicleInWater(int vehicle_base_adr) { // TODO VCS
 }
 
 int isVehicleInAir(int vehicle_base_adr) {
-  if( getByte(vehicle_base_adr+ (LCS ? 0x10A : 0x136)) == 0 ) 
-    return 1;
-  return 0;
+  return getByte(vehicle_base_adr+ (LCS ? 0x10A : 0x136)) == 0;
 }
 
 int isVehicleUpsideDown(int vehicle_base_adr) {
-  if( getFloat(pcar+0x28) < -0.85 ) // -0.00 would be on side of car | -1 completely on roof
-    return 1; 
-  return 0;
+  return getFloat(pcar+0x28) < -0.85; // -0.00 would be on side of car | -1 completely on roof
 }
 
 int getVehicleObjectIsActive(int vehicle_base_adr) {
-  if( getShort(vehicle_base_adr+0x62) != -1 && getInt(vehicle_base_adr+0x1C) == 0 ) // ugly? okay? todo? 
-    return 1; // true
-  return 0; // false
+  return (getShort(vehicle_base_adr+0x62) != -1 && getInt(vehicle_base_adr+0x1C) == 0); // ugly? okay? todo? 
 }
 
 int getVehicleActiveObjects(int vehicle_base, int vehicle_max, int vehicle_size) {
@@ -2227,10 +2214,7 @@ void setBmxJumpMultiplier(float value) { // VCS only
 
 /// world objects ///////////
 int getWorldObjectIsActive(int worldobjs_base_adr) {
-  if( getInt(worldobjs_base_adr+0x64) == 0x42C80000 ) { // ugly? okay? todo? 
-    return 1; // true
-  }
-  return 0; // false
+  return getInt(worldobjs_base_adr+0x64) == 0x42C80000;
 }
 
 int getWorldActiveObjects(int worldobjs_base, int worldobjs_max, int worldobjs_size) {
@@ -2282,15 +2266,11 @@ void setPoliceChaseHeliModel(short model) {
   
 /// Pickups ///////////
 int getPickupIsActive(int pickup_base_adr) { // slot is in use (some pickups are one-time pickups others like weapons respawn after some time! -> slot is still used although nothing in world)
-  if( getByte(pickup_base_adr+(LCS?0x32:0x38)) != 0 ) // just like ghidra
-    return 1; // true
-  return 0; // false
+  return getByte(pickup_base_adr+(LCS?0x32:0x38)) != 0; // just like ghidra
 }
 
 int getPickupIsCollectable(int pickup_base_adr) { // slot is used by pickup currently collectable in world
-  if( getInt(pickup_base_adr+(LCS?0x14:0x20)) != 0 || getInt(pickup_base_adr+(LCS?0x18:0x24)) != 0 ) // just like ghidra
-    return 1; // true
-  return 0; // false
+  return getInt(pickup_base_adr+(LCS?0x14:0x20)) != 0 || getInt(pickup_base_adr+(LCS?0x18:0x24)) != 0; // just like ghidra
 }
 
 short getPickupID(int pickup_base_adr) {
@@ -2298,7 +2278,7 @@ short getPickupID(int pickup_base_adr) {
 }
 
 float getPickupCoordX(int pickup_base_adr) {
-  return getFloat(pickup_base_adr+0x00);
+  return getFloat(pickup_base_adr);
 }
 
 float getPickupCoordY(int pickup_base_adr) {
@@ -2390,21 +2370,15 @@ VCS: FUN_0000a03c      iGp000016dc ptr + 0x270
 */
 
 int getMapiconIsActive(int mapicon_base_adr) { // aka. slot is in use (there can be inactive mission icons though!!)
-  if( (LCS && getByte(mapicon_base_adr+0x33) != 0) || (VCS && getByte(mapicon_base_adr+0x28) != 0)  ) {  // TODO like ghidra 
-    return 1; // true
-  }
-  return 0; // false
+  return (LCS && getByte(mapicon_base_adr+0x33) != 0) || (VCS && getByte(mapicon_base_adr+0x28) != 0); // TODO like ghidra
 }
 
 int getMapiconIsVisible(int mapicon_base_adr) { // aka. something is displayed! TODO like ghidra 
-  if( getMapiconIsActive(mapicon_base_adr) && 
+  return ( getMapiconIsActive(mapicon_base_adr) && 
       ((LCS && getByte(mapicon_base_adr+0x3E) > 0)  // display bool: 1 = arrow, 2 = on map, 3 = both
       || (VCS && (getBit(mapicon_base_adr+0x20, 5) ||  // show arrow
             getBit(mapicon_base_adr+0x20, 6)       // display on map
-            ) ) ) ) {  
-    return 1; // true
-  }
-  return 0; // false
+            ) ) ) );
 }
 
 int getMapiconsActiveObjects(int mapicon_base, int mapicons_max, int mapicons_size) {
@@ -2452,7 +2426,7 @@ char *getMapiconTypeName(int mapicon_base_adr) { // TODO VCS
 }
 
 int getMapiconColor(int mapicon_base_adr) {
-  return getInt(mapicon_base_adr+0x00);
+  return getInt(mapicon_base_adr);
 }
 
 char *getMapiconColorName(int mapicon_base_adr) {
@@ -2934,9 +2908,7 @@ int getVehicleWorldSpawnSlotAddress(int slot) { // slots start with 0!!!
   
 int isCustomParkedVehicleSpawnViaSlot(int slot) {
   u32 addr = getVehicleWorldSpawnSlotAddress(slot);
-  if( getByte(addr + (LCS ? 0x2B : 0x2F)) == 0x42 ) // my custom flag indicator
-    return 1;
-  return 0;
+  return (getByte(addr + (LCS ? 0x2B : 0x2F)) == 0x42);
 }  
 
 int createParkedVehicleSpawnViaSlot(int slot, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock) {
@@ -3227,9 +3199,7 @@ float getGamespeed() {
 }
 
 int isPedCrouching(int ped) {
-  if( getInt( pplayer + (LCS ? 0x198 : 0x1CC)) & (LCS ? 0x10 : 0x2000) ) // my check
-    return 1;
-  return 0;
+  return getInt( pplayer + (LCS ? 0x198 : 0x1CC)) & (LCS ? 0x10 : 0x2000);
 }
 
 void TaskDuck(int ped) {
