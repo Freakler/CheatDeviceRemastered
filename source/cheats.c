@@ -23,6 +23,7 @@
 #include <systemctrl.h>
 #include <math.h>
 #include <malloc.h>
+#include <psprtc.h>
 
 #include "cheats.h"
 #include "functions.h"
@@ -9403,12 +9404,13 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
  *
  * Completion:  99%
  * 
- * Todo:  - sync real time to game from time to time :P (but needs checking if clock cheat on/off changed etc..)
+ * Todo:  - 
  *        
  * Notes:   might break missions ?!
  **************************************************************************************************************************************/
 void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
   static int status;
+  static pspTime timetest;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -9431,6 +9433,11 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
           setClockMultiplier(60000); // real time
           status = 1;
         }        
+
+      } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
+		/// Set PSP SystemTime as Gametime
+        sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
+        setClockTime((char)timetest.hour, (char)timetest.minutes, (char)timetest.seconds);  
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         //int gp_tmp = (LCS ? 0 : gp);

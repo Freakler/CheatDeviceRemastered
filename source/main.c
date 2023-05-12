@@ -322,7 +322,7 @@ const Menu_pack main_menu[] = {
   
   {"World"                            , CAT_WORLD   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x280A , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
   {"Time: "                           , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AC , OFF , world_time           , "CROSS = Freeze/Unfreeze time"      , "LEFT/RIGHT = Adjust hour"           , "> Adjust the Worlds time and freeze it completely." },
-  {"Realtime Clock"                   , CAT_WORLD   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x19C1 , OFF , world_realtimeclock  , "CROSS = Enable/Disable Cheat"      , ""                                   , "> A day will last 24 real hours! (also sets System's real time)" },
+  {"Realtime Clock"                   , CAT_WORLD   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x19C1 , OFF , world_realtimeclock  , "CROSS = Enable/Disable Cheat"      , "SQUARE = Sync with System time"     , "> A day will last 24 real hours!" },
   {"Weather: "                        , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E2F , OFF , world_weather        , "CROSS = Lock/Unlock weather"       , "LEFT/RIGHT = Select weather"        , "> Adjust and lock the Weather so it won't ever change again."},
   {"Water Level: "                    , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x173A , OFF , world_waterlevel     , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust height"         , "> Adjust the oceans water level height."},
   {"Gravity: "                        , CAT_WORLD   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x115C , OFF , world_gravity        , "CROSS = Reverse-button On/Off"     , "LEFT/RIGHT = Adjust gravity"        , "> Adjust gravity intensity and hold 'UP' button in-game to reverse it!" },
@@ -598,8 +598,8 @@ int usercheats_draw() {
   drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? 194.0f : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
   /// draw the top menu
-  snprintf(buffer, sizeof(buffer)_top, "File: %s", filename);
-  snprintf(buffer, sizeof(buffer)_top2, "%d of %d", usercheat_dirno+1, cur_dirno);
+  snprintf(buffer_top, sizeof(buffer_top), "File: %s", filename);
+  snprintf(buffer_top2, sizeof(buffer_top2), "%d of %d", usercheat_dirno+1, cur_dirno);
   if(usercheat_selector == 1) { // cursor in top menu (txt select)
     drawString(buffer_top, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_ON);
     drawString(buffer_top2, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+400.0f, y, COLOR_CHEAT_ON);
@@ -2556,16 +2556,16 @@ int editor_draw() {
       editor_block_current = editor_vehicleobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: ", editor_block_current+1, editor_blocks, getVehicleID(editor_base_adr)); // block menu
+        sprintf(buffer_top0, "Slot: %i/%i      ID: %i    Name: ", editor_block_current+1, editor_blocks, getVehicleID(editor_base_adr)); // block menu
         
-        snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s%s", buffer_top0, buffer_top1);
+          sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
+        sprintf(buffer_top0, "%s%s", buffer_top0, buffer_top1);
         
         editor_draw_lower = 1; // there is a Vehicle here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active Vehicle here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2637,10 +2637,10 @@ int editor_draw() {
       snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i", editor_garageslot_current+1 );
       if( getGarageVehicleSlotIsActive(editor_base_adr) ){ // vehicle id for detecting if slot is used
         ///print vehicle name
-        /*snprintf(buffer, sizeof(buffer)_top1, "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        /*snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          snprintf(buffer, sizeof(buffer)_top1, "%s", getGxtIdentifierForVehicleViaID(getShort(editor_base_adr))); // ..use the GXT identifier-name then
-        snprintf(buffer, sizeof(buffer)_top0, "%s     '%s'", buffer_top0, buffer_top1);*/
+          snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getShort(editor_base_adr))); // ..use the GXT identifier-name then
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s     '%s'", buffer_top0, buffer_top1);*/
         editor_draw_lower = 1; // allowed
     
       } else { 
@@ -2655,21 +2655,21 @@ int editor_draw() {
       editor_block_current = editor_vehiclespawn_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleWorldSpawnSlotIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i", editor_block_current+1, editor_blocks, getInt(editor_base_adr)); // block menu
+        sprintf(buffer_top0, "Slot: %i/%i      ID: %i", editor_block_current+1, editor_blocks, getInt(editor_base_adr)); // block menu
         
         ///add vehicle name
-        snprintf(buffer_top0, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s    Name: %s", buffer_top0, buffer_top1);
+          sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
+        sprintf(buffer_top0, "%s    Name: %s", buffer_top0, buffer_top1);
         
         ///add custom created indicator
         if( isCustomParkedVehicleSpawnViaSlot(editor_block_current) )
-          snprintf(buffer_top0, sizeof(buffer_top0), "%s    (custom)", buffer_top0);
+          sprintf(buffer_top0, "%s    (custom)", buffer_top0);
           
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -4876,10 +4876,10 @@ int hexeditor_draw() {
     drawString("R + SQUARE = Zero 4 Bytes",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
     drawString("R + TRIANGLE = Teleport xyz", ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
     drawString("SELECT = Cycle Baseadr.",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
-    #endif
     #ifdef HEXMARKERS
     drawString("R + CROSS = Mark selected",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
     #endif
+	#endif
   }
   
   
