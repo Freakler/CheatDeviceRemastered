@@ -39,6 +39,7 @@
 #define USERSCRIPTS // (~19KB)
 #define HEXEDITOR // (~30KB)
 #define CONFIG // (~8KB)
+#define HEXMARKERS // (~4KB)
 
 //#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed
@@ -146,7 +147,6 @@ enum {
   CAT_COUNTER // my little counter (must be last)
 };
 
-
 void draw();
 void stopMenu();
 void closeMenu();
@@ -216,15 +216,17 @@ int editbyte_create();
 int editbyte_draw();
 int editbyte_ctrl();
 
+int hexeditor_create(int hexadr, int hexmode, int lowbound, int highbound, const char *infostring);
+int hexeditor_draw();
+int hexeditor_ctrl();
+#endif
+
+#ifdef HEXMARKERS
 void hex_marker_add(u32 address);
 int hex_marker_check(u32 address);
 void hex_marker_addx(u32 address, int size);
 void hex_marker_remove(u32 address);
 void hex_marker_clear();
-
-int hexeditor_create(int hexadr, int hexmode, int lowbound, int highbound, const char *infostring);
-int hexeditor_draw();
-int hexeditor_ctrl();
 #endif
 
 #endif

@@ -23,7 +23,6 @@
 #include <systemctrl.h>
 #include <math.h>
 #include <malloc.h>
-#include <psprtc.h>
 
 #include "cheats.h"
 #include "functions.h"
@@ -394,7 +393,7 @@ u32 saveprefix   = -1;
       if( getFloat(pplayer+0x38) < test[0]-0.4f )
         setFloat(pplayer+0x38, test[0]-0.4f);  
       
-      sprintf(buffer, "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
+      snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
       
       
@@ -439,7 +438,7 @@ u32 saveprefix   = -1;
   void (*testfunc)(int ide, int wheel_no, uint *vectors); 
   void testfunc_patched(int ide, int wheel_no, uint *vectors) { //FUN_0007243c_CVehicleModelInfo_GetWheelPosn
     //char buffer[256]; 
-    //sprintf(buffer, "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
+    //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
     //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
       
     logPrintf("ide: 0x%08X, wheel: %d, vectors: 0x%08X", ide, wheel_no, vectors);
@@ -2290,7 +2289,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x00187400: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x00187404: 0x8C84A81C '....' - lw         $a0, -22500($a0)
     *******************************************************************/
-    global_m_pVehicleName = (_lh(addr+0x0) * 0x10000) + (int16_t)_lh(addr+0x4); 
+    global_m_pVehicleName = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> global_m_pVehicleName", global_m_pVehicleName-text_addr, global_m_pVehicleName); // DAT_0035a81c_m_pVehicleName
     #endif
@@ -2446,7 +2445,7 @@ void FUN_test_patched() {
 void (*testfuncv)(int a, int b); 
 void testfuncv_patched(int a, int b) {
   //char buffer[256]; 
-  //sprintf(buffer, "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
+  //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
   //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
       
   logPrintf("a: 0x%08X, b: 0x%08X", a, b);
@@ -3888,11 +3887,11 @@ extern char buffer[256];
 void drawMemoryUsage() {
   char sizestr[16];
   getSizeString(sizestr, sceKernelTotalFreeMemSize());
-  sprintf(buffer, "sceKernelTotalFreeMemSize = %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "sceKernelTotalFreeMemSize = %s", sizestr);
   drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 20.0f, RED);
 
   getSizeString(sizestr, sceKernelMaxFreeMemSize());
-  sprintf(buffer, "sceKernelMaxFreeMemSize = %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "sceKernelMaxFreeMemSize = %s", sizestr);
   drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 35.0f, RED);
 
 
@@ -3903,15 +3902,15 @@ void drawMemoryUsage() {
   drawString("main", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 40.0f, WHITE);
 
   getSizeString(sizestr, getInt(_main));
-  sprintf(buffer, "total: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "total: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 50.0f, RED);
 
   getSizeString(sizestr, FUN_0029febc(_main));
-  sprintf(buffer, "free: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "free: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 60.0f, RED);
 
   getSizeString(sizestr, FUN_0029fed4(_main));
-  sprintf(buffer, "largest: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "largest: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 70.0f, RED);
 
 
@@ -3919,15 +3918,15 @@ void drawMemoryUsage() {
   drawString("streaming", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 90.0f, WHITE);
 
   getSizeString(sizestr, getInt(_streaming));
-  sprintf(buffer, "total: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "total: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 100.0f, RED);
 
   getSizeString(sizestr, FUN_0029febc(_streaming));
-  sprintf(buffer, "free: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "free: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 110.0f, RED);
 
   getSizeString(sizestr, FUN_0029fed4(_streaming));
-  sprintf(buffer, "largest: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "largest: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 120.0f, RED);
 
 
@@ -3935,15 +3934,15 @@ void drawMemoryUsage() {
   drawString("volatile", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 140.0f, WHITE);
 
   getSizeString(sizestr, getInt(_volatile));
-  sprintf(buffer, "total: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "total: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 150.0f, RED);
 
   getSizeString(sizestr, FUN_0029febc(_volatile));
-  sprintf(buffer, "free: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "free: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 160.0f, RED);
 
   getSizeString(sizestr, FUN_0029fed4(_volatile));
-  sprintf(buffer, "largest: %s", sizestr);
+  snprintf(buffer, sizeof(buffer), "largest: %s", sizestr);
   drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 170.0f, RED);
 }
 #endif
@@ -4337,7 +4336,7 @@ void achievements() {
   
   for(i = 0; i < achievement_size; i++) { // loop achievements list
     if( achievement[i].unlocked == 2 ) { // check for "just unlocked"
-      sprintf(buffer, "~w~%s (%d/%d) ~n~%s", au, achievements_getDone(), achievement_size, achievement[i].title);
+      snprintf(buffer, sizeof(buffer), "~w~%s (%d/%d) ~n~%s", au, achievements_getDone(), achievement_size, achievement[i].title);
       achievement[i].unlocked = 1; // set "was displayed"
       goto triggerachievement; // trigger it then!
     }
@@ -4677,7 +4676,7 @@ void freecam(int calltype, int keypress, int defaultstatus) {
         freecam_create();
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         
         hex_marker_addx(global_camera + (LCS ? 0x340 : 0x90), sizeof(float)); // camera_x
@@ -4695,7 +4694,8 @@ void freecam(int calltype, int keypress, int defaultstatus) {
         hex_marker_addx(global_camera + (LCS ? 0x368 : 0xD8), sizeof(float)); // cam_coord_z2
         
         hex_marker_addx(global_camera + (LCS ? 0xCC : 0x798 ), sizeof(float)); // in vehicle camera mode (used to unbind cam)
-
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(global_camera, 1, global_camera, memory_high, "> camera location");
         #endif
       }
@@ -4892,19 +4892,19 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
           drawString("General", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
           
             /// mod_text_addr
-            sprintf(buffer, "mod_text_addr = 0x%08X", mod_text_addr);
+            snprintf(buffer, sizeof(buffer), "mod_text_addr = 0x%08X", mod_text_addr);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE);
             
             /// mod_text_size
-            sprintf(buffer, "mod_text_size = 0x%08X", mod_text_size);
+            snprintf(buffer, sizeof(buffer), "mod_text_size = 0x%08X", mod_text_size);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, WHITE);
             
             /// mod_data_size
-            sprintf(buffer, "mod_data_size = 0x%08X", mod_data_size);
+            snprintf(buffer, sizeof(buffer), "mod_data_size = 0x%08X", mod_data_size);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, WHITE);
             
             /// Global Pointer Register
-            sprintf(buffer, "$gp = 0x%08X (0x%08X)", gp, gp-mod_text_addr);
+            snprintf(buffer, sizeof(buffer), "$gp = 0x%08X (0x%08X)", gp, gp-mod_text_addr);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE);
                 
 
@@ -4912,61 +4912,61 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
           drawString("Globals", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
         
             /// gametimer
-            sprintf(buffer, "gametimer = %i", gametimer);
+            snprintf(buffer, sizeof(buffer), "gametimer = %i", gametimer);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, YELLOW);
             
             /// weather globals
-            if( LCS ) sprintf(buffer, "weather: %i, %i, %i", getShort(global_weather),      getShort(global_weather + 0x2),      getShort(global_weather + 0x84) );
-            if( VCS ) sprintf(buffer, "weather: %i, %i, %i", getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp) );
+            if( LCS ) snprintf(buffer, sizeof(buffer), "weather: %i, %i, %i", getShort(global_weather),      getShort(global_weather + 0x2),      getShort(global_weather + 0x84) );
+            if( VCS ) snprintf(buffer, sizeof(buffer), "weather: %i, %i, %i", getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, YELLOW);
           
             /// global_currentisland
-            sprintf(buffer, "island = %i", island);
+            snprintf(buffer, sizeof(buffer), "island = %i", island);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, YELLOW);
         
             /// global_systemlanguage
-            sprintf(buffer, "language = %i", language);
+            snprintf(buffer, sizeof(buffer), "language = %i", language);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, YELLOW);
         
             /// global_ismultiplayer
-            sprintf(buffer, "multiplayer = %i", multiplayer);
+            snprintf(buffer, sizeof(buffer), "multiplayer = %i", multiplayer);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, YELLOW);
         
         
-            //sprintf(buffer, "DAT_0035a288: 0x%X", getInt(mod_text_addr + 0x035a288) );
+            //snprintf(buffer, sizeof(buffer), "DAT_0035a288: 0x%X", getInt(mod_text_addr + 0x035a288) );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 70.0f, CYAN);
-            //sprintf(buffer, "DAT_0035a28c: 0x%X", getInt(mod_text_addr + 0x035a28C) );
+            //snprintf(buffer, sizeof(buffer), "DAT_0035a28c: 0x%X", getInt(mod_text_addr + 0x035a28C) );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 90.0f, CYAN);
-            //sprintf(buffer, "DAT_00354b9c: 0x%X (max)", getInt(mod_text_addr + 0x0354b9c) );
+            //snprintf(buffer, sizeof(buffer), "DAT_00354b9c: 0x%X (max)", getInt(mod_text_addr + 0x0354b9c) );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 110.0f, CYAN);
-            //sprintf(buffer, "DAT_00354ba0: 0x%X (media max)", getInt(mod_text_addr + 0x0354ba0) );
+            //snprintf(buffer, sizeof(buffer), "DAT_00354ba0: 0x%X (media max)", getInt(mod_text_addr + 0x0354ba0) );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 130.0f, CYAN);
         
         } else if( i == 2 ) { // pplayer
           drawString("pplayer", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
           
           if( pplayer > 0 ) {
-            sprintf(buffer, "pplayer = 0x%08X", pplayer); // player ped handle
+            snprintf(buffer, sizeof(buffer), "pplayer = 0x%08X", pplayer); // player ped handle
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE);
           
-            sprintf(buffer, "Mass = %.2f, %.2f", getFloat(pplayer+0xD0), getFloat(pplayer+0xD4));
+            snprintf(buffer, sizeof(buffer), "Mass = %.2f, %.2f", getFloat(pplayer+0xD0), getFloat(pplayer+0xD4));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, CYAN);
             
-            if( LCS ) sprintf(buffer, "animation: 0x%0X", getByte(pplayer + 0x250) );
-            if( VCS ) sprintf(buffer, "animation: 0x%0X", getByte(pplayer + 0x894) );
+            if( LCS ) snprintf(buffer, sizeof(buffer), "animation: 0x%0X", getByte(pplayer + 0x250) );
+            if( VCS ) snprintf(buffer, sizeof(buffer), "animation: 0x%0X", getByte(pplayer + 0x894) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, CYAN);
             
         
-            sprintf(buffer, "health = %.2f", getPedHealth(pplayer) );
+            snprintf(buffer, sizeof(buffer), "health = %.2f", getPedHealth(pplayer) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, CYAN);
             
-            sprintf(buffer, "armor = %.2f", getPedArmor(pplayer) );
+            snprintf(buffer, sizeof(buffer), "armor = %.2f", getPedArmor(pplayer) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, CYAN);
             
-            sprintf(buffer, "facing = %.2f", getPedFacingDirectionInDegree(pplayer) );
+            snprintf(buffer, sizeof(buffer), "facing = %.2f", getPedFacingDirectionInDegree(pplayer) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, CYAN);
             
-            sprintf(buffer, "drowning = %d", getPedDrowning(pplayer) );
+            snprintf(buffer, sizeof(buffer), "drowning = %d", getPedDrowning(pplayer) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, CYAN);
           }
       
@@ -4975,28 +4975,28 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
           drawString("pcar", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
           
           if( pcar ) {        
-            sprintf(buffer, "pcar: 0x%08X", pcar); // player car handle
+            snprintf(buffer, sizeof(buffer), "pcar: 0x%08X", pcar); // player car handle
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE);
             
-            sprintf(buffer, "pcar_id = 0x%02X", pcar_id);
+            snprintf(buffer, sizeof(buffer), "pcar_id = 0x%02X", pcar_id);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, AZURE);
               
-            sprintf(buffer, "pcar_type = 0x%02X", pcar_type);
+            snprintf(buffer, sizeof(buffer), "pcar_type = 0x%02X", pcar_type);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, AZURE);
               
-            sprintf(buffer, "isVehicleInWater = %X", isVehicleInWater( pcar ) );
+            snprintf(buffer, sizeof(buffer), "isVehicleInWater = %X", isVehicleInWater( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE);
             
-            sprintf(buffer, "isVehicleInAir = %X", isVehicleInAir( pcar ) );
+            snprintf(buffer, sizeof(buffer), "isVehicleInAir = %X", isVehicleInAir( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, AZURE);
             
-            sprintf(buffer, "isVehicleUpsideDown = %X", isVehicleUpsideDown( pcar ) );
+            snprintf(buffer, sizeof(buffer), "isVehicleUpsideDown = %X", isVehicleUpsideDown( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, AZURE);
             
-            sprintf(buffer, "health = %.2f", getVehicleHealth( pcar ) );
+            snprintf(buffer, sizeof(buffer), "health = %.2f", getVehicleHealth( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, AZURE);
             
-            sprintf(buffer, "speed = %.2f", getVehicleSpeed( pcar ) );
+            snprintf(buffer, sizeof(buffer), "speed = %.2f", getVehicleSpeed( pcar ) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 160.0f, AZURE);
           } 
       
@@ -5004,14 +5004,14 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
         } else if( i == 4 ) { // tests
           drawString("tests", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
           
-            //sprintf(buffer, "TESTVAL1 = 0x%08X -> 0x%08X", TESTVAL1, *(int*)(TESTVAL1+gp) );
+            //snprintf(buffer, sizeof(buffer), "TESTVAL1 = 0x%08X -> 0x%08X", TESTVAL1, *(int*)(TESTVAL1+gp) );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 120.0f, WHITE);
             
-            //sprintf(buffer, "TESTVAL1 = 0x%08X", TESTVAL1 );
+            //snprintf(buffer, sizeof(buffer), "TESTVAL1 = 0x%08X", TESTVAL1 );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 120.0f, WHITE);
-            //sprintf(buffer, "TESTVAL2 = 0x%08X", TESTVAL2 );
+            //snprintf(buffer, sizeof(buffer), "TESTVAL2 = 0x%08X", TESTVAL2 );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 140.0f, WHITE);
-            //sprintf(buffer, "TESTVAL3 = 0x%08X", TESTVAL3 );
+            //snprintf(buffer, sizeof(buffer), "TESTVAL3 = 0x%08X", TESTVAL3 );
             //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 160.0f, WHITE);
 
         } else {
@@ -5460,9 +5460,11 @@ void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus, int de
         // todo - unstuck player
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(addr_randompedcheat, sizeof(int));
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(addr_randompedcheat, 0, memory_low, memory_high, "");
         #endif
       } 
@@ -5563,9 +5565,11 @@ void *gamespeed(int calltype, int keypress, int defaultstatus, int defaultval) {
         setGamespeed(1.0f);
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS 
         hex_marker_clear();
         hex_marker_addx(global_timescale + gp_, sizeof(float));
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(global_timescale + gp_, 0, memory_low, memory_high, "> timescale");
         #endif
       } 
@@ -5633,9 +5637,11 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
         i--;
         if( status ) goto fpscap_enable;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS 
         hex_marker_clear();
         hex_marker_addx(addr_fpsCap, sizeof(short)); // hour value
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(addr_fpsCap, 0, memory_low, memory_high, "> fps cap");
         #endif
       } break;
@@ -5755,11 +5761,13 @@ void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) 
         closeMenu();
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS 
         hex_marker_clear();  
         hex_marker_addx(pobj+0x30, sizeof(float));
         hex_marker_addx(pobj+0x34, sizeof(float));
         hex_marker_addx(pobj+0x38, sizeof(float));
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(pobj+0x30, 0, memory_low, memory_high, "> world xyz coord");
         #endif
       }
@@ -6633,9 +6641,11 @@ void *disable_textures(int calltype, int keypress, int defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         status = 1 - status;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         hex_marker_addx(render + gp_, sizeof(int)); // health value
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(render + gp_, 0, memory_low, memory_high, "> Texturetable of WRLD");
         #endif
       } break;
@@ -6677,11 +6687,13 @@ void *godmode(int calltype, int keypress, int defaultstatus) {
           status = 0;
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         hex_marker_addx(pplayer+(LCS ? 0x4B8 : 0x4E4), sizeof(float)); // health value
         hex_marker_addx(pplayer+(LCS ? 0x4BC : 0x4E8), sizeof(float)); // armor value
         hex_marker_addx(pplayer+(LCS ? 0x6DC : 0x6B0), sizeof(int));   // on-fire boolean
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(pplayer + (LCS ? 0x4B8 : 0x4E4), 0, memory_low, memory_high, "> pplayer health & armor");
         #endif
       } break;
@@ -6774,10 +6786,12 @@ void *invisible(int calltype, int keypress, int defaultstatus) {
           status = 0;
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS 
         hex_marker_clear();  
         if( LCS ) hex_marker_addx(pplayer+0x19A, sizeof(char));
         if( VCS ) hex_marker_addx(pplayer+0x4C, sizeof(short));
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(pplayer + (LCS ? 0x19A : 0x4C), 0, memory_low, memory_high, "> pplayer invisible");
         #endif
       } break;
@@ -6819,10 +6833,12 @@ void *ignored(int calltype, int keypress, int defaultstatus) {
           status = 0;
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
         int temp = pplayer + (LCS ? 0x82E : 0x90E); 
+        #ifdef HEXMARKERS  
         hex_marker_clear();  
         hex_marker_addx(temp, sizeof(char));
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(temp, 0, memory_low, memory_high, "");
         #endif
       } break;
@@ -7032,10 +7048,12 @@ void *heavy_player(int calltype, int keypress, int defaultstatus) {
         } else status = 1;
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS  
         hex_marker_clear();  
         hex_marker_addx(pplayer+0xD0, sizeof(float));
         hex_marker_addx(pplayer+0xD4, sizeof(float));
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(pplayer+0xD0, 0, memory_low, memory_high, "> pplayer mass");
         #endif
       } break;
@@ -7500,7 +7518,7 @@ void *automaticflipover(int calltype, int keypress, int defaultstatus) {
           if( getFloat(pcar+0x28) < -0.85 ) { //-0.00 would be on side of car | -1 completely on roof
             
             /// invert the following vectors
-            setFloat(pcar + 0x00, 0 - getFloat(pcar+0x00));
+            setFloat(pcar + 0x00, 0 - getFloat(pcar));
             setFloat(pcar + 0x04, 0 - getFloat(pcar+0x04));
             setFloat(pcar + 0x08, 0 - getFloat(pcar+0x08));
             
@@ -7571,14 +7589,16 @@ void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
           status = 0;
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
         if( pcar ) {
           int temp = pcar + (VCS ? 0x27c : 0x268);
+          #ifdef HEXMARKERS
           hex_marker_clear();  
           hex_marker_addx(temp, sizeof(float));
+          #endif
+          #ifdef HEXEDITOR  
           hexeditor_create(temp, 0, memory_low, memory_high, "> vehicle health value");
+          #endif
         }
-        #endif
       } 
       break;
       
@@ -7627,14 +7647,16 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
           status = 0;
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
         if( pcar ) {
           int temp = pcar + (LCS ? 0x294 : 0x2A8);
+          #ifdef HEXMARKERS
           hex_marker_clear();  
           hex_marker_addx(temp, sizeof(char));
+          #endif
+          #ifdef HEXEDITOR  
           hexeditor_create(temp, 0, memory_low, memory_high, "> vehicle lock doors");
+          #endif
         }
-        #endif
       } 
       break;
       
@@ -7737,7 +7759,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         
         /// always keep car level #OK
           //flip vehicle forward/backward + up/down with analog
-          setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar+0x0) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
+          setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
           setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+0x4) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
           setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+0x8) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
 
@@ -7821,16 +7843,16 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
           static char buffery[16];
           static char bufferz[16];
           
-          sprintf(bufferx, "x: %.2f", Xdeg);
-          sprintf(buffery, "y: %.2f", Ydeg);
-          sprintf(bufferz, "z: %.2f", Zdeg);
+          snprintf(buffer, sizeof(buffer)x, "x: %.2f", Xdeg);
+          snprintf(buffer, sizeof(buffer)y, "y: %.2f", Ydeg);
+          snprintf(buffer, sizeof(buffer)z, "z: %.2f", Zdeg);
           
           drawString(bufferx, ALIGN_LEFT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED );
           drawString(buffery, ALIGN_LEFT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 40.0f, RED );
           drawString(bufferz, ALIGN_LEFT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 60.0f, RED );
           
  
-         setFloat(pcar+0x00, cos(Ydeg) * cos(Zdeg));
+         setFloat(pcar, cos(Ydeg) * cos(Zdeg));
          setFloat(pcar+0x04, sin(Xdeg) * sin(Ydeg) * cos(Zdeg) - cos(Xdeg) * sin(Zdeg));
          setFloat(pcar+0x08, cos(Xdeg) * sin(Ydeg) * cos(Zdeg) + sin(Xdeg) * sin(Zdeg));
 
@@ -8020,9 +8042,11 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
         status = 1;
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS  
         hex_marker_clear();
         hex_marker_addx(addr_worldgravity, sizeof(short));
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create(addr_worldgravity, 0, memory_low, memory_high, "> world gravity");
         #endif
       }
@@ -8155,15 +8179,17 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
         break;
         
       case FUNC_CHANGE_VALUE:
-        #ifdef HEXEDITOR  
         if( keypress == PSP_CTRL_TRIANGLE ) {
           int temp = pcar + (LCS ? 0x1F0 : 0x224);
+          #ifdef HEXMARKERS
           hex_marker_clear();
           hex_marker_addx(temp, (LCS ? sizeof(char) : sizeof(int)));
+          #endif
+          #ifdef HEXEDITOR  
           hexeditor_create(temp, 0, memory_low, memory_high, "> Primary Color");
+          #endif
           break;
         }
-        #endif
         
         if( VCS ) {
           if( keypress == PSP_CTRL_CROSS ) { // CROSS
@@ -8230,15 +8256,17 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
         break;
         
       case FUNC_CHANGE_VALUE:
-        #ifdef HEXEDITOR  
         if( keypress == PSP_CTRL_TRIANGLE ) {
           int temp = pcar + (LCS ? 0x1F1 : 0x228);
+          #ifdef HEXMARKERS
           hex_marker_clear();
           hex_marker_addx(temp, (LCS?sizeof(char):sizeof(int)));
+          #endif
+          #ifdef HEXEDITOR  
           hexeditor_create(temp, 0, memory_low, memory_high, "> Secondary Color");
+          #endif
           break;
         }
-        #endif
           
         if( VCS ) {
           if( keypress == PSP_CTRL_CROSS ) { // CROSS
@@ -8377,9 +8405,11 @@ void *traffic_density(int calltype, int keypress, int defaultstatus) {
         setInt(global_trafficdensity + gp_, 0x3f800000); // float = 1.0
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         hex_marker_addx(global_trafficdensity + gp_, sizeof(float));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_trafficdensity+ gp_, 0, memory_low, memory_high, "> traffic density multiplier");
         #endif
       }
@@ -8477,9 +8507,11 @@ void *peds_density(int calltype, int keypress, int defaultstatus) {
         setInt(global_peddensity + gp_, 0x3f800000); // float = 1.0
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         hex_marker_addx(global_peddensity + gp_, sizeof(float));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_peddensity + gp_, 0, memory_low, memory_high, "> ped density multiplier");
         #endif
       }
@@ -8548,16 +8580,24 @@ void *onmission(int calltype, int keypress, int defaultstatus, int defaultval) {
           option = 1 - option;
   
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
-        hex_marker_clear();  
-        if( offsetinspace == 0 ) {
-          hex_marker_addx(offsetinspace, sizeof(char));
-          hexeditor_create(offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
-        } else if( offsetinspace > 0 && scriptspace > 0 ) {
-          hex_marker_addx(scriptspace + offsetinspace, sizeof(char));
-          hexeditor_create(scriptspace + offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
-        }
+        #ifdef HEXMARKERS
+        hex_marker_clear(); 
         #endif
+        if( offsetinspace == 0 ) {
+          #ifdef HEXMARKERS
+          hex_marker_addx(offsetinspace, sizeof(char));
+          #endif
+          #ifdef HEXEDITOR  
+          hexeditor_create(offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
+          #endif
+        } else if( offsetinspace > 0 && scriptspace > 0 ) {
+          #ifdef HEXMARKERS
+          hex_marker_addx(scriptspace + offsetinspace, sizeof(char));
+          #endif
+          #ifdef HEXEDITOR
+          hexeditor_create(scriptspace + offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
+          #endif
+        }
       }
       
       //if( status == 0 && offsetinspace > 0 ) {
@@ -8609,9 +8649,11 @@ void *freeze_timers(int calltype, int keypress, int defaultstatus) {
         setByte(global_freezetimers, 0); // normal
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         hex_marker_addx(global_freezetimers, sizeof(char));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_freezetimers, 0, memory_low, memory_high, "> freeze timers");
         #endif
       }
@@ -8665,7 +8707,7 @@ void *peds_killaiming(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_APPLY:
       base = peds_base;
-      //sprintf(buffer, "Debug: %i, 0x%08X = 0x%08X", peds_max, base, pobj);
+      //snprintf(buffer, sizeof(buffer), "Debug: %i, 0x%08X = 0x%08X", peds_max, base, pobj);
       //setTimedTextbox(buffer, 7.00f);
       for( j = 0; j < peds_max; j++, base += var_pedobjsize ) {
         if( getInt(base+(LCS?0x6BC:0x81C)) == pobj ) { // can be pplayer or pcar -> use pobj
@@ -8777,12 +8819,12 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
           if( curped == base ) {
 
             /// Health
-            sprintf(buffer1, "%.2f", getPedHealth(base));
+            snprintf(buffer1, sizeof(buffer1), "%.2f", getPedHealth(base));
             drawString(buffer1, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 100.0f, (LCS?LCS_HEALTH:VCS_HEALTH) );
             
             /// Armor
             if( getPedArmor(base) > 0.00f ) {
-              sprintf(buffer2, "%.2f", getPedArmor(base));
+              snprintf(buffer2, sizeof(buffer2), "%.2f", getPedArmor(base));
               drawString(buffer2, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 85.0f, (LCS?LCS_ARMOR:VCS_ARMOR) );
             }
           }
@@ -8844,13 +8886,15 @@ void *max_health(int calltype, int keypress) {
         setMaxHealthMultiplier(healthval);
         setPedHealthAndArmor(pplayer, (float)(healthval), -1);
       }
-      #ifdef HEXEDITOR  
       if( keypress == PSP_CTRL_TRIANGLE ) {
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_maxhealthmult, sizeof(char));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_maxhealthmult, 0, memory_low, memory_high, "> max health multiplier");
+        #endif
       }
-      #endif
       break;
   }
   return NULL;
@@ -8892,13 +8936,15 @@ void *max_armor(int calltype, int keypress) {
         setMaxArmorMultiplier(armorval);
         setPedHealthAndArmor(pplayer, -1, (float)armorval);
       }
-      #ifdef HEXEDITOR  
       if( keypress == PSP_CTRL_TRIANGLE ) {
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_maxhealthmult, sizeof(char));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_maxarmormult, 0, memory_low, memory_high, "> max armor multiplier");
+        #endif
       } 
-      #endif
       break;
   }
   return NULL;
@@ -8938,13 +8984,15 @@ void *unlimited_sprinting(int calltype, int keypress, int defaultstatus) {
           status = 0;
         } else status = 1;
       }
-      #ifdef HEXEDITOR  
       if( keypress == PSP_CTRL_TRIANGLE ) {
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_unlimtedsprint, sizeof(char));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_unlimtedsprint, 0, memory_low, memory_high, "> unlimted sprinting bool");
+        #endif
       } 
-      #endif
       break;
       
     case FUNC_SET: // todo - not used currently
@@ -9010,9 +9058,11 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
         status = 1;
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         hex_marker_addx(global_maxwantedlevel+gp_, sizeof(char));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_maxwantedlevel+gp_, 0, memory_low, memory_high, "> maximum wanted level possible");
         #endif
       } break;
@@ -9245,12 +9295,14 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval) 
         setClockTime(current_hour, 0x00, 0x00);
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
         //int gp_tmp = (LCS ? 0 : gp);
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_clockmultiplier + gp_ + 0x4, sizeof(char)); // hour value
         hex_marker_addx(global_clockmultiplier + gp_ + 0x5, sizeof(char)); // minute value
         hex_marker_addx(global_clockmultiplier + gp_ + 0x6, sizeof(char)); // second value
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_clockmultiplier+ gp_ + 0x4, 0, memory_low, memory_high, "> game clock");
         #endif
       } break;
@@ -9327,9 +9379,11 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
           state = 1 - state;
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_bridgeState, sizeof(int));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_bridgeState, 0, memory_low, memory_high, "> bridge state");
         #endif
       } 
@@ -9355,7 +9409,6 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
  **************************************************************************************************************************************/
 void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
   static int status;
-  static pspTime timetest;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -9363,13 +9416,6 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
     
     case FUNC_APPLY:
       setClockMultiplier(60000); //real time
-      
-      /// set again if game changed it (eg. after save/load game)
-      sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
-      if( world_time(FUNC_GET_STATUS, 0, 0, 0) == 0 && (getClockMinutes() != (char)timetest.minutes || getClockHours() != (char)timetest.hour) ) {
-        //logPrintf("[INFO] %i: real time set!", getGametime());
-        setClockTime((char)timetest.hour, (char)timetest.minutes, (char)timetest.seconds);
-      }
       break;
 
     case FUNC_CHANGE_VALUE:
@@ -9383,19 +9429,16 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
         } else {
           realtime_enable:
           setClockMultiplier(60000); // real time
-          
-          /// Set PSP SystemTime as Gametime
-          sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
-          setClockTime((char)timetest.hour, (char)timetest.minutes, (char)timetest.seconds);
-          
           status = 1;
         }        
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
         //int gp_tmp = (LCS ? 0 : gp);
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_clockmultiplier + gp_, sizeof(int));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_clockmultiplier+ gp_, 0, memory_low, memory_high, "> game time multiplier");
         #endif
       } 
@@ -9450,10 +9493,12 @@ void *no_cheating_warning(int calltype, int keypress, int defaultstatus) {
         status = 0;
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_cheatusedboolean + gp_, sizeof(char));
         hex_marker_addx(global_cheatusedcounter + gp_, sizeof(int));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_cheatusedboolean+ gp_, 0, memory_low, memory_high, "> cheatcode used boolean (IN THIS PLAY SESSION)");
         #endif
       } break;
@@ -10975,12 +11020,12 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     
     case FUNC_GET_STRING: 
       if( j == 0 ) { // pickups
-        sprintf(retbuf, "Pickups - %s (%i)", (LCS ? lcs_pickups[i].name : vcs_pickups[i].name), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
+        snprintf(retbuf, sizeof(retbuf), "Pickups - %s (%i)", (LCS ? lcs_pickups[i].name : vcs_pickups[i].name), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
           
       } else if( j == 1 ) { // weapons in range
         if( status ) 
-          sprintf(retbuf, "Weapons in range (%i)", res);
-        else sprintf(retbuf, "Weapons in range");
+          snprintf(retbuf, sizeof(retbuf), "Weapons in range (%i)", res);
+        else snprintf(retbuf, sizeof(retbuf), "Weapons in range");
         //res = 0; // if apply loop not updating
           
       } else if( j == 2 ) { // stunt jumps
@@ -11080,9 +11125,11 @@ void *camera_centered(int calltype, int keypress, int defaultstatus) {
         status = 1 - status;
     
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_camera + (LCS ? 0x1AA : 0x113), sizeof(float)); // not ulux
+        #endif
+        #ifdef HEXEDITOR
         hexeditor_create( global_camera + (LCS ? 0x1AA : 0x113), 0, memory_low, memory_high, "> centered");
         #endif
       } 
@@ -11148,9 +11195,11 @@ void *fieldofview(int calltype, int keypress, int defaultstatus, int defaultval)
         setFieldOfView(70.0f);
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_camera + (LCS ? 0x254 : 0x198), sizeof(float));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create( global_camera + (LCS ? 0x254 : 0x198), 0, memory_low, memory_high, "> FOV");
         #endif
       } 
@@ -11191,12 +11240,14 @@ void *camera_topdown(int calltype, int keypress, int defaultstatus) {
         status = 1 - status;
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_camera + (LCS ? 0x0D4 : 0x854), sizeof(float));
         hex_marker_addx(global_camera + (LCS ? 0x13C : 0x890), sizeof(float));
         hex_marker_addx(global_camera + (LCS ? 0x24C : 0x0E8), sizeof(float)); // not ulux
         hex_marker_addx(global_camera + (LCS ? 0x250 : 0x194), sizeof(float)); // not ulux
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create( global_camera + (LCS ? 0x24C : 0x194), 0, memory_low, memory_high, "> TopDown camera");
         #endif
       }
@@ -11241,9 +11292,11 @@ void *dev_flag(int calltype, int keypress, int defaultstatus) {
           status = 1;
         }
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();  
         hex_marker_addx(global_developerflag+(VCS?gp:0), sizeof(char));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_developerflag+(VCS?gp:0), 0, memory_low, memory_high, "> developer flag");
         #endif
       }
@@ -11394,9 +11447,11 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
         mult = 1.0f;
       
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(global_bmxjumpmult + gp_, sizeof(float));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(global_bmxjumpmult + gp_, 0, memory_low, memory_high, "> global_bmxjumpmult");
         #endif
       } 
@@ -11480,9 +11535,11 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
         status = 1;
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) { // RIGHT
-        #ifdef HEXEDITOR  
+        #ifdef HEXMARKERS
         hex_marker_clear();
         hex_marker_addx(addr_policechaseheli_2, sizeof(short));
+        #endif
+        #ifdef HEXEDITOR  
         hexeditor_create(addr_policechaseheli_2, 0, memory_low, memory_high, "> addr_policechaseheli_2");
         #endif
       } 

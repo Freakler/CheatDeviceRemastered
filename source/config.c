@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pspkernel.h> // VS Code is annoying and keeps spamming "u32" undefined errors
 
 #include "main.h"
 #include "cheats.h"
@@ -676,7 +677,7 @@ int writeCategoryHeader(SceUID file, char *magic) {
   //logPrintf("category %s", magic);
   char buffer[16];
   memset(buffer, 0, sizeof(buffer));
-  sprintf(buffer, "%s", magic);
+  snprintf(buffer, sizeof(buffer), "%s", magic);
   return sceIoWrite(file, buffer, sizeof(buffer)); 
 }
 
@@ -740,7 +741,7 @@ int getValueFromConfigFor(SceUID file, char * magic, short id) {
   int _value = 0;
   
   for( i = 0; i < entries; i++ ) {
-    //logPrintf("%i of %i", i+1, entries);
+    //logPrintf("%i/%i", i+1, entries);
     sceIoRead(file, &_id, sizeof(_id));
     
     if( type == 1) {
