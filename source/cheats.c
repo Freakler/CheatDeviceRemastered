@@ -3813,6 +3813,18 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     return 1;
   }
   
+  /// pre-load garage vehicles when player spawns (this "feature" is what causes the famous garage bug)
+  if( _lw(addr + 0x1C) == 0x2A440005 && _lw(addr - 0x24) == 0x34040000 ) { // 0x002D0EF4
+    /*******************************************************************
+     *  0x002D0EF4: 0x0C05A8CE '....' - jal        sub_0016A338
+    *******************************************************************/
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> 'garage bug fix'", addr-text_addr, addr);
+    #endif
+    _sw(0x00000000, addr); // nop function
+    return 1;
+  }
+  
   #ifdef PREVIEW
   /// wind
   if( _lw(addr + 0x14) == 0x3C053F33 && _lw(addr + 0x2C) == 0x28850015  ) { // 0x002F8E04

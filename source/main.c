@@ -5504,11 +5504,7 @@ void applyOnce() { //called by hijacked game function
     removeIPLObjectsCollision(0x1C5); // disables ocean blockades by removing object collision (inside buildings.ipl id: 453)
   }
   
-  
   /// fix invisible garage door in Staunton
-  
-  
-  /// fix VCS garage bug
   
   
   /// heli height limit
