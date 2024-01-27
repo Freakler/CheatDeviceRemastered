@@ -1235,10 +1235,12 @@ const pickups_pack lcs_pickups[] = {
   {"Briefcase (closed)",  0x206, 0x03,  0x00 },
   {"Briefcase (open)",    0xFAE, 0x03,  0x00 }, // with drugs
   {"Drug Package",        0x208, 0x03,  0x00 }, // GTA3 hidden package & in beta
+  {"Drug Package Big",    0x231, 0x03,  0x00 }, // hidden package in Sindacco Chronicles
   {"TopSecret Folder",    0xF03, 0x03,  0x00 }, // used in LC Confidential
   {"Rockstar Bag (black)",0xFA1, 0x03,  0x00 }, // used as hidden package in beta
   {"Rockstar Bag (brown)",0xFA3, 0x03,  0x00 }, // used as hidden package in beta
   {"Hidden Package",      0xFE9, 0x03,  0x00 },  
+  
   
   // {"Cooking Pod",      0xFA2, 0x03,   0x00 },  
 }; int lcs_pickupsize = (sizeof(lcs_pickups)/sizeof(pickups_pack))-1;  
