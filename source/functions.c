@@ -2127,7 +2127,8 @@ float getVehicleWheelCamber(int vehicle_base_adr) {
 }
 
 float getVehicleSpeed(int vehicle_base_adr) {
-  return getFloat(vehicle_base_adr + (LCS ? 0x124 : 0x108));
+  //return getFloat(vehicle_base_adr + (LCS ? 0x124 : 0x108)); // calculated by game (up/down counts too) (has some weird multiplier?! (probably gamespeed) Which is also different for LCS vs VCS?!?! its ALSO not consistent and is calculated wrong with higher speeds sometimes...)
+  return sqrt((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144))) + (getFloat(pcar+(LCS?0x78:0x148)) * getFloat(pcar+(LCS?0x78:0x148)))); // doing it myself then!! SQRT( x^2 + y^2 + z^2 )
 }
 
 char getVehicleCurrentGear(int vehicle_base_adr) {

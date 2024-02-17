@@ -4252,7 +4252,7 @@ void achievements() {
       switch(achievement[i].id) {
         
         case 0x100: /// "Speedfreak"
-          if( pcar && getVehicleSpeed(pcar) > 6.00f ) { // 1.00f = 50 kmh, 2.00 = 100 kmh, 6.00 = 300 kmh
+          if( pcar && getVehicleSpeed(pcar) > 6.00f ) { // 6.00 = ?? kmh
             achievement[i].unlocked = 2; // unlocked
           } break;
         
@@ -4284,7 +4284,7 @@ void achievements() {
           } break;
         
         case 0x202: /// "Back to the future"
-          if( LCS && pcar_id == 187 && lcs_getVehicleColorBase(pcar) == 13 && lcs_getVehicleColorStripe(pcar) == 0 && ((getVehicleSpeed(pcar) * 100) / 2 * 0.621371) >= 88 ) { // V8 Ghost or Deluxo (same ID! :D)
+          if( LCS && pcar_id == 187 && lcs_getVehicleColorBase(pcar) == 13 && lcs_getVehicleColorStripe(pcar) == 0 && ((getVehicleSpeed(pcar) * 100) * 0.621371) >= 88 ) { // V8 Ghost or Deluxo (same ID! :D)
             achievement[i].unlocked = 2; // unlocked
           } break;
               
@@ -4819,7 +4819,7 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
     case FUNC_APPLY:
       if( pcar ) { 
         /// speed
-        sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), (getFloat(pcar + (LCS ? 0x124 : 0x108)) * 100) / 2 * (i ? 0.621371 : 1)); 
+        sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), (getVehicleSpeed(pcar) * 100) * (i ? 0.621371 : 1)); // kmh is default in the og CD (under coordinates)
         
         /// gears
         sprintf(gear, "Gear: %X", getVehicleCurrentGear( pcar ) );
@@ -4997,19 +4997,19 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
             snprintf(buffer, sizeof(buffer), "pcar_type = 0x%02X", pcar_type);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, AZURE);
               
-            snprintf(buffer, sizeof(buffer), "isVehicleInWater = %X", isVehicleInWater( pcar ) );
+            snprintf(buffer, sizeof(buffer), "isVehicleInWater = %X", isVehicleInWater(pcar));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE);
             
-            snprintf(buffer, sizeof(buffer), "isVehicleInAir = %X", isVehicleInAir( pcar ) );
+            snprintf(buffer, sizeof(buffer), "isVehicleInAir = %X", isVehicleInAir( pcar ));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, AZURE);
             
-            snprintf(buffer, sizeof(buffer), "isVehicleUpsideDown = %X", isVehicleUpsideDown( pcar ) );
+            snprintf(buffer, sizeof(buffer), "isVehicleUpsideDown = %X", isVehicleUpsideDown(pcar) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, AZURE);
             
-            snprintf(buffer, sizeof(buffer), "health = %.2f", getVehicleHealth( pcar ) );
+            snprintf(buffer, sizeof(buffer), "health = %.2f", getVehicleHealth( pcar ));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, AZURE);
             
-            snprintf(buffer, sizeof(buffer), "speed = %.2f", getVehicleSpeed( pcar ) );
+            snprintf(buffer, sizeof(buffer), "speed = %.2f", getVehicleSpeed(pcar));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 160.0f, AZURE);
           } 
       
@@ -7291,9 +7291,9 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
         if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
           
           /// SPEED
-          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * (boost * thrust) );
-          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * (boost * thrust) );
-          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * (boost * thrust) );  
+          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * ((boost+1) * thrust) );
+          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * ((boost+1) * thrust) );
+          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * ((boost+1) * thrust) );
         }
       }        
       break;
@@ -7687,7 +7687,10 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
  * 
  * Todo:     - restore default wheel camber value from handling file in memory
  * 
- * Notes:     
+ * Notes:
+
+     The "handling" is still not great. It should take car mass and handling values into account.
+     Also not instant apply force but calc new direction from momentum and front of car vectors. (LCS: 0x90 = 0x70s & 0x10s & mass)
  
  LCS: vehicle calc turn & move when on ground
  --------------------------------------------
@@ -7701,7 +7704,7 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
 void *hover_vehicle(int calltype, int keypress, int defaultstatus) { 
   static int status = 0;
   static int lastcar = 0; // for backup
-  static float speed;
+  static float speed, xyspeed;
   static float wheels; // for backup
   static int hovermation = 2;
   static int hovermation_time = 0;
@@ -7738,11 +7741,9 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         wheels = 0;
         lastcar = 0;
       }
-      
       break;
         
     case FUNC_APPLY:
-      
       if( !pcar && lastcar ) { // not in car anymore -> reset old car's values
         setVehicleGravityApplies(lastcar, TRUE); // restore gravity for vehicle
         setVehicleWheelCamber(lastcar, wheels);  // restore wheels camber to default value
@@ -7751,47 +7752,47 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       }
       
       if( pcar && !lastcar ) { // in new car -> backup car's values (this will be done only once)
-        wheels = getVehicleWheelCamber( pcar );    
+        wheels = getVehicleWheelCamber(pcar);
         lastcar = pcar;
       }
       
       if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) { // in vehicle!
-        /// read out speed
-        speed = getVehicleSpeed( pcar ); // calculated by game (up/down counts too)
+        /// get speed
+        speed = getVehicleSpeed(pcar);
+        xyspeed = sqrt((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144)))); // SQRT( x^2 + y^2 )
         
         /// disable world gravity for vehicle
         setVehicleGravityApplies(pcar, FALSE);
         
         /// lower wheels slowly
         if( pcar_type == VEHICLE_CAR ) { // car
-          if( getVehicleWheelCamber( pcar ) < 3.0000 ) { // 0x40400000 same as edison
+          if( getVehicleWheelCamber(pcar) < 3.0000 ) { // 0x40400000 same as edison
             setVehicleWheelCamber(pcar, getVehicleWheelCamber( pcar ) + 0.05); 
           }
         }
-        
-        
+
         /// always keep car level #OK
-          //flip vehicle forward/backward + up/down with analog
+          // flip vehicle forward/backward + up/down with analog
           setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
           setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+0x4) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
           setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+0x8) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
 
-          //flip adjustments + ///roll vehicle left/right  + left/right leaning with analog
+          // flip adjustments + ///roll vehicle left/right  + left/right leaning with analog
           setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar+(LCS?0x80:0x70)) + getFloat(pcar+0x10) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
           setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+(LCS?0x84:0x74)) + getFloat(pcar+0x14) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
           setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+(LCS?0x88:0x78)) + getFloat(pcar+0x18) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
           
           
         /// turning left/right #OK
-        setFloat(pcar + (LCS?0x88:0x78), -0.05 * xstick); // spin vehicle around Z world axis (slow turning -0.02 | -0.05 faster turning)
+        setFloat(pcar + (LCS?0x88:0x78), -0.04 * xstick); // spin vehicle around Z world axis (slow turning -0.02 | -0.05 faster turning)
         
         ///manual hovering up/down
-        if( current_buttons & PSP_CTRL_UP   && flag_menu_running == 0 ) 
-          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))+0.02); //0x98 vector when hitting object
-        if( current_buttons & PSP_CTRL_DOWN && flag_menu_running == 0 ) {
-          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))-0.02); //0x98 vector when hitting object
+        if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) 
+          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) + 0.02); // 0.015 for LCS?
+        if( (current_buttons & PSP_CTRL_DOWN) && ((xyspeed < 0.1f) || (current_buttons & PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) {
+          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) - 0.02);
         }
-        
+         
         /// hovering animation #could be smoother
         if( speed < 0.05 ) { 
           if( hovermation == 1 ) { // animation up
@@ -7806,79 +7807,90 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
             } else setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))-0.001);
           }
         }
-        ///////////////////////////////////////////////////////////
-        
-        /// thrust, reverse & automatically slowing down
-        if( current_buttons & PSP_CTRL_CROSS && flag_menu_running == 0 ) {  ///forward
-          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * 0.012 );
-          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * 0.012 );
-          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * 0.024 );
-          
-        } else if( current_buttons & PSP_CTRL_SQUARE && flag_menu_running == 0 ) { ///reverse
-          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - getFloat(pcar+0x10) * 0.008 );
-          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - getFloat(pcar+0x14) * 0.008 );
-          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - getFloat(pcar+0x18) * 0.020 );
-        
-        } else { /// stopping in air (because there is no ground that would do that normally)  
-          
-          if( speed > 0.01 ) { /// stopping depending on speed (the slower the faster)
-            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - (getFloat(pcar+(LCS?0x70:0x140)) * (0.01/speed)) ); // 0.0003 the higher the faster
-            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - (getFloat(pcar+(LCS?0x74:0x144)) * (0.01/speed)) );
-            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - (getFloat(pcar+(LCS?0x78:0x148)) * (0.01/speed)) );
-          }
-        }
-        
-        if( current_buttons & PSP_CTRL_RTRIGGER && flag_menu_running == 0 ) { /// handbrake
-          if( speed > 0.01 ) { /// stopping depending on speed (the slower the faster)
-            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - (getFloat(pcar+(LCS?0x70:0x140)) * (0.04/speed)) ); // 0.0003 the higher the faster
-            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - (getFloat(pcar+(LCS?0x74:0x144)) * (0.04/speed)) );
-            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - (getFloat(pcar+(LCS?0x78:0x148)) * (0.02/speed)) );
-          }
-        }
-
-
-      //testfunc( pcar );
-      /*
-        // waterbottles VCS cheat 
-        static float Xdeg, Ydeg, Zdeg;
-
-         if(!Zdeg)
-          Zdeg = getFloat(pplayer+0x8d0);
-         
-         Zdeg += xstick * 0.15; //turning
-         if(ystick) {
-          Xdeg = getFloat( pcar ) * ystick;
-          Ydeg = getFloat(pcar+4) * ystick;
-         } else Ydeg = Xdeg = 0; 
-         
-         
-          static char bufferx[16];
-          static char buffery[16];
-          static char bufferz[16];
-          
-          snprintf(buffer, sizeof(buffer)x, "x: %.2f", Xdeg);
-          snprintf(buffer, sizeof(buffer)y, "y: %.2f", Ydeg);
-          snprintf(buffer, sizeof(buffer)z, "z: %.2f", Zdeg);
-          
-          drawString(bufferx, ALIGN_LEFT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED );
-          drawString(buffery, ALIGN_LEFT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 40.0f, RED );
-          drawString(bufferz, ALIGN_LEFT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 60.0f, RED );
-          
- 
-         setFloat(pcar, cos(Ydeg) * cos(Zdeg));
-         setFloat(pcar+0x04, sin(Xdeg) * sin(Ydeg) * cos(Zdeg) - cos(Xdeg) * sin(Zdeg));
-         setFloat(pcar+0x08, cos(Xdeg) * sin(Ydeg) * cos(Zdeg) + sin(Xdeg) * sin(Zdeg));
-
-         setFloat(pcar+0x10, cos(Ydeg) * sin(Zdeg));
-         setFloat(pcar+0x14, sin(Xdeg) * sin(Ydeg) * cos(Zdeg) + cos(Xdeg) * cos(Zdeg));
-         setFloat(pcar+0x18, cos(Xdeg) * sin(Ydeg) * sin(Zdeg) - sin(Xdeg) * cos(Zdeg));
-
-         setFloat(pcar+0x20, -sin(Ydeg));
-         setFloat(pcar+0x24, sin(Xdeg) * cos(Ydeg));
-         setFloat(pcar+0x28, cos(Xdeg) * cos(Ydeg));
-      */        
-        
       
+        ///////////////////////////////////////////////////////////
+
+        if( !(current_buttons & PSP_CTRL_RTRIGGER) && flag_menu_running == 0 ) { /// "handbrake" keeps momentum (old style)
+          if( xyspeed > 0.1f ) { // to allow hover animation without force forward
+            if( getVehicleCurrentGear(pcar) > 0 ) { // not in reverse
+              /// keep the momentum in the direction the vehicle
+              setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+0x10) * speed);
+              setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+0x14) * speed);
+              setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+0x18) * speed);
+            } else {
+              /// keep the momentum in the reverse direction the vehicle
+              setFloat(pcar+(LCS?0x70:0x140), -getFloat(pcar+0x10) * speed);
+              setFloat(pcar+(LCS?0x74:0x144), -getFloat(pcar+0x14) * speed);
+              setFloat(pcar+(LCS?0x78:0x148), -getFloat(pcar+0x18) * speed);
+            }
+          }
+        }
+             
+        /// thrust, reverse & automatically slowing down (could also be done by setting lower/higher speed but I'd like to keep the "handbrake feature")
+        if( current_buttons & PSP_CTRL_CROSS && flag_menu_running == 0 ) {  /// forward
+          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * 0.010);
+          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * 0.010);
+          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * 0.022);
+          
+        } else if( current_buttons & PSP_CTRL_SQUARE && flag_menu_running == 0 ) { /// break & reverse
+          if( getVehicleCurrentGear(pcar) > 0 || speed < 0.5f ) { /// limit reverse speed
+            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - getFloat(pcar+0x10) * 0.02);
+            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - getFloat(pcar+0x14) * 0.02);
+            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - getFloat(pcar+0x18) * 0.05);
+          }
+        } else { /// stopping in air (because there is no ground that would do that normally)
+          if( speed > 0.01f ) { /// stopping depending on speed (the slower the faster)
+            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - (getFloat(pcar+(LCS?0x70:0x140)) * (0.01/speed))); // 0.0003 the higher the faster
+            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - (getFloat(pcar+(LCS?0x74:0x144)) * (0.01/speed)));
+            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - (getFloat(pcar+(LCS?0x78:0x148)) * (0.01/speed)));
+          }
+        }
+      
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+   /*
+        // LCS 0x70 moving currently
+        // LCS 0x80 turning / leaning currently
+        // LCS 0x90 moving to be applied
+        // LCS 0xA0 turning / leaning to be applied
+     
+        extern char buffer[256];
+     
+        snprintf(buffer, sizeof(buffer), "magicval: %.3f", magicval);
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 20.0f, RED);
+     
+        snprintf(buffer, sizeof(buffer), "00:  %.2f, %.2f, %.2f", getFloat(pcar+0x0), getFloat(pcar+0x4), getFloat(pcar+0x8));
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 40.0f, WHITE);
+     
+        snprintf(buffer, sizeof(buffer), "10:  %.2f, %.2f, %.2f", getFloat(pcar+0x10), getFloat(pcar+0x14), getFloat(pcar+0x18));
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 60.0f, WHITE);
+   
+        snprintf(buffer, sizeof(buffer), "20:  %.2f, %.2f, %.2f", getFloat(pcar+0x20), getFloat(pcar+0x24), getFloat(pcar+0x28));
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 80.0f, WHITE);
+   
+   
+        snprintf(buffer, sizeof(buffer), "70:  %.2f, %.2f, %.2f", getFloat(pcar+0x70), getFloat(pcar+0x74), getFloat(pcar+0x78));
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 110.0f, WHITE);
+   
+        snprintf(buffer, sizeof(buffer), "80:  %.2f, %.2f, %.2f", getFloat(pcar+0x80), getFloat(pcar+0x84), getFloat(pcar+0x88));
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 130.0f, WHITE);
+   
+        snprintf(buffer, sizeof(buffer), "90:  %.2f, %.2f, %.2f", getFloat(pcar+0x90), getFloat(pcar+0x94), getFloat(pcar+0x98));
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, WHITE);
+     
+        snprintf(buffer, sizeof(buffer), "A0:  %.2f, %.2f, %.2f", getFloat(pcar+0xA0), getFloat(pcar+0xA4), getFloat(pcar+0xA8));
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 170.0f, WHITE);
+       
+       
+        snprintf(buffer, sizeof(buffer), "speed (0x124): %.3f", speed);
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 190.0f, RED);
+ 
+        snprintf(buffer, sizeof(buffer), "xyspeed (calced): %.3f", xyspeed );
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 210.0f, RED);
+     
+        snprintf(buffer, sizeof(buffer), "xyzspeed (calced): %.3f", xyzspeed );
+        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 230.0f, RED);
+   */
+        ///////////////////////////////////////////////////////////////////////////////////////////////  
       }
       break;  
       
@@ -9447,7 +9459,7 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
         }        
 
       } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
-		/// Set PSP SystemTime as Gametime
+        /// Set PSP SystemTime as Gametime
         sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
         setClockTime((char)timetest.hour, (char)timetest.minutes, (char)timetest.seconds);  
 
@@ -11384,7 +11396,7 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
       for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) { 
         if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
           setVehicleMakePhysical(base);
-		  gather_helper(base, x, y, z);
+          gather_helper(base, x, y, z);
         }
       }
       /// Pedestrians

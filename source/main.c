@@ -41,7 +41,7 @@
   #include "minIni.h"
 #endif
 
-#define VERSION "v1.0g" // displayed in title
+#define VERSION "v1.0g2" // displayed in title
 
 PSP_MODULE_INFO("CheatDeviceRemastered", 0, 1, 0); // user
 
@@ -5484,7 +5484,11 @@ void applyOnce() { //called by hijacked game function
   #ifdef PREVIEW
   if( LCS ) {
     teleport(918, 194, 5); // Portland ferry area ocean ramp
-  }  
+  }
+  //if( VCS ) {
+  //  createParkedVehicleSpawnViaSlot(65, 187, -807.20f, -1187.13f, 12.0f, 300.0f,  -1,  -1,  0,  0); // Deluxo in front of Safehouse
+  //  teleport(-811, -1179.2, 14); // Bayshore
+  //}
   #endif
   
   /// make RC Cars drivable (this sets "model flag 2" in handling.cfg to "NO_DOORS")
