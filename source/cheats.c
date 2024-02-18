@@ -4818,8 +4818,8 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
       
     case FUNC_APPLY:
       if( pcar ) { 
-        /// speed
-        sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), (getVehicleSpeed(pcar) * 100) * (i ? 0.621371 : 1)); // kmh is default in the og CD (under coordinates)
+        /// speed (Example: "ESPRIT" 1.065 (fMaxVelocity) * 180 * 1.2 = 230 km/h as set in beta handling.cfg)  See: https://github.com/guard3/g3DTZ/blob/e22a1a2295fe136e702153aabb391453be9f6305/source/core/HandlingMgr.cpp#L13
+        sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), (getVehicleSpeed(pcar) * 180.0f * 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
         
         /// gears
         sprintf(gear, "Gear: %X", getVehicleCurrentGear( pcar ) );

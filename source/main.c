@@ -5079,9 +5079,9 @@ void draw() { // called by hijacked game function
   #endif
   
   /// add 'watermark'
-  #ifdef PREVIEW
+//  #ifdef PREVIEW
   drawString("PREVIEW", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, WHITE);
-  #endif
+//  #endif
   
 
   /// draw welcome message in textbox (only when menu autostart is disabled!)
