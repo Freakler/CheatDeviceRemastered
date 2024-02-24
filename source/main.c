@@ -893,7 +893,7 @@ int usercheats_draw() {
 int usercheats_ctrl() {
   if( usercheat_selector ) { // cursor in top menu (txt select)
     
-    if ( hold_buttons & PSP_CTRL_DOWN) {
+    if( hold_buttons & PSP_CTRL_DOWN ) {
       if( usercheat_draw_lower ) {
         usercheat_selector = 0; // switch to values
         //readtxtneeded = 1;
@@ -913,7 +913,7 @@ int usercheats_ctrl() {
       }
     }
   
-    if(  hold_buttons & PSP_CTRL_RIGHT ) { // next txt
+    if( hold_buttons & PSP_CTRL_RIGHT ) { // next txt
       if( usercheat_dirno < cur_dirno-1 ) {
         usercheat_dirno++;
         usercheat_options = 0;
@@ -2120,8 +2120,14 @@ int userscripts_ctrl() {
                         }
                       }
                       
+                      if( VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
+                        if( strcmp(token, "enable") == 0 ) {
+                          break; // ignore "enable 1"
+                        }
+                      }
+                      
                       // more? todo!
-
+                      
                     }
                   } else {
                     //logPrintf("empty arg string");
@@ -2374,11 +2380,11 @@ int userscripts_ctrl() {
           CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
           
           #if defined(LOG) || defined(USERSCRIPTLOG)
-          /*u8 tempbuffffff[128]; // quick temp printout (which also crashes for bigger scripts)
+          u8 tempbuffffff[128]; // quick temp printout (which also crashes for bigger scripts)
           memset(&tempbuffffff, 0, sizeof(tempbuffffff)); 
           for( i = 0; i < (pos < 128 ? pos : 128); i++ ) // otherwise crash of emulator
             sprintf(tempbuffffff, "%s %02X", tempbuffffff, script[i]);
-          logPrintf("\nSCRIPT:%s\n\n", tempbuffffff);*/
+          logPrintf("\nSCRIPT:%s\n\n", tempbuffffff);
           #endif  
           
           CustomScriptExecute(addr);
@@ -4879,7 +4885,7 @@ int hexeditor_draw() {
     #ifdef HEXMARKERS
     drawString("R + CROSS = Mark selected",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
     #endif
-	#endif
+   #endif
   }
   
   
@@ -5079,9 +5085,9 @@ void draw() { // called by hijacked game function
   #endif
   
   /// add 'watermark'
-//  #ifdef PREVIEW
+  #ifdef PREVIEW
   drawString("PREVIEW", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, WHITE);
-//  #endif
+  #endif
   
 
   /// draw welcome message in textbox (only when menu autostart is disabled!)
@@ -5256,6 +5262,10 @@ void draw() { // called by hijacked game function
       drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 140.0f, COLOR_VALUE);
       snprintf(buffer, sizeof(buffer), "%.0f", getPedFacingDirectionInDegree(pplayer) );
       drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 165.0f, COLOR_VALUE);
+     /* if( pcar ) { // beacause og CD
+         snprintf(buffer, sizeof(buffer), "%.0f", getVehicleSpeed(pcar) * 100 );
+         drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 190.0f, COLOR_VALUE);
+     } */
     }
   }
   

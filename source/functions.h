@@ -381,6 +381,8 @@ char *vcs_getNameForPedViaID(int id);
 
 char *getRadioStationName(int no);
 
+char *removeColor(char *string);
+
 
 /// Camera
 void setCameraCenterBehindPlayer();

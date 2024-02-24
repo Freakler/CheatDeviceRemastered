@@ -3149,16 +3149,18 @@ char *vcs_getNameForPedViaID(int id) { // eg: returns "PHCOL" for entered id 0x9
   return getString( getInt(idetable+(id*0x4)) + 0xE4, 0 ); //name is inside IDE
 }
 
-
+char *removeColor(char *string) { // fix - sindacco chronicles gave radio stations a custom color ("~Y~XYZ")
+  return string[0] == '~' ? &string[3] : string;
+}
 
 char *getRadioStationName(int no) { // for LCS: 0 = Head Radio, 1 = Double Clef, .... 10 = Radio Off
   static char buf[32];
   
   if( no == var_radios ) // highest possible is "radio off"
-    return getGxtTranslation("FEA_NON");
+    return removeColor(getGxtTranslation("FEA_NON"));
   else if ( no < var_radios && no >= 0 ){
     sprintf(buf, "FEA_FM%i", no);
-    return getGxtTranslation(buf);
+    return removeColor(getGxtTranslation(buf));
   } else { // error
     sprintf(buf, "#%i", no);
     return buf;

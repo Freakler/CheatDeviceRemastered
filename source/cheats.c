@@ -9849,25 +9849,24 @@ void *pickup_spawner(int calltype, int keypress, int defaultstatus, int defaultv
  * 
  * Notes:     
  ******************************************************************************************************************************************************/
-char *lcs_playerModels[] = {  //must be lowerCase and 8 chars max
-  "plr", 
-  "plr2",    // 128
-  "plr3",    // 129
-  "plr4",    // 130
-  "plr5",    // 131
-  "plr6",    // 132
-  "plr7",    // 133
-  "plr8",    // 134
-  "plr9",    // 135
-  "plr10",   // 136
-  "plr11",   // 137
-  "plr12",   // 138
-  "plr13", 
-  "plr14", 
-  "plr15",
-  "plr16",
+char *lcs_playerModels[] = {  // 8 chars max
+  "plr",     //     "Leone Suit"
+  "plr2",    // 128 "Lawyer"
+  "plr3",    // 129 "Casual"
+  "plr4",    // 130 "Chauffeur"
+  "plr5",    // 131 "Overall"
+  "plr6",    // 132 "Tuxedo"
+  "plr7",    // 133 "Avengin Angels"
+  "plr8",    // 134 "The King of Rockn Roll"
+  "plr9",    // 135 "Cocks Mascot"
+  "plr10",   // 136 "Boxer Shorts"
+  "plr11",   // 137 "Super Hero"
+  "plr12",   // 138 "Dragon"
+  "plr13",   //
+  "plr14",   //
+  "plr15",   //
+  "plr16",   //
   
-  "player",   // --
   "sal_01",   // 65
   "ray_01",   // 66
   
@@ -9879,7 +9878,7 @@ char *lcs_playerModels[] = {  //must be lowerCase and 8 chars max
   
   "grdang2",  // 78
   "m_hole",   // 79
-  "franfor",  // 80 crash
+//"franfor",  // 80 crash
   "kazuki",   // 81
   "paulie",   // 82
   "hopper",   // 83
@@ -9904,29 +9903,32 @@ char *lcs_playerModels[] = {  //must be lowerCase and 8 chars max
   "thug_01",  // 106
   "thug_02",  // 107
   
-//  "camp_man", // 109 error
-//  "camp_wom", // 110 error
+//"camp_man", // 109 error
+//"camp_wom", // 110 error
   "miguel",   // 111
   "deliass",  // 112
   "hobo_01",  // 113
   
-//  "cop",    // 114 error
-//  "swat",   // 115
-//  "fbi",    // 116
-//  ...  
-//  "hitman",  // 122
-//  "gang01",  // 123
-//  "gang02",  // 124
+//"cop",      // 114 error
+//"swat",     // 115
+//"fbi",      // 116
+//...
+//"hitman",   // 122
+//"gang01",   // 123
+//"gang02",   // 124
   
   "holejog",  // 125
   "chauff",   // 126
   
   "philc",    // 139
-  "grease",   // 140 crash
+  "grease",   // 140
   "gun_ass",  // 141
   "jd_shot",  // --
   "bodybag",  // --
   "sal_con",  // 142
+  
+  "PLAYER",   // early "PLR" (beta naming)
+  "TONI_C1",  // early "PLR3" (beta naming) "the dummy"
 }; // VCS via IDE (can even load all peds this way)
 
 /// only special chars for LCS and very experimental
@@ -9969,13 +9971,13 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
         if( VCS ) 
           while( getAddressOfIdeSlotForID(i) <= 0 ) // no address means empty IDE slot
             i--;
-        
+      
       } else if( keypress == PSP_CTRL_RIGHT && i < (LCS ? list_size : 0xA7) ) { // RIGHT (using getLastIdeOfType(MODELINFO_PED) will make SetActorSkinTo crash the game ?!?!?!?!?)
         i++;
         if( VCS ) 
           while( getAddressOfIdeSlotForID(i) <= 0 ) // no address means empty IDE slot
             i++;
-        
+      
       } break;
       
     case FUNC_SET:
@@ -9985,7 +9987,7 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
       if( i > (LCS ? list_size : 0xA7) ) 
         i = 0; // fix for bad config value
       break;
-  }  
+  }
   
   return NULL;
 }
@@ -9996,7 +9998,6 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
  * Completion:   95 %
  * 
  * Todo:  - 
- *        - exclude those crashing?
  *        - check for blocking vehicle and unload (like debug version)
  * 
  * Notes:     
@@ -10004,8 +10005,9 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
   static short id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
-  
-  static int status = 0; 
+  static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI, AEROPL, DODO
+  static short blacklist_vcs[] = { 0x118 }; // AEROPL
+  static int i = 0, status = 0;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -10023,10 +10025,26 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && id > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
         id--;
-        
+      #ifndef DEBUG
+      for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+         if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+              id--;
+            i = 0;
+           }
+        } if( id < getFirstIdeOfType(MODELINFO_VEHICLE) ) id+=2; // first is blacklisted, go to second
+      #endif
+      
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
-        
+        #ifndef DEBUG
+      for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+         if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+              id++;
+            i = 0;
+           }
+        } if( id > getLastIdeOfType(MODELINFO_VEHICLE) ) id-=2; // last is blacklisted, go to pre-last
+      #endif
+      
       } else if( keypress == PSP_CTRL_SQUARE ) { // "become vehicle"
         
         if( !pcar ) {
