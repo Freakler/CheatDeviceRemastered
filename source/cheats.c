@@ -3825,6 +3825,18 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     return 1;
   }
   
+  /// addr_heliheight (also planes)
+  if( _lh(addr) == 0x42A0 && _lh(addr + 0x18) == 0xBF80 && _lw(addr + 0xC) == 0x00000000 ) {  // 0x002FDDA0
+    /*******************************************************************
+     *  0x002FDDA0: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0
+    *******************************************************************/
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
+    #endif
+    addr_heliheight = addr; // 0x002FDDA0
+    return 1;
+  }
+  
   #ifdef PREVIEW
   /// wind
   if( _lw(addr + 0x14) == 0x3C053F33 && _lw(addr + 0x2C) == 0x28850015  ) { // 0x002F8E04

@@ -5521,10 +5521,8 @@ void applyOnce() { //called by hijacked game function
   /// fix invisible garage door in Staunton
   
   
-  /// heli height limit
-  if( LCS ) {
-    setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
-  }
+  /// heli height limit (also planes in VCS)
+  setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
   
   ///Custom Vehicle Spawns in World
   if( LCS ) {

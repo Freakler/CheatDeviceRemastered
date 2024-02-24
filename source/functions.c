@@ -2247,10 +2247,7 @@ int getVehicleBackseatRightHandle(int vehicle_base_adr) {
 
 void setHeliHeightLimit(float height) { // LCS only currently  
   int local = getInt((int)&height) >> 16; // only upper part of float needed eg: 80.0f = 0x42A0
-  
-  if( LCS ) // 80.0f is default
-    setShort(addr_heliheight, local); 
-    
+  setShort(addr_heliheight, local); // 80.0f is default
   clearICacheFor(addr_heliheight); // needed for PPSSPP
 }
 
