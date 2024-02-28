@@ -174,7 +174,7 @@ const Menu_pack main_menu[] = {
   /// char *path                        cat           type               LC      VC      SP      MP     conf_id  def_stat  void *value        char *msg1                          char *msg2                              char *desc
   
   // // DEBUG // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
-
+  
   #ifdef DEBUG
   {"Debug Monitor: "                  , CAT_DEBUG   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F00 , OFF , debug_monitor        , ""                                 , ""                                    , "" },
   {"Display vars"                     , CAT_DEBUG   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F01 , ON  , debug_vars           , ""                                 , ""                                    , "" },
@@ -191,6 +191,7 @@ const Menu_pack main_menu[] = {
   #endif
   
   #ifdef PREVIEW
+  {"Swimming"                         , CAT_WIP     , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Doesn't work on real hardware todo"},
   {"Wave height: "                    , CAT_WIP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A4A , OFF , world_waveheight     , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust height"         , "> Adjust the oceans wave height."},
   {"Police Heli: "                    , CAT_WIP     , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F63 , OFF , policechaseheli      , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust"                , "> " },
   {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -217,7 +218,7 @@ const Menu_pack main_menu[] = {
   {"Button Up: "                      , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , up_button            , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Select a Cheat to quick toggle via button when in-game!" },
   {"Button Down: "                    , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , down_button          , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Select a Cheat to quick toggle via button when in-game!" },
   {""                                 , CAT_ALIAS   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-       
+  
   // // CHEATS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
   {"Player"                           , CAT_PLAYER  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x245F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
@@ -260,7 +261,7 @@ const Menu_pack main_menu[] = {
   {"Teleport near marker"             , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1647 , -1  , teleport_marker      , "CROSS = Teleport"                  , ""                                   , "> Teleport near the custom marker" },
   {"Step Through Wall"                , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x195A , -1  , stepthroughwall      , "CROSS = Teleport one step forward" , ""                                   , "> With this you can easily step through walls get inside buildings etc" },
   {""                                 , CAT_TELEP   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
- 
+
   {"Vehicles"                         , CAT_TRFFIC  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x215F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Disable Traffic"                  , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x198C , OFF , traffic_density      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely disable the worlds traffic! (Parked vehicles still appear)"  },
   {"Freeze Traffic"                   , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x17EC , OFF , traffic_freeze       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely freeze the worlds vehicles except your own!"  },
@@ -269,7 +270,7 @@ const Menu_pack main_menu[] = {
   {"BMX Jump Height: "                , CAT_TRFFIC  , MENU_VALUE       , FALSE , TRUE  , TRUE  , TRUE  , 0x1BDE , OFF , bmxjumpheight        , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust multiplier"     , "> Adjust the BMXs jump height." },
   {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x15D3 , OFF , untouchable          , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Vehicles wont be able to get near you and will be pushed back." },
   {""                                 , CAT_TRFFIC  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
- 
+
   {"Pedestriants"                     , CAT_PEDS    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x28A4 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Disable Peds"                     , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1770 , OFF , peds_density         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely disable Pedestrians! (special ones might still appear)"  },
   {"Freeze Peds"                      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x191C , OFF , peds_freeze          , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Freeze Pedestrians current positions in the world."  },
@@ -277,7 +278,7 @@ const Menu_pack main_menu[] = {
   {"Kill everyone aiming at you"      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1611 , OFF , peds_killaiming      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Everyone aiming at you will be killed instantly!"  },
   {"Ped Walking Speed: "              , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x191A , OFF , pedwalking_speed     , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust the Pedestrians walking and sprinting speed." },
   {""                                 , CAT_PEDS    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
- 
+
   {"Missions"                         , CAT_MISSON  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x235B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Mission Selector"                 , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1F98 , -1  , mission_selector     , "CROSS = Open Menu"                 , ""                                   , "> Use the build-in level-skip menu to start missions." },
   {"Force OnMission bool: "           , CAT_MISSON  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x17B5 , OFF , onmission            , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Control OnMission check. Handle with care!"  },
@@ -287,17 +288,17 @@ const Menu_pack main_menu[] = {
   {"Teleport to next Objective"       , CAT_MISSON  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1762 , -1  , teleport_next        , "CROSS = Teleport"                  , ""                                   , "> Teleport to next marked destination, target or object" },
   {"Teleport to next Mission"         , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1799 , -1  , teleport_mission     , "CROSS = Teleport"                  , ""                                   , "> Teleport to next Story-Mission marker." },
   {""                                 , CAT_MISSON  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+
   {"Map"                              , CAT_MAP     , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2A11 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Mark on Map: "                    , CAT_MAP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x165F , OFF , markonmap            , "CROSS = Enable/Disable Cheat"      , "SQUARE = Cycle options"             , "> Select what should be displayed on the map and radar." },
   {""                                 , CAT_MAP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+
   {"Camera"                           , CAT_CAMERA  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x254B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Classic TopDown view"             , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1458 , OFF , camera_topdown       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Experience the classic top-down camera angle!" },
   {"Always Centered behind Vehicle"   , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A3C , OFF , camera_centered      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> The camera will always be centered behind a vehicle." },
   {"Field of View: "                  , CAT_CAMERA  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DC7 , OFF , fieldofview          , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust the Field of View for a better viewing angle." },
   {""                                 , CAT_CAMERA  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  
+
   {"Button Cheats"                    , CAT_STCKCHT , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2E5F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
   {"Give Health"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x19CA , -1  , bttncht_givehealth   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
   {"Give Armor"                       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1874 , -1  , bttncht_givearmor    , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },

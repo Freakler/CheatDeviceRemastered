@@ -229,6 +229,7 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
 void *untouchable(int calltype, int keypress, int defaultstatus);
 void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultval);
 void *policechaseheli(int calltype, int keypress, int defaultstatus, int defaultval);
+void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultval);
 
 
 void bttncht_givehealth();

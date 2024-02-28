@@ -290,7 +290,6 @@ u32 titleid      = -1;
 u32 saveprefix   = -1;
 #endif
 
-
 #ifdef PREVIEW 
 /** Test-Area ***********************************************************************************************/
   
@@ -361,6 +360,10 @@ u32 saveprefix   = -1;
   
   void (*FUN_00009138_CAutomobile_DoHoverSuspensionRatios)(int param_1);
 
+  
+  
+  
+  /// fake swimming
   int (*FUN_00109dac_CWaterLevel_GetWaterLevel)(float param_1,float param_2,float *param_3);
   /*int * FUN_00109dac_CWaterLevel_GetWaterLevel_patched(float param_1,float param_2,float *param_3) {
     
@@ -375,48 +378,87 @@ u32 saveprefix   = -1;
     
     return FUN_00109dac_CWaterLevel_GetWaterLevel(param_1, param_2, param_3);
   }*/
-  
-  
-  /// fake swimming test (PPSSPP only)
-  void (*FUN_001a8d9c_CPed_ProcessBuoyancy)(int param_1); 
-  void * FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {  
-  
-    char buffer[256]; 
-    
-    FUN_001a8d9c_CPed_ProcessBuoyancy(param_1); //do boayancay stuff so that checkPedIsInWater() works
 
-    //logPrintf("> yea");
+  int (*FUN_000e7d70_CCam_IsTargetInWater)(int param_1); 
+  int FUN_000e7d70_CCam_IsTargetInWater_patched(int param_1) {
+	return (fake_swimming(FUNC_GET_STATUS, -1, -1, -1) ? 0 : FUN_000e7d70_CCam_IsTargetInWater(param_1));
+  }
+
+  void (*FUN_001a8d9c_CPed_ProcessBuoyancy)(int param_1); 
+  void * FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {     
+    FUN_001a8d9c_CPed_ProcessBuoyancy(param_1); // do buoyancy stuff first so that checkPedIsInWater() works
+
     //logPrintf("> %.2f %.2f 0%.2f Car: 0x%08X -> 0x%08X 0x%08X 0x%08X 0x%08X 0x%02X", param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8, param_9);
       
-    float test[4];    
-    if( checkPedIsInWater(pplayer) ) {
+    float test[4];
+    if( fake_swimming(FUNC_GET_STATUS, -1, -1, -1) && checkPedIsInWater(pplayer) ) {
       FUN_00109dac_CWaterLevel_GetWaterLevel(getFloat(pplayer+0x30),getFloat(pplayer+0x34), test);
-      if( getFloat(pplayer+0x38) < test[0]-0.4f )
-        setFloat(pplayer+0x38, test[0]-0.4f);  
       
-      snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
-      
-      
-      ///turn while jumping
-      if( xstick < -0.25 || xstick > 0.25 ) { 
-        setFloat(pplayer+(LCS?0xA8:0x78), (LCS?-0.001:-0.01) * xstick); //turn player
-        //setFloat(pplayer+(LCS?0x88:0x78), 0.0f); //turn player
-      }
-      
-      ///check for Cross
-      float boost = 0.05f;
-      if( flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS) ) 
+	  float boost = 0.05f;
+	  int cross = (flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
+	  float crawl = ((ystick < 0.0f) && cross) ? -ystick*0.3f : 0.0f; // only if stick forward & cross pressed
+	 
+	 //char buffer[256]; 
+	  //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
+      //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
+	  
+	  /** TODO ********
+	   * - make boost static so that player accelerates and keeps some momentum
+	   * - animation?! FUN_00286f88_CAnimManager_BlendAnimation
+	   * - camera front is where player should swim to (like player on land)
+	   * - 
+	   *
+	  ***/
+	  
+	  /// turn with camera (todo)
+	  //setFloat(pplayer+0x10, getFloat(global_camera + 0xC4));
+	  //setFloat(pplayer+0x14, getFloat(global_camera + 0xC8));
+	  
+	  
+      /// turn with stick
+      if( xstick < -0.20 || xstick > 0.20 ) { 
+        setFloat(pplayer + 0xA8, -0.005 * xstick); //turn player
+      } else { // stop turning (since game thinks we are falling)
+		setFloat(pplayer + 0x88, 0.0f);
+	  }
+	   
+      /// add more speed when cross pressed
+      if( cross ) {
         boost = 0.1f;
-      
-      ///forward-thrust (TODO check for object in front of you (and ground?) )
-      if( ystick < -0.25 ) {   //stick forward
-        setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabs(ystick*boost)); //thrust
+	  }
+	  
+      /// forward-thrust
+      if( ystick < -0.25 ) { // stick forward
+	    setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabs(ystick*boost)); //thrust
         setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*fabs(ystick*boost));  //thrust
+      } 
+	  
+	  /// adjust player height in water
+	  if( getFloat(pplayer+0x38) < test[0]-0.4f+crawl) { // -0.4f so that player is right height (lower under water)
+        setFloat(pplayer+0x38, test[0]-0.4f+crawl);   // +crawl adjust (add height depending on leaning forward)
+	  }
+	  
+	  /// lean forward
+	  if( ystick < 0.05f ) { // only forward
+		setFloat(pplayer + 0x18,  ystick*0.3f); // just a little
+		if( cross ) // even more when cross pressed
+			setFloat(pplayer + 0x18,  ystick); // -0.9f
       }
-      
+	  
+	  /// disable roll after falling (when getting on land again)
+      setFloat(pplayer+0x4E0, getFloat(pplayer+0x4E4)); // continuously setting current dir
+	  	  
+      /// set current weapon to be fist slot
+	  setByte(pplayer + 0xB84,  0x00);
+	  
+	  /// set camera to not go below see level
+	  // todo although only nice to have
+	  
+	  
+	  //setFloat(pplayer + 0x1A8, 0.0f); // blocks falling anim!!!
+	  
     }
-      
+	
     //logPrintf("%.2f", test);
     return 0;
   }
@@ -602,9 +644,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// fake swimming
-  //MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0); //FUN_000e7d70_CCam_IsTargetInWater
-  //FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(text_addr + 0x109dac); //needs to be called
-  //FUN_001a8d9c_CPed_ProcessBuoyancy = (void*)(text_addr + 0x1a8d9c); //FUN_001a8d9c_CPed_ProcessBuoyancy
+  //HIJACK_FUNCTION(text_addr + 0xe7d70, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0); // FUN_000e7d70_CCam_IsTargetInWater
+  //FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(text_addr + 0x109dac); // needs to be called
   //HIJACK_FUNCTION(text_addr + 0x1a8d9c, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
   
   
@@ -2395,6 +2436,30 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   } 
   
+  #ifdef PREVIEW
+  /// swimming
+  if( _lw(addr + 0x18) == 0x3C04C5BB && _lw(addr + 0x5C) == 0x3C04C5BB ) { // FUN_000e7d70_CCam_IsTargetInWater
+    if( PPSSPP ) HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0);
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> CCam_IsTargetInWater", addr-text_addr, addr); // 
+    #endif
+    return 1;
+  }
+  if( _lw(addr + 0x0) == 0x3C064500 && _lw(addr + 0x2C) == 0x340A0080 ) { // FUN_00109dac_CWaterLevel_GetWaterLevel
+    if( PPSSPP ) FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(addr); // needs to be called in "ProcessBuoyancy"
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> CWaterLevel_GetWaterLevel", addr-text_addr, addr); // 
+    #endif
+    return 1;
+  }
+  if( _lw(addr + 0x4) == 0x3C063F8C && _lw(addr + 0x44) == 0x34050037 ) { // FUN_001a8d9c_CPed_ProcessBuoyancy
+    if( PPSSPP ) HIJACK_FUNCTION(addr, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
+    #ifdef PATCHLOG
+    logPrintf("0x%08X (0x%08X) -> CPed_ProcessBuoyancy", addr-text_addr, addr); // 
+    #endif
+    return 1;
+  }
+  #endif
   
   return 0;
 }
@@ -6766,7 +6831,10 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
           setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*0.1); // thrust
           setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*0.1); // thrust
         }
-      
+		
+		/// set rolling after landing animation in the current direction
+        setFloat(pplayer+(LCS?0x4E0:0x8D0), getFloat(pplayer+(LCS?0x4E4:0x8D4))); // continuously setting current dir
+        
       }
       break;  
       
@@ -11624,8 +11692,44 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
   
   return NULL;
 }
-#endif
 
+/** fake_swimming ************************************************************************************
+ *
+ * Completion: 
+ * 
+ * Todo:     
+ * 
+ * Notes: 
+ **************************************************************************************************************************************/
+void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultval) {
+  static int status = 0;
+
+  switch( calltype ) {
+    case FUNC_GET_STATUS: 
+      return (int*)status;
+          
+    case FUNC_APPLY:
+      break;
+    
+    case FUNC_CHECK:
+      break;
+    
+    case FUNC_GET_STRING: 
+      break; 
+    
+    case FUNC_CHANGE_VALUE:
+      status = 1 - status;
+	  break; 
+      
+    case FUNC_SET: 
+      status = defaultstatus;
+      break;
+      
+  }
+  
+  return NULL;
+}
+#endif
 
 
 
