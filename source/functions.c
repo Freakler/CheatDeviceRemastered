@@ -190,7 +190,7 @@ const teleports_pack lcs_teleports[] = { // z value + 0.20
   {"SSV Cochrane Dam Lower",            -1052,    465,  23.81 },
   {"SSV Donald Love's House",            -365,    241,  61.10 },
   {"SSV Safehouse",                      -825,    304,  40.22 },
-  {"SSV Sindaco Hideout Near Dam",      -1092,    248,      4 },
+  {"SSV Sindacco Hideout Near Dam",     -1092,    248,      4 },
   {"SSV Pay 'n' Spray",                 -1133,     34,     59 },
   {"SSV Claude Speed's Hideout",         -651,    -36,     19 },
   {"SSV Wichita Gardens",                -417,    -34,      4 },

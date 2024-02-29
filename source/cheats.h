@@ -137,6 +137,13 @@ void DrawLoadingBar_patched(float param_1);
 void (*UpdatePosition)(int handle);
 void UpdatePosition_patched(int handle);
 
+#ifdef PREVIEW
+int (*FUN_00109dac_CWaterLevel_GetWaterLevel)(float param_1,float param_2,float *param_3);
+int (*FUN_000e7d70_CCam_IsTargetInWater)(int param_1);
+int FUN_000e7d70_CCam_IsTargetInWater_patched(int param_1);
+void (*FUN_001a8d9c_CPed_ProcessBuoyancy)(int param_1);
+void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1);
+#endif
 
 /// Cheat functions 
 void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultval);

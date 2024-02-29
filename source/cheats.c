@@ -360,109 +360,6 @@ u32 saveprefix   = -1;
   
   void (*FUN_00009138_CAutomobile_DoHoverSuspensionRatios)(int param_1);
 
-  
-  
-  
-  /// fake swimming
-  int (*FUN_00109dac_CWaterLevel_GetWaterLevel)(float param_1,float param_2,float *param_3);
-  /*int * FUN_00109dac_CWaterLevel_GetWaterLevel_patched(float param_1,float param_2,float *param_3) {
-    
-    if( pcar ) {
-      //float test[4];
-      //return FUN_00109dac_CWaterLevel_GetWaterLevel(param_1, param_2, param_3);
-      drawString("now", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
-      
-      param_3[0] = getFloat(pcar+0x38) - 2.0f;
-      return 1;
-    }
-    
-    return FUN_00109dac_CWaterLevel_GetWaterLevel(param_1, param_2, param_3);
-  }*/
-
-  int (*FUN_000e7d70_CCam_IsTargetInWater)(int param_1); 
-  int FUN_000e7d70_CCam_IsTargetInWater_patched(int param_1) {
-   return (fake_swimming(FUNC_GET_STATUS, -1, -1, -1) ? 0 : FUN_000e7d70_CCam_IsTargetInWater(param_1));
-  }
-
-  void (*FUN_001a8d9c_CPed_ProcessBuoyancy)(int param_1); 
-  void * FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {     
-    FUN_001a8d9c_CPed_ProcessBuoyancy(param_1); // do buoyancy stuff first so that checkPedIsInWater() works
-
-    //logPrintf("> %.2f %.2f 0%.2f Car: 0x%08X -> 0x%08X 0x%08X 0x%08X 0x%08X 0x%02X", param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8, param_9);
-      
-    if( fake_swimming(FUNC_GET_STATUS, -1, -1, -1) && checkPedIsInWater(pplayer) ) {
-	  float test[4];
-	  FUN_00109dac_CWaterLevel_GetWaterLevel(getFloat(pplayer+0x30),getFloat(pplayer+0x34), test);
-      
-      float boost = 0.05f;
-      int cross = (flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
-      float crawl = ((ystick < 0.0f) && cross) ? -ystick*0.3f : 0.0f; // only if stick forward & cross pressed
-    
-      char buffer[256]; // commenting this block out will NOT make it work for real hardware ?!?
-      snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
-     
-     /** TODO ********
-      * - make boost static so that player accelerates and keeps some momentum
-      * - animation?! FUN_00286f88_CAnimManager_BlendAnimation
-      * - camera front is where player should swim to (like player on land)
-      * - 
-      *
-     ***/
-     
-     /// turn with camera (todo)
-     //setFloat(pplayer+0x10, getFloat(global_camera + 0xC4));
-     //setFloat(pplayer+0x14, getFloat(global_camera + 0xC8));
-     
-     
-      /// turn with stick
-      if( xstick < -0.20 || xstick > 0.20 ) { 
-        setFloat(pplayer + 0xA8, -0.005 * xstick); //turn player
-      } else { // stop turning (since game thinks we are falling)
-        setFloat(pplayer + 0x88, 0.0f);
-      }
-      
-      /// add more speed when cross pressed
-      if( cross ) {
-        boost = 0.1f;
-      }
-     
-      /// forward-thrust
-      if( ystick < -0.25 ) { // stick forward
-        setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabs(ystick*boost)); // thrust
-        setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*fabs(ystick*boost));  // thrust
-      } 
-     
-      /// adjust player height in water
-      if( getFloat(pplayer+0x38) < test[0]-0.4f+crawl) { // -0.4f so that player is right height (lower under water)
-        setFloat(pplayer+0x38, test[0]-0.4f+crawl);   // +crawl adjust (add height depending on leaning forward)
-      }
-     
-      /// lean forward
-      if( ystick < 0.05f ) { // only forward
-        setFloat(pplayer + 0x18,  ystick*0.3f); // just a little
-        if( cross ) // even more when cross pressed
-          setFloat(pplayer + 0x18,  ystick); // -0.9f
-      }
-     
-      /// disable roll after falling (when getting on land again)
-      setFloat(pplayer+0x4E0, getFloat(pplayer+0x4E4)); // continuously setting current dir
-          
-      /// set current weapon to be fist slot
-      setByte(pplayer + 0xB84,  0x00);
-     
-      /// set camera to not go below see level
-      // todo although only nice to have
-     
-     
-      //setFloat(pplayer + 0x1A8, 0.0f); // blocks falling anim!!!
-     
-    }
-   
-    //logPrintf("%.2f", test);
-    return 0;
-  }
-  
   ////////////////////////////////////////////  ////////////////////////////////////////////  ////////////////////////////////////////////
   
   uint (*testfunc2)(int param_1, uint param_2); 
@@ -2438,31 +2335,29 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   
   #ifdef PREVIEW
   /// swimming
-  if( _lw(addr + 0x18) == 0x3C04C5BB && _lw(addr + 0x5C) == 0x3C04C5BB ) { // FUN_000e7d70_CCam_IsTargetInWater
-    //if( PPSSPP ) 
-      HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0);
+  if( _lw(addr + 0x18) == 0x3C04C5BB && _lw(addr + 0x5C) == 0x3C04C5BB ) { // FUN_000e7d70_CCam_IsTargetInWater 
+    HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0);
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> CCam_IsTargetInWater", addr-text_addr, addr); // 
     #endif
     return 1;
   }
   if( _lw(addr + 0x0) == 0x3C064500 && _lw(addr + 0x2C) == 0x340A0080 ) { // FUN_00109dac_CWaterLevel_GetWaterLevel
-    //if( PPSSPP ) 
-      FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(addr); // needs to be called in "ProcessBuoyancy"
+    FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(addr); // needs to be called in "ProcessBuoyancy"
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> CWaterLevel_GetWaterLevel", addr-text_addr, addr); // 
     #endif
     return 1;
   }
   if( _lw(addr + 0x4) == 0x3C063F8C && _lw(addr + 0x44) == 0x34050037 ) { // FUN_001a8d9c_CPed_ProcessBuoyancy
-    //if( PPSSPP ) 
-      HIJACK_FUNCTION(addr, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
+    HIJACK_FUNCTION(addr, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> CPed_ProcessBuoyancy", addr-text_addr, addr); // 
     #endif
     return 1;
   }
   #endif
+  
   return 0;
 }
 
@@ -4705,6 +4600,96 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   return ret; 
 }
 
+#ifdef PREVIEW
+/// fake swimming
+int FUN_000e7d70_CCam_IsTargetInWater_patched(int param_1) {
+  return (fake_swimming(FUNC_GET_STATUS, -1, -1, -1) ? 0 : FUN_000e7d70_CCam_IsTargetInWater(param_1));
+}
+ 
+void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {     
+  FUN_001a8d9c_CPed_ProcessBuoyancy(param_1); // do buoyancy stuff first so that checkPedIsInWater() works
+
+  //logPrintf("> %.2f %.2f 0%.2f Car: 0x%08X -> 0x%08X 0x%08X 0x%08X 0x%08X 0x%02X", param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8, param_9);
+  
+  if( fake_swimming(FUNC_GET_STATUS, -1, -1, -1) && checkPedIsInWater(pplayer) ) {
+    float test[4];
+    FUN_00109dac_CWaterLevel_GetWaterLevel(getFloat(pplayer+0x30),getFloat(pplayer+0x34), test);
+  
+    float boost = 0.05f;
+    int cross = (flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
+    float crawl = ((ystick < 0.0f) && cross) ? -ystick*0.3f : 0.0f; // only if stick forward & cross pressed
+
+    char buffer[128]; // commenting this block out will NOT make it work for real hardware ?!? (when it was at other position in file)
+    snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
+ 
+   /** TODO ********
+    * - make boost static so that player accelerates and keeps some momentum
+    * - animation?! FUN_00286f88_CAnimManager_BlendAnimation
+    * - camera front is where player should swim to (like player on land)
+    * - 
+    *
+   ***/
+ 
+    /// turn with camera (todo)
+    //setFloat(pplayer+0x10, getFloat(global_camera + 0xC4));
+    //setFloat(pplayer+0x14, getFloat(global_camera + 0xC8));
+ 
+ 
+    /// turn with stick
+    if( xstick < -0.20 || xstick > 0.20 ) { 
+      setFloat(pplayer + 0xA8, -0.005 * xstick); //turn player
+    } else { // stop turning (since game thinks we are falling)
+      setFloat(pplayer + 0x88, 0.0f);
+    }
+  
+    /// add more speed when cross pressed
+    if( cross ) {
+	  boost = 0.1f;
+    }
+
+    /// small jump
+    if( (pressed_buttons & PSP_CTRL_SQUARE) && !cross ) {
+	  setFloat(pplayer+0x98, 0.1f );
+    }
+ 
+    /// forward-thrust
+    if( ystick < -0.25 ) { // stick forward
+      extern float walkspd_mult; // to allow "Walking Speed" cheat have effect on swim speed as well
+	  setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabs(ystick*boost*walkspd_mult)); // thrust
+      setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*fabs(ystick*boost*walkspd_mult));  // thrust
+    } 
+ 
+    /// adjust player height in water
+    if( getFloat(pplayer+0x38) < test[0]-0.4f+crawl) { // -0.4f so that player is right height (lower under water)
+	  setFloat(pplayer+0x38, test[0]-0.4f+crawl);   // +crawl adjust (add height depending on leaning forward)
+    }
+ 
+    /// lean forward
+    if( ystick < 0.05f ) { // only forward
+	  setFloat(pplayer + 0x18,  ystick*0.4f); // just a little
+	  if( cross ) // even more when cross pressed
+	    setFloat(pplayer + 0x18,  ystick); // -0.9f
+    }
+ 
+    /// disable roll after falling (when getting on land again)
+    setFloat(pplayer+0x4E0, getFloat(pplayer+0x4E4)); // continuously setting current dir
+	  
+    /// set current weapon to be fist slot
+    setByte(pplayer + 0xB84,  0x00);
+ 
+    /// set camera to not go below sea level
+    // todo although only nice to have
+ 
+    /// blocks falling animation
+    //setFloat(pplayer + 0x1A8, 0.0f); 
+ 
+  }
+  
+  return 0;
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void user_cheats(int calltype, int keypress, int defaultstatus) {
@@ -6819,7 +6804,7 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
       if( !pcar && flag_menu_running == 0 && (current_buttons & PSP_CTRL_SQUARE) && (LCS ? (getByte(pplayer+0x34C) == 0x29) : (getByte(pplayer+0x1C9) == 0x10)) ) { // activate only when jumping + SQUARE
         
         /// up-thrust
-        setFloat(pplayer+(LCS?0x78:0x148), getFloat(pplayer+(LCS?0x78:0x148)) + 0.02f );
+        setFloat(pplayer+(LCS?0x98:0x88), getFloat(pplayer+(LCS?0x98:0x88)) + 0.02f ); // was (LCS?0x98:0x148)
       
         /// turn while jumping
         if( xstick < -0.25 || xstick > 0.25 ) { 
@@ -6834,7 +6819,7 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
           setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*0.1); // thrust
         }
       
-      /// set rolling after landing animation in the current direction
+        /// set rolling after landing animation in the current direction
         setFloat(pplayer+(LCS?0x4E0:0x8D0), getFloat(pplayer+(LCS?0x4E4:0x8D4))); // continuously setting current dir
         
       }
@@ -10087,9 +10072,12 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
   static short id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
+  #ifndef DEBUG
+  static int i = 0;
   static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI, AEROPL, DODO
   static short blacklist_vcs[] = { 0x118 }; // AEROPL
-  static int i = 0, status = 0;
+  #endif
+  static int status = 0;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -10750,7 +10738,7 @@ void buttonApplyOnce(int i) { // apply once on button press
       
   } else if( i == 14 ) { 
     if( pcar && !isVehicleInAir( pcar ) && !isVehicleUpsideDown( pcar ) ) 
-    setFloat(pcar+(LCS?0x78:0x148), 0.3f);
+      setFloat(pcar+(LCS?0x78:0x148), 0.3f);
   
   } else if( i == 15 ) { // lock/unlock vehicle doors
     lockdoors(FUNC_CHANGE_VALUE, PSP_CTRL_CROSS, 0);
@@ -11615,8 +11603,6 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
 
 
 
-
-
 /// PREVIEW /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /
 
 #ifdef PREVIEW
@@ -11698,14 +11684,17 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
   
   return NULL;
 }
+#endif
 
+#ifdef PREVIEW
 /** fake_swimming ************************************************************************************
  *
  * Completion: 
  * 
- * Todo:     
+ * Todo:  There must be some null pointer somewhere in the hooked function. There is very weird behaviour on real hardware. 
+ *        This needs investigating..   
  * 
- * Notes: 
+ * Notes: all logic is inside the hooked functions
  **************************************************************************************************************************************/
 void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status = 0;
@@ -11715,6 +11704,11 @@ void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*)status;
           
     case FUNC_APPLY:
+	  if( pcar && (pcar_type != VEHICLE_BOAT) && (isVehicleInWater(pcar) >= 1) && isVehicleInAir(pcar) ) { // when vehicle in water and no ground contact
+        if( current_buttons & PSP_CTRL_TRIANGLE ) { // player wants to exit vehicle
+          setPedExitVehicleNow(pplayer);
+		}
+	  }
       break;
     
     case FUNC_CHECK:
@@ -11724,7 +11718,9 @@ void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultva
       break; 
     
     case FUNC_CHANGE_VALUE:
-      status = 1 - status;
+      if( keypress == PSP_CTRL_CROSS ) {
+        status = 1 - status;
+      } 
      break; 
       
     case FUNC_SET: 
@@ -11736,9 +11732,6 @@ void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultva
   return NULL;
 }
 #endif
-
-
-
 
 
 /// TESTS /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /
