@@ -60,7 +60,7 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 <li>fixed userscript opcode 0482 (VCS)
 <li>added "the dummy" skin (LCS)
 <li>added fix for Sindacco Chronicles' custom radio color showing in menu
-<li>added unlimted height limit for helis and planes (VCS)
+<li>added unlimited height limit for helis and planes (VCS)
 <li>fixed and enhanced power-jump 
 <li>added lock/unlock car to up/down button cheat
 <li>fixed PPSSPP blackscreen for LCS
