@@ -48,6 +48,25 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 
 
 ## Changelog
+<details><summary>v1.0g2 (3rd Mar. 2024)</summary><ul>
+<li>better hover vehicle controls 
+<li>added VCS garage fix 
+<li>speedometer fix (more realistic but probably still not accurate)
+<li>rocket boost fix (1 was the same as off)
+<li>cheat description strings adjusted
+<li>added Sindacco Chronicles Hidden package object to pickups
+<li>now skipping special vehicles in vehicle spawner
+<li>removed crashing skin "FRANFOR" (LCS)
+<li>fixed userscript opcode 0482 (VCS)
+<li>added "the dummy" skin (LCS)
+<li>added fix for Sindacco Chronicles' custom radio color showing in menu
+<li>added unlimted height limit for helis and planes (VCS)
+<li>fixed and enhanced power-jump 
+<li>added lock/unlock car to up/down button cheat
+<li>fixed PPSSPP blackscreen for LCS
+<li>more optimizations and fixes 
+</ul></details>
+
 <details><summary>v1.0g "The Open Source Release" (4th May 2023)</summary><ul>
 <li>fixed newline bug in UserScripts
 <li>better "high memory layout" detection
