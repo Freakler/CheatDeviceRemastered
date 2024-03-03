@@ -6912,8 +6912,10 @@ void *ignored(int calltype, int keypress, int defaultstatus) {
           status = 0;
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
+        #if defined(HEXMARKERS) || defined(HEXEDITOR)
         int temp = pplayer + (LCS ? 0x82E : 0x90E); 
-        #ifdef HEXMARKERS  
+        #endif
+		#ifdef HEXMARKERS  
         hex_marker_clear();  
         hex_marker_addx(temp, sizeof(char));
         #endif
@@ -7669,7 +7671,9 @@ void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         if( pcar ) {
+          #if defined(HEXMARKERS) || defined(HEXEDITOR)
           int temp = pcar + (VCS ? 0x27c : 0x268);
+          #endif
           #ifdef HEXMARKERS
           hex_marker_clear();  
           hex_marker_addx(temp, sizeof(float));
@@ -7727,7 +7731,9 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
         } else status = 1;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         if( pcar ) {
+          #if defined(HEXMARKERS) || defined(HEXEDITOR)
           int temp = pcar + (LCS ? 0x294 : 0x2A8);
+          #endif
           #ifdef HEXMARKERS
           hex_marker_clear();  
           hex_marker_addx(temp, sizeof(char));
@@ -8271,7 +8277,9 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
         
       case FUNC_CHANGE_VALUE:
         if( keypress == PSP_CTRL_TRIANGLE ) {
+          #if defined(HEXMARKERS) || defined(HEXEDITOR)
           int temp = pcar + (LCS ? 0x1F0 : 0x224);
+          #endif
           #ifdef HEXMARKERS
           hex_marker_clear();
           hex_marker_addx(temp, (LCS ? sizeof(char) : sizeof(int)));
@@ -8348,7 +8356,9 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
         
       case FUNC_CHANGE_VALUE:
         if( keypress == PSP_CTRL_TRIANGLE ) {
+          #if defined(HEXMARKERS) || defined(HEXEDITOR)
           int temp = pcar + (LCS ? 0x1F1 : 0x228);
+          #endif
           #ifdef HEXMARKERS
           hex_marker_clear();
           hex_marker_addx(temp, (LCS?sizeof(char):sizeof(int)));
