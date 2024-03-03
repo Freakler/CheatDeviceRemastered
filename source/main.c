@@ -235,7 +235,7 @@ const Menu_pack main_menu[] = {
   {"Model: "                          , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1C87 , OFF , player_model         , "CROSS = Change now"                , "LEFT/RIGHT = Select model"          , "> Change the actor skin / model. Beware: May break the game!" },
   {"Maximum Health: "                 , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1D7D , -1  , max_health           , "LEFT/RIGHT = Adjust multiplier"    , ""                                   , "> Adjust the Multiplier value giving extra health! ('Health Plus')" },
   {"Maximum Armor: "                  , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x178E , -1  , max_armor            , "LEFT/RIGHT = Adjust multiplier"    , ""                                   , "> Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
-  {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E4A , OFF , powerjump            , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Hold the jumping key to jump as high as you want." },
+  {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E4A , OFF , powerjump            , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
   {""                                 , CAT_PLAYER  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
   {"Current Vehicle"                  , CAT_VEHICL  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x258B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
@@ -6304,6 +6304,8 @@ static void CheckModules() { // PPSSPP only
         }
         #endif
         ////////////////////////////////////////////////////////
+      
+        sceKernelDelayThread(10000); // small delay to fix blackscreen for LCS (mostly slow android devices)
   
         initTextBlit(mod_text_addr, mod_text_size);  // see blit.c (HAS ITS OWN SEARCHING LOOP!)  
     

@@ -4645,36 +4645,36 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
   
     /// add more speed when cross pressed
     if( cross ) {
-	  boost = 0.1f;
+     boost = 0.1f;
     }
 
     /// small jump
     if( (pressed_buttons & PSP_CTRL_SQUARE) && !cross ) {
-	  setFloat(pplayer+0x98, 0.1f );
+     setFloat(pplayer+0x98, 0.1f );
     }
  
     /// forward-thrust
     if( ystick < -0.25 ) { // stick forward
       extern float walkspd_mult; // to allow "Walking Speed" cheat have effect on swim speed as well
-	  setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabs(ystick*boost*walkspd_mult)); // thrust
+      setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabs(ystick*boost*walkspd_mult)); // thrust
       setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*fabs(ystick*boost*walkspd_mult));  // thrust
     } 
  
     /// adjust player height in water
     if( getFloat(pplayer+0x38) < test[0]-0.4f+crawl) { // -0.4f so that player is right height (lower under water)
-	  setFloat(pplayer+0x38, test[0]-0.4f+crawl);   // +crawl adjust (add height depending on leaning forward)
+      setFloat(pplayer+0x38, test[0]-0.4f+crawl);   // +crawl adjust (add height depending on leaning forward)
     }
  
     /// lean forward
     if( ystick < 0.05f ) { // only forward
-	  setFloat(pplayer + 0x18,  ystick*0.4f); // just a little
-	  if( cross ) // even more when cross pressed
-	    setFloat(pplayer + 0x18,  ystick); // -0.9f
+     setFloat(pplayer + 0x18,  ystick*0.4f); // just a little
+     if( cross ) // even more when cross pressed
+       setFloat(pplayer + 0x18,  ystick); // -0.9f
     }
  
     /// disable roll after falling (when getting on land again)
     setFloat(pplayer+0x4E0, getFloat(pplayer+0x4E4)); // continuously setting current dir
-	  
+     
     /// set current weapon to be fist slot
     setByte(pplayer + 0xB84,  0x00);
  
@@ -6788,7 +6788,7 @@ void *godmode(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  
  * 
- * Todo:  - depending on framerate :/
+ * Todo:  - 
  *        - 
  * 
  * Notes:     /
@@ -6801,27 +6801,26 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
       
     case FUNC_APPLY:
-      if( !pcar && flag_menu_running == 0 && (current_buttons & PSP_CTRL_SQUARE) && (LCS ? (getByte(pplayer+0x34C) == 0x29) : (getByte(pplayer+0x1C9) == 0x10)) ) { // activate only when jumping + SQUARE
+      if( !pcar && flag_menu_running == 0 ) {
+        if( getByte(pplayer+(LCS?0x10A:136)) == 0 ) { // player not touching ground (better check todo?)
+         
+          /// calc current speed
+          float speed = sqrt((getFloat(pplayer+(LCS?0x70:0x140)) * getFloat(pplayer+(LCS?0x70:0x140))) + (getFloat(pplayer+(LCS?0x74:0x144)) * getFloat(pplayer+(LCS?0x74:0x144)))); // SQRT( x^2 + y^2 )
+          
+          /// forward-thrust
+          setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4) * speed );
+          setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer) * speed);
         
-        /// up-thrust
-        setFloat(pplayer+(LCS?0x98:0x88), getFloat(pplayer+(LCS?0x98:0x88)) + 0.02f ); // was (LCS?0x98:0x148)
+          /// up-thrust
+          if( current_buttons & PSP_CTRL_SQUARE ) // SQUARE pressed
+            setFloat(pplayer+(LCS?0x98:0x148), getFloat(pplayer+(LCS?0x98:0x148)) + 0.02f );
+        
+          /// turn 
+          setFloat(pplayer+(LCS?0x88:0x78), (LCS?-0.02:-0.02) * xstick);
       
-        /// turn while jumping
-        if( xstick < -0.25 || xstick > 0.25 ) { 
-          setFloat(pplayer+(LCS?0xA8:0x78), (LCS?-0.001:-0.01) * xstick); // turn player
-        //} else {
-          //setInt(pplayer+0x88, 0); //reset this vector ...necessary?
+          /// set rolling after landing animation in the current direction
+          setFloat(pplayer+(LCS?0x4E0:0x8D0), getFloat(pplayer+(LCS?0x4E4:0x8D4))); // continuously setting current dir
         }
-        
-        /// forward-thrust (TODO check for object in front of you (and ground?) )
-        if( ystick < -0.25 ) {   //stick forward
-          setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*0.1); // thrust
-          setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*0.1); // thrust
-        }
-      
-        /// set rolling after landing animation in the current direction
-        setFloat(pplayer+(LCS?0x4E0:0x8D0), getFloat(pplayer+(LCS?0x4E4:0x8D4))); // continuously setting current dir
-        
       }
       break;  
       
@@ -7511,7 +7510,7 @@ void *tank(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_APPLY:
       if( pcar ) {
-        if( !PPSSPP && pcar_type == VEHICLE_BIKE ) // using on bike on real hardware crashes (but not on PPSSPP)
+        if( /* !PPSSPP && */ pcar_type == VEHICLE_BIKE ) // using on bike crashes (but not on PPSSPP prior to 1.16.x)
           break;
       
         TankControl( pcar );
@@ -10587,7 +10586,8 @@ const char *buttonCheatNames[] = {
   "Toggle Slowmo", 
   "Impulse", 
   "Jump with Vehicle", 
-  "Lock Doors when inside", 
+  "Lock Vehicle Doors", 
+  "Unlock Vehicle Doors", 
   //Zoom out minimap
   //
   //
@@ -10740,10 +10740,15 @@ void buttonApplyOnce(int i) { // apply once on button press
     if( pcar && !isVehicleInAir( pcar ) && !isVehicleUpsideDown( pcar ) ) 
       setFloat(pcar+(LCS?0x78:0x148), 0.3f);
   
-  } else if( i == 15 ) { // lock/unlock vehicle doors
-    lockdoors(FUNC_CHANGE_VALUE, PSP_CTRL_CROSS, 0);
+  } else if( i == 15 ) { // lock vehicle doors
+    if( pcar )
+      setVehicleDoorsLocked(pcar, TRUE);
   
-  } else if( i == 16 ) { 
+  } else if( i == 16 ) { // unlock vehicle doors
+    if( pcar )
+      setVehicleDoorsLocked(pcar, FALSE);
+  
+  } else if( i == 17 ) { 
     setTimedTextbox("TODO", 3.0f);
   } 
 }
@@ -11704,11 +11709,11 @@ void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*)status;
           
     case FUNC_APPLY:
-	  if( pcar && (pcar_type != VEHICLE_BOAT) && (isVehicleInWater(pcar) >= 1) && isVehicleInAir(pcar) ) { // when vehicle in water and no ground contact
+     if( pcar && (pcar_type != VEHICLE_BOAT) && (isVehicleInWater(pcar) >= 1) && isVehicleInAir(pcar) ) { // when vehicle in water and no ground contact
         if( current_buttons & PSP_CTRL_TRIANGLE ) { // player wants to exit vehicle
           setPedExitVehicleNow(pplayer);
-		}
-	  }
+      }
+     }
       break;
     
     case FUNC_CHECK:
@@ -11721,7 +11726,7 @@ void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultva
       if( keypress == PSP_CTRL_CROSS ) {
         status = 1 - status;
       } 
-     break; 
+      break; 
       
     case FUNC_SET: 
       status = defaultstatus;
