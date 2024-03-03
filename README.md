@@ -30,7 +30,7 @@ Please use ```cheatdevice_remastered_lite.prx``` instead.
 
 
 ## Compatibility
-All versions of the game (except the Japanese releases) are supported! As a bonus the German versions will be patched back uncut again. Tested and working on selected PSP CFWs as well as on [Adrenaline eCFW](https://github.com/TheOfficialFloW/Adrenaline/releases) for Vita and [PPSSPP](https://www.ppsspp.org/) v1.12.3.
+All versions of the game (except the Japanese releases) are supported! As a bonus the German versions will be patched back uncut again. Tested and working on selected PSP CFWs as well as on [Adrenaline eCFW](https://github.com/TheOfficialFloW/Adrenaline/releases) for Vita and [PPSSPP](https://www.ppsspp.org/) v1.12.3+
  
 PPSSPP is like 98% compatible right now. There might be more issues due to the emulation however.
  
