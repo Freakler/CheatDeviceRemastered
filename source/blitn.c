@@ -359,6 +359,7 @@ void mymenurender_VCS_patched() {
 
 int FindPatchLCS(u32 addr, u32 text_addr) {
   /*************************************
+   * ULUS-10041 v1.02 | 0x0010dfa8 | OK!
    * ULUS-10041 v1.05 | 0x001BEF40 | OK!
    * ULUS-10041 v3.00 | 0x001BEE84 | OK!
    * ULES-00182 v1.00 | 0x001BEE8C | OK!
@@ -370,9 +371,9 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x001C3FB8 | OK!
    * ULET-00361 v0.02 | 0x001BEE84 | OK!
    * ULET-00362 v0.01 | 0x001BEDD0 | OK!
-   * ULUX-80142 v0.02 | 0x00077AA0 | OK!
+   * ULUX-80146 v0.02 | 0x00077AA0 | OK!
    **************************************/ 
-  if( _lw(addr - 0x90) == 0x02002825 && _lw(addr + 0x24) == 0x00C02025 && _lw(addr + 0x78) == 0x00802825 ) { // 0x001BEE84
+  if( _lw(addr + 0x34) == 0x24C5FEE0 && _lw(addr + 0x24) == 0x00C02025 ) { // 0x001BEE84
     #ifdef LOG
     logPrintf("blitn: 0x%08X (0x%08X) -> mymenurender_LCS_patched", addr-text_addr, addr);
     #endif
@@ -392,7 +393,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x00258F60 | OK!
    * ULET-00361 v0.02 | 0x00250DF8 | OK!
    * ULET-00362 v0.01 | 0x00250D44 | OK!
-   * ULUX-80142 v0.02 | 0x001C3F10 | OK!
+   * ULUX-80146 v0.02 | 0x001C3F10 | OK!
    **************************************/ 
   if( _lw(addr - 0x4) == 0xA080001F && _lw(addr + 0x8) == 0xE48C0004 && _lw(addr + 0x10) == 0xE48D0008 && _lw(addr + 0x20) == 0xE48C000C ) { // 0x00250DF8
     #ifdef LOG
@@ -416,7 +417,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x00258F98 | OK!
    * ULET-00361 v0.02 | 0x00250E30 | OK!
    * ULET-00362 v0.01 | 0x00250D7C | OK!
-   * ULUX-80142 v0.02 | 0x001C3F48 | OK!
+   * ULUX-80146 v0.02 | 0x001C3F48 | OK!
    **************************************/ 
   if( _lw(addr - 0x4) == 0xE48D0014 && _lw(addr) == 0x00802825 && _lw(addr + 0x4) == 0x90A40000 && _lw(addr + 0x10) == 0x90A70001 ) { // 0x00250E30
     #ifdef LOG
@@ -438,7 +439,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x0025907C | OK!
    * ULET-00361 v0.02 | 0x00250F14 | OK!
    * ULET-00362 v0.01 | 0x00250E60 | OK!
-   * ULUX-80142 v0.02 | 0x001C402C | OK!
+   * ULUX-80146 v0.02 | 0x001C402C | OK!
    **************************************/ 
   if( _lw(addr + 0xC) == 0xA0800018 && _lw(addr + 0x10) == 0x03E00008 && _lw(addr + 0x14) == 0xA0800019 && _lw(addr + 0x18) == 0x44807000 && _lw(addr + 0x1C) == 0x3C0443F0 ) { // 0x00250F14
     #ifdef LOG
@@ -465,7 +466,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x00259138 | OK!
    * ULET-00361 v0.02 | 0x00250FD0 | OK! 
    * ULET-00362 v0.01 | 0x00250F1C | OK!
-   * ULUX-80142 v0.02 | 0x001C40E8 | OK!
+   * ULUX-80146 v0.02 | 0x001C40E8 | OK!
    **************************************/ 
   if( _lw(addr - 0x4) == 0xA0A4001B && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0xC) == 0xA080001B && _lw(addr + 0x10) == 0x90850000 && _lw(addr + 0x1C) == 0xA0C50028 ) { // 0x00250FD0
     #ifdef LOG
@@ -487,7 +488,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x00259198 | OK!
    * ULET-00361 v0.02 | 0x00251030 | OK!
    * ULET-00362 v0.01 | 0x00250F7C | OK!
-   * ULUX-80142 v0.02 | 0x001C4148 | OK!
+   * ULUX-80146 v0.02 | 0x001C4148 | OK!
    **************************************/ 
   if( _lw(addr - 0x4) == 0xA080001C && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0xC) == 0x03E00008 && _lw(addr + 0x10) == 0xA0A4001D ) { // 0x00251030
     #ifdef LOG
@@ -510,7 +511,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x002591BC | OK!
    * ULET-00361 v0.02 | 0x00251054 | OK!
    * ULET-00362 v0.01 | 0x00250FA0 | OK!
-   * ULUX-80142 v0.02 | 0x001C416C | OK!
+   * ULUX-80146 v0.02 | 0x001C416C | OK!
    **************************************/ 
   if( _lw(addr) == 0x00042C00 && _lw(addr + 0xc) == 0x34060002 && _lw(addr + 0x10) == 0x14A60005 && _lw(addr + 0x18) == 0xA4850038 ) { // 0x00251054
     #ifdef LOG
@@ -532,7 +533,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x00259204 | OK!
    * ULET-00361 v0.02 | 0x0025109C | OK!
    * ULET-00362 v0.01 | 0x00250FE8 | OK!
-   * ULUX-80142 v0.02 | 0x001C41B4 | OK!
+   * ULUX-80146 v0.02 | 0x001C41B4 | OK!
    **************************************/ 
   if( _lw(addr - 0x3C) == 0x34060002 && _lw(addr + 0x10) == 0x00802825 &&  _lw(addr + 0xB4) == 0x00000000 ) { // 0x0025109c
     #ifdef LOG
@@ -555,7 +556,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x00259F60 | OK!
    * ULET-00361 v0.02 | 0x00252AD4 | OK!
    * ULET-00362 v0.01 | 0x00252A20 | OK!
-   * ULUX-80142 v0.02 | 0x001C54B8 | OK!
+   * ULUX-80146 v0.02 | 0x001C54B8 | OK!
    **************************************/ 
   if( _lw(addr - 0x6C) == 0x0211A02B && _lw(addr - 0xD8) == 0x0211A02B ) { // 0x00252AD4
     #ifdef LOG
@@ -566,6 +567,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
   }
   
   /*************************************
+   * ULUS-10041 v1.02 | 0x001A1660 | OK!
    * ULUS-10041 v1.05 | 0x001F9434 | OK!
    * ULUS-10041 v3.00 | 0x001F9378 | OK!
    * ULES-00182 v1.00 | 0x001F9380 | OK!
@@ -577,10 +579,10 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x001FEFA8 | OK!
    * ULET-00361 v0.02 | 0x001F9378 | OK!
    * ULET-00362 v0.01 | 0x001F92C4 | OK!
-   * ULUX-80142 v0.02 | 0x002846C0 | OK!
+   * ULUX-80146 v0.02 | 0x002846C0 | OK!
+   * ULUX-80146 v0.03 | 0x001FF904 | OK!
    **************************************/ 
-  if( _lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 && _lw(addr - 0x24 ) == 0x00801025 && // 0x001F9378
-    ( _lw(addr + 0x40 ) == 0x00A08025 || _lw(addr + 0x38) == 0x00A08025 || _lw(addr + 0x48) == 0x00A08025) ) { // rest || ulux || jp
+  if( _lw(addr - 0x20) == 0x3C05C974 &&_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 ) { // 0x001F9378
     #ifdef LOG
     logPrintf("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
     #endif
@@ -600,7 +602,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 0x002D7BD4 | OK!
    * ULET-00361 v0.02 | 0x002CFE18 | OK!
    * ULET-00362 v0.01 | 0x002CFD64 | OK!
-   * ULUX-80142 v0.02 | 0x0017C10C | OK!
+   * ULUX-80146 v0.02 | 0x0017C10C | OK!
    **************************************/ 
   if( _lw(addr+0x20) == 0x02004025 && _lw(addr + 0x8) == 0x30C900FF && _lw(addr + 0x64) == 0x3404000C /*0x3404000A for VCS*/ ) {  // 0x002CFDD0
     #ifdef LOG
@@ -622,7 +624,7 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULJM-05255 v1.01 | 
    * ULET-00361 v0.02 | 
    * ULET-00362 v0.01 | 
-   * ULUX-80142 v0.02 | 
+   * ULUX-80146 v0.02 | 
    **************************************/ 
   if( _lw(addr+0x4) == 0x3C0443F0 && _lw(addr + 0x44) == 0x3C0443F0 && _lw(addr + 0x68) == 0x00000000 ) {  
     #ifdef LOG

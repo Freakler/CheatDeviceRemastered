@@ -2102,7 +2102,7 @@ void makeVehicleExplode(int vehicle_base_adr) {
 }
 
 void setVehicleRadioStation(int vehicle_base_adr, char id) {
-  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
+  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX v0.02
     setByte(vehicle_base_adr + 0x29C, id); 
   return;
   } 
@@ -2132,7 +2132,7 @@ float getVehicleSpeed(int vehicle_base_adr) {
 }
 
 char getVehicleCurrentGear(int vehicle_base_adr) {
-  if( LCS && mod_text_size == 0x0031F854 ) // ULUX 0.02
+  if( LCS && mod_text_size == 0x0031F854 ) // ULUX v0.02
     return getByte(vehicle_base_adr + 0x26C); 
   return getByte(vehicle_base_adr + (LCS ? 0x270 : 0x284)); 
 }
@@ -3171,7 +3171,7 @@ char *getRadioStationName(int no) { // for LCS: 0 = Head Radio, 1 = Double Clef,
 } */
 
 void setCameraCenterBehindPlayer() {
-  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
+  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) { // ULUX v0.02 & ULUS v1.02
     setByte(global_camera + 0x19A, 0x1);
   return;
   } 
@@ -3179,15 +3179,15 @@ void setCameraCenterBehindPlayer() {
 }
 
 void setFieldOfView(float fov) {
-  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX 0.02
+  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) { // ULUX v0.02 & ULUS v1.02
     setFloat(global_camera + 0x244, fov);
-  return;
+    return;
   } 
   setFloat(global_camera + (LCS ? 0x254 : 0x198), fov);
 }
 
 float getFieldOfView() {
-  if( LCS && mod_text_size == 0x0031F854 ) // ULUX 0.02
+  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) // ULUX v0.02 & ULUS v1.02
     return getFloat(global_camera + 0x244);
   return getFloat(global_camera + (LCS ? 0x254 : 0x198));
 }

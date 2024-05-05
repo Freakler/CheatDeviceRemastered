@@ -1731,17 +1731,17 @@ int userscripts_ctrl() {
                       /** LCS *** (PSP) *******************
                       533=PLAYER_SKIN    0x215  -> 0x15CE
                       536=PLAYER_CHAR    0x218  -> 0x18CE
-                      540=PLAYER_ACTOR  0x21C  -> 0x1CCE
-                      560=ONMISSION    0x230  -> 0x30CE
+                      540=PLAYER_ACTOR   0x21C  -> 0x1CCE
+                      560=ONMISSION      0x230  -> 0x30CE
                       
-                      500         0x1F4  -> 0xF4CD
+                      500          0x1F4  -> 0xF4CD
                       512          0x200  -> 0x00CE
                       4028         0xFBC  -> 0xBCDB
                       ************************************/
                       
                       /** VCS *** (PSP) *******************
-                      782=PLAYER_CHAR    0x30E  -> 0x0ED0 
-                      789=ONMISSION    0x315  -> 0x15D0  D0 15
+                      782=PLAYER_CHAR   0x30E  -> 0x0ED0 
+                      789=ONMISSION     0x315  -> 0x15D0  D0 15
                       
                       500          0x1F4  -> 0xF4CE  CE F4
                       ************************************/
@@ -1751,15 +1751,22 @@ int userscripts_ctrl() {
                       
                       int adr = 0;
 
-                      if( strcmp(token, "PLAYER_SKIN") == 0 ) {
+                      if( strcmp(token, "PLAYER_SKIN") == 0 ) { // LCS only
                         tempint = 533;
+                  
                       } else if( strcmp(token, "PLAYER_CHAR") == 0 ) {
                         tempint = (LCS ? 536 : 782);
-                      } else if( strcmp(token, "PLAYER_ACTOR") == 0 ) {
+                        if( VCS && mod_text_size == 0x00377D30 ) tempint = 759; // for ULUS v1.01
+                        if( LCS && mod_text_size == 0x00320A34 ) tempint = 534; // for ULUS v1.02
+                  
+                      } else if( strcmp(token, "PLAYER_ACTOR") == 0 ) { // LCS only
                         tempint = 540;
+                  
                       } else if( strcmp(token, "ONMISSION") == 0 ) {
                         tempint = (LCS ? 560 : 789);
-                        
+                        if( VCS && mod_text_size == 0x00377D30 ) tempint = 766; // for ULUS v1.01
+                  if( LCS && mod_text_size == 0x00320A34 ) tempint = 558; // for ULUS v1.02
+                  
                       } else {
                         tempint = strtol(token, NULL, 0); // convert 
                       }
@@ -3961,7 +3968,7 @@ float cam_coord_x2, cam_coord_y2, cam_coord_z2;
 float radius, inclination, azimuth; 
 float movespeed = 0.40, turnspeed = 0.05;
 int printinfo = 1;
-int uluxfix = 0;
+int protofix = 0, protofix2 = 0; // todo make dynamic?!
 extern u32 global_camera;
 
 int freecam_create() {
@@ -3969,12 +3976,15 @@ int freecam_create() {
   logPrintf("[INFO] %i: freecam_create()", getGametime());
   #endif
   
-  if( LCS && mod_text_size == 0x0031F854 ) // ULUX 0.02
-    uluxfix = -0x10;
+  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) // ULUX v0.02 & ULUS v1.02
+    protofix = -0x10;
+  
+  if( VCS && mod_text_size == 0x00377D30 ) // ULUS v1.01
+    protofix2 = 0x4;
   
   flag_freecam = 1; // only set here!
   printinfo = 1;
-  setByte(pplayer + (LCS ? 0x560 : 0x550), 1); // unbind camera from player 
+  setByte(pplayer + (LCS ? 0x560 : 0x550) + protofix2, 1); // unbind camera from player 
   setFloat(global_camera + (LCS ? 0xCC : 0x798), 4.0f); // unbind camera from vehicle (by setting camera mode to "4")
   return 0;
 }
@@ -3985,19 +3995,19 @@ int freecam_draw() {
   float player_z = getFloat(pplayer+0x38);
   
   /// get camera values
-  if( getByte(global_camera + (LCS ? 0x6B+uluxfix : 0x81A) ) == 0x1) { // cutscene
-    camera_x = getFloat(global_camera + (LCS ? 0x9C0+uluxfix : 0x7F0));
-    camera_y = getFloat(global_camera + (LCS ? 0x9C4+uluxfix : 0x7F4));
-    camera_z = getFloat(global_camera + (LCS ? 0x9C8+uluxfix : 0x7F8));
+  if( getByte(global_camera + (LCS ? 0x6B+protofix : 0x81A) ) == 0x1) { // cutscene
+    camera_x = getFloat(global_camera + (LCS ? 0x9C0+protofix : 0x7F0));
+    camera_y = getFloat(global_camera + (LCS ? 0x9C4+protofix : 0x7F4));
+    camera_z = getFloat(global_camera + (LCS ? 0x9C8+protofix : 0x7F8));
   } else {
-    camera_x = getFloat(global_camera + (LCS ? 0x340+uluxfix : 0x90));
-    camera_y = getFloat(global_camera + (LCS ? 0x344+uluxfix : 0x94));
-    camera_z = getFloat(global_camera + (LCS ? 0x348+uluxfix : 0x98));
+    camera_x = getFloat(global_camera + (LCS ? 0x340+protofix : 0x90));
+    camera_y = getFloat(global_camera + (LCS ? 0x344+protofix : 0x94));
+    camera_z = getFloat(global_camera + (LCS ? 0x348+protofix : 0x98));
   }
-  fov = getFloat(global_camera + (LCS ? 0x254+uluxfix : 0x198));
-  cam_coord_x1 = getFloat(global_camera + (LCS ? 0x330+uluxfix : 0x80));
-  cam_coord_y1 = getFloat(global_camera + (LCS ? 0x334+uluxfix : 0x84));
-  cam_coord_z1 = getFloat(global_camera + (LCS ? 0x338+uluxfix : 0x88));
+  fov = getFloat(global_camera + (LCS ? 0x254+protofix : 0x198));
+  cam_coord_x1 = getFloat(global_camera + (LCS ? 0x330+protofix : 0x80));
+  cam_coord_y1 = getFloat(global_camera + (LCS ? 0x334+protofix : 0x84));
+  cam_coord_z1 = getFloat(global_camera + (LCS ? 0x338+protofix : 0x88));
   
 
   /// calculate
@@ -4101,25 +4111,25 @@ int freecam_draw() {
   /////////////////////////////////////////////////////////////////////////////////////
   
   /// write back new values
-  if( getByte(global_camera + (LCS ? 0x6B+uluxfix : 0x81A)) == 0x1 ) { // cutscene
-    setFloat(global_camera + (LCS ? 0x9C0+uluxfix : 0x7F0), camera_x);
-    setFloat(global_camera + (LCS ? 0x9C4+uluxfix : 0x7F4), camera_y);
-    setFloat(global_camera + (LCS ? 0x9C8+uluxfix : 0x7F8), camera_z);
+  if( getByte(global_camera + (LCS ? 0x6B+protofix : 0x81A)) == 0x1 ) { // cutscene
+    setFloat(global_camera + (LCS ? 0x9C0+protofix : 0x7F0), camera_x);
+    setFloat(global_camera + (LCS ? 0x9C4+protofix : 0x7F4), camera_y);
+    setFloat(global_camera + (LCS ? 0x9C8+protofix : 0x7F8), camera_z);
   } else {
-    setFloat(global_camera + (LCS ? 0x340+uluxfix : 0x90), camera_x);
-    setFloat(global_camera + (LCS ? 0x344+uluxfix : 0x94), camera_y);
-    setFloat(global_camera + (LCS ? 0x348+uluxfix : 0x98), camera_z);
+    setFloat(global_camera + (LCS ? 0x340+protofix : 0x90), camera_x);
+    setFloat(global_camera + (LCS ? 0x344+protofix : 0x94), camera_y);
+    setFloat(global_camera + (LCS ? 0x348+protofix : 0x98), camera_z);
   }
   
-  setFloat(global_camera + (LCS ? 0x254+uluxfix : 0x198), fov);
+  setFloat(global_camera + (LCS ? 0x254+protofix : 0x198), fov);
   
-  setFloat(global_camera + (LCS ? 0x330+uluxfix : 0x80), cam_coord_x1);
-  setFloat(global_camera + (LCS ? 0x334+uluxfix : 0x84), cam_coord_y1);
-  setFloat(global_camera + (LCS ? 0x338+uluxfix : 0x88), cam_coord_z1);
+  setFloat(global_camera + (LCS ? 0x330+protofix : 0x80), cam_coord_x1);
+  setFloat(global_camera + (LCS ? 0x334+protofix : 0x84), cam_coord_y1);
+  setFloat(global_camera + (LCS ? 0x338+protofix : 0x88), cam_coord_z1);
   
-  setFloat(global_camera + (LCS ? 0x360+uluxfix : 0xD0), cam_coord_x2);
-  setFloat(global_camera + (LCS ? 0x364+uluxfix : 0xD4), cam_coord_y2);
-  setFloat(global_camera + (LCS ? 0x368+uluxfix : 0xD8), cam_coord_z2);
+  setFloat(global_camera + (LCS ? 0x360+protofix : 0xD0), cam_coord_x2);
+  setFloat(global_camera + (LCS ? 0x364+protofix : 0xD4), cam_coord_y2);
+  setFloat(global_camera + (LCS ? 0x368+protofix : 0xD8), cam_coord_z2);
   
   
   /////////////////////////////////////////////////////////////////////////////////////
@@ -4167,10 +4177,10 @@ int freecam_draw() {
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE);
     */
     
-    snprintf(buffer, sizeof(buffer), "cutscene = %X", getByte( global_camera + (LCS ? 0x6B+uluxfix : 0x81A)) );
+    snprintf(buffer, sizeof(buffer), "cutscene = %X", getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY);
     
-    snprintf(buffer, sizeof(buffer), "camera = %X", getByte( global_camera + (LCS ? 0x64+uluxfix : 0x816)) );
+    snprintf(buffer, sizeof(buffer), "camera = %X", getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY);
     
 
@@ -4208,7 +4218,7 @@ int freecam_ctrl() {
   
   if( pressed_buttons & PSP_CTRL_CIRCLE ) {
     flag_freecam = 0;
-    setByte(pplayer + (LCS ? 0x560 : 0x550), 0); // rebind camera to player
+    setByte(pplayer + (LCS ? 0x560 : 0x550) + protofix2, 0); // rebind camera to player
     setFloat(global_camera + (LCS ? 0xCC : 0x798 ), 2.0f); // rebind camera to vehicle
   }
 
@@ -6074,6 +6084,7 @@ int patch() {
   
   /***************************************************************** 
   * - USA ----------
+  * ULUS-10041_v1.02  text_size = 0x00320A34, data_size = 0x0002DBE4
   * ULUS-10041_v1.05  text_size = 0x0032BEDC, data_size = 0x0002E0F8
   * ULUS-10041_v3.00  text_size = 0x0032BFC4, data_size = 0x0002E110
   * 
@@ -6091,13 +6102,15 @@ int patch() {
   * ULJM-05255_v1.01  text_size = 0x0033388C, data_size = 0x0002FEB0
   * 
   * - PROTOTYPE ----
-  * ULUX-80142_v0.02  text_size = 0x0031F854, data_size = 0x0002DEC8
+  * ULUX-80146_v0.02  text_size = 0x0031F854, data_size = 0x0002DEC8
+  * ULUX-80146_v0.03  text_size = 0x0033205C, data_size = 0x0002E1E0
   * ULET-00361_v0.02  text_size = 0x0032C044, data_size = 0x0002E110 (EU)
   * ULET-00362_v0.01  text_size = 0x0032BF74, data_size = 0x0002E110 (GER)
   * 
   *****************************************************************
   * 
   * - USA ----------
+  * ULUS-10160_v1.01  text_size = 0x00377D30, data_size = 0x00020E34
   * ULUS-10160_v1.02  text_size = 
   * ULUS-10160_v1.03  text_size = 0x003864DC, data_size = 0x0001F85C
   * 
