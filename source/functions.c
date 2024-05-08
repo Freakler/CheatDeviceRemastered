@@ -1279,7 +1279,7 @@ const pickups_pack vcs_pickups[] = {
   {"RocketLauncher",     0x167,   0x0B,   0x0A },  
   {"Flamethrower",       0x168,   0x0B,   0x258},  
   {"M249",               0x169,   0x0B,   0x64 },
-  // 0x16A MG magazine
+  {"Minigun",            0x16A,   0x0B,   0x1F4 },
   {"Remote Explosive",   0x16B,   0x0B,   0x0A },  
   {"Kamera",             0x16C,   0x0B,   0x0A }, // check type & amount  
   {"Information",        0x16D,   0x0B,   0x00 }, // check type & amount  
