@@ -546,7 +546,7 @@ const Editor_pack vcs_vehicleobj_menu[] = {
   {"Mass"                      , " kg"     , 0xD0      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"TurnMass"                  , " kg m3"  , 0xD4      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   
-  {"Health"                    , ""        , 0x27C     , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"Health"                    , ""        , 0x27C     , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    }, // 0x29C for ULUS v1.01
   
   {"Primary Color"             , ""        , 0x224     , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Secondary Color"           , ""        , 0x228     , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },

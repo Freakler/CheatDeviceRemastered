@@ -2081,9 +2081,16 @@ void vcs_setVehicleColorStripe(int vehicle_base_adr, int color) {
 }
 
 void setVehicleHealth(int vehicle_base_adr, float value) {
+  if( VCS && mod_text_size == 0x00377D30 ) { // ULUS v1.01
+    setFloat(vehicle_base_adr + 0x29C, value);
+	return;
+  }
   setFloat(vehicle_base_adr + (LCS ? 0x268 : 0x27C), value);
 }
 float getVehicleHealth(int vehicle_base_adr) {
+  if( VCS && mod_text_size == 0x00377D30 ) { // ULUS v1.01
+    return getFloat(vehicle_base_adr + 0x29C);
+  }
   return getFloat(vehicle_base_adr + (LCS ? 0x268 : 0x27C));
 }
 
@@ -2104,7 +2111,7 @@ void makeVehicleExplode(int vehicle_base_adr) {
 void setVehicleRadioStation(int vehicle_base_adr, char id) {
   if( LCS && mod_text_size == 0x0031F854 ) { // ULUX v0.02
     setByte(vehicle_base_adr + 0x29C, id); 
-  return;
+    return;
   } 
   setByte(vehicle_base_adr + (LCS ? 0x2A0 : 0x2B7), id);
 }
@@ -2141,7 +2148,7 @@ void setVehicleFlagToUnload(int vehicle_base_adr) { // aka: mark no longer neede
   if( LCS ) setByte(vehicle_base_adr+0x48, 1);
 }
 
-void setVehicleDoorsLocked(int vehicle_base_adr, int boolean) {
+void setVehicleDoorsLocked(int vehicle_base_adr, int boolean) { // todo vcs proto
   setByte(vehicle_base_adr + (LCS ? 0x294 : 0x2A8), (boolean) ? 0x02 : 0x01); // 0x2 is locked, 0x1 is normal
 }
 

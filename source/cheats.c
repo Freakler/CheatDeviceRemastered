@@ -2482,11 +2482,14 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   
   /// cWorldStream_Render
   /*************************************
-   * ULUS-10160 v1.03 | 0x00154D28 | OK!
-   * ULES-00502 v1.02 |  | 
-   * ULES-00503 v1.02 |  | 
-   * ULJM-05297 v1.01 |  | 
-   * ULET-00417 v0.06 | 0x0014DCBC | OK!
+   * ULUS-10160 v1.01 | 
+   * ULUS-10160 v1.02 | 
+   * ULUS-10160 v1.03 | 0x00154D28
+   * ULES-00502 v1.02 | 
+   * ULES-00503 v1.02 | 
+   * ULJM-05297 v1.01 | 
+   * ULET-00417 v0.06 | 0x0014DCBC
+   * ULET-00417 v0.07 | 
    **************************************/ 
   if( _lw(addr + 0x84) == 0x3C043F80 && _lw(addr + 0x70) == 0x3C043D4C  ) { 
     #ifdef PATCHLOG
@@ -2536,6 +2539,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |  | 
    * ULET-00417 v0.06 | 0x001FFE00 | OK!
    **************************************/ 
+//if( _lw(addr - 0xC) == 0x1000FFF7 && _lw(addr + 0x4) == 0x00000000 && _lw(addr + 0x8) == 0x27A60010 && _lw(addr + 0x10) == 0x00602825 && _lw(addr + 0x1C) == 0x8FA40014 ) { // 0x002030D4
   if( _lw(addr + 0x6C) == 0x34040006 && _lw(addr - 0x20) == 0x2C840002 ) { // 0x002030D4
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
@@ -3265,7 +3269,18 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   
   
   /// GAME.DTZ - FUN_0024f6f0_loadGAMEDTZ (contains pointers to all files packed in the dtz) (GAME.DTZ is loaded to 0x   )
-  if( _lw(addr + 0xA4) == 0x3C044754 && _lw(addr + 0xA8) == 0x24844147 ) { // FUN_0024f6f0
+  /*************************************
+   * ULUS-10160 v1.01 | 0x0022303C (FUN_00223044) 
+   * ULUS-10160 v1.02 | 
+   * ULUS-10160 v1.03 | 0x0024f6f0
+   * ULES-00502 v1.02 | 
+   * ULES-00503 v1.02 | 
+   * ULJM-05297 v1.01 | 
+   * ULET-00417 v0.06 | 
+   * ULET-00417 v0.07 | 
+   **************************************/
+   if( _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
+	
     /*******************************************************************
      *  0x0024F720: 0x3C04003C '<..<' - lui        $a0, 0x3C
      *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
@@ -3275,7 +3290,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     logPrintf("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_003c2500
     #endif
   
-  /*******************************************************************
+    /*******************************************************************
      *  0x0024F940: 0xAF842700 '.'..' - sw         $a0, 9984($gp)
      * Handling isn't linked in VCS????      I need these for config though
     *******************************************************************/
@@ -3297,7 +3312,6 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     #ifdef PATCHLOG
     logPrintf("0x%08X -> ptr_buildingsIPL", ptr_buildingsIPL); // uGpffffc1a0
     #endif
-    
     
     /*******************************************************************
      * 0024f7ec a4 c1 84 af     sw         a0,-0x3e5c(gp)
@@ -3327,7 +3341,6 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     logPrintf("0x%08X -> ptr_particleCFG", ptr_particleCFG); // uGp00002270
     #endif
 
-
     /*******************************************************************
      * 0x0024f8dc d0 16 84 8f     lw         a0,LAB_000016d0(gp)
     *******************************************************************/
@@ -3353,20 +3366,21 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// IDEs (in DTZ but need to get globals from other location)
   /*************************************
    * ULUS-10160 v1.01 | 0x002C1ED0
+   * ULUS-10160 v1.02 | 
    * ULUS-10160 v1.03 | 0x002E8884
-   * ULES-00502 v1.02 | 
-   * ULES-00503 v1.02 | 
+   * ULES-00502 v1.02 | 0x002E8C64
+   * ULES-00503 v1.02 | 0x002E8ADC
    * ULJM-05297 v1.01 | 
-   * ULET-00417 v0.06 | 
+   * ULET-00417 v0.06 | 0x002E3E90
+   * ULET-00417 v0.07 | 0x002E8C64
    **************************************/ 
-  if( _lw(addr + 0x28) == 0x34100006 && _lw(addr + 0x5C) == 0x8CA50004 ) { // FUN_002e8884_IDE
-    
+  if( _lw(addr + 0x28) == 0x34100006 && _lw(addr + 0x44) == 0x90850010 ) {  // FUN_002e8884_IDE
     /*******************************************************************
      *  0x002E8898: 0xAF841DE8 '....' - sw         $a0, 7656($gp)
     *******************************************************************/
     ptr_IDEs = (int16_t) _lh(addr+0x14); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_IDEs", ptr_IDEs); //uGp00001de8
+    logPrintf("0x%08X (0x%08X) -> ptr_IDEs = 0x%08X", addr+0x14-text_addr, addr+0x14, ptr_IDEs); //uGp00001de8
     #endif
     
     /*******************************************************************
@@ -3374,7 +3388,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_IDETable = (int16_t) _lh(addr+0x24); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_IDETable", ptr_IDETable); // iGp00000018
+    logPrintf("0x%08X (0x%08X) -> ptr_IDETable = 0x%08X", addr+0x24-text_addr, addr+0x24, ptr_IDETable); // iGp00000018
     #endif
     
     return 1;
@@ -3382,7 +3396,6 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   
   /// pedstat.dat (in DTZ but need to get globals from other location)
   if( _lw(addr - 0x30) == 0x24A5008C && _lw(addr + 0x8) == 0x8C840000 ) { // 0x001D0528 (inside FUN_001d0480)
-    
     /*******************************************************************
      *  0x001D0528: 0x8F851DA4 '....' - lw         $a1, 7588($gp)
     *******************************************************************/
@@ -5092,13 +5105,13 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
             snprintf(buffer, sizeof(buffer), "isVehicleInWater = %X", isVehicleInWater(pcar));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE);
             
-            snprintf(buffer, sizeof(buffer), "isVehicleInAir = %X", isVehicleInAir( pcar ));
+            snprintf(buffer, sizeof(buffer), "isVehicleInAir = %X", isVehicleInAir(pcar));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, AZURE);
             
             snprintf(buffer, sizeof(buffer), "isVehicleUpsideDown = %X", isVehicleUpsideDown(pcar) );
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, AZURE);
             
-            snprintf(buffer, sizeof(buffer), "health = %.2f", getVehicleHealth( pcar ));
+            snprintf(buffer, sizeof(buffer), "health = %.2f", getVehicleHealth(pcar));
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, AZURE);
             
             snprintf(buffer, sizeof(buffer), "speed = %.2f", getVehicleSpeed(pcar));
@@ -7703,6 +7716,7 @@ void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
         if( pcar ) {
           #if defined(HEXMARKERS) || defined(HEXEDITOR)
           int temp = pcar + (VCS ? 0x27c : 0x268);
+          if( VCS && mod_text_size == 0x00377D30 ) temp = pcar + 0x29C; // ULUS v1.01
           #endif
           #ifdef HEXMARKERS
           hex_marker_clear();  

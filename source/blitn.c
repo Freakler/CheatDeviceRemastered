@@ -582,7 +582,8 @@ int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x002846C0 | OK!
    * ULUX-80146 v0.03 | 0x001FF904 | OK!
    **************************************/ 
-  if( _lw(addr - 0x20) == 0x3C05C974 &&_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 ) { // 0x001F9378
+  if( (_lw(addr - 0x20) == 0x3C05C974 &&_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025) &&  // 0x001F9378
+      (_lw(addr + 0x4C) == 0x27A50010 || _lw(addr + 0x34) == 0x00003825) ) {  // rest || ULUS v1.02
     #ifdef LOG
     logPrintf("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
     #endif
@@ -721,14 +722,17 @@ int FindPatchVCS(u32 addr, u32 text_addr) {
   }
   
   /*************************************
-   * ULUS-10160 v1.03 | 0x001CDB1C | OK!
-   * ULES-00502 v1.02 | 0x001CDEB0 | OK!
-   * ULES-00503 v1.02 | 0x001CDD78 | OK!
-   * ULJM-05297 v1.01 | 0x001E2118 | OK!
-   * ULET-00417 v0.06 | 0x001C3E14 | OK!
+   * ULUS-10160 v1.01 | 0x0019895C
+   * ULUS-10160 v1.02 | 
+   * ULUS-10160 v1.03 | 0x001CDB1C
+   * ULES-00502 v1.02 | 0x001CDEB0
+   * ULES-00503 v1.02 | 0x001CDD78
+   * ULJM-05297 v1.01 | 0x001E2118
+   * ULET-00417 v0.06 | 0x001C3E14
+   * ULET-00417 v0.07 | 
    **************************************/ 
-  if( _lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 && _lw(addr - 0x24 ) == 0x00801025 && 
-    ( _lw(addr + 0x34 ) == 0x00003825 || _lw(addr + 0x4C ) == 0x00402025 ) ) { // rest || JP
+  if( (_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 && _lw(addr - 0x24 ) == 0x00801025) && // also LCS !!
+    (_lw(addr + 0x34 ) == 0x00003825 || _lw(addr + 0x4C ) == 0x00402025) ) { // rest || JP
     #ifdef LOG
     logPrintf("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
     #endif
@@ -743,7 +747,7 @@ int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULJM-05297 v1.01 | 0x0032FEB4 | OK!
    * ULET-00417 v0.06 | 0x002EBC20 | OK!
    **************************************/ 
-  if( _lw(addr+0x20) == 0x02004025 && _lw(addr + 0x8) == 0x30C900FF && _lw(addr + 0x64) == 0x3404000A /* 0x3404000C for LCS*/ ) { 
+  if( _lw(addr+0x20) == 0x02004025 && _lw(addr+0x8) == 0x30C900FF && _lw(addr+0x64) == 0x3404000A /* 0x3404000C for LCS*/ ) {
     #ifdef LOG
     logPrintf("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
     #endif
@@ -777,13 +781,13 @@ int initTextBlit(u32 text_addr, u32 text_size) {
   
   if( gta_version == -1 ) {
     #ifdef LOG
-    logPrintf("blitn: error!\n");
+    logPrintf("blitn: ..error!\n");
     #endif
     return -1; // error
   }
   
   #ifdef LOG
-  logPrintf("blitn: success!\n");
+  logPrintf("blitn: ..success! (%s)\n", gta_version ? "LCS" : "VCS");
   #endif  
   return 0;
 }

@@ -27,7 +27,7 @@
 
 //#define LOG // logging to logfile
 //#define MEMLOG // logging bad memory access to logfile
-//#define PATCHLOG // debug logging for patch locations only
+//#define PATCHLOG // debug logging for detected patch locations only
 //#define USERSCRIPTLOG // debug logging for userscripts only
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
