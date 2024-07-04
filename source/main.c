@@ -1564,13 +1564,14 @@ int userscripts_ctrl() {
           for(i = 0; i < SUPPORT_LABEL; i++) // poorly memset unk_label
             unk_label[i][0] = 0;
           int unk_label_pos_cur = 0;
-
+          int lastif = -1, opcodessinceif = -1;
+		  
           //int blockcomment = 0;
           
           /// read in line by line /////////////////////////////////////////////////////////////////
           while( _fgets(readbuf, SCRIPTLINELGT, file) ) { // read txt line by line
             line++;
-                        
+            
             char *linehandle = readbuf; //create ptr to work with
           
             /// remove preceding whitespaces and tabs
@@ -1623,7 +1624,7 @@ int userscripts_ctrl() {
              
             /// check type of row
             if( linehandle[4] == ':' && linehandle[5] == ' ' ) { // operation (eg: "024C: request_model 172")            
-              
+              opcodessinceif++;
               int counter = -1, isfuncall = -1;
               char *saveptr;
               char *token = strtok_r(linehandle, " ", &saveptr); // get the first token
@@ -1649,7 +1650,7 @@ int userscripts_ctrl() {
                     isfuncall = 3; // first 3 vals without identifier (like 06 for int XX XX XX XX)
                   } else isfuncall = 0;
                 }
-                                
+                
                 /// rest are args or text
                 else {
                   
@@ -2119,15 +2120,32 @@ int userscripts_ctrl() {
                       
                       /// "if and" & "if or"
                       if( opcode == 0x00DB || opcode == 0x0078 ) { // LCS & VCS 
-                        if( strcmp(token, "and") == 0 ) {
-                          script[pos++] = 0x07; //
-                          script[pos++] = 0x04; //
+						opcodessinceif = -1;
+						if( strcmp(token, "and") == 0 ) {
+                          script[pos++] = 0x07; // int  -128 to 127
+                          script[pos++] = 0x00; // 0x00 + number of and conditions (eg 0x4 = 4)
+						  #if defined(LOG) || defined(USERSCRIPTLOG)
+                          logPrintf("Number of conditions will be adjusted later!");
+                          #endif
                         } else if( strcmp(token, "or") == 0 ) {
-                          script[pos++] = 0x07; //
-                          script[pos++] = 0x16; //
+                          script[pos++] = 0x07; // int  -128 to 127
+						  script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
+						  #if defined(LOG) || defined(USERSCRIPTLOG)
+                          logPrintf("Number of conditions will be adjusted later!");
+                          #endif
                         }
+						lastif = pos-1;
                       }
-                      
+                      if( lastif != -1 ) { // if "lastif" is not -1 then previously there was an "if and" or "if or" opcode which still needs its conditions parameter set!
+                        if( opcode == 0x004C || opcode == 0x004D || opcode == 0x0021 || opcode == 0x0022 ) { // set it once we reached "goto_if_false" or "goto_if_true"
+                          script[lastif] = script[lastif] + opcodessinceif; // add
+						  #if defined(LOG) || defined(USERSCRIPTLOG)
+						  logPrintf("Last 'if' has %d conditions and is now set!", opcodessinceif);
+						  #endif
+                          lastif = -1; // reset
+						}
+                      }
+					  
                       if( VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
                         if( strcmp(token, "enable") == 0 ) {
                           break; // ignore "enable 1"
