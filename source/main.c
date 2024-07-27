@@ -2120,28 +2120,28 @@ int userscripts_ctrl() {
                       
                       /// "if and" & "if or"
                       if( opcode == 0x00DB || opcode == 0x0078 ) { // LCS & VCS 
-						opcodessinceif = -1;
-						if( strcmp(token, "and") == 0 ) {
+                        opcodessinceif = -1;
+                        if( strcmp(token, "and") == 0 ) {
                           script[pos++] = 0x07; // int  -128 to 127
                           script[pos++] = 0x00; // 0x00 + number of and conditions (eg 0x4 = 4)
-						  #if defined(LOG) || defined(USERSCRIPTLOG)
+                          #if defined(LOG) || defined(USERSCRIPTLOG)
                           logPrintf("Number of conditions will be adjusted later!");
                           #endif
                         } else if( strcmp(token, "or") == 0 ) {
                           script[pos++] = 0x07; // int  -128 to 127
-						  script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
+                          script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
 						  #if defined(LOG) || defined(USERSCRIPTLOG)
                           logPrintf("Number of conditions will be adjusted later!");
                           #endif
                         }
-						lastif = pos-1;
+                        lastif = pos-1;
                       }
                       if( lastif != -1 ) { // if "lastif" is not -1 then previously there was an "if and" or "if or" opcode which still needs its conditions parameter set!
                         if( opcode == 0x004C || opcode == 0x004D || opcode == 0x0021 || opcode == 0x0022 ) { // set it once we reached "goto_if_false" or "goto_if_true"
                           script[lastif] = script[lastif] + opcodessinceif; // add
-						  #if defined(LOG) || defined(USERSCRIPTLOG)
-						  logPrintf("Last 'if' has %d conditions and is now set!", opcodessinceif);
-						  #endif
+                          #if defined(LOG) || defined(USERSCRIPTLOG)
+                          logPrintf("Last 'if' has %d conditions and is now set!", opcodessinceif);
+                          #endif
                           lastif = -1; // reset
 						}
                       }

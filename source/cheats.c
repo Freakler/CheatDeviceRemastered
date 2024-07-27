@@ -10125,12 +10125,13 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
   static short id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
-  #ifndef DEBUG
+  //#ifndef DEBUG
   static int i = 0;
   static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI, AEROPL, DODO
   static short blacklist_vcs[] = { 0x118 }; // AEROPL
-  #endif
+  //#endif
   static int status = 0;
+  //int typebackup = -1;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -10148,25 +10149,25 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && id > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
         id--;
-      #ifndef DEBUG
-      for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
-         if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-              id--;
+        #ifndef DEBUG
+        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+            id--;
             i = 0;
            }
         } if( id < getFirstIdeOfType(MODELINFO_VEHICLE) ) id+=2; // first is blacklisted, go to second
-      #endif
-      
+        #endif
+
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
         #ifndef DEBUG
-      for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
-         if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-              id++;
+        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+            id++;
             i = 0;
            }
         } if( id > getLastIdeOfType(MODELINFO_VEHICLE) ) id-=2; // last is blacklisted, go to pre-last
-      #endif
+        #endif
       
       } else if( keypress == PSP_CTRL_SQUARE ) { // "become vehicle"
         
@@ -10297,7 +10298,17 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         }
         
       } else if( keypress == PSP_CTRL_CROSS ) {
-
+		
+        // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
+        #ifdef DEBUG
+        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) {
+          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+            //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
+            setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
+          }
+        } // HAS to be reset after spawn todo
+        #endif
+        
         /// calculate coordinate in front of player
         x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
         y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
@@ -10398,7 +10409,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         writeFloat(&script_spawnvehicle[46], deg);
         
         CustomScriptExecute((int)&script_spawnvehicle); // make game execute it
-          
+        
       }
       break;
       
