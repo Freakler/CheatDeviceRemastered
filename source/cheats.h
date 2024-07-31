@@ -270,6 +270,9 @@ void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus);
 void *cdr_liveconfig(int calltype, int keypress, int defaultstatus);
 void *cdr_advancedconfig(int calltype, int keypress, int defaultstatus);
 
+#ifdef LANG
+void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultval);
+#endif
 
 void load_defaults();
 void exit_game();

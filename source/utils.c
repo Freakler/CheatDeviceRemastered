@@ -232,19 +232,19 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
     *save_ptr = s;
     return NULL;
   }
-  /* Scan leading delimiters.  */
+  // Scan leading delimiters.
   s += strspn (s, delim);
   if( *s == '\0' ) {
     *save_ptr = s;
     return NULL;
   }
-  /* Find the end of the token.  */
+  // Find the end of the token. 
   end = s + strcspn (s, delim);
   if( *end == '\0' ) {
     *save_ptr = end;
     return s;
   }
-  /* Terminate the token and make *SAVE_PTR point past it.  */
+  // Terminate the token and make *SAVE_PTR point past it.  
   *end = '\0';
   *save_ptr = end + 1;
   return s;
@@ -329,4 +329,8 @@ void getSizeString(char string[16], uint64_t size) {
     i++;
   }
   snprintf(string, 16, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
+}
+
+int fileEndsWithExtension(char *filename, const char* extension) {
+  return strcmp(filename + strlen(filename) - strlen(extension), extension) == 0;
 }

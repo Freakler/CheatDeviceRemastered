@@ -33,6 +33,11 @@
   #define INI_BUFFERSIZE  512
 #endif
 
+#if !defined INI_FILETYPE
+  //#define INI_FILETYPE    FILE*
+  #define INI_FILETYPE    SceUID
+#endif
+
 #if defined __cplusplus
   extern "C" {
 #endif
@@ -43,6 +48,8 @@ long  ini_getlhex(const TCHAR *Section, const TCHAR *Key, long DefValue, const T
 int   ini_gets(const TCHAR *Section, const TCHAR *Key, const TCHAR *DefValue, TCHAR *Buffer, int BufferSize, const TCHAR *Filename);
 int   ini_getsection(int idx, TCHAR *Buffer, int BufferSize, const TCHAR *Filename);
 int   ini_getkey(const TCHAR *Section, int idx, TCHAR *Buffer, int BufferSize, const TCHAR *Filename);
+int ini_getkeyfromstring(const TCHAR *Section, int idx, TCHAR *Buffer, int BufferSize, const TCHAR *string);
+int ini_getsfromstring(const TCHAR *Section, const TCHAR *Key, const TCHAR *DefValue, TCHAR *Buffer, int BufferSize, const TCHAR *string);
 
 #if !defined INI_NOFLOAT
 float ini_getf(const TCHAR *Section, const TCHAR *Key, float DefValue, const TCHAR *Filename);

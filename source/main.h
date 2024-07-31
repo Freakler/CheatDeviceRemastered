@@ -22,10 +22,10 @@
 
 /** FEATURE-FLAGS *****************************************************************************************************/
 
-//#define DEBUG // Debug mode  ("Debug" watermark, extra monitor, options etc)
+//#define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 //#define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
-//#define LOG // logging to logfile
+#define LOG // logging to logfile
 //#define MEMLOG // logging bad memory access to logfile
 //#define PATCHLOG // debug logging for detected patch locations only
 //#define USERSCRIPTLOG // debug logging for userscripts only
@@ -40,6 +40,7 @@
 #define HEXEDITOR // (~30KB)
 #define CONFIG // (~8KB)
 #define HEXMARKERS // (~4KB)
+#define LANG
 
 //#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed
@@ -172,6 +173,9 @@ void *category_toggle(int type, int cat, int set);
 int module_stop(int argc, char *argv[]);
 int module_start(SceSize argc, void* argp);
 
+extern const Menu_pack main_menu[];
+extern int menu_size;
+
 /////////////////////////////////////////////
 
 int editor_create();
@@ -228,5 +232,7 @@ void hex_marker_addx(u32 address, int size);
 void hex_marker_remove(u32 address);
 void hex_marker_clear();
 #endif
+
+extern int LCS;
 
 #endif
