@@ -4489,7 +4489,7 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
       static int lang_ran = 1;
 
       if (lang_ran) {
-        setup_lang(LanguageConfigStart);
+        setup_lang(CurrentLanguageID);
         lang_ran = 0;
       }
     }
@@ -5456,29 +5456,35 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
 
   switch( calltype ) {
 
-    case FUNC_GET_STATUS: 
+    case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_GET_VALUE: 
       return (int*)lang; 
 
     case FUNC_GET_STRING:
-      if (main_file_table->size <= 0)
-        return (void*)("None");
+
+      if ( main_file_table == NULL || main_file_table->size==1  )
+        return (void*)("English (United States)"); // Just return English, since it's the default
       else 
         return (void*)(main_file_table->lang_files[lang]->Language);
 
     case FUNC_CHANGE_VALUE:
-      if ( keypress == PSP_CTRL_CROSS ) {
+      if ( keypress == PSP_CTRL_CROSS && CurrentLanguageID != lang) {
         update_lang(lang);
+        status = 1;
       } 
 
-      else if( keypress == PSP_CTRL_LEFT && lang > 0) {
+      else if( keypress == PSP_CTRL_LEFT && lang > 0 && (main_file_table != NULL && main_file_table->size>1)) {
         lang--;
+        status = (CurrentLanguageID == lang);
       }
 
-      else if ( keypress == PSP_CTRL_RIGHT && lang < main_file_table->size-1 ) {
-        lang++;
+
+      else if ( keypress == PSP_CTRL_RIGHT && main_file_table != NULL ) {
+        if (lang < main_file_table->size-1)
+          lang++;
+          status = (CurrentLanguageID == lang);
       } 
       
       break;
@@ -5492,7 +5498,8 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
       } else {
         lang = 0;
       }
-      LanguageConfigStart = lang;
+      CurrentLanguageID = lang;
+      status = 1;
       break;
   }
 

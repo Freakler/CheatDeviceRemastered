@@ -25,7 +25,7 @@
 //#define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 //#define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
-#define LOG // logging to logfile
+//#define LOG // logging to logfile
 //#define MEMLOG // logging bad memory access to logfile
 //#define PATCHLOG // debug logging for detected patch locations only
 //#define USERSCRIPTLOG // debug logging for userscripts only

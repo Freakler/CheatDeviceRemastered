@@ -39,6 +39,6 @@ void GetINIInfo(LangFileTable *table, char* filename);
 extern LangHashTable *main_lang_table;
 extern LangFileTable *main_file_table;
 
-extern int LanguageConfigStart;
+extern int CurrentLanguageID;
 
 #endif

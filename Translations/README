@@ -3,7 +3,7 @@ This Translation add-on was originally made by danssmnt (https://github.com/dans
 
 If you wanna start translating CDR, it's really simple:
 
-    - Make a copy of en_US.ini and rename to:
+    - Make a copy of sample.ini and rename to:
 
         "{Language Code of the Country}_{Country Code}.ini" (example: pt_PT.ini for Portugues (Portugal))
 

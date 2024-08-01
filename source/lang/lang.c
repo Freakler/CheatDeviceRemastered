@@ -94,6 +94,9 @@ void lang_table_insert(LangHashTable *ht, const char *original_string, const cha
 }
 
 char *lang_table_search(LangHashTable *ht, const char *original_string) {
+
+    if (ht == NULL || main_file_table == NULL || main_file_table->size==1) goto RET_ORIGINAL_STRING;
+
     uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED);
     string_lang *current = ht->table[index];
     
@@ -104,6 +107,7 @@ char *lang_table_search(LangHashTable *ht, const char *original_string) {
         current = current->next;
     }
 
+    RET_ORIGINAL_STRING:
     // If not found, return the original string
     return (char*)original_string;
 }
@@ -142,7 +146,7 @@ LangFileTable *initLangFileTable() {
     return table;
 }
 
-int LanguageConfigStart = 0;
+int CurrentLanguageID = 0;
 
 // Append a LanguageFile to the LangFileTable
 void LangFileAppend(LangFileTable *table, char *version, char *author, char *language, char* filename) {
@@ -188,10 +192,13 @@ LangFileTable *SearchLangFiles() {
         return NULL;
     }
 
+    // Create a english default 
+    LangFileAppend(main_file_table, "", "", "English (United States)", "");
+
     SceUID dir = sceIoDopen(path_lang_files);
     if (dir < 0) {
-        freeLangFileTable(main_file_table);
-        return NULL;
+        //freeLangFileTable(main_file_table);
+        return main_file_table;
     }
 
     SceIoDirent dirent;
@@ -199,7 +206,7 @@ LangFileTable *SearchLangFiles() {
 
     while (sceIoDread(dir, &dirent) > 0) {
         if (FIO_SO_ISREG(dirent.d_stat.st_attr)) {
-            if (fileEndsWithExtension(dirent.d_name, ".ini")) {
+            if (fileEndsWithExtension(dirent.d_name, ".ini") && strcmp(dirent.d_name, "sample.ini") != 0) {
                 GetINIInfo(main_file_table, dirent.d_name);
             }
         }
@@ -208,6 +215,11 @@ LangFileTable *SearchLangFiles() {
     }
 
     sceIoDclose(dir);
+
+    /*if (main_file_table->size == 0) {
+        freeLangFileTable(main_file_table);
+        return NULL;
+    }*/
 
     return main_file_table;
 }
@@ -299,8 +311,17 @@ void update_lang(int langIndex) {
 }
 
 void setup_lang(int langIndex) {
+
     main_lang_table = create_lang_table();
     main_file_table = SearchLangFiles();
+
+    // If language is english
+    if (langIndex == 0) {
+        CurrentLanguageID = langIndex;
+        return;
+    } 
+
+    if (main_file_table->size==1) return;
 
     if (main_lang_table == NULL) return;
     else if (main_file_table == NULL) return;
@@ -311,6 +332,8 @@ void setup_lang(int langIndex) {
         ReadTranslationsFromINI(main_lang_table, "LCS", langIndex);
     else
         ReadTranslationsFromINI(main_lang_table, "VCS", langIndex);
+
+    CurrentLanguageID = langIndex;
 }
 
 #endif
