@@ -1,0 +1,26 @@
+Thank you for your interest in Translating CheatDevice Remastered!
+This Translation add-on was originally made by danssmnt (https://github.com/danssmnt).
+
+If you wanna start translating CDR, it's really simple:
+
+    - Make a copy of en_US.ini and rename to:
+
+        "{Language Code of the Country}_{Country Code}.ini" (example: pt_PT.ini for Portugues (Portugal))
+
+        Language Code of countries (use Set 1) -> https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+        Country Code of countries (Alpha-2 code) -> http://www.davros.org/misc/iso3166.html
+
+    - Change the variables in section [INFO]
+    - Start translating!
+
+
+When translating, you need to take in mind the following:
+
+    - The file size can't be longer than 65535 bytes (~65.5 KB)
+    - You can only use ASCII letters -> https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html
+    Which means no accented characters or other alphabets (cyrillic, arabic, Devanagari) :(
+
+    The game can lag, crash or be buggy with the translations and were working on improving it!
+    If you have other questions or problems, contact us in CheatDevice Remastered's official Discord Server -> https://discord.gg/7DERFmkgYq
+
+That's it, good luck! ;)
