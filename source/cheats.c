@@ -8578,7 +8578,7 @@ void *world_weather(int calltype, int keypress, int defaultstatus, int defaultva
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
         status = 1;
-      } else if( keypress == PSP_CTRL_RIGHT && i < 7 ) { // RIGHT
+      } else if( keypress == PSP_CTRL_RIGHT && i < 15 ) { // RIGHT
         i++;
         status = 1;
       } break;

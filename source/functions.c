@@ -141,8 +141,9 @@ char key_to_pad; // for custom button trigger (only cheats currently)
 char *lcs_garagenames[] = { "Portland", "Staunton Island", "Shoreside Vale" };
 char *vcs_garagenames[] = { "101 Bayshore Avenue", "The Compound", "Clymenus Suite" };
 
-char *weather_lcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Snow"};
-char *weather_vcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Ultra Sunny"};
+// So, you can set the weather up to 15 through userscripts (Phil Collins concert in VCS does it, setting it to "10")
+char *weather_vcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Ultra Sunny", "8", "9", "10", "11", "12", "13", "14", "15"};
+char *weather_lcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Snow", "8", "9", "10", "11", "12", "13", "14", "15"};
 
 
 const teleports_pack lcs_teleports[] = { // z value + 0.20 
