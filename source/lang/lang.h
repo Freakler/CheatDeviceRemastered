@@ -1,8 +1,11 @@
+#include <stdbool.h>
 
 #ifndef __LANG_H__
 #define __LANG_H__
 
-#define TABLE_SIZE 2579 // Prime number for hash table size
+#define LANG_DEBUG
+
+#define TABLE_SIZE 823 // Prime number for hash table size
 #define LANG_FILES_LIMIT 8
 #define TRANSLATED_STRINGS_LIMIT TABLE_SIZE
 #define FILE_SIZE_LIMIT 0xFFFF
@@ -34,7 +37,7 @@ typedef struct {
     int size;
 } LangFileTable;
 
-void GetINIInfo(LangFileTable *table, char* filename);
+void GetINIInfo(LangFileTable *table, const char* filename);
 
 extern LangHashTable *main_lang_table;
 extern LangFileTable *main_file_table;

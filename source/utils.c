@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <math.h>
+#include <ctype.h>
 
 #include "utils.h"
 #include "main.h" // for LOG
@@ -32,12 +33,18 @@ extern char file_log[];
 extern const char *basefolder;
 
 int logPrintf(const char *text, ...) { 
+
   va_list list;
   char string[256];
 
   va_start(list, text);
   vsprintf(string, text, list);
   va_end(list);
+
+  if (PPSSPP) {
+    sceKernelPrintf(string);
+    return 0;
+  }
 
   char buffer[128];
   snprintf(buffer, sizeof(buffer), "%s%s", basefolder, file_log);
@@ -331,6 +338,25 @@ void getSizeString(char string[16], uint64_t size) {
   snprintf(string, 16, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
 }
 
+// Convert a string to a lowercase string
+char* string_to_lower(char* c) {
+  if ( c == NULL ) return NULL;
+
+  size_t i;
+  size_t c_length = strlen(c);
+
+  for ( i = 0; i < c_length; i++ ) 
+  {
+    if ( isupper(c[i]) ) {
+      c[i] = tolower(c[i]);
+    }
+  }
+
+  return c;
+}
+
+// Check if filename (or path) ends with extension
 int fileEndsWithExtension(char *filename, const char* extension) {
-  return strcmp(filename + strlen(filename) - strlen(extension), extension) == 0;
+  // sometimes filenames are uppercase (for some reason idk)
+  return strcmp(string_to_lower(filename) + strlen(filename) - strlen(extension), string_to_lower(extension)) == 0;
 }

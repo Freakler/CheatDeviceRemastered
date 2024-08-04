@@ -5450,6 +5450,8 @@ void *cdr_autostartmenu(int calltype, int keypress, int defaultstatus) {
 
 #ifdef LANG
 
+char langBuf[32];
+
 void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   static int lang = 0;
@@ -5464,10 +5466,20 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
 
     case FUNC_GET_STRING:
 
-      if ( main_file_table == NULL || main_file_table->size==1  )
-        return (void*)("English (United States)"); // Just return English, since it's the default
-      else 
-        return (void*)(main_file_table->lang_files[lang]->Language);
+      // Lang files not found
+      if ( main_file_table == NULL || main_file_table->size==1 ) {
+        snprintf(langBuf, sizeof(langBuf), "English (United States)");
+        return (void*)langBuf;
+      } 
+    
+      // Versions don't match (probably old)
+      if (strlen(main_file_table->lang_files[lang]->Version) != 0 && strcmp(main_file_table->lang_files[lang]->Version, VERSION) != 0) {
+        snprintf(langBuf, sizeof(langBuf), "%s (%s)", main_file_table->lang_files[lang]->Language, main_file_table->lang_files[lang]->Version);
+        return (void*)langBuf;
+      } 
+
+      snprintf(langBuf, sizeof(langBuf), "%s", main_file_table->lang_files[lang]->Language);
+      return (void*)langBuf;
 
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_CROSS && CurrentLanguageID != lang) {

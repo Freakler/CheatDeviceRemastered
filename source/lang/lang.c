@@ -134,7 +134,6 @@ LangFileTable *main_file_table;
 LangFileTable *initLangFileTable() {
     LangFileTable *table = (LangFileTable *)malloc(sizeof(LangFileTable));
     if (!table) {
-        // fprintf(stderr, "Memory allocation for LangFileTable failed\n");
         return NULL;
     }
     int i;
@@ -149,7 +148,7 @@ LangFileTable *initLangFileTable() {
 int CurrentLanguageID = 0;
 
 // Append a LanguageFile to the LangFileTable
-void LangFileAppend(LangFileTable *table, char *version, char *author, char *language, char* filename) {
+void LangFileAppend(LangFileTable *table, const char *version, const char *author, const char *language, const char *filename) {
     if (table->size >= LANG_FILES_LIMIT) {
         return;
     }
@@ -193,38 +192,37 @@ LangFileTable *SearchLangFiles() {
     }
 
     // Create a english default 
-    LangFileAppend(main_file_table, "", "", "English (United States)", "");
+    LangFileAppend(main_file_table, VERSION, "Freakler", "English (United States)", "");
 
     SceUID dir = sceIoDopen(path_lang_files);
     if (dir < 0) {
-        //freeLangFileTable(main_file_table);
         return main_file_table;
     }
 
     SceIoDirent dirent;
+
+    // Initialize dirent
     memset(&dirent, 0, sizeof(SceIoDirent));
 
     while (sceIoDread(dir, &dirent) > 0) {
         if (FIO_SO_ISREG(dirent.d_stat.st_attr)) {
+            // Suffix to ignore an .ini file (add "_ignore.ini" to the filename)
+            if (fileEndsWithExtension(dirent.d_name, "_ignore.ini")) continue;
             if (fileEndsWithExtension(dirent.d_name, ".ini") && strcmp(dirent.d_name, "sample.ini") != 0) {
                 GetINIInfo(main_file_table, dirent.d_name);
             }
         }
 
+        // Clear dirent
         memset(&dirent, 0, sizeof(SceIoDirent));
     }
 
     sceIoDclose(dir);
 
-    /*if (main_file_table->size == 0) {
-        freeLangFileTable(main_file_table);
-        return NULL;
-    }*/
-
     return main_file_table;
 }
 
-void GetINIInfo(LangFileTable *table, char *filename) {
+void GetINIInfo(LangFileTable *table, const char *filename) {
     char Version[8];
     char Author[32];
     char Language[32];
@@ -236,8 +234,8 @@ void GetINIInfo(LangFileTable *table, char *filename) {
     ini_gets("INFO", "Translate Author", "None", Author, sizeof(Author), filepath);
     ini_gets("INFO", "Translate Language", "None", Language, sizeof(Language), filepath);
 
-#if defined(LOG) || defined(DEBUG)
-        sceKernelPrintf("Info from file '%s': Version '%s', Author '%s', Language '%s'\n", filename, Version, Author, Language);
+#if defined(LOG) && defined(LANG_DEBUG)
+        logPrintf("Info from file '%s': Version '%s', Author '%s', Language '%s'", filename, Version, Author, Language);
 #endif
 
     LangFileAppend(table, Version, Author, Language, filename);
@@ -259,8 +257,8 @@ void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int i
 
     snprintf(lang_path, sizeof(lang_path), "%s%s", path_lang_files, main_file_table->lang_files[index]->FileName);
 
-#if defined(LOG) || defined(DEBUG)
-    sceKernelPrintf("Reading Section '%s' from INI file '%s'\n", INISection, lang_path);
+#if defined(LOG) && defined(LANG_DEBUG)
+    logPrintf("Reading Section '%s' from INI file '%s'", INISection, lang_path);
 #endif
 
     if (!ini_openread(lang_path, &fp)) {
@@ -272,13 +270,19 @@ void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int i
     }
 
     int i;
-    for (i = 0; i < translated_strings_left; i++) {
+    int temp_trans_strings_left = translated_strings_left;
+    for (i = 0; i < temp_trans_strings_left; i++) {
         // Get original string (key) from index
         if (ini_getkeyfromstring(INISection, i, original_string, sizeof(original_string), fileread) == 0)
             break;
 
         // Get (from key) the translation
         ini_getsfromstring(INISection, original_string, original_string, translated_string, sizeof(translated_string), fileread);
+
+        // Don't load any english or empty string (it defaults to english)
+        if (strcmp(original_string, translated_string) == 0 || strlen(translated_string) == 0) {
+            continue;
+        }
         
         // Insert on table
         lang_table_insert(table, original_string, translated_string);
@@ -288,12 +292,10 @@ void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int i
     CLOSE_INI:
     ini_close(&fp);
 
-#if defined(LOG) || defined(DEBUG)
+#if defined(LOG) && defined(LANG_DEBUG)
     after_time = sceKernelGetSystemTimeWide();
-    sceKernelPrintf("Translated Strings Left -> %d", translated_strings_left);
-    
-    snprintf(bufDebug, sizeof(bufDebug), "Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
-    sceKernelPrintf(bufDebug);
+    logPrintf("Translated Strings Left -> %d", translated_strings_left);
+    logPrintf("Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
 #endif
 }
 
@@ -321,10 +323,7 @@ void setup_lang(int langIndex) {
         return;
     } 
 
-    if (main_file_table->size==1) return;
-
-    if (main_lang_table == NULL) return;
-    else if (main_file_table == NULL) return;
+    if (main_lang_table == NULL || main_file_table == NULL || main_file_table->size==1) return;
 
     ReadTranslationsFromINI(main_lang_table, "GENERAL", langIndex);
 
@@ -342,5 +341,5 @@ char* translate_string(const char* string) {
     #ifdef LANG
     return lang_table_search(main_lang_table, string);
     #endif
-    return string;
+    return (char*)string;
 }

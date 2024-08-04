@@ -42,6 +42,8 @@
 #define HEXMARKERS // (~4KB)
 #define LANG
 
+#define VERSION "v1.0g2" // displayed in title
+
 //#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed
 
@@ -50,6 +52,11 @@
 
 
 /**********************************************************************************************************************/
+
+extern int ADRENALINE;
+extern int PPSSPP;
+extern int LCS;
+extern int VCS;
 
 enum {
   OFF, // 0

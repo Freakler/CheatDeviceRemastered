@@ -45,8 +45,6 @@
 #include "lang/lang.h"
 #endif
 
-#define VERSION "v1.0g2" // displayed in title
-
 PSP_MODULE_INFO("CheatDeviceRemastered", 0, 1, 0); // user
 
 

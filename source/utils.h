@@ -19,6 +19,8 @@
 #ifndef __UTILSS_H__
 #define __UTILSS_H__
 
+#define LOG_SIZE 128
+
 
 int logPrintf(const char *text, ...);
 
