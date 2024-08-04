@@ -339,7 +339,9 @@ void setup_lang(int langIndex) {
 
 char* translate_string(const char* string) {
     #ifdef LANG
-    return lang_table_search(main_lang_table, string);
+    if (CurrentLanguageID != 0)
+        return lang_table_search(main_lang_table, string);
+    return (char*)string;
     #endif
     return (char*)string;
 }
