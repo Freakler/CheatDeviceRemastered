@@ -41,7 +41,7 @@
   #include "minIni.h"
 #endif
 
-#define VERSION "v1.0g2" // displayed in title
+#define VERSION "v1.0g3" // displayed in title
 
 PSP_MODULE_INFO("CheatDeviceRemastered", 0, 1, 0); // user
 
@@ -205,7 +205,7 @@ const Menu_pack main_menu[] = {
   {"- - - - - - - - - - - - - - - - -", CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
-  
+ 
   // // ALIAS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
   {"Infinite Health & Armor"          , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , godmode              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You are immune to explosions, gunshots, fall damage, fire etc.." },
@@ -251,7 +251,7 @@ const Menu_pack main_menu[] = {
   {"Drive on walls"                   , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x165A , OFF , driveonwalls         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Drive on walls! Good luck, its tricky ;)" },
   {"N.O.S boost"                      , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x19A9 , OFF , nitro                , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Press O to activate a 2 sec Nitro Boost for your vehicle." },
   {"Rocket boost: "                   , CAT_VEHICL  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x19A8 , OFF , rocketboost          , "LEFT/RIGHT = Adjust multiplier"    , "CIRCLE = Disable and reset"         , "> Continuous additional boost to your vehicle forward speed." },
-  {"Behave like Tank"                 , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1489 , OFF , tank                 , "CROSS = Enable/Disable Cheat"      , "SQUARE = Toggle explode on touch"   , "> Press O to fire canon and make vehicles explode when run into!" },
+  {"Behave like Tank"                 , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1489 , OFF , tank                 , "CROSS = Enable/Disable Cheat"      , "SQUARE = Toggle explode on touch"   , "> Press O to fire cannon and make vehicles explode when run into!" },
   {"Warp out of Water automatically"  , CAT_VEHICL  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x1A49 , OFF , warp_out_water_veh   , "CROSS = Enable/Disable Cheat"      , ""                                   , "> If you fall into the ocean you will be teleported out automatically." },
   {"Cars drive on Water"              , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x15F7 , OFF , driveonwater         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Your car can drive on water." },
   {""                                 , CAT_VEHICL  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -337,7 +337,7 @@ const Menu_pack main_menu[] = {
   {"Pickup Spawner: "                 , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1501 , OFF , pickup_spawner       , "CROSS = Create one-time pickup"    , "SQUARE = Create reappearing"        , "> Spawns selected Pickup in front of you." },
   {"Vehicle Spawner: "                , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x18FF , OFF , vehicle_spawner      , "CROSS/SQUARE = Spawn Vehicle"      , "LEFT/RIGHT = Adjust"                , "> Spawns selected Vehicle in front of you." },
   {"Reset Button Cheats history"      , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , no_cheating_warning  , "CROSS = Reset"                     , ""                                   , "> Remove all evidence of stock Cheats ever being used. Safe saving!" },
-  {"Vehicle Speedometer: "            , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1507 , OFF , speedometer_toggle   , "CROSS = Toggle Speedometer"        , ""                                   , "> Display a Speed'O'Meter when inside a Vehicle to monitor speed." },
+  {"Vehicle Speedometer: "            , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1507 , OFF , speedometer_toggle   , "CROSS = Toggle Speedometer"        , "SQUARE = Switch calculation"        , "> Display a Speed'O'Meter when inside a Vehicle to monitor speed." },
   {"Display FPS"                      , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179A , OFF , fps_toggle           , "CROSS = Toggle Display"            , ""                                   , "> Display the Games' Frames Per Second" },
   {"Display Memory Usage"             , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179B , OFF , mem_toggle           , "CROSS = Toggle Display"            , ""                                   , "> Display the Games' free main memory" },
   {"Display Coordinates"              , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1814 , OFF , coords_toggle        , "CROSS = Toggle Coordinates"        , ""                                   , "> Display your current xyz coordinates in the world." },
@@ -1565,7 +1565,7 @@ int userscripts_ctrl() {
             unk_label[i][0] = 0;
           int unk_label_pos_cur = 0;
           int lastif = -1, opcodessinceif = -1;
-		  
+        
           //int blockcomment = 0;
           
           /// read in line by line /////////////////////////////////////////////////////////////////
@@ -2130,7 +2130,7 @@ int userscripts_ctrl() {
                         } else if( strcmp(token, "or") == 0 ) {
                           script[pos++] = 0x07; // int  -128 to 127
                           script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
-						  #if defined(LOG) || defined(USERSCRIPTLOG)
+                          #if defined(LOG) || defined(USERSCRIPTLOG)
                           logPrintf("Number of conditions will be adjusted later!");
                           #endif
                         }
@@ -2143,9 +2143,9 @@ int userscripts_ctrl() {
                           logPrintf("Last 'if' has %d conditions and is now set!", opcodessinceif);
                           #endif
                           lastif = -1; // reset
-						}
+                        }
                       }
-					  
+                 
                       if( VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
                         if( strcmp(token, "enable") == 0 ) {
                           break; // ignore "enable 1"
@@ -2966,7 +2966,7 @@ int editor_draw() {
       
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything    
         func = editor_curmenu[i].value;
-        val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].address+editor_base_adr);
+        val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].address+editor_base_adr, (int)editor_curmenu[i].steps);
         snprintf(buffer, sizeof(buffer), "%s%s", val, editor_curmenu[i].postfix );
         
       } else { // plain value editing 
@@ -3453,7 +3453,7 @@ int editor_ctrl() {
           if( hold_buttons & PSP_CTRL_RIGHT ) 
             keypress = PSP_CTRL_RIGHT;
           func = (void *)(editor_curmenu[editor_selection_val].value);
-          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].address+editor_base_adr);
+          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].address+editor_base_adr, (int)editor_curmenu[editor_selection_val].steps);
           editor_wasused++;
           
         } else {
