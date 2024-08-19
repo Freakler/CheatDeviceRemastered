@@ -1055,7 +1055,7 @@ char script_workfldr[256]; // into this one
 
 ushort custom_gxts[CSTGXTS][CSTGXTLGT];
 
-#define SCRIPT_SIZE 8192    // maximum script size
+#define SCRIPT_SIZE 8192*2    // maximum script size
 
 #define SUPPORT_LABEL 256   // maximum supported Labels
 #define MAX_LABEL_LENGTH 32 // max length of a Label
@@ -2417,9 +2417,9 @@ int userscripts_ctrl() {
           u8 tempbuffffff[128]; // quick temp printout (which also crashes for bigger scripts)
           memset(&tempbuffffff, 0, sizeof(tempbuffffff)); 
           for( i = 0; i < (pos < 128 ? pos : 128); i++ ) // otherwise crash of emulator
-            sprintf(tempbuffffff, "%s %02X", tempbuffffff, script[i]);
+            snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
           logPrintf("\nSCRIPT:%s\n\n", tempbuffffff);
-          #endif  
+          #endif
           
           CustomScriptExecute(addr);
         }
