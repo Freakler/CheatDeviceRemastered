@@ -2103,6 +2103,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x0009F778
+    setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy
     return 1;
   } 
   
@@ -3837,6 +3838,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x002FDDA0
+	setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy
     return 1;
   }
   
@@ -4620,7 +4622,7 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   //logPrintf("0x%08X", &string);
   
   #ifdef USERSCRIPTS
-  #define CSTGXTS 16 // defined in main
+  #define CSTGXTS 32 // defined in main
   #define CSTGXTLGT 256 // ...
   extern ushort custom_gxts[CSTGXTS][CSTGXTLGT];
   if( strncmp(string, "CUST_", 5) == 0 ) { // CUST_00, CUST_01, ...

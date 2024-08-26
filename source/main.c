@@ -1042,12 +1042,12 @@ char script_workfldr[256]; // into this one
 #define SCRIPTNAMELGT 60  // max name length of cheat 
 #define SCRIPTLINELGT 256 // max line length in txt
 
-#define CSTGXTS 16    // max custom strings possible (ALSO CHANGE IN cheats.c!!)
+#define CSTGXTS 32    // max custom strings possible (ALSO CHANGE IN cheats.c!!)
 #define CSTGXTLGT 256 // max custom string length (ALSO CHANGE IN cheats.c!!)
 
 ushort custom_gxts[CSTGXTS][CSTGXTLGT];
 
-#define SCRIPT_SIZE 8192    // maximum script size
+#define SCRIPT_SIZE 16384   // maximum script size
 
 #define SUPPORT_LABEL 256   // maximum supported Labels
 #define MAX_LABEL_LENGTH 32 // max length of a Label
@@ -5551,7 +5551,8 @@ void applyOnce() { //called by hijacked game function
   
   
   /// heli height limit (also planes in VCS)
-  setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
+  //setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
+  // -> now set in Patch function(s) so that its being set as early as possible so that PPSSPP doesn't crash (for some strange jit bug reason)
   
   ///Custom Vehicle Spawns in World
   if( LCS ) {

@@ -2252,9 +2252,11 @@ int getVehicleBackseatRightHandle(int vehicle_base_adr) {
   return getInt(vehicle_base_adr + (LCS ? 0x204 : 0x390) );
 }
 
-void setHeliHeightLimit(float height) { // LCS only currently  
+void setHeliHeightLimit(float height) {
   int local = getInt((int)&height) >> 16; // only upper part of float needed eg: 80.0f = 0x42A0
   setShort(addr_heliheight, local); // 80.0f is default
+  //int local = getShort(addr_heliheight + 2) * 0x10000 + (getInt((int)&height) >> 16);
+  //setInt(addr_heliheight, local); // set the full instruction (and not individual bytes) is an easy fix for ppsspp jit problem apparently (Update: apparently not)
   clearICacheFor(addr_heliheight); // needed for PPSSPP
 }
 
