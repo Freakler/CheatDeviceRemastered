@@ -36,13 +36,10 @@
 #include "editor.h"
 #include "config.h"
 #include "functions.h"
+#include "lang/lang.h"
 
 #ifdef NAMERESOLV
   #include "minIni.h"
-#endif
-
-#ifdef LANG
-#include "lang/lang.h"
 #endif
 
 PSP_MODULE_INFO("CheatDeviceRemastered", 0, 1, 0); // user
@@ -210,7 +207,7 @@ const Menu_pack main_menu[] = {
   {"- - - - - - - - - - - - - - - - -", CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
-  
+ 
   // // ALIAS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
   {"Infinite Health & Armor"          , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
   {"Wanted Level:"                    , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current as max"        , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
@@ -255,7 +252,7 @@ const Menu_pack main_menu[] = {
   {"Drive on walls"                   , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x165A , OFF , driveonwalls         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Drive on walls! Good luck, its tricky :)" },
   {"N.O.S boost"                      , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x19A9 , OFF , nitro                , "CROSS: Enable/Disable Cheat"      , ""                                   , "Press O to activate a 2 sec Nitro Boost for your vehicle." },
   {"Rocket boost:"                    , CAT_VEHICL  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x19A8 , OFF , rocketboost          , "LEFT/RIGHT: Adjust multiplier"    , "CIRCLE: Disable and reset"         , "Continuous additional boost to your vehicle forward speed." },
-  {"Behave like Tank"                 , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1489 , OFF , tank                 , "CROSS: Enable/Disable Cheat"      , "SQUARE: Toggle explode on touch"   , "Press O to fire canon and make vehicles explode when run into!" },
+  {"Behave like Tank"                 , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1489 , OFF , tank                 , "CROSS: Enable/Disable Cheat"      , "SQUARE: Toggle explode on touch"   , "Press O to fire cannon and make vehicles explode when run into!" },
   {"Warp out of Water automatically"  , CAT_VEHICL  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x1A49 , OFF , warp_out_water_veh   , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
   {"Cars drive on Water"              , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x15F7 , OFF , driveonwater         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your car can drive on water." },
   {""                                 , CAT_VEHICL  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
@@ -275,7 +272,7 @@ const Menu_pack main_menu[] = {
   {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x15D3 , OFF , untouchable          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Vehicles wont be able to get near you and will be pushed back." },
   {""                                 , CAT_TRFFIC  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-  {"Pedestriants"                     , CAT_PEDS    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x28A4 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Pedestrians"                      , CAT_PEDS    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x28A4 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
   {"Disable Peds"                     , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1770 , OFF , peds_density         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely disable Pedestrians! (special ones might still appear)"  },
   {"Freeze Peds"                      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x191C , OFF , peds_freeze          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Freeze Pedestrians current positions in the world."  },
   {"Touch Ped to:"                    , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x14BA , OFF , touch_pedestrian     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"         , "Decide what should happen with a Ped as soon as you touch it." },
@@ -341,7 +338,7 @@ const Menu_pack main_menu[] = {
   {"Pickup Spawner:"                  , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1501 , OFF , pickup_spawner       , "CROSS: Create one-time pickup"    , "SQUARE: Create reappearing"        , "Spawns selected Pickup in front of you." },
   {"Vehicle Spawner:"                 , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x18FF , OFF , vehicle_spawner      , "CROSS/SQUARE: Spawn Vehicle"      , "LEFT/RIGHT: Adjust"                , "Spawns selected Vehicle in front of you." },
   {"Reset Button Cheats history"      , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , no_cheating_warning  , "CROSS: Reset"                     , ""                                   , "Remove all evidence of stock Cheats ever being used. Safe saving!" },
-  {"Vehicle Speedometer:"             , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1507 , OFF , speedometer_toggle   , "CROSS: Toggle Speedometer"        , ""                                   , "Display a Speed'O'Meter when inside a Vehicle to monitor speed." },
+  {"Vehicle Speedometer:"             , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1507 , OFF , speedometer_toggle   , "CROSS: Toggle Speedometer"        , "SQUARE: Switch calculation"         , "Display a Speed'O'Meter when inside a Vehicle to monitor speed." },
   {"Display FPS"                      , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179A , OFF , fps_toggle           , "CROSS: Toggle Display"            , ""                                   , "Display the Games' Frames Per Second" },
   {"Display Memory Usage"             , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179B , OFF , mem_toggle           , "CROSS: Toggle Display"            , ""                                   , "Display the Games' free main memory" },
   {"Display Coordinates"              , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1814 , OFF , coords_toggle        , "CROSS: Toggle Coordinates"        , ""                                   , "Display your current xyz coordinates in the world." },
@@ -1050,12 +1047,12 @@ char script_workfldr[256]; // into this one
 #define SCRIPTNAMELGT 60  // max name length of cheat 
 #define SCRIPTLINELGT 256 // max line length in txt
 
-#define CSTGXTS 16    // max custom strings possible (ALSO CHANGE IN cheats.c!!)
+#define CSTGXTS 32    // max custom strings possible (ALSO CHANGE IN cheats.c!!)
 #define CSTGXTLGT 256 // max custom string length (ALSO CHANGE IN cheats.c!!)
 
 ushort custom_gxts[CSTGXTS][CSTGXTLGT];
 
-#define SCRIPT_SIZE 8192*2    // maximum script size
+#define SCRIPT_SIZE 16384   // maximum script size
 
 #define SUPPORT_LABEL 256   // maximum supported Labels
 #define MAX_LABEL_LENGTH 32 // max length of a Label
@@ -1573,7 +1570,7 @@ int userscripts_ctrl() {
             unk_label[i][0] = 0;
           int unk_label_pos_cur = 0;
           int lastif = -1, opcodessinceif = -1;
-		  
+
           //int blockcomment = 0;
           
           /// read in line by line /////////////////////////////////////////////////////////////////
@@ -2128,30 +2125,30 @@ int userscripts_ctrl() {
                       
                       /// "if and" & "if or"
                       if( opcode == 0x00DB || opcode == 0x0078 ) { // LCS & VCS 
-						opcodessinceif = -1;
-						if( strcmp(token, "and") == 0 ) {
-                          script[pos++] = 0x07; // int  -128 to 127
-                          script[pos++] = 0x00; // 0x00 + number of and conditions (eg 0x4 = 4)
-						  #if defined(LOG) || defined(USERSCRIPTLOG)
-                          logPrintf("Number of conditions will be adjusted later!");
-                          #endif
-                        } else if( strcmp(token, "or") == 0 ) {
-                          script[pos++] = 0x07; // int  -128 to 127
-						  script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
-						  #if defined(LOG) || defined(USERSCRIPTLOG)
-                          logPrintf("Number of conditions will be adjusted later!");
-                          #endif
+                        opcodessinceif = -1;
+                        if( strcmp(token, "and") == 0 ) {
+                            script[pos++] = 0x07; // int  -128 to 127
+                            script[pos++] = 0x00; // 0x00 + number of and conditions (eg 0x4 = 4)
+                            #if defined(LOG) || defined(USERSCRIPTLOG)
+                            logPrintf("Number of conditions will be adjusted later!");
+                            #endif
+                          } else if( strcmp(token, "or") == 0 ) {
+                            script[pos++] = 0x07; // int  -128 to 127
+                            script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
+                            #if defined(LOG) || defined(USERSCRIPTLOG)
+                            logPrintf("Number of conditions will be adjusted later!");
+                            #endif
                         }
-						lastif = pos-1;
+                        lastif = pos-1;
                       }
                       if( lastif != -1 ) { // if "lastif" is not -1 then previously there was an "if and" or "if or" opcode which still needs its conditions parameter set!
                         if( opcode == 0x004C || opcode == 0x004D || opcode == 0x0021 || opcode == 0x0022 ) { // set it once we reached "goto_if_false" or "goto_if_true"
                           script[lastif] = script[lastif] + opcodessinceif; // add
-						  #if defined(LOG) || defined(USERSCRIPTLOG)
-						  logPrintf("Last 'if' has %d conditions and is now set!", opcodessinceif);
-						  #endif
+						              #if defined(LOG) || defined(USERSCRIPTLOG)
+                          logPrintf("Last 'if' has %d conditions and is now set!", opcodessinceif);
+                          #endif
                           lastif = -1; // reset
-						}
+						            }
                       }
 					  
                       if( VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
@@ -2974,7 +2971,7 @@ int editor_draw() {
       
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything    
         func = editor_curmenu[i].value;
-        val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].address+editor_base_adr);
+        val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].address+editor_base_adr, (int)editor_curmenu[i].steps);
         snprintf(buffer, sizeof(buffer), "%s%s", val, editor_curmenu[i].postfix );
         
       } else { // plain value editing 
@@ -3461,7 +3458,7 @@ int editor_ctrl() {
           if( hold_buttons & PSP_CTRL_RIGHT ) 
             keypress = PSP_CTRL_RIGHT;
           func = (void *)(editor_curmenu[editor_selection_val].value);
-          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].address+editor_base_adr);
+          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].address+editor_base_adr, (int)editor_curmenu[editor_selection_val].steps);
           editor_wasused++;
           
         } else {
@@ -5559,7 +5556,8 @@ void applyOnce() { //called by hijacked game function
   
   
   /// heli height limit (also planes in VCS)
-  setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
+  //setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
+  // -> now set in Patch function(s) so that its being set as early as possible so that PPSSPP doesn't crash (for some strange jit bug reason)
   
   ///Custom Vehicle Spawns in World
   if( LCS ) {

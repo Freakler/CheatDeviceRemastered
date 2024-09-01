@@ -31,10 +31,7 @@
 #include "editor.h"
 #include "utils.h"
 #include "blitn.h"
-
-#ifdef LANG
 #include "lang/lang.h"
-#endif
 
 register int gp asm("gp"); // for VCS
 int gp_ = 0; // helper (also used in configs extern)
@@ -2107,6 +2104,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x0009F778
+    setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy
     return 1;
   } 
   
@@ -3284,7 +3282,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.07 | 
    **************************************/
    if( _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
-	
+
     /*******************************************************************
      *  0x0024F720: 0x3C04003C '<..<' - lui        $a0, 0x3C
      *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
@@ -3841,6 +3839,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x002FDDA0
+    setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy
     return 1;
   }
   
@@ -4636,7 +4635,7 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   //logPrintf("0x%08X", &string);
   
   #ifdef USERSCRIPTS
-  #define CSTGXTS 16 // defined in main
+  #define CSTGXTS 32 // defined in main
   #define CSTGXTLGT 256 // ...
   extern ushort custom_gxts[CSTGXTS][CSTGXTLGT];
   if( strncmp(string, "CUST_", 5) == 0 ) { // CUST_00, CUST_01, ...
@@ -4926,6 +4925,7 @@ char gear[16];
 void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
   static int i = 0;
+  static int real = 0;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -4935,12 +4935,12 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return ( i ? "MP/H" : "KM/H");
+      return (real ? ( i ? "MP/H (real)" : "KM/H (real)") : ( i ? "MP/H" : "KM/H"));
       
     case FUNC_APPLY:
       if( pcar ) { 
         /// speed (Example: "ESPRIT" 1.065 (fMaxVelocity) * 180 * 1.2 = 230 km/h as set in beta handling.cfg)  See: https://github.com/guard3/g3DTZ/blob/e22a1a2295fe136e702153aabb391453be9f6305/source/core/HandlingMgr.cpp#L13
-        sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), (getVehicleSpeed(pcar) * 180.0f * 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
+        sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed(pcar) * 180.0f * (real ? 1 : 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
         
         /// gears
         sprintf(gear, "Gear: %X", getVehicleCurrentGear( pcar ) );
@@ -4954,6 +4954,8 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
         } else {
           flag_draw_SPEEDO = status = 1;
         }
+      } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
+        real = 1 - real;
       } else if( keypress == PSP_CTRL_LEFT ) { // LEFT
         i = 0;
       } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
@@ -10213,12 +10215,13 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
   static short id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
-  #ifndef DEBUG
+  // #ifndef DEBUG
   static int i = 0;
   static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI, AEROPL, DODO
   static short blacklist_vcs[] = { 0x118 }; // AEROPL
-  #endif
+  // #endif
   static int status = 0;
+  // int typebackup = -1;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -10236,25 +10239,25 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && id > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
         id--;
-      #ifndef DEBUG
-      for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
-         if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-              id--;
+        #ifndef DEBUG
+        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+            id--;
             i = 0;
-           }
+          }
         } if( id < getFirstIdeOfType(MODELINFO_VEHICLE) ) id+=2; // first is blacklisted, go to second
-      #endif
+        #endif
       
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
         #ifndef DEBUG
-      for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_lcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
-         if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-              id++;
+        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+            id++;
             i = 0;
-           }
+          }
         } if( id > getLastIdeOfType(MODELINFO_VEHICLE) ) id-=2; // last is blacklisted, go to pre-last
-      #endif
+        #endif
       
       } else if( keypress == PSP_CTRL_SQUARE ) { // "become vehicle"
         
@@ -10267,7 +10270,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           02D3: get_ground_z_for_3d_coord 0@ 1@ 2@ store_to 4@ 
           00A5: create_car 172 at 0@ 1@ 4@ store_to 5@ 
           017A: set_car_heading 5@ to 3@ 
-          036E: warp_char_into_car $PLAYER_CHAR to 5@ 
+          036E: warp_char_into_car $PLAYER_CHAR to 5@
+          > 01C8: mark_car_as_no_longer_needed 5@  
           004E: terminate_this_script
           ************************************************************/
           /*
@@ -10278,7 +10282,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           D3 02 0C 0D 0E 10
           A5 00 08 AC 00 0C 0D 10 11 
           7A 01 11 0F 
-          6E 03 CE 18 11 
+          6E 03 CE 18 11
+          > C8 01 11 
           4E 00          
           */
           
@@ -10290,7 +10295,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           01BB: get_ground_z_for_3d_coord 0@ 1@ 2@ store_to 4@ 
           0048: create_car 162 at 0@ 1@ 4@ store_to 5@ 
           00D1: set_car_heading 5@ to 3@ 
-          021C: warp_char_into_car $PLAYER_CHAR to 5@ 
+          021C: warp_char_into_car $PLAYER_CHAR to 5@
+          > 0113: mark_car_as_no_longer_needed 5@ 
           0023: end_thread
           ************************************************************/
           
@@ -10313,7 +10319,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
             /// get_player_heading
             0x75, 0x01,
             0xCE, 0x18, // $PLAYER_CHAR
-            0x0F,  // 3@ (store_to)
+            0x0F, // 3@ (store_to)
             
             /// get_ground_z_for_3d_coord
             0xD3, 0x02,
@@ -10339,7 +10345,11 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
             /// WARP_PLAYER_INTO_CAR
             0x6E, 0x03,
             0xCE, 0x18, // $PLAYER_CHAR 536
-            0x11,      // 5@
+            0x11, // 5@
+
+            /// mark_car_as_no_longer_needed
+            0xC8, 0x01,
+            0x11, // 5@
             
             /// terminate_this_script
             0x4E, 0x00 // Opcode: 004E
@@ -10354,7 +10364,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
             writeShort(&script_becomevehicle[25], 0x0048);
             writeShort(&script_becomevehicle[34], 0x00D1);
             writeShort(&script_becomevehicle[38], 0x021C);
-            writeShort(&script_becomevehicle[43], 0x0023);
+            writeShort(&script_becomevehicle[43], 0x0113);
+            writeShort(&script_becomevehicle[46], 0x0023);
             
             /// update $PLAYER_CHAR
             writeShort(&script_becomevehicle[9], 0x0ED0);
@@ -10385,6 +10396,18 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         }
         
       } else if( keypress == PSP_CTRL_CROSS ) {
+        
+        // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
+        #ifdef DEBUG
+        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
+          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+            //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
+            setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
+          }
+        } // HAS to be reset after spawn todo
+        #endif
+
+
 
         /// calculate coordinate in front of player
         x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
@@ -10404,6 +10427,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         00A5: create_car 162 at X Y 0@ store_to 1@ 
         017A: set_car_heading 1@ to DEG
         020F: lock_car_doors 1@ mode 1
+        > 01C8: mark_car_as_no_longer_needed 1@ 
         004E: terminate_this_script
         ************************************************************/
         
@@ -10414,6 +10438,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         0048: create_car 162 at X Y 0@ store_to 1@ 
         00D1: set_car_heading 1@ to DEG
         013A: lock_car_doors 1@ mode 1
+        > 0113: mark_car_as_no_longer_needed 1@
         0023: terminate_this_script
         ************************************************************/
 
@@ -10458,6 +10483,10 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           0x0F, 0x02, 
           0x0D, // 1@
           0x07, 0x01, // mode 1
+
+          /// mark_car_as_no_longer_needed
+          0xC8, 0x01,
+          0x0D, // 1@
           
           /// terminate_this_script
           0x4E, 0x00 // Opcode: 004E
@@ -10470,7 +10499,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           writeShort(&script_spawnvehicle[25], 0x0048);
           writeShort(&script_spawnvehicle[42], 0x00D1);
           writeShort(&script_spawnvehicle[50], 0x013A);
-          writeShort(&script_spawnvehicle[55], 0x0023);
+          writeShort(&script_spawnvehicle[55], 0x0113);
+          writeShort(&script_spawnvehicle[58], 0x0023);
         }
         
         writeShort(&script_spawnvehicle[3], id); // insert vehicle_id
@@ -10486,7 +10516,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         writeFloat(&script_spawnvehicle[46], deg);
         
         CustomScriptExecute((int)&script_spawnvehicle); // make game execute it
-          
+        
       }
       break;
       

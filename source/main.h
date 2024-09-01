@@ -19,6 +19,7 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#define VERSION "v1.0g3" // displayed in title
 
 /** FEATURE-FLAGS *****************************************************************************************************/
 
@@ -40,9 +41,7 @@
 #define HEXEDITOR // (~30KB)
 #define CONFIG // (~8KB)
 #define HEXMARKERS // (~4KB)
-#define LANG
-
-#define VERSION "v1.0g2" // displayed in title
+#define LANG // (~6KB)
 
 //#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed

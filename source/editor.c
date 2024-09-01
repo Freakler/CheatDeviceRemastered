@@ -438,6 +438,36 @@ const Editor_pack vcs_pedobj_menu[] = {
 
   {"Health"                         , ""      , 0x4E4      , TRUE    , TYPE_FLOAT      , 2      , 0            , 1      },
   {"Armor"                          , ""      , 0x4E8      , TRUE    , TYPE_FLOAT      , 2      , 0            , 1      },
+
+  {"Color R"                   , "/255"  , 0x4FC      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color G"                   , "/255"  , 0x4FD      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color B"                   , "/255"  , 0x4FE      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color Alpha"               , "/255"  , 0x4FF      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+
+  {"Color R"                   , "/255"  , 0x500      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color G"                   , "/255"  , 0x501      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color B"                   , "/255"  , 0x502      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color Alpha"               , "/255"  , 0x503      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+
+  {"Color R"                   , "/255"  , 0x504      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color G"                   , "/255"  , 0x505      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color B"                   , "/255"  , 0x506      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color Alpha"               , "/255"  , 0x507      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+
+  {"Color R"                   , "/255"  , 0x508      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color G"                   , "/255"  , 0x509      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color B"                   , "/255"  , 0x50A      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color Alpha"               , "/255"  , 0x50B      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+
+  {"Color R"                   , "/255"  , 0x50C      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color G"                   , "/255"  , 0x50D      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color B"                   , "/255"  , 0x50E      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color Alpha"               , "/255"  , 0x50F      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+
+  {"Color R"                   , "/255"  , 0x510      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color G"                   , "/255"  , 0x511      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color B"                   , "/255"  , 0x512      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
+  {"Color Alpha"               , "/255"  , 0x513      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   
   {"WeaponID - Melee Slot"          , ""      , 0x578      , FALSE   , TYPE_BYTE       , HEX    , 0            , 0x1    }, 
 
@@ -868,18 +898,18 @@ const Editor_pack lcs_handlingcfg_menu[] = {
   {"fSuspensionLowerLimit"             , ""      , 0xC4      , TRUE    , TYPE_FLOAT       , 2      , 0                    , 0.01f    }, // e
   {"fSuspensionBias"                   , ""      , 0xC8      , TRUE    , TYPE_FLOAT       , 2      , 0                    , 0.01f    }, // f (suspension bias between front and rear)
   {"fSuspensionAntiDive"               , ""      , 0xCC      , TRUE    , TYPE_FLOAT       , 2      , 0                    , 0.05f    }, // g
-                                                                                                                                                             //     D0 D1 D2 D3
-                                                                                                                  /// ag   dwflags <format=hex>;    Digits: 0x 21 43 65 87
-  {"ModelFlag 1"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_LOW  , DEC    , vehicle_flag1        , 0x1      }, // 1: 1G_BOOST        2: 2G_BOOST       4: REV_BONNET    8: HANGING_BOOT
-  {"ModelFlag 2"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_HIGH , DEC    , vehicle_flag2        , 0x1      }, // 1: NO_DOORS      2: IS_VAN        4: IS_BUS        8: IS_LOW
-  {"ModelFlag 3"                       , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_LOW  , DEC    , vehicle_flag3        , 0x1      }, // 1: DBL_EXHAUST      2: TAILGATE_BOOT  4: NOSWING_BOOT  8: NONPLAYER_STABILISER  
-  {"ModelFlag 4"                       , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_HIGH , DEC    , vehicle_flag4        , 0x1      }, // 1: NEUTRALHANDLING 2: HAS_NO_ROOF    4: IS_BIG        8: HALOGEN_LIGHTS
-  {"ModelFlag 5"                       , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_LOW  , DEC    , vehicle_flag5        , 0x1      }, // 1: IS_BIKE      2: IS_HELI        4: IS_PLANE      8: IS_BOAT
-  {"ModelFlag 6"                       , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_HIGH , DEC    , vehicle_flag6        , 0x1      }, // 1: NO_EXHAUST    2: REARWHEEL_1ST  4: HANDBRAKE_TYRE8: SIT_IN_BOAT
-  {"ModelFlag 7"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_LOW  , DEC    , vehicle_flag7        , 0x1      }, // 1: FAT_REARW    2: NARROW_FRONTW  4: GOOD_INSAND
-  {"ModelFlag 8"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_HIGH , DEC    , vehicle_flag8        , 0x1      }, // 1: FORCE_GRND_CLR
+                                                                                                                                                                             // D0 D1 D2 D3
+                                                                                                                                   /// ag   dwflags <format=hex>;    Digits: 0x 21 43 65 87
+  {"ModelFlag 1"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 0      }, // 1st digit =      1: 1G_BOOST         2: 2G_BOOST       4: REV_BONNET    8: HANGING_BOOT
+  {"ModelFlag 2"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 1      }, // 2nd digit =      1: NO_DOORS           2: IS_VAN         4: IS_BUS        8: IS_LOW
+  {"ModelFlag 3"                       , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 2      }, // 3rd digit =       1: DBL_EXHAUST       2: TAILGATE_BOOT  4: NOSWING_BOOT  8: NONPLAYER_STABILISER    
+  {"ModelFlag 4"                       , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 3      }, // 4th digit =      1: NEUTRALHANDLING  2: HAS_NO_ROOF    4: IS_BIG        8: HALOGEN_LIGHTS
+  {"ModelFlag 5"                       , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 4      }, // 5th digit =      1: IS_BIKE         2: IS_HELI        4: IS_PLANE      8: IS_BOAT
+  {"ModelFlag 6"                       , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 5      }, // 6th digit =      1: NO_EXHAUST      2: REARWHEEL_1ST  4: HANDBRAKE_TYRE8: SIT_IN_BOAT
+  {"ModelFlag 7"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 6      }, // 7th digit =      1: FAT_REARW      2: NARROW_FRONTW  4: GOOD_INSAND
+  {"ModelFlag 8"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 7      }, // 8th digit =      1: FORCE_GRND_CLR
  
-  
+ 
   {"fSeatOffsetDistance"               , ""      , 0xD4      , TRUE    , TYPE_FLOAT       , 2      , 0                    , 0.01f    }, // aa
   {"nMonetaryValue"                    , " $"    , 0xD8      , TRUE    , TYPE_INTEGER     , DEC    , 0                    , 1        }, // ac
   
@@ -892,7 +922,7 @@ const Editor_pack lcs_handlingcfg_menu[] = {
 };
 
 const Editor_pack vcs_handlingcfg_menu[] = {
-  //name                              //postfix   //address   //edit_bool    //type  //precision  //*value              //steps    //min    //max  
+  //name                              //postfix   //address   //edit_bool    //type  //precision  //*value              //steps 
   {"fMass"                             , " Kg"    , 0xBC      , TRUE    , TYPE_FLOAT   , 2      , 0                    , 1.00f    }, // B
   {"fTurnMass"                         , " Kg"    , 0xC0      , TRUE    , TYPE_FLOAT   , 2      , 0                    , 1.00f    }, // C
   {"fTractionMultiplier"               , " x1.0"  , 0xC4      , TRUE    , TYPE_FLOAT   , 2      , 0                    , 0.05f    }, // J - OK
@@ -953,56 +983,79 @@ const Editor_pack vcs_handlingcfg_menu[] = {
   {"ModelFlag 7"              , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , vehicle_flag5, 0x1    , 0x0    , 0xF     }, // 1: IS_BIKE      2: IS_HELI        4: IS_PLANE      8: IS_BOAT
   {"ModelFlag 8"              , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //
  */
+
+  {"HandlingFlag 1"                    , ""      , 0xCC      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 0      }, // 
+  {"HandlingFlag 2"                    , ""      , 0xCC      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 1      }, // NO_HANDBRAKE, STEER_REARWHEELS..
+  {"HandlingFlag 3"                    , ""      , 0xCD      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 2      }, // 
+  {"HandlingFlag 4"                    , ""      , 0xCD      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 3      }, //
+  {"HandlingFlag 5"                    , ""      , 0xCE      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 4      }, //
+  {"HandlingFlag 6"                    , ""      , 0xCE      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 5      }, // GOOD_INSAND..
+  {"HandlingFlag 7"                    , ""      , 0xCF      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 6      }, // 
+  {"HandlingFlag 8"                    , ""      , 0xCF      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 7      }, //
+
+  {"ModelFlag 1"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 0      }, //
+  {"ModelFlag 2"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 1      }, //
+  {"ModelFlag 3"                       , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 2      }, //  
+  {"ModelFlag 4"                       , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 3      }, //
+  {"ModelFlag 5"                       , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 4      }, //
+  {"ModelFlag 6"                       , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 5      }, // 
+  {"ModelFlag 7"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 6      }, // 1: IS_BIKE      2: IS_HELI        4: IS_PLANE      8: IS_BOAT
+  {"ModelFlag 8"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 7      }, // 
+
   {NULL,NULL,0,0,0,0,0}
 };
 
-void *vehicle_flag1(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleLow(address);
-  
-  if( calltype == FUNC_GET_STRING ) {
-    switch( nibble ) {
-      case 0x1: return "1G_BOOST";
-      case 0x2: return "2G_BOOST";
-      case 0x4: return "REV_BONNET";
-      case 0x8: return "HANGING_BOOT";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
-    }
-  }
-  
-  if( calltype == FUNC_CHANGE_VALUE ) {
-    if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
-        nibble--;
-        
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
-        nibble++;
-      
-      setNibbleLow(address, nibble);
-    }
-  }
-  
-  return NULL;
-}
+/************************************
+example modelflag LCS: "Idaho"
+0x10200002 = 02 00 20 10
+    ^              ^
+   "6th digit"    "REARWHEEL_1ST"
+   
+0x 21 43 65 87
+************************************/   
 
-void *vehicle_flag2(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleHigh(address);
+char *lcs_modelflags[] = { "1G_BOOST",        "2G_BOOST",      "REV_BONNET",     "HANGING_BOOT", 
+                           "NO_DOORS",        "IS_VAN",        "IS_BUS",         "IS_LOW", 
+                           "DBL_EXHAUST",     "TAILGATE_BOOT", "NOSWING_BOOT",   "NONPLAYER_STABILISER", 
+                           "NEUTRALHANDLING", "HAS_NO_ROOF",   "IS_BIG",         "HALOGEN_LIGHTS", 
+                           "IS_BIKE",         "IS_HELI",       "IS_PLANE",       "IS_BOAT", 
+                           "NO_EXHAUST",      "REARWHEEL_1ST", "HANDBRAKE_TYRE", "SIT_IN_BOAT", 
+                           "FAT_REARW",       "NARROW_FRONTW", "GOOD_INSAND",    "FLAG_7D", 
+                           "FORCE_GRND_CLR",  "FLAG_8B",       "FLAG_8C",        "FLAG_8D" };                 
+
+char *vcs_modelflags[] = { "FLAG_1A",      "FLAG_1B",      "FLAG_1C",     "FLAG_1D", 
+                           "FLAG_2A",      "FLAG_2B",      "FLAG_2C",     "FLAG_2D", 
+                           "FLAG_3A",      "FLAG_3B",      "FLAG_3C",     "FLAG_3D", 
+                           "FLAG_4A",      "FLAG_4B",      "FLAG_4C",     "FLAG_4D", 
+                           "FLAG_5A",      "FLAG_5B",      "FLAG_5C",     "FLAG_5D", 
+                           "FLAG_6A",      "FLAG_6B",      "FLAG_6C",     "FLAG_6D", 
+                           "IS_BIKE",      "IS_HELI",      "IS_PLANE",    "IS_BOAT", 
+                           "FLAG_8A",      "FLAG_8B",      "FLAG_8C",     "FLAG_8D" };
+
+void *model_flag(int calltype, int keypress, int base_address, int address, int arg) { // ".steps" is alienated here to identify the position as "arg"
+  static char buffer[64];
+  char nibble = (arg % 2 ? getNibbleHigh(address) : getNibbleLow(address));
   
   if( calltype == FUNC_GET_STRING ) {
-    switch( nibble ) {
-      case 0x1: return "NO_DOORS";
-      case 0x2: return "IS_VAN";
-      case 0x4: return "IS_BUS";
-      case 0x8: return "IS_LOW";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
+    memset(&buffer, 0, sizeof(buffer));
+    
+    if( nibble == 0 ) { // 0000
+      snprintf(buffer, sizeof(buffer), "NONE");
     }
+    if( 0x1 & nibble ) { // 0001
+      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0]);
+    }      
+    if( 0x2 & nibble ) { // 0010
+      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1]);
+    }      
+    if( 0x4 & nibble ) { // 0100
+      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2]);
+    }      
+    if( 0x8 & nibble ) { // 1000
+      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3]);
+    }      
+
+    return (void *)buffer;  
   }
   
   if( calltype == FUNC_CHANGE_VALUE ) {
@@ -1013,60 +1066,47 @@ void *vehicle_flag2(int calltype, int keypress, int base_address, int address) {
       if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
-      setNibbleHigh(address, nibble);
+      (arg % 2 ? setNibbleHigh(address, nibble) : setNibbleLow(address, nibble));
     }
   }
   
   return NULL;
-}
+}   
+                    
+char *vcs_handlingflags[] = { "FLAG_1A",      "FLAG_1B",          "FLAG_1C",   "FLAG_1D", 
+                              "NO_HANDBRAKE", "STEER_REARWHEELS", "FLAG_2C",   "FLAG_2D",  
+                              "FLAG_3A",      "NARROW_FRONTW",    "FLAG_3C",   "FLAG_3D", 
+                              "FLAG_4A",      "FLAG_4B",          "FAT_REARW", "FLAG_4D", 
+                              "FLAG_5A",      "FLAG_5B",          "FLAG_5C",   "FLAG_5D",
+                              "FLAG_6A",      "GOOD_INSAND",      "FLAG_6C",   "floating_car", 
+                              "FLAG_7A",      "FLAG_7B",          "FLAG_7C",   "FLAG_7D",
+                              "FLAG_8A",      "FLAG_8B",          "FLAG_8C",   "FLAG_8D" };
+                              
 
-void *vehicle_flag3(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleLow(address);
+void *handling_flag(int calltype, int keypress, int base_address, int address, int arg) { // ".steps" is alienated here to identify the position as "arg"
+  static char buffer[64];
+  char nibble = (arg % 2 ? getNibbleHigh(address) : getNibbleLow(address));
   
   if( calltype == FUNC_GET_STRING ) {
-    switch( nibble ) { 
-      case 0x1: return "DBL_EXHAUST";
-      case 0x2: return "TAILGATE_BOOT";
-      case 0x4: return "NOSWING_BOOT";
-      case 0x8: return "NONPLAYER_STABILISER";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
+    memset(&buffer, 0, sizeof(buffer));
+   
+    if( nibble == 0 ) { // 0000
+      snprintf(buffer, sizeof(buffer), "NONE");
     }
-  }
-  
-  if( calltype == FUNC_CHANGE_VALUE ) {
-    if( keypress ) {
-      if ( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
-        nibble--;
-        
-      if ( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
-        nibble++;
-      
-      setNibbleLow(address, nibble);
-    }
-  }
-  
-  return NULL;
-}
+    if( 0x1 & nibble ) { // 0001
+      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 0]);
+    }      
+    if( 0x2 & nibble ) { // 0010
+      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 1]);
+    }      
+    if( 0x4 & nibble ) { // 0100
+      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 2]);
+    }      
+    if( 0x8 & nibble ) { // 1000
+      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 3]);
+    }      
 
-void *vehicle_flag4(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleHigh(address);
-  
-  if( calltype == FUNC_GET_STRING ) {
-    switch( nibble ) {
-      case 0x1: return "NEUTRALHANDLING";
-      case 0x2: return "HAS_NO_ROOF";
-      case 0x4: return "IS_BIG";
-      case 0x8: return "HALOGEN_LIGHTS";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
-    }
+    return (void *)buffer;  
   }
   
   if( calltype == FUNC_CHANGE_VALUE ) {
@@ -1077,136 +1117,14 @@ void *vehicle_flag4(int calltype, int keypress, int base_address, int address) {
       if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
         nibble++;
       
-      setNibbleHigh(address, nibble);
+      (arg % 2 ? setNibbleHigh(address, nibble) : setNibbleLow(address, nibble));
     }
   }
   
   return NULL;
 }
 
-void *vehicle_flag5(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleLow(address);
-  
-  if( calltype == FUNC_GET_STRING ) {
-    switch( nibble ) {
-      case 0x1: return "IS_BIKE";
-      case 0x2: return "IS_HELI";
-      case 0x4: return "IS_PLANE";
-      case 0x8: return "IS_BOAT";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
-    }
-  }
-  
-  if( calltype == FUNC_CHANGE_VALUE ) {
-    if( keypress ) {
-      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
-        nibble--;
-        
-      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
-        nibble++;
-      
-      setNibbleLow(address, nibble);
-    }
-  }
-  
-  return NULL;
-}
 
-void *vehicle_flag6(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleHigh(address);
-  
-  if( calltype == FUNC_GET_STRING ) {
-    switch( nibble ) {
-      case 0x1: return "NO_EXHAUST";
-      case 0x2: return "REARWHEEL_1ST";
-      case 0x4: return "HANDBRAKE_TYRE8";
-      case 0x8: return "SIT_IN_BOAT";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
-    }
-  }
-  
-  if( calltype == FUNC_CHANGE_VALUE ) {
-    if( keypress ) {
-      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
-        nibble--;
-        
-      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
-        nibble++;
-      
-      setNibbleHigh(address, nibble);
-    }
-  }
-  
-  return NULL;
-}
-
-void *vehicle_flag7(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleLow(address);
-  
-  if( calltype == FUNC_GET_STRING ) {
-    switch(nibble) {
-      case 0x1: return "FAT_REARW";
-      case 0x2: return "NARROW_FRONTW";
-      case 0x4: return "GOOD_INSAND";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
-    }
-  }
-  
-  if( calltype == FUNC_CHANGE_VALUE ) {
-    if( keypress ) {
-      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
-        nibble--;
-        
-      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
-        nibble++;
-      
-      setNibbleLow(address, nibble);
-    }
-  }
-  
-  return NULL;
-}
-
-void *vehicle_flag8(int calltype, int keypress, int base_address, int address) { 
-  static char buffer[8];
-  char nibble = getNibbleHigh(address);
-  
-  if( calltype == FUNC_GET_STRING ) {
-    switch( nibble ) {
-      case 0x1: return "FORCE_GRND_CLR";
-      
-      default: 
-        snprintf(buffer, sizeof(buffer), "%i", nibble);
-        return (void *)buffer;  
-    }
-  }
-  
-  if( calltype == FUNC_CHANGE_VALUE ) {
-    if( keypress ) {
-      if( keypress == PSP_CTRL_LEFT && nibble > 0x0 ) // LEFT
-        nibble--;
-        
-      if( keypress == PSP_CTRL_RIGHT && nibble < 0xF ) // RIGHT
-        nibble++;
-      
-      setNibbleHigh(address, nibble);
-    }
-  }
-  
-  return NULL;
-}
 
 void *vehicle_enginetype(int calltype, int keypress, int base_address, int address) { 
   const char *list_name[] = { "Diesel", "Electro", "Petrol"};

@@ -120,13 +120,7 @@ void *vehicle_enginetype(int calltype, int keypress, int base_address, int addre
 void *vehicle_lights_front(int calltype, int keypress, int base_address, int address);
 void *vehicle_lights_rear(int calltype, int keypress, int base_address, int address);
 void *vehicle_transtype(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag1(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag2(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag3(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag4(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag5(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag6(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag7(int calltype, int keypress, int base_address, int address);
-void *vehicle_flag8(int calltype, int keypress, int base_address, int address);
+void *handling_flag(int calltype, int keypress, int base_address, int address, int arg);
+void *model_flag(int calltype, int keypress, int base_address, int address, int arg);
 
 #endif
