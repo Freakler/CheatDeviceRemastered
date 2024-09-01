@@ -3663,35 +3663,35 @@ int editor_ctrl() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE: 
-        snprintf(buffer, sizeof(buffer), translate_string("Garage Data (%s - Slot: %i)"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current], editor_garageslot_current+1);
+        snprintf(buffer, sizeof(buffer), "Garage Data (%s - Slot: %i)", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current], editor_garageslot_current+1);
         break;
         
       case EDITOR_PEDOBJ: 
-        snprintf(buffer, sizeof(buffer), translate_string("Pedestrian Object %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedestrian Object %i/%i", editor_block_current+1, editor_blocks);
         break;
           
       case EDITOR_VEHICLEOBJ: 
-        snprintf(buffer, sizeof(buffer), translate_string("Vehicle Object %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Vehicle Object %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_WORLDOBJ: 
-        snprintf(buffer, sizeof(buffer), translate_string("World Object %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "World Object %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_BUSINESSOBJ: 
-        snprintf(buffer, sizeof(buffer), translate_string("Business Object %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Business Object %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_PICKUPS: 
-        snprintf(buffer, sizeof(buffer), translate_string("Pickup %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pickup %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_MAPICONS: 
-        snprintf(buffer, sizeof(buffer), translate_string("Mapicon %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Mapicon %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_VEHWORLDSPAWNS: 
-        snprintf(buffer, sizeof(buffer), translate_string("Parked Vehicle Spawn %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Parked Vehicle Spawn %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       /// /// /// /// /// 
@@ -3700,49 +3700,49 @@ int editor_ctrl() {
         //snprintf(buffer, sizeof(buffer), "handling.cfg (ID: %i  Name: %s)", lcs_vehicles[editor_block_current].id, lcs_vehicles[editor_block_current].name); //editor_block_current, editor_blocks
         // if( LCS )
           // snprintf(buffer, sizeof(buffer), "handling.cfg (Slot %i)", lcs_vehicles[editor_block_current].hndlng_no); //alternative
-        snprintf(buffer, sizeof(buffer), translate_string("Handling.cfg"));
+        snprintf(buffer, sizeof(buffer), "Handling.cfg");
         break;
       
       case EDITOR_BUILDINGSIPL:
-        snprintf(buffer, sizeof(buffer), translate_string("Buildings.ipl %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Buildings.ipl %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_TREADABLESIPL: 
-        snprintf(buffer, sizeof(buffer), translate_string("Treadables.ipl %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Treadables.ipl %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_DUMMYSIPL: 
-        snprintf(buffer, sizeof(buffer), translate_string("Dummys.ipl %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Dummys.ipl %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_CARCOLSDAT: 
-        snprintf(buffer, sizeof(buffer), translate_string("Carcols.dat %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Carcols.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       case EDITOR_PEDCOLSDAT: 
-        snprintf(buffer, sizeof(buffer), translate_string("Pedcols.dat %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedcols.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_IDE: 
         //editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); //hex to ptr instead
         //editor_temp_blocksize = 0x4;
-        snprintf(buffer, sizeof(buffer), translate_string("IDEs %i/%i"), editor_block_current, editor_blocks-1);
+        snprintf(buffer, sizeof(buffer), "IDEs %i/%i", editor_block_current, editor_blocks-1);
         break;
         
       case EDITOR_PARTICLECFG: 
-        snprintf(buffer, sizeof(buffer), translate_string("Particle.cfg %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Particle.cfg %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_PEDSTATSDAT: 
-        snprintf(buffer, sizeof(buffer), translate_string("Pedstats.dat %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedstats.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
         
       case EDITOR_WEAPONDAT: 
-        snprintf(buffer, sizeof(buffer), translate_string("Weapon.dat %i/%i"), editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Weapon.dat %i/%i", editor_block_current+1, editor_blocks);
         break;
     
       case EDITOR_TIMECYCDAT: 
-      snprintf(buffer, sizeof(buffer), translate_string("Timecyc.dat - %s / %02i:00 - %s"), LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
+        snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02i:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
         break;
                 
       default: 
