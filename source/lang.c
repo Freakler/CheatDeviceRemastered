@@ -22,17 +22,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
-#include "../minIni.h"
-#include "../main.h"
+#include "minIni.h"
+#include "main.h"
 #include "lang.h"
 #include <pspiofilemgr.h>
-#include "../utils.h"
+#include "utils.h"
 
 #ifdef LANG
 
-
-// Path to language files
-char path_lang_files[] = "ms0:/PSP/PLUGINS/cheatdevice_remastered/Translations/";
+extern char folder_translations[];
+extern const char *basefolder;
 
 int translated_strings_left = TRANSLATED_STRINGS_LIMIT;
 
@@ -212,7 +211,9 @@ LangFileTable *SearchLangFiles() {
     // Create an english default 
     LangFileAppend(main_file_table, VERSION, "Freakler", "English (United States)", "");
 
-    SceUID dir = sceIoDopen(path_lang_files);
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_translations);
+    SceUID dir = sceIoDopen(buffer);
     if (dir < 0) {
         return main_file_table;
     }
@@ -245,8 +246,8 @@ void GetINIInfo(LangFileTable *table, const char *filename) {
     char Author[32];
     char Language[32];
     char filepath[256];
-
-    snprintf(filepath, sizeof(filepath), "%s/%s", path_lang_files, filename);
+	
+    snprintf(filepath, sizeof(filepath), "%s%s%s", basefolder, folder_translations, filename);
 
     ini_gets("INFO", "Translate Version", "None", Version, sizeof(Version), filepath);
     ini_gets("INFO", "Translate Author", "None", Author, sizeof(Author), filepath);
@@ -273,7 +274,7 @@ void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int i
 
     curr_time = sceKernelGetSystemTimeWide();
 
-    snprintf(lang_path, sizeof(lang_path), "%s%s", path_lang_files, main_file_table->lang_files[index]->FileName);
+    snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->FileName);
 
 #if defined(LOG) && defined(LANG_DEBUG)
     logPrintf("Reading Section '%s' from INI file '%s'", INISection, lang_path);

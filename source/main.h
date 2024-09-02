@@ -19,7 +19,7 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define VERSION "v1.0g3" // displayed in title
+#define VERSION "v1.0h" // displayed in title
 
 /** FEATURE-FLAGS *****************************************************************************************************/
 

@@ -345,8 +345,7 @@ char* string_to_lower(char* c) {
   size_t i;
   size_t c_length = strlen(c);
 
-  for ( i = 0; i < c_length; i++ ) 
-  {
+  for ( i = 0; i < c_length; i++ ) {
     if ( isupper(c[i]) ) {
       c[i] = tolower(c[i]);
     }
@@ -356,7 +355,7 @@ char* string_to_lower(char* c) {
 }
 
 // Check if filename (or path) ends with extension
-int fileEndsWithExtension(char *filename, const char* extension) {
+int fileEndsWithExtension(char *filename, char* extension) {
   // sometimes filenames are uppercase (for some reason idk)
   return strcmp(string_to_lower(filename) + strlen(filename) - strlen(extension), string_to_lower(extension)) == 0;
 }

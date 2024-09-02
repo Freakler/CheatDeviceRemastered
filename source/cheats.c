@@ -31,7 +31,7 @@
 #include "editor.h"
 #include "utils.h"
 #include "blitn.h"
-#include "lang/lang.h"
+#include "lang.h"
 
 register int gp asm("gp"); // for VCS
 int gp_ = 0; // helper (also used in configs extern)
@@ -4483,9 +4483,8 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
     if( gametimer >= menuopendelay) // delay after new game
       draw();
     #ifdef LANG
-    if ( gametimer >= 1000) {
+    if ( gametimer >= 1000 ) { // 
       static int lang_ran = 1;
-
       if (lang_ran) {
         setup_lang(CurrentLanguageID);
         lang_ran = 0;
@@ -5451,7 +5450,7 @@ void *cdr_autostartmenu(int calltype, int keypress, int defaultstatus) {
 
 #ifdef LANG
 
-char langBuf[32];
+char langBuf[48];
 
 void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status;
@@ -5493,19 +5492,15 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
         status = (CurrentLanguageID == lang);
       }
 
-
       else if ( keypress == PSP_CTRL_RIGHT && main_file_table != NULL ) {
         if (lang < main_file_table->size-1)
           lang++;
           status = (CurrentLanguageID == lang);
-      } 
-      
+      }
       break;
     
     case FUNC_SET:
       status = defaultstatus;
-
-
       if ( defaultval >= 0 && defaultval <= LANG_FILES_LIMIT-1 ) {
         lang = defaultval;
       } else {

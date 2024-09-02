@@ -1,5 +1,5 @@
 TARGET = ..\cheatdevice_remastered
-OBJS = exports.o main.o cheats.o utils.o editor.o functions.o config.o blitn.o minIni.o lang/lang.o
+OBJS = exports.o main.o cheats.o utils.o editor.o functions.o config.o blitn.o minIni.o lang.o
   
 CFLAGS = -O2 -Os -G0 -Wall -fshort-wchar -fno-pic -mno-check-zero-division
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
