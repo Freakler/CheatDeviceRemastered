@@ -3282,7 +3282,6 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.07 | 
    **************************************/
    if( _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
-
     /*******************************************************************
      *  0x0024F720: 0x3C04003C '<..<' - lui        $a0, 0x3C
      *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
@@ -10215,13 +10214,14 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
   static short id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
-  // #ifndef DEBUG
+
+  //#ifndef DEBUG
   static int i = 0;
   static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI, AEROPL, DODO
   static short blacklist_vcs[] = { 0x118 }; // AEROPL
-  // #endif
+  //#endif
   static int status = 0;
-  // int typebackup = -1;
+  //int typebackup = -1;
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -10247,7 +10247,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           }
         } if( id < getFirstIdeOfType(MODELINFO_VEHICLE) ) id+=2; // first is blacklisted, go to second
         #endif
-      
+        
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
         #ifndef DEBUG
@@ -10282,8 +10282,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           D3 02 0C 0D 0E 10
           A5 00 08 AC 00 0C 0D 10 11 
           7A 01 11 0F 
-          6E 03 CE 18 11
-          > C8 01 11 
+          6E 03 CE 18 11 
+          > C8 01 11
           4E 00          
           */
           
@@ -10295,8 +10295,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           01BB: get_ground_z_for_3d_coord 0@ 1@ 2@ store_to 4@ 
           0048: create_car 162 at 0@ 1@ 4@ store_to 5@ 
           00D1: set_car_heading 5@ to 3@ 
-          021C: warp_char_into_car $PLAYER_CHAR to 5@
-          > 0113: mark_car_as_no_longer_needed 5@ 
+          021C: warp_char_into_car $PLAYER_CHAR to 5@ 
+          > 0113: mark_car_as_no_longer_needed 5@
           0023: end_thread
           ************************************************************/
           
@@ -10350,7 +10350,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
             /// mark_car_as_no_longer_needed
             0xC8, 0x01,
             0x11, // 5@
-            
+
             /// terminate_this_script
             0x4E, 0x00 // Opcode: 004E
           };
@@ -10406,8 +10406,6 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           }
         } // HAS to be reset after spawn todo
         #endif
-
-
 
         /// calculate coordinate in front of player
         x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
@@ -10484,6 +10482,10 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           0x0D, // 1@
           0x07, 0x01, // mode 1
 
+          /// mark_car_as_no_longer_needed
+          0xC8, 0x01,
+          0x0D, // 1@
+          
           /// mark_car_as_no_longer_needed
           0xC8, 0x01,
           0x0D, // 1@

@@ -469,6 +469,7 @@ const Editor_pack vcs_pedobj_menu[] = {
   {"Color B"                   , "/255"  , 0x512      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color Alpha"               , "/255"  , 0x513      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   
+  
   {"WeaponID - Melee Slot"          , ""      , 0x578      , FALSE   , TYPE_BYTE       , HEX    , 0            , 0x1    }, 
 
   {"WeaponID - Handgun Slot"        , ""      , 0x5CC      , FALSE   , TYPE_BYTE       , HEX    , 0            , 0x1    }, 
@@ -973,17 +974,6 @@ const Editor_pack vcs_handlingcfg_menu[] = {
   {"bFrontLights"                      , ""      , 0x94      , TRUE    , TYPE_BYTE     , 0      , vehicle_lights_front , 1        }, // ah (0 = long, 1 = small, 2 = big, 3 = tall)
   {"bRearLights"                       , ""      , 0x95      , TRUE    , TYPE_BYTE     , 0      , vehicle_lights_rear  , 1        }, // ai (0 = long, 1 = small, 2 = big, 3 = tall)
 
-/*  
-  {"ModelFlag 1"              , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //
-  {"ModelFlag 2"              , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //
-  {"ModelFlag 3"              , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //  
-  {"ModelFlag 4"              , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //
-  {"ModelFlag 5"              , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //
-  {"ModelFlag 6"              , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //
-  {"ModelFlag 7"              , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , vehicle_flag5, 0x1    , 0x0    , 0xF     }, // 1: IS_BIKE      2: IS_HELI        4: IS_PLANE      8: IS_BOAT
-  {"ModelFlag 8"              , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , 0            , 0x1    , 0x0    , 0xF     }, //
- */
-
   {"HandlingFlag 1"                    , ""      , 0xCC      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 0      }, // 
   {"HandlingFlag 2"                    , ""      , 0xCC      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 1      }, // NO_HANDBRAKE, STEER_REARWHEELS..
   {"HandlingFlag 3"                    , ""      , 0xCD      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 2      }, // 
@@ -1022,7 +1012,7 @@ char *lcs_modelflags[] = { "1G_BOOST",        "2G_BOOST",      "REV_BONNET",    
                            "NO_EXHAUST",      "REARWHEEL_1ST", "HANDBRAKE_TYRE", "SIT_IN_BOAT", 
                            "FAT_REARW",       "NARROW_FRONTW", "GOOD_INSAND",    "FLAG_7D", 
                            "FORCE_GRND_CLR",  "FLAG_8B",       "FLAG_8C",        "FLAG_8D" };                 
-
+  
 char *vcs_modelflags[] = { "FLAG_1A",      "FLAG_1B",      "FLAG_1C",     "FLAG_1D", 
                            "FLAG_2A",      "FLAG_2B",      "FLAG_2C",     "FLAG_2D", 
                            "FLAG_3A",      "FLAG_3B",      "FLAG_3C",     "FLAG_3D", 
@@ -1031,7 +1021,7 @@ char *vcs_modelflags[] = { "FLAG_1A",      "FLAG_1B",      "FLAG_1C",     "FLAG_
                            "FLAG_6A",      "FLAG_6B",      "FLAG_6C",     "FLAG_6D", 
                            "IS_BIKE",      "IS_HELI",      "IS_PLANE",    "IS_BOAT", 
                            "FLAG_8A",      "FLAG_8B",      "FLAG_8C",     "FLAG_8D" };
-
+                       
 void *model_flag(int calltype, int keypress, int base_address, int address, int arg) { // ".steps" is alienated here to identify the position as "arg"
   static char buffer[64];
   char nibble = (arg % 2 ? getNibbleHigh(address) : getNibbleLow(address));
@@ -1123,7 +1113,6 @@ void *handling_flag(int calltype, int keypress, int base_address, int address, i
   
   return NULL;
 }
-
 
 
 void *vehicle_enginetype(int calltype, int keypress, int base_address, int address) { 
