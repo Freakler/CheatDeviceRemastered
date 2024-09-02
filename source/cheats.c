@@ -31,6 +31,7 @@
 #include "editor.h"
 #include "utils.h"
 #include "blitn.h"
+#include "lang/lang.h"
 
 register int gp asm("gp"); // for VCS
 int gp_ = 0; // helper (also used in configs extern)
@@ -3281,7 +3282,6 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.07 | 
    **************************************/
    if( _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
-    
     /*******************************************************************
      *  0x0024F720: 0x3C04003C '<..<' - lui        $a0, 0x3C
      *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
@@ -4459,6 +4459,8 @@ mode 1 - more detailed buildings and interior
 mode 2 - everything with transparency like trees, windows etc
 **************************************************************/
 void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered -> allow cheat menu
+
+
   #ifdef LOG
   static int debug_cwsrp = 1;
   if( debug_cwsrp ) {
@@ -4480,6 +4482,16 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
   if( mode == 0 )
     if( gametimer >= menuopendelay) // delay after new game
       draw();
+    #ifdef LANG
+    if ( gametimer >= 1000) {
+      static int lang_ran = 1;
+
+      if (lang_ran) {
+        setup_lang(CurrentLanguageID);
+        lang_ran = 0;
+      }
+    }
+    #endif
   
   cWorldStream_Render(this, mode); // continue
 }
@@ -5437,6 +5449,78 @@ void *cdr_autostartmenu(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
+#ifdef LANG
+
+char langBuf[32];
+
+void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultval) {
+  static int status;
+  static int lang = 0;
+
+  switch( calltype ) {
+
+    case FUNC_GET_STATUS:
+      return (int*)status;
+
+    case FUNC_GET_VALUE: 
+      return (int*)lang; 
+
+    case FUNC_GET_STRING:
+
+      // Lang files not found
+      if ( main_file_table == NULL || main_file_table->size==1 ) {
+        snprintf(langBuf, sizeof(langBuf), "English (United States)");
+        return (void*)langBuf;
+      } 
+    
+      // Versions don't match (probably old)
+      if (strlen(main_file_table->lang_files[lang]->Version) != 0 && strcmp(main_file_table->lang_files[lang]->Version, VERSION) != 0) {
+        snprintf(langBuf, sizeof(langBuf), "%s (%s)", main_file_table->lang_files[lang]->Language, main_file_table->lang_files[lang]->Version);
+        return (void*)langBuf;
+      } 
+
+      snprintf(langBuf, sizeof(langBuf), "%s", main_file_table->lang_files[lang]->Language);
+      return (void*)langBuf;
+
+    case FUNC_CHANGE_VALUE:
+      if ( keypress == PSP_CTRL_CROSS && CurrentLanguageID != lang) {
+        update_lang(lang);
+        status = 1;
+      } 
+
+      else if( keypress == PSP_CTRL_LEFT && lang > 0 && (main_file_table != NULL && main_file_table->size>1)) {
+        lang--;
+        status = (CurrentLanguageID == lang);
+      }
+
+
+      else if ( keypress == PSP_CTRL_RIGHT && main_file_table != NULL ) {
+        if (lang < main_file_table->size-1)
+          lang++;
+          status = (CurrentLanguageID == lang);
+      } 
+      
+      break;
+    
+    case FUNC_SET:
+      status = defaultstatus;
+
+
+      if ( defaultval >= 0 && defaultval <= LANG_FILES_LIMIT-1 ) {
+        lang = defaultval;
+      } else {
+        lang = 0;
+      }
+      CurrentLanguageID = lang;
+      status = 1;
+      break;
+  }
+
+  return NULL;
+}
+
+#endif
+
 void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats to default value (values from main_menu_sp)
   #ifdef LOG
   logPrintf("[INFO] %i: load_defaults()", getGametime());
@@ -5870,7 +5954,7 @@ void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) 
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)(LCS ? lcs_teleports[i].name : vcs_teleports[i].name);
+      return (void *)(translate_string(LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
       
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_LEFT && i > 1 ) { // LEFT
@@ -7396,7 +7480,7 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
     case FUNC_GET_VALUE: 
       return (int*)boost;  
   
-  case FUNC_GET_STRING: 
+    case FUNC_GET_STRING: 
       sprintf(retbuf, "%i", boost);
       return (void *)retbuf;
         
@@ -8313,9 +8397,9 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
       case FUNC_GET_STRING: 
         if( LCS ) sprintf(retbuf, "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? "Red: %i Green: %i Blue:>%i<" : 
-                          pos == 1 ? "Red: %i Green:>%i<Blue: %i " : 
-                          pos == 2 ? "Red:>%i<Green: %i Blue: %i " : "error", (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+          sprintf(retbuf, pos == 0 ? translate_string("Red: %i Green: %i Blue:>%i<") : 
+                          pos == 1 ? translate_string("Red: %i Green:>%i<Blue: %i") : 
+                          pos == 2 ? translate_string("Red:>%i<Green: %i Blue: %i") : translate_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
         return (void *)retbuf;
       
@@ -8392,9 +8476,9 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
       case FUNC_GET_STRING: 
         if( LCS ) sprintf(retbuf, "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? "Red: %i Green: %i Blue:>%i<" : 
-                          pos == 1 ? "Red: %i Green:>%i<Blue: %i " : 
-                          pos == 2 ? "Red:>%i<Green: %i Blue: %i " : "error", (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+          sprintf(retbuf, pos == 0 ? translate_string("Red: %i Green: %i Blue:>%i<") : 
+                          pos == 1 ? translate_string("Red: %i Green:>%i<Blue: %i") : 
+                          pos == 2 ? translate_string("Red:>%i<Green: %i Blue: %i") : translate_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
         return (void *)retbuf;
       
@@ -8507,7 +8591,7 @@ void *world_weather(int calltype, int keypress, int defaultstatus, int defaultva
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
         status = 1;
-      } else if( keypress == PSP_CTRL_RIGHT && i < 7 ) { // RIGHT
+      } else if( keypress == PSP_CTRL_RIGHT && i < 15 ) { // RIGHT
         i++;
         status = 1;
       } break;
@@ -9179,7 +9263,7 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
       return (int*)i;
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, "%i Stars (%i max)", i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
+      sprintf(retbuf, translate_string("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
       return (void*)retbuf;
       
     case FUNC_APPLY:
@@ -9495,7 +9579,7 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
       return (int*)status;
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, " %s", state ? "down" : "up" );
+      sprintf(retbuf, " %s", translate_string(state ? "down" : "up"));
       return retbuf;
       
     case FUNC_APPLY:
@@ -10130,6 +10214,7 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
   static short id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
+
   //#ifndef DEBUG
   static int i = 0;
   static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI, AEROPL, DODO
@@ -10159,10 +10244,10 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id--;
             i = 0;
-           }
+          }
         } if( id < getFirstIdeOfType(MODELINFO_VEHICLE) ) id+=2; // first is blacklisted, go to second
         #endif
-
+        
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
         #ifndef DEBUG
@@ -10170,7 +10255,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id++;
             i = 0;
-           }
+          }
         } if( id > getLastIdeOfType(MODELINFO_VEHICLE) ) id-=2; // last is blacklisted, go to pre-last
         #endif
       
@@ -10185,8 +10270,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           02D3: get_ground_z_for_3d_coord 0@ 1@ 2@ store_to 4@ 
           00A5: create_car 172 at 0@ 1@ 4@ store_to 5@ 
           017A: set_car_heading 5@ to 3@ 
-          036E: warp_char_into_car $PLAYER_CHAR to 5@ 
-          > 01C8: mark_car_as_no_longer_needed 5@ 
+          036E: warp_char_into_car $PLAYER_CHAR to 5@
+          > 01C8: mark_car_as_no_longer_needed 5@  
           004E: terminate_this_script
           ************************************************************/
           /*
@@ -10265,7 +10350,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
             /// mark_car_as_no_longer_needed
             0xC8, 0x01,
             0x11, // 5@
-          
+
             /// terminate_this_script
             0x4E, 0x00 // Opcode: 004E
           };
@@ -10321,7 +10406,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           }
         } // HAS to be reset after spawn todo
         #endif
-        
+
         /// calculate coordinate in front of player
         x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
         y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
@@ -10396,6 +10481,10 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           0x0F, 0x02, 
           0x0D, // 1@
           0x07, 0x01, // mode 1
+
+          /// mark_car_as_no_longer_needed
+          0xC8, 0x01,
+          0x0D, // 1@
           
           /// mark_car_as_no_longer_needed
           0xC8, 0x01,
@@ -10675,13 +10764,13 @@ const char *buttonCheatNames[] = {
   "Teleport Destination", 
   "Kill / destroy all targets", 
   "Switch Radio Off", 
-  "Switch Radio/CustomTracks", 
+  "Switch Radio / Custom Tracks", 
   "Toggle FPS", 
   "Step through wall",
   "Toggle top down camera",
   "Crouch",
   "Reverse Gravity",
-  "Toggle GatherSpell", 
+  "Toggle Gather Spell", 
   "Toggle Slowmo", 
   "Impulse", 
   "Jump with Vehicle", 
@@ -10864,7 +10953,7 @@ void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)buttonCheatNames[i];
+      return (void *)translate_string(buttonCheatNames[i]);
       
     case FUNC_APPLY:
       if( (pressed_buttons & PSP_CTRL_UP) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && flag_menu_running == 0 && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
@@ -11065,7 +11154,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)list_names[i];
+      return (void *)translate_string(list_names[i]);
       
     case FUNC_APPLY:
       addr = getObjectsTouchedObjectAddress(pobj);
@@ -11247,12 +11336,12 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     
     case FUNC_GET_STRING: 
       if( j == 0 ) { // pickups
-        snprintf(retbuf, sizeof(retbuf), "Pickups - %s (%i)", (LCS ? lcs_pickups[i].name : vcs_pickups[i].name), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
+        snprintf(retbuf, sizeof(retbuf), translate_string("Pickups - %s (%i)"), translate_string((LCS ? lcs_pickups[i].name : vcs_pickups[i].name)), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
           
       } else if( j == 1 ) { // weapons in range
         if( status ) 
-          snprintf(retbuf, sizeof(retbuf), "Weapons in range (%i)", res);
-        else snprintf(retbuf, sizeof(retbuf), "Weapons in range");
+          snprintf(retbuf, sizeof(retbuf), translate_string("Weapons in range (%i)"), res);
+        else snprintf(retbuf, sizeof(retbuf), translate_string("Weapons in range"));
         //res = 0; // if apply loop not updating
           
       } else if( j == 2 ) { // stunt jumps

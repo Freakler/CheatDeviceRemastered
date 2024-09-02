@@ -146,7 +146,7 @@ const Editor_pack lcs_garage_menu[] = {
   {"Flag: Fire-proof (FP)"          , NULL      , 0x20      , TRUE    , TYPE_BIT      , 1      , 0                   , 0      },
   {"Flag: Explosion-proof (EP)"     , NULL      , 0x20      , TRUE    , TYPE_BIT      , 2      , 0                   , 0      },
   {"Flag: Damage-proof (DP)"        , NULL      , 0x20      , TRUE    , TYPE_BIT      , 3      , 0                   , 0      },
-  {"Flag: Meele-proof"              , NULL      , 0x20      , TRUE    , TYPE_BIT      , 4      , 0                   , 0      },
+  {"Flag: Melee-proof"              , NULL      , 0x20      , TRUE    , TYPE_BIT      , 4      , 0                   , 0      },
   {"Flag: Tires pop-proof (PP)"     , NULL      , 0x20      , TRUE    , TYPE_BIT      , 5      , 0                   , 0      },
   {"Flag: Strong (QD)"              , NULL      , 0x20      , TRUE    , TYPE_BIT      , 6      , 0                   , 0      },
   {"Flag: Heavy (H) (WP)"           , NULL      , 0x20      , TRUE    , TYPE_BIT      , 7      , 0                   , 0      },
@@ -213,7 +213,7 @@ const Editor_pack vcs_garage_menu[] = {
   {"Flag: Fire-proof (FP)"      , NULL      , 0x20      , TRUE    , TYPE_BIT      , 1        , 0            , 0      },
   {"Flag: Explosion-proof (EP)" , NULL      , 0x20      , TRUE    , TYPE_BIT      , 2        , 0            , 0      },
   {"Flag: Damage-proof (DP)"    , NULL      , 0x20      , TRUE    , TYPE_BIT      , 3        , 0            , 0      },
-  {"Flag: Meele-proof"          , NULL      , 0x20      , TRUE    , TYPE_BIT      , 4        , 0            , 0      },
+  {"Flag: Melee-proof"          , NULL      , 0x20      , TRUE    , TYPE_BIT      , 4        , 0            , 0      },
   {"Flag: Tires pop-proof (PP)" , NULL      , 0x20      , TRUE    , TYPE_BIT      , 5        , 0            , 0      },
   {"Flag: Strong (QD)"          , NULL      , 0x20      , TRUE    , TYPE_BIT      , 6        , 0            , 0      },
   {"Flag: Heavy (H) (WP)"       , NULL      , 0x20      , TRUE    , TYPE_BIT      , 7        , 0            , 0      },
@@ -370,12 +370,12 @@ const Editor_pack lcs_pedobj_menu[] = {
   {"Armor"                           , ""      , 0x4BC     , TRUE    , TYPE_FLOAT    , 2      , 0            , 1      },
   
   {"Facing Direction (currently)"    , ""      , 0x4E0     , FALSE   , TYPE_FLOAT    , 2      , 0            , 0.10   },
-  {"Facing Direction (to be aplied)" , ""      , 0x4E4     , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.10   }, // 0.00  = North, 1.50 = East, 3.00 South, -1.50 West
+  {"Facing Direction (to be applied)", ""      , 0x4E4     , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.10   }, // 0.00  = North, 1.50 = East, 3.00 South, -1.50 West
  
   {"In-Vehicle bool"                 , ""      , 0x538     , FALSE   , TYPE_BOOL     , 0      , 0            , 0      },
   
   
-  {"WeaponID - Meele Slot"           , ""      , 0x594     , FALSE   , TYPE_BYTE      , HEX    , 0            , 0x1    }, 
+  {"WeaponID - Melee Slot"           , ""      , 0x594     , FALSE   , TYPE_BYTE      , HEX    , 0            , 0x1    }, 
   {"WeaponID - Projectile Slot"      , ""      , 0x5CC     , FALSE   , TYPE_BYTE      , HEX    , 0            , 0x1    }, 
   
   {"WeaponID - Handgun Slot"         , ""      , 0x5E8     , FALSE   , TYPE_BYTE      , HEX    , 0            , 0x1    }, 
@@ -410,10 +410,10 @@ const Editor_pack lcs_pedobj_menu[] = {
   
   {"PED aiming at"                   , ""      , 0x6BC     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
   {"Last touched PED"                , ""      , 0x6E0     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
-  {"Ped in range #1 (nearest)"       , ""      , 0x724     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
-  {"Ped in range #2"                 , ""      , 0x728     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
+  {"Ped in range 1 (nearest)"       , ""      , 0x724     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
+  {"Ped in range 2"                 , ""      , 0x728     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
   //..
-  {"Ped in range #10 (farest)"       , ""      , 0x748     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
+  {"Ped in range 10 (farest)"       , ""      , 0x748     , FALSE   , TYPE_INTEGER   , HEX    , 0            , 1      },
   {"Ped in range counter"            , "/10", 0x74C     , FALSE   , TYPE_BYTE      , DEC    , 0            , 1      }, 
   
   {"Ped ??"                          , ""      , 0x780     , FALSE    , TYPE_INTEGER  , HEX    , 0            , 1      },
@@ -443,7 +443,7 @@ const Editor_pack vcs_pedobj_menu[] = {
   {"Color G"                   , "/255"  , 0x4FD      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color B"                   , "/255"  , 0x4FE      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color Alpha"               , "/255"  , 0x4FF      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
-  
+
   {"Color R"                   , "/255"  , 0x500      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color G"                   , "/255"  , 0x501      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color B"                   , "/255"  , 0x502      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
@@ -458,19 +458,19 @@ const Editor_pack vcs_pedobj_menu[] = {
   {"Color G"                   , "/255"  , 0x509      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color B"                   , "/255"  , 0x50A      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color Alpha"               , "/255"  , 0x50B      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
-  
+
   {"Color R"                   , "/255"  , 0x50C      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color G"                   , "/255"  , 0x50D      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color B"                   , "/255"  , 0x50E      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color Alpha"               , "/255"  , 0x50F      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
-  
+
   {"Color R"                   , "/255"  , 0x510      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color G"                   , "/255"  , 0x511      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color B"                   , "/255"  , 0x512      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   {"Color Alpha"               , "/255"  , 0x513      , TRUE   , TYPE_BYTE       , DEC    , 0            , 0x1    }, 
   
   
-  {"WeaponID - Meele Slot"          , ""      , 0x578      , FALSE   , TYPE_BYTE       , HEX    , 0            , 0x1    }, 
+  {"WeaponID - Melee Slot"          , ""      , 0x578      , FALSE   , TYPE_BYTE       , HEX    , 0            , 0x1    }, 
 
   {"WeaponID - Handgun Slot"        , ""      , 0x5CC      , FALSE   , TYPE_BYTE       , HEX    , 0            , 0x1    }, 
   {"Handgun Ammo (loaded)"          , ""      , 0x5D4      , TRUE    , TYPE_INTEGER    , DEC    , 0            , 1      },
@@ -521,7 +521,7 @@ const Editor_pack lcs_vehicleobj_menu[] = {
 //{"0x48 Flag 2"                   , ""      , 0x48      , TRUE    , TYPE_BIT      , 2      , 0            , 0      },
 //{"Disable Refelection (alt?)"    , ""      , 0x48      , TRUE    , TYPE_BIT      , 3      , 0            , 0      },
 //{"0x48 Flag 4"                   , ""      , 0x48      , TRUE    , TYPE_BIT      , 4      , 0            , 0      },
-  {"Disable Refelection"           , ""      , 0x48      , TRUE    , TYPE_BIT      , 5      , 0            , 0      },
+  {"Disable Reflection"            , ""      , 0x48      , TRUE    , TYPE_BIT      , 5      , 0            , 0      },
 //{"0x48 Flag 6"                   , ""      , 0x48      , TRUE    , TYPE_BIT      , 6      , 0            , 0      },
 //{"0x48 Flag 7"                   , ""      , 0x48      , TRUE    , TYPE_BIT      , 7      , 0            , 0      },
    
@@ -547,7 +547,7 @@ const Editor_pack lcs_vehicleobj_menu[] = {
   {"Secondary Color"               , ""      , 0x1F1      , TRUE    , TYPE_BYTE     , DEC   , 0            , 0x1    },
   
   {"Health"                        , ""      , 0x268      , TRUE    , TYPE_FLOAT    , 2     , 0            , 1      },
-  {"Currenty Gear"                 , ""      , 0x270      , TRUE    , TYPE_BYTE     , DEC   , 0            , 0x1    },
+  {"Current Gear"                  , ""      , 0x270      , TRUE    , TYPE_BYTE     , DEC   , 0            , 0x1    },
   {"Radio Station"                 , ""      , 0x2A0      , TRUE    , TYPE_BYTE     , 0     , radiostation , 0      },
   
   {"Honking Bool"                  , ""      , 0x2A8      , TRUE    , TYPE_BOOL     , 0     , 0            , 0      },
@@ -973,7 +973,7 @@ const Editor_pack vcs_handlingcfg_menu[] = {
   
   {"bFrontLights"                      , ""      , 0x94      , TRUE    , TYPE_BYTE     , 0      , vehicle_lights_front , 1        }, // ah (0 = long, 1 = small, 2 = big, 3 = tall)
   {"bRearLights"                       , ""      , 0x95      , TRUE    , TYPE_BYTE     , 0      , vehicle_lights_rear  , 1        }, // ai (0 = long, 1 = small, 2 = big, 3 = tall)
-  
+
   {"HandlingFlag 1"                    , ""      , 0xCC      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 0      }, // 
   {"HandlingFlag 2"                    , ""      , 0xCC      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 1      }, // NO_HANDBRAKE, STEER_REARWHEELS..
   {"HandlingFlag 3"                    , ""      , 0xCD      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 2      }, // 
@@ -982,7 +982,7 @@ const Editor_pack vcs_handlingcfg_menu[] = {
   {"HandlingFlag 6"                    , ""      , 0xCE      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 5      }, // GOOD_INSAND..
   {"HandlingFlag 7"                    , ""      , 0xCF      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , handling_flag    , 6      }, // 
   {"HandlingFlag 8"                    , ""      , 0xCF      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , handling_flag    , 7      }, //
- 
+
   {"ModelFlag 1"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 0      }, //
   {"ModelFlag 2"                       , ""      , 0xD0      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 1      }, //
   {"ModelFlag 3"                       , ""      , 0xD1      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 2      }, //  
@@ -991,7 +991,7 @@ const Editor_pack vcs_handlingcfg_menu[] = {
   {"ModelFlag 6"                       , ""      , 0xD2      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 5      }, // 
   {"ModelFlag 7"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 6      }, // 1: IS_BIKE      2: IS_HELI        4: IS_PLANE      8: IS_BOAT
   {"ModelFlag 8"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 7      }, // 
- 
+
   {NULL,NULL,0,0,0,0,0}
 };
 
@@ -1360,7 +1360,7 @@ const Editor_pack lcs_ide_menu[] = {
   //name                                 //postfix   //address  //edit_bool  //type        //precision  //*value    //steps    //min    //max  
   {"Name (CRC32 hashed)"                   , ""      , 0x08      , TRUE    , TYPE_INTEGER   , HEX    , 0            , 1      },
   {"Type"                                  , ""      , 0x10      , TRUE    , TYPE_BYTE      , DEC    , 0            , 1      },
-  {"Count 2dfx"                            , ""      , 0x11      , TRUE    , TYPE_BYTE      , DEC    , 0            , 1      },
+  {"Number of 2dfx"                        , ""      , 0x11      , TRUE    , TYPE_BYTE      , DEC    , 0            , 1      },
   {"Collision in DTZ"                      , ""      , 0x12      , TRUE    , TYPE_BOOL      , 0      , 0            , 1      },
   {"Offset to Collision"                   , ""      , 0x14      , TRUE    , TYPE_INTEGER   , HEX    , 0            , 1      },
   {"2dfx ID"                               , ""      , 0x18      , TRUE    , TYPE_SHORT     , DEC    , 0            , 1      },
@@ -1447,10 +1447,10 @@ const Editor_pack lcs_ide_cars_menu[] = {  /// 6 - cars
 };
 
 const Editor_pack lcs_ide_ped_menu[] = {  /// 7 - ped
-  {" ?"                                   , ""      , 0x2C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
+  {"?"                                   , ""      , 0x2C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"Threat (ped.dat)"                     , ""      , 0x30      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"Behaviour (pedstat.dat)"              , ""      , 0x34      , TRUE    , TYPE_INTEGER  , 0      , pedstatname  , 0      },
-  {" ?"                                   , ""      , 0x38      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
+  {"?"                                   , ""      , 0x38      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Offset to ?"                          , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"RadioA"                               , ""      , 0x40      , TRUE    , TYPE_BYTE     , 0      , radiostation , 0      },
   {"RadioB"                               , ""      , 0x41      , TRUE    , TYPE_BYTE     , 0      , radiostation , 0      },
@@ -1591,7 +1591,7 @@ const Editor_pack lcs_particlecfg_menu[] = {
   {"Animation Speed"                      , ""       , 0x42      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1       }, // J   
   {"Start Animation Frame"                , ""       , 0x40      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1       }, // K
   {"Final Animation Frame"                , ""       , 0x41      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1       }, // L
-  {"Rotation Speed (0=None,i-deg/frame)"  , ""       , 0x44      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       }, // M
+  {"Rotation Speed (0: None,i-deg/frame)" , ""       , 0x44      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       }, // M
   {"Gravitational Acceleration"           , ""       , 0x48      , TRUE    , TYPE_FLOAT    , 4      , 0            , 0.001f  }, // N
   
   {"Drag/Friction Decceleration"          , ""       , 0x4C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       }, // O
@@ -1633,25 +1633,25 @@ const Editor_pack lcs_particlecfg_menu[] = {
 
 const Editor_pack vcs_particlecfg_menu[] = { 
   //name                                 //postfix    //address     //edit_bool  //type      //precision  //*value  //steps    //min    //max  
-  {"Particle Type Name"                   , ""         , 0x04      , TRUE    , TYPE_STRING   , 20    , 0            , 0       },
+  {"Particle Type Name"                   , ""        , 0x04      , TRUE    , TYPE_STRING   , 20    , 0            , 0       },
   
-  {"Render Colouring R"                   , "/255"  , 0x60      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // B
-  {"Render Colouring G"                   , "/255"  , 0x61      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // C
-  {"Render Colouring B"                   , "/255"  , 0x62      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // D
-  {"Initial Color Variation"              , ""         , 0x64      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // CV (for r,g,b only, in %) (0-100);
+  {"Render Colouring R"                   , "/255"    , 0x60      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // B
+  {"Render Colouring G"                   , "/255"    , 0x61      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // C
+  {"Render Colouring B"                   , "/255"    , 0x62      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // D
+  {"Initial Color Variation"              , ""        , 0x64      , TRUE    , TYPE_BYTE     , DEC    , 0           , 1       }, // CV (for r,g,b only, in %) (0-100);
   
-  {"0x18 ?"                               , ""         , 0x18      , TRUE    , TYPE_FLOAT    , 2      , 0           , 1.00f   }, //
+  {"0x18 ?"                               , ""        , 0x18      , TRUE    , TYPE_FLOAT    , 2      , 0           , 1.00f   }, //
   
-  {"Default Initial Radius"               , ""         , 0x1C      , TRUE    , TYPE_FLOAT    , 4      , 0           , 0.001f  }, // E LCS
-  {"Expansion Rate"                       , ""         , 0x20      , TRUE    , TYPE_FLOAT    , 4      , 0           , 0.001f  }, // F LCS
+  {"Default Initial Radius"               , ""        , 0x1C      , TRUE    , TYPE_FLOAT    , 4      , 0           , 0.001f  }, // E LCS
+  {"Expansion Rate"                       , ""        , 0x20      , TRUE    , TYPE_FLOAT    , 4      , 0           , 0.001f  }, // F LCS
 
   ///Color "Fade-to-Black" options:
-  {"Initial Intensity (0-255)"            , "/255" , 0x26      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // G
+  {"Initial Intensity (0-255)"            , "/255"    , 0x26      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // G
   {"Fade Time"                            , ""        , 0x24      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // H
   {"Fade Amount (-255 to 255)"            , ""        , 0x28      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // I
   
   ///"Fade Alpha" options:
-  {"Initial Intensity (alpha)"            , "/255" , 0x2A      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // GA
+  {"Initial Intensity (alpha)"            , "/255"    , 0x2A      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // GA
   {"Fade Time (alpha)"                    , ""        , 0x2C      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // HA
   {"Fade Amount (alpha)"                  , ""        , 0x2E      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // IA
    
@@ -1659,7 +1659,7 @@ const Editor_pack vcs_particlecfg_menu[] = {
   {"Animation Speed"                      , ""        , 0x32      , TRUE    , TYPE_SHORT     , DEC    , 0           , 1       }, // J   
   {"Start Animation Frame"                , ""        , 0x30      , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // K
   {"Final Animation Frame"                , ""        , 0x31      , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, // L
-  {"Rotation Speed (0=None,i-deg/frame)"  , ""        , 0x34      , TRUE    , TYPE_INTEGER   , DEC    , 0           , 1       }, // M
+  {"Rotation Speed (0: None,i-deg/frame)" , ""        , 0x34      , TRUE    , TYPE_INTEGER   , DEC    , 0           , 1       }, // M
   {"Gravitational Acceleration"           , ""        , 0x38      , TRUE    , TYPE_FLOAT     , 4      , 0           , 0.001f  }, // N
   
   {"Drag/Friction Decceleration"          , ""        , 0x3C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       }, // O
@@ -1706,11 +1706,11 @@ const Editor_pack lcs_pedstatsdat_menu[] = {
   {"PedStat Type Name"     , ""      , 0x04      , TRUE    , TYPE_STRING   , 20    , 0            , 0      }, // A:  PedStat type name
   
   {"Flee Distance"         , ""      , 0x1C      , TRUE    , TYPE_FLOAT    , 0     , 0            , 1.0f   }, // B:  Flee distance
-  {"Heading change rate "  , " Deg"  , 0x20      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // C:  Heading change rate
+  {"Heading change rate"   , " Deg"  , 0x20      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // C:  Heading change rate
   
   {"Fear"                  , " %"    , 0x24      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // D:  Fear
   {"Temper"                , " %"    , 0x25      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // E:  Temper
-  {"Lawfullnes"            , " %"    , 0x26      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // F:  Lawfullness
+  {"Lawfullness"           , " %"    , 0x26      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // F:  Lawfullness
   {"Sexiness"              , " %"    , 0x27      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // G:  Sexiness
   {"Attack strength"       , ""      , 0x28      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // H: Attack strength  
   {"Defend weakness"       , ""      , 0x2C      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // I:  Defend weakness
@@ -1734,11 +1734,11 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
   {"PedStat Type Name"        , ""      , 0x1A      , TRUE    , TYPE_STRING   , 20    , 0            , 0      }, // A:  PedStat type name
  
   {"Flee Distance"            , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 0     , 0            , 1.0f   }, // B:  Flee distance
-  {"Heading change rate "     , " Deg"  , 0x08      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // C:  Heading change rate
+  {"Heading change rate"     , " Deg"  , 0x08      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // C:  Heading change rate
   
   {"Fear"                     , " %"    , 0x16      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // D:  Fear
   {"Temper"                   , " %"    , 0x17      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // E:  Temper
-  {"Lawfullnes"               , " %"    , 0x18      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // F:  Lawfullness
+  {"Lawfullness"               , " %"    , 0x18      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // F:  Lawfullness
   {"Sexiness"                 , " %"    , 0x19      , TRUE    , TYPE_BYTE     , DEC   , 0            , 1      }, // G:  Sexiness
   {"Attack strength"          , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // H: Attack strength  
   {"Defend weakness"          , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 1     , 0            , 0.1f   }, // I:  Defend weakness

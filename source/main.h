@@ -19,10 +19,11 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#define VERSION "v1.0g3" // displayed in title
 
 /** FEATURE-FLAGS *****************************************************************************************************/
 
-//#define DEBUG // Debug mode  ("Debug" watermark, extra monitor, options etc)
+//#define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 //#define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
 //#define LOG // logging to logfile
@@ -40,6 +41,7 @@
 #define HEXEDITOR // (~30KB)
 #define CONFIG // (~8KB)
 #define HEXMARKERS // (~4KB)
+#define LANG // (~6KB)
 
 //#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed
@@ -49,6 +51,11 @@
 
 
 /**********************************************************************************************************************/
+
+extern int ADRENALINE;
+extern int PPSSPP;
+extern int LCS;
+extern int VCS;
 
 enum {
   OFF, // 0
@@ -172,6 +179,9 @@ void *category_toggle(int type, int cat, int set);
 int module_stop(int argc, char *argv[]);
 int module_start(SceSize argc, void* argp);
 
+extern const Menu_pack main_menu[];
+extern int menu_size;
+
 /////////////////////////////////////////////
 
 int editor_create();
@@ -228,5 +238,7 @@ void hex_marker_addx(u32 address, int size);
 void hex_marker_remove(u32 address);
 void hex_marker_clear();
 #endif
+
+extern int LCS;
 
 #endif
