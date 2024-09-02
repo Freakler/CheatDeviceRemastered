@@ -36,12 +36,11 @@
 #include "editor.h"
 #include "config.h"
 #include "functions.h"
+#include "lang/lang.h"
 
 #ifdef NAMERESOLV
   #include "minIni.h"
 #endif
-
-#define VERSION "v1.0g3" // displayed in title
 
 PSP_MODULE_INFO("CheatDeviceRemastered", 0, 1, 0); // user
 
@@ -176,8 +175,11 @@ const Menu_pack main_menu[] = {
   // // DEBUG // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
   
   #ifdef DEBUG
-  {"Debug Monitor: "                  , CAT_DEBUG   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F00 , OFF , debug_monitor        , ""                                 , ""                                    , "" },
+  {"Debug Monitor:"                   , CAT_DEBUG   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F00 , OFF , debug_monitor        , ""                                 , ""                                    , "" },
   {"Display vars"                     , CAT_DEBUG   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F01 , ON  , debug_vars           , ""                                 , ""                                    , "" },
+  #ifdef LANG
+  {"Update Language Strings"          , CAT_DEBUG   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , update_lang          , "CROSS: Reset"                     , ""                                   , "Update Menu Language" },
+  #endif
   {"- - - - - - - - - - - - - - - - -", CAT_DEBUG   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                  , NULL },
   {""                                 , CAT_DEBUG   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                  , NULL },
   #endif
@@ -186,56 +188,55 @@ const Menu_pack main_menu[] = {
   // // WORK IN PROGRESS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
   
   #ifdef ACHIEVEMENTS
-  {"Reset Achievements"               , CAT_WIP     , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x164B , -1  , achievements_reset   , ""                                  , ""                                   , "> " },
+  {"Reset Achievements"               , CAT_WIP     , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x164B , -1  , achievements_reset   , ""                                  , ""                                   , "" },
   {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
   
   #ifdef PREVIEW
-  {"Swimming"                         , CAT_WIP     , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You finally learned to swim! No more drowning"},
-  {"Wave height: "                    , CAT_WIP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A4A , OFF , world_waveheight     , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust height"         , "> Adjust the oceans wave height."},
-  {"Police Heli: "                    , CAT_WIP     , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F63 , OFF , policechaseheli      , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust"                , "> " },
+  {"Swimming"                         , CAT_WIP     , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning"},
+  {"Wave height: "                    , CAT_WIP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A4A , OFF , world_waveheight     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust height"         , "Adjust the oceans wave height."},
+  {"Police Heli: "                    , CAT_WIP     , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F63 , OFF , policechaseheli      , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust"                , "" },
   {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  {"test_func()"                      , CAT_WIP     , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , test_func            , "CROSS = Execute"                   , ""                                   , "" },  
-  {"test_switch()"                    , CAT_WIP     , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , test_switch          , "CROSS = Enable/Disable Cheat"      , ""                                   , "" },
+  {"test_func()"                      , CAT_WIP     , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , test_func            , "CROSS: Execute"                   , ""                                   , "" },  
+  {"test_switch()"                    , CAT_WIP     , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , test_switch          , "CROSS: Enable/Disable Cheat"      , ""                                   , "" },
   {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
-  {"Hex Editor"                       , CAT_ALIAS   , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditor            , "CROSS = Open HexEditor"            , ""                                   , "> " },
-  {"User Cheats"                      , CAT_WIP     , MENU_CDR_USER    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , user_cheats          , "CROSS = "                          , "TRIANGLE = "                        , "" },
-  {"User Scripts"                     , CAT_WIP     , MENU_CDR_USCM    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , user_scripts         , "CROSS = "                          , "TRIANGLE = "                        , "" },
-  {"Start Mission: "                  , CAT_WIP     , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1EF4 , -1  , mission_select       , "CROSS = Start Mission"             , ""                                   , "> " },
+  {"Hex Editor"                       , CAT_ALIAS   , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditor            , "CROSS: Open HexEditor"            , ""                                   , "" },
+  {"User Cheats"                      , CAT_WIP     , MENU_CDR_USER    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , user_cheats          , "CROSS: "                          , "TRIANGLE: "                        , "" },
+  {"User Scripts"                     , CAT_WIP     , MENU_CDR_USCM    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , user_scripts         , "CROSS: "                          , "TRIANGLE: "                        , "" },
+  {"Start Mission: "                  , CAT_WIP     , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1EF4 , -1  , mission_select       , "CROSS: Start Mission"             , ""                                   , "" },
   {"- - - - - - - - - - - - - - - - -", CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
  
   // // ALIAS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
-
-  {"Infinite Health & Armor"          , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , godmode              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You are immune to explosions, gunshots, fall damage, fire etc.." },
-  {"Wanted Level: "                   , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , wanted_level         , "CROSS = Enable/Disable Cheat"      , "SQUARE = Set current as max"        , "> Adjust your Wanted Level and set the Maximum Level possible." },
-  {"Time: "                           , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , world_time           , "CROSS = Freeze/Unfreeze time"      , "LEFT/RIGHT = Adjust hour"           , "> Adjust the Worlds time and freeze it completely." },
-  {"Weather: "                        , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , world_weather        , "CROSS = Lock/Unlock weather"       , "LEFT/RIGHT = Select weather"        , "> Adjust and lock the Worlds Weather so it won't ever change again." },
-  {"Vehicle Spawner: "                , CAT_ALIAS   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , vehicle_spawner      , "CROSS/SQUARE = Spawn Vehicle"      , "LEFT/RIGHT = Adjust"                , "> Spawns selected Vehicle in front of you." },
-  {"Teleport: "                       , CAT_ALIAS   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , teleporter           , "CROSS = Teleport to location"      , "LEFT/RIGHT = Select location"       , "> Teleport yourself to a preset location on the map." },
-  {"Hover Bike & Car"                 , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hover_vehicle        , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Your vehicle hovers and can fly." },
-  {"Button Up: "                      , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , up_button            , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Select a Cheat to quick toggle via button when in-game!" },
-  {"Button Down: "                    , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , down_button          , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Select a Cheat to quick toggle via button when in-game!" },
+  {"Infinite Health & Armor"          , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
+  {"Wanted Level:"                    , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current as max"        , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
+  {"Time:"                            , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , world_time           , "CROSS: Freeze/Unfreeze time"      , "LEFT/RIGHT: Adjust hour"           , "Adjust the Worlds time and freeze it completely." },
+  {"Weather:"                         , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , world_weather        , "CROSS: Lock/Unlock weather"       , "LEFT/RIGHT: Select weather"        , "Adjust and lock the Weather so it won't ever change again." },
+  {"Vehicle Spawner:"                 , CAT_ALIAS   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , vehicle_spawner      , "CROSS/SQUARE: Spawn Vehicle"      , "LEFT/RIGHT: Adjust"                , "Spawns selected Vehicle in front of you." },
+  {"Teleport:"                        , CAT_ALIAS   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , teleporter           , "CROSS: Teleport to location"      , "LEFT/RIGHT: Select location"       , "Teleport yourself to a preset location on the map." },
+  {"Hover Bike & Car"                 , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hover_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle hovers and can fly like a hovercraft." },
+  {"Button Up:"                       , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , up_button            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"         , "Select a Cheat to quick toggle via button when in-game!" },
+  {"Button Down:"                     , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , down_button          , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"         , "Select a Cheat to quick toggle via button when in-game!" },
   {""                                 , CAT_ALIAS   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
   // // CHEATS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
-  {"Player"                           , CAT_PLAYER  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x245F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
-  {"Infinite Health & Armor"          , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A93 , OFF , godmode              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You are immune to explosions, gunshots, fall damage, fire etc.." },
-  {"Unlimited Ammo & No reloading"    , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AB , OFF , unlimited_ammo       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> All your Weapons have unlimited ammunition and no reloading needed." },
-  {"Unlimited sprinting"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x11E0 , -1  , unlimited_sprinting  , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You are never getting tired from sprinting ever again." },
-  {"Walking Speed: "                  , CAT_PLAYER  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x192C , OFF , walking_speed        , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust your speed of walking, sprinting etc" },
-  {"Invisible"                        , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1D18 , OFF , invisible            , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You are invisible but can still be attacked." },
-  {"Ignored by everyone"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x155A , OFF , ignored              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Everyone including police and mission enemys will ignore you." },
-  {"Wanted Level: "                   , CAT_PLAYER  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x19DF , OFF , wanted_level         , "CROSS = Enable/Disable Cheat"      , "SQUARE = Set current level as max"  , "> Adjust your Wanted Level, lock it and set the Maximum possible." },
-  {"Heavy Player"                     , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1F3B , OFF , heavy_player         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> You can push cars by running against them but are to heavy to jump!" },
-  {"Aim of Death"                     , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1BBC , OFF , aim_of_death         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Aiming down at a target will instantly kill it." },
-  {"Warp out of Water automatically"  , CAT_PLAYER  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x1A48 , OFF , warp_out_water       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> If you fall into the ocean you will be teleported out automatically." },
-  {"Model: "                          , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1C87 , OFF , player_model         , "CROSS = Change now"                , "LEFT/RIGHT = Select model"          , "> Change the actor skin / model. Beware: May break the game!" },
-  {"Maximum Health: "                 , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1D7D , -1  , max_health           , "LEFT/RIGHT = Adjust multiplier"    , ""                                   , "> Adjust the Multiplier value giving extra health! ('Health Plus')" },
-  {"Maximum Armor: "                  , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x178E , -1  , max_armor            , "LEFT/RIGHT = Adjust multiplier"    , ""                                   , "> Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
-  {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E4A , OFF , powerjump            , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
+  {"Player"                           , CAT_PLAYER  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x245F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Infinite Health & Armor"          , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A93 , OFF , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
+  {"Unlimited Ammo & No reloading"    , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AB , OFF , unlimited_ammo       , "CROSS: Enable/Disable Cheat"      , ""                                   , "All your Weapons have unlimited ammunition and no reloading needed." },
+  {"Unlimited sprinting"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x11E0 , -1  , unlimited_sprinting  , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from sprinting ever again." },
+  {"Walking Speed:"                   , CAT_PLAYER  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x192C , OFF , walking_speed        , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"         , "Adjust your speed of walking, sprinting etc" },
+  {"Invisible"                        , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1D18 , OFF , invisible            , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are invisible but can still be attacked." },
+  {"Ignored by everyone"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x155A , OFF , ignored              , "CROSS: Enable/Disable Cheat"      , ""                                   , "Everyone including police and mission enemys will ignore you." },
+  {"Wanted Level:"                    , CAT_PLAYER  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x19DF , OFF , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current level as max"  , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
+  {"Heavy Player"                     , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1F3B , OFF , heavy_player         , "CROSS: Enable/Disable Cheat"      , ""                                   , "You can push cars by running against them but are to heavy to jump!" },
+  {"Aim of Death"                     , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1BBC , OFF , aim_of_death         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Aiming down at a target will instantly kill it." },
+  {"Warp out of Water automatically"  , CAT_PLAYER  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x1A48 , OFF , warp_out_water       , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
+  {"Model:"                           , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1C87 , OFF , player_model         , "CROSS: Change now"                , "LEFT/RIGHT: Select model"          , "Change the actor skin / model. Beware: May break the game!" },
+  {"Maximum Health:"                  , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1D7D , -1  , max_health           , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra health! ('Health Plus')" },
+  {"Maximum Armor:"                   , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x178E , -1  , max_armor            , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
+  {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E4A , OFF , powerjump            , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
   {""                                 , CAT_PLAYER  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
   {"Current Vehicle"                  , CAT_VEHICL  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x258B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
@@ -256,19 +257,19 @@ const Menu_pack main_menu[] = {
   {"Cars drive on Water"              , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x15F7 , OFF , driveonwater         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Your car can drive on water." },
   {""                                 , CAT_VEHICL  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-  {"Teleporting"                      , CAT_TELEP   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2B73 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
-  {"Teleport: "                       , CAT_TELEP   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x18FA , OFF , teleporter           , "CROSS = Teleport to location"      , "LEFT/RIGHT = Select Location"       , "> Teleport yourself to a preset location on the map." },
-  {"Teleport near marker"             , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1647 , -1  , teleport_marker      , "CROSS = Teleport"                  , ""                                   , "> Teleport near the custom marker" },
-  {"Step Through Wall"                , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x195A , -1  , stepthroughwall      , "CROSS = Teleport one step forward" , ""                                   , "> With this you can easily step through walls get inside buildings etc" },
+  {"Teleporting"                      , CAT_TELEP   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2B73 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Teleport:"                        , CAT_TELEP   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x18FA , OFF , teleporter           , "CROSS: Teleport to location"      , "LEFT/RIGHT: Select Location"       , "Teleport yourself to a preset location on the map." },
+  {"Teleport near marker"             , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1647 , -1  , teleport_marker      , "CROSS: Teleport"                  , ""                                   , "Teleport near the custom marker" },
+  {"Step Through Wall"                , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x195A , -1  , stepthroughwall      , "CROSS: Teleport one step forward" , ""                                   , "With this you can easily step through walls get inside buildings etc" },
   {""                                 , CAT_TELEP   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-  {"Vehicles"                         , CAT_TRFFIC  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x215F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
-  {"Disable Traffic"                  , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x198C , OFF , traffic_density      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely disable the worlds traffic! (Parked vehicles still appear)"  },
-  {"Freeze Traffic"                   , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x17EC , OFF , traffic_freeze       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Completely freeze the worlds vehicles except your own!"  },
-  {"Touch Vehicle to: "               , CAT_TRFFIC  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1EC4 , OFF , touch_vehicle        , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Decide what should happen with a vehicle as soon as you touch." },
-  {"Default RadioStation: "           , CAT_TRFFIC  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1B98 , OFF , traffic_radiostation , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Select Station"        , "> Select a Radio Station that will be played when entering a vehicle."  },
-  {"BMX Jump Height: "                , CAT_TRFFIC  , MENU_VALUE       , FALSE , TRUE  , TRUE  , TRUE  , 0x1BDE , OFF , bmxjumpheight        , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust multiplier"     , "> Adjust the BMXs jump height." },
-  {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x15D3 , OFF , untouchable          , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Vehicles wont be able to get near you and will be pushed back." },
+  {"Vehicles"                         , CAT_TRFFIC  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x215F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Disable Traffic"                  , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x198C , OFF , traffic_density      , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely disable the worlds traffic! (Parked vehicles still appear)"  },
+  {"Freeze Traffic"                   , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x17EC , OFF , traffic_freeze       , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely freeze the worlds vehicles except your own!"  },
+  {"Touch Vehicle to:"                , CAT_TRFFIC  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1EC4 , OFF , touch_vehicle        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"         , "Decide what should happen with a vehicle as soon as you touch." },
+  {"Default RadioStation:"            , CAT_TRFFIC  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1B98 , OFF , traffic_radiostation , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Select Station"        , "Select a Radio Station that will be played when entering a vehicle."  },
+  {"BMX Jump Height:"                 , CAT_TRFFIC  , MENU_VALUE       , FALSE , TRUE  , TRUE  , TRUE  , 0x1BDE , OFF , bmxjumpheight        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust multiplier"     , "Adjust the BMXs jump height." },
+  {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x15D3 , OFF , untouchable          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Vehicles wont be able to get near you and will be pushed back." },
   {""                                 , CAT_TRFFIC  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
   {"Pedestrians"                      , CAT_PEDS    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x28A4 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
@@ -279,56 +280,56 @@ const Menu_pack main_menu[] = {
   {"Ped Walking Speed: "              , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x191A , OFF , pedwalking_speed     , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust the Pedestrians walking and sprinting speed." },
   {""                                 , CAT_PEDS    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-  {"Missions"                         , CAT_MISSON  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x235B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
-  {"Mission Selector"                 , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1F98 , -1  , mission_selector     , "CROSS = Open Menu"                 , ""                                   , "> Use the build-in level-skip menu to start missions." },
-  {"Force OnMission bool: "           , CAT_MISSON  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x17B5 , OFF , onmission            , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Control OnMission check. Handle with care!"  },
-  {"Freeze Mission Timers"            , CAT_MISSON  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x16EE , OFF , freeze_timers        , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Freeze side missions on screen timers."  },
-  {"Kill / destroy all targets"       , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x18BC , -1  , kill_all_targets     , "CROSS = Execute Order 66"          , ""                                   , "> Kill all Targets marked red!" },
-  {"Freeze all targets"               , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1C56 , -1  , freeze_all_targets   , "CROSS = Freeze Targets"            , ""                                   , "> Freeze all Targets marked red!" },
-  {"Teleport to next Objective"       , CAT_MISSON  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1762 , -1  , teleport_next        , "CROSS = Teleport"                  , ""                                   , "> Teleport to next marked destination, target or object" },
-  {"Teleport to next Mission"         , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1799 , -1  , teleport_mission     , "CROSS = Teleport"                  , ""                                   , "> Teleport to next Story-Mission marker." },
+  {"Missions"                         , CAT_MISSON  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x235B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Mission Selector"                 , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1F98 , -1  , mission_selector     , "CROSS: Open Menu"                 , ""                                   , "Use the build-in level-skip menu to start missions." },
+  {"Force OnMission bool:"            , CAT_MISSON  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x17B5 , OFF , onmission            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"         , "Control OnMission check. Handle with care!"  },
+  {"Freeze Mission Timers"            , CAT_MISSON  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x16EE , OFF , freeze_timers        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Freeze side missions on screen timers."  },
+  {"Kill / destroy all targets"       , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x18BC , -1  , kill_all_targets     , "CROSS: Execute Order 66"          , ""                                   , "Kill all Targets marked red!" },
+  {"Freeze all targets"               , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1C56 , -1  , freeze_all_targets   , "CROSS: Freeze Targets"            , ""                                   , "Freeze all Targets marked red!" },
+  {"Teleport to next Objective"       , CAT_MISSON  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1762 , -1  , teleport_next        , "CROSS: Teleport"                  , ""                                   , "Teleport to next marked destination, target or object" },
+  {"Teleport to next Mission"         , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1799 , -1  , teleport_mission     , "CROSS: Teleport"                  , ""                                   , "Teleport to next Story-Mission marker." },
   {""                                 , CAT_MISSON  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-  {"Map"                              , CAT_MAP     , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2A11 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
-  {"Mark on Map: "                    , CAT_MAP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x165F , OFF , markonmap            , "CROSS = Enable/Disable Cheat"      , "SQUARE = Cycle options"             , "> Select what should be displayed on the map and radar." },
+  {"Map"                              , CAT_MAP     , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2A11 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Mark on Map:"                     , CAT_MAP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x165F , OFF , markonmap            , "CROSS: Enable/Disable Cheat"      , "SQUARE: Cycle options"             , "Select what should be displayed on the map and radar." },
   {""                                 , CAT_MAP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-  {"Camera"                           , CAT_CAMERA  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x254B , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
-  {"Classic TopDown view"             , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1458 , OFF , camera_topdown       , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Experience the classic top-down camera angle!" },
-  {"Always Centered behind Vehicle"   , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A3C , OFF , camera_centered      , "CROSS = Enable/Disable Cheat"      , ""                                   , "> The camera will always be centered behind a vehicle." },
-  {"Field of View: "                  , CAT_CAMERA  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DC7 , OFF , fieldofview          , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust the Field of View for a better viewing angle." },
+  {"Camera"                           , CAT_CAMERA  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x254B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Classic TopDown view"             , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1458 , OFF , camera_topdown       , "CROSS: Enable/Disable Cheat"      , ""                                   , "Experience the classic top-down camera angle!" },
+  {"Always Centered behind Vehicle"   , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A3C , OFF , camera_centered      , "CROSS: Enable/Disable Cheat"      , ""                                   , "The camera will always be centered behind a vehicle." },
+  {"FOV:"                             , CAT_CAMERA  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DC7 , OFF , fieldofview          , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"         , "Adjust the Field of View for a better viewing angle." },
   {""                                 , CAT_CAMERA  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
-  {"Button Cheats"                    , CAT_STCKCHT , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2E5F , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , ""  },
-  {"Give Health"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x19CA , -1  , bttncht_givehealth   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Give Armor"                       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1874 , -1  , bttncht_givearmor    , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Give 250.000 Dollar"              , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x198F , -1  , bttncht_givemoney    , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Weaponset #1"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1AC1 , -1  , bttncht_weaponset1   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Weaponset #2"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x16AC , -1  , bttncht_weaponset2   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Weaponset #3"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x17EB , -1  , bttncht_weaponset3   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Spawn Rhino"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x122B , -1  , bttncht_spawnrhino   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Cars drive on Water"              , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x187A , -1  , bttncht_carsonwater  , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Blow up all nearby Vehicles"      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x138D , -1  , bttncht_blowupcars   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Change Player Model to "          , CAT_STCKCHT , MENU_VALUE       , TRUE  , FALSE , TRUE  , FALSE , 0x1D45 , OFF , bttncht_randomplayer , "CROSS = Trigger Stock Cheat"       , "LEFT/RIGHT = Adjust model"          , ""  },
-  {"Perfect Traction & Jumping"       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1654 , -1  , bttncht_perftraction , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Unlock 100% Multiplayer"          , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1D80 , -1  , bttncht_unlockmult100, "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Bubble Heads"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x146A , -1  , bttncht_bubblehead   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Play Credits"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x187C , -1  , bttncht_playcredits  , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Peds have Weapons"                , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x195C , -1  , bttncht_pedsweapons  , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Peds attack you"                  , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x135C , -1  , bttncht_pedsattack   , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Peds Riot"                        , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1C71 , -1  , bttncht_pedsriot     , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Aggressive Drivers"               , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x15F3 , -1  , bttncht_agrodrivers  , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Chrome Vehicles"                  , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1E4C , -1  , bttncht_traffichrome , "CROSS = Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Button Cheats"                    , CAT_STCKCHT , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2E5F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Give Health"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x19CA , -1  , bttncht_givehealth   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Give Armor"                       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1874 , -1  , bttncht_givearmor    , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Give 250k Dollars"                , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x198F , -1  , bttncht_givemoney    , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Weaponset 1"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1AC1 , -1  , bttncht_weaponset1   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Weaponset 2"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x16AC , -1  , bttncht_weaponset2   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Weaponset 3"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x17EB , -1  , bttncht_weaponset3   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Spawn Rhino"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x122B , -1  , bttncht_spawnrhino   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Cars drive on Water"              , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x187A , -1  , bttncht_carsonwater  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Blow up all nearby Vehicles"      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x138D , -1  , bttncht_blowupcars   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Change Player Model to:"          , CAT_STCKCHT , MENU_VALUE       , TRUE  , FALSE , TRUE  , FALSE , 0x1D45 , OFF , bttncht_randomplayer , "CROSS: Trigger Stock Cheat"       , "LEFT/RIGHT: Adjust model"          , ""  },
+  {"Perfect Traction & Jumping"       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1654 , -1  , bttncht_perftraction , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Unlock 100% Multiplayer"          , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1D80 , -1  , bttncht_unlockmult100, "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Bubble Heads"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x146A , -1  , bttncht_bubblehead   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Play Credits"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x187C , -1  , bttncht_playcredits  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Peds have Weapons"                , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x195C , -1  , bttncht_pedsweapons  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Peds attack you"                  , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x135C , -1  , bttncht_pedsattack   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Peds Riot"                        , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1C71 , -1  , bttncht_pedsriot     , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Aggressive Drivers"               , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x15F3 , -1  , bttncht_agrodrivers  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Chrome Vehicles"                  , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1E4C , -1  , bttncht_traffichrome , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
   {""                                 , CAT_STCKCHT , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
-  {"World"                            , CAT_WORLD   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x280A , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
-  {"Time: "                           , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AC , OFF , world_time           , "CROSS = Freeze/Unfreeze time"      , "LEFT/RIGHT = Adjust hour"           , "> Adjust the Worlds time and freeze it completely." },
-  {"Realtime Clock"                   , CAT_WORLD   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x19C1 , OFF , world_realtimeclock  , "CROSS = Enable/Disable Cheat"      , "SQUARE = Sync with System time"     , "> A day will last 24 real hours!" },
-  {"Weather: "                        , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E2F , OFF , world_weather        , "CROSS = Lock/Unlock weather"       , "LEFT/RIGHT = Select weather"        , "> Adjust and lock the Weather so it won't ever change again."},
-  {"Water Level: "                    , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x173A , OFF , world_waterlevel     , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust height"         , "> Adjust the oceans water level height."},
-  {"Gravity: "                        , CAT_WORLD   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x115C , OFF , world_gravity        , "CROSS = Reverse-button On/Off"     , "LEFT/RIGHT = Adjust gravity"        , "> Adjust gravity intensity and hold 'UP' button in-game to reverse it!" },
-  {"Touch Object to: "                , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x142B , OFF , touch_object         , "CROSS = Enable/Disable Cheat"      , "LEFT/RIGHT = Adjust option"         , "> Decide what should happen to a world object when touching it." },
-  {"Staunton Bridge Lift is: "        , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , FALSE , TRUE  , TRUE  , 0x18CA , OFF , world_liftcontrol    , "CROSS = Force position"            , "LEFT/RIGHT = Adjust option"         , "> Change & force Staunton Bridge's Lift position to a selected position." },
+  {"World"                            , CAT_WORLD   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x280A , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Time:"                            , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AC , OFF , world_time           , "CROSS: Freeze/Unfreeze time"      , "LEFT/RIGHT: Adjust hour"           , "Adjust the Worlds time and freeze it completely." },
+  {"Realtime Clock"                   , CAT_WORLD   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x19C1 , OFF , world_realtimeclock  , "CROSS: Enable/Disable Cheat"      , "SQUARE: Sync with System time"     , "A day will last 24 real hours!" },
+  {"Weather:"                         , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E2F , OFF , world_weather        , "CROSS: Lock/Unlock weather"       , "LEFT/RIGHT: Select weather"        , "Adjust and lock the Weather so it won't ever change again."},
+  {"Water Level:"                     , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x173A , OFF , world_waterlevel     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust height"         , "Adjust the oceans water level height."},
+  {"Gravity:"                         , CAT_WORLD   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x115C , OFF , world_gravity        , "CROSS: Reverse-button On/Off"     , "LEFT/RIGHT: Adjust gravity"        , "Adjust gravity intensity and hold 'UP' button in-game to reverse it!" },
+  {"Touch Object to:"                 , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x142B , OFF , touch_object         , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"         , "Decide what should happen to a world object when touching it." },
+  {"Staunton Bridge Lift is:"         , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , FALSE , TRUE  , TRUE  , 0x18CA , OFF , world_liftcontrol    , "CROSS: Force position"            , "LEFT/RIGHT: Adjust option"         , "Change & force Staunton Bridge's Lift position to a selected position." },
   {""                                 , CAT_WORLD   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
   {"Miscellaneous"                    , CAT_MISC    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2847 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
@@ -344,98 +345,102 @@ const Menu_pack main_menu[] = {
   {"Gather Spell"                     , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E35 , OFF , gather_spell         , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Gather everything!! (There will be LAG.. but its worth it!)"  },
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
-  {"Multiplayer"                      , CAT_MULTI   , MENU_CATEGORY    , TRUE  , TRUE  , FALSE , TRUE  , 0x2D2A , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
-  {"test"                             , CAT_MULTI   , MENU_SWITCH      , TRUE  , TRUE  , FALSE , TRUE  , 0x181C , OFF , mp_test              , "CROSS = Enable/Disable Cheat"      , ""                                   , "> " },
+  {"Multiplayer"                      , CAT_MULTI   , MENU_CATEGORY    , TRUE  , TRUE  , FALSE , TRUE  , 0x2D2A , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"test"                             , CAT_MULTI   , MENU_SWITCH      , TRUE  , TRUE  , FALSE , TRUE  , 0x181C , OFF , mp_test              , "CROSS: Enable/Disable Cheat"      , ""                                   , "" },
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , FALSE , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
-  {"Game Options"                     , CAT_GAME    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2542 , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
-  {"Developer Flag"                   , CAT_GAME    , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x14C0 , OFF , dev_flag             , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Spawn at Debug area on New Game & Start Multiplayer alone" },
-  {"Gamespeed: "                      , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1965 , OFF , gamespeed            , "CROSS = Enable/Disable Cheat"      , "CIRCLE = Disable and reset"         , "> Adjust the games speed." },
-  {"Skip Intro Movies"                , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DD1 , OFF , skip_intros          , "CROSS = Enable/Disable Cheat"      , ""                                   , "> Skip Rockstar Logo and Intro Movie when starting the game." },
-  {"Debug Messages on Loadscreen"     , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x184C , OFF , debug_loadscreens    , "CROSS = Enable/Disable"            , ""                                   , "> Re-enable some of Rockstars debug messages on the Loadscreen." },
-  {"Random Loadscreens"               , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18D3 , OFF , random_loadscreens   , "CROSS = Enable/Disable"            , ""                                   , "> Real random Loadscreens including Multiplayer ones!" },
-  {"Disable World Textures"           , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x17CF , OFF , disable_textures     , "CROSS = Enable/Disable"            , ""                                   , "> Stop World Textures from being applied to models." },
-  {"Limit FPS to: "                   , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x16F0 , OFF , fps_cap              , "CROSS = Toggle FPS Limit"          , ""                                   , "> Limit the Games' Frames Per Second and enable 60 FPS!" },
+  {"Game Options"                     , CAT_GAME    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2542 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Developer Flag"                   , CAT_GAME    , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x14C0 , OFF , dev_flag             , "CROSS: Enable/Disable Cheat"      , ""                                   , "Spawn at Debug area on New Game & Start Multiplayer alone" },
+  {"Gamespeed:"                       , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1965 , OFF , gamespeed            , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"         , "Adjust the games speed." },
+  {"Skip Intro Movies"                , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DD1 , OFF , skip_intros          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Skip Rockstar Logo and Intro Movie when starting the game." },
+  {"Debug Messages on Loadscreen"     , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x184C , OFF , debug_loadscreens    , "CROSS: Enable/Disable"            , ""                                   , "Re-enable some of Rockstars debug messages on the Loadscreen." },
+  {"Random Loadscreens"               , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18D3 , OFF , random_loadscreens   , "CROSS: Enable/Disable"            , ""                                   , "Real random Loadscreens including Multiplayer ones!" },
+  {"Disable World Textures"           , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x17CF , OFF , disable_textures     , "CROSS: Enable/Disable"            , ""                                   , "Stop World Textures from being applied to models." },
+  {"Limit FPS to:"                    , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x16F0 , OFF , fps_cap              , "CROSS: Toggle FPS Limit"          , ""                                   , "Limit the Games' Frames Per Second and enable 60 FPS!" },
   {""                                 , CAT_GAME    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
-  {"CheatDevice Options"              , CAT_CHDEV   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x285E , OFF , category_toggle      , "CROSS = Show/Hide Category"        , ""                                   , "" },
-  {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS = Enable/Disable"            , ""                                   , "> Enabling will automatically start the CheatDevice after spawning." },
+  {"CheatDevice Options"              , CAT_CHDEV   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x285E , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS: Enable/Disable"            , ""                                   , "Enabling will automatically start the CheatDevice after spawning." },
   #ifdef CONFIG
-  {"Autosave Settings to Config"      , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3E81 , OFF , cdr_liveconfig       , "CROSS = Enable/Disable"            , ""                                   , "> All settings will be auto-saved to config when closing the menu." },
+  {"Autosave Settings to Config"      , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3E81 , OFF , cdr_liveconfig       , "CROSS: Enable/Disable"            , ""                                   , "All settings will be auto-saved to config when closing the menu." },
   #endif
-  {"Collapsible Categories"           , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365A , ON  , cdr_collapsecats     , "CROSS = Enable/Disable"            , ""                                   , "> Choose between collapsible or always expanded categories." },
-  {"Show popular cheats on top"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3C42 , ON  , cdr_showpopular      , "CROSS = Enable/Disable"            , ""                                   , "> Enabling will show a preset selection of popular Cheats on top." },
-  {"Hide some UserInterfaces in Menu" , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3881 , ON  , cdr_allowuiblocking  , "CROSS = Enable/Disable"            , ""                                   , "> Allow Games's UserInterface elements to be blocked in some menus etc" },
-  {"Freeze Game when in Menu"         , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x3F9E , OFF , cdr_freezegameinmenu , "CROSS = Enable/Disable"            , ""                                   , "> Freeze the Game when the CheatDevice Menu is in use." },
-  {"Hide Button Legend & Info"        , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365B , OFF , cdr_uselegend        , "CROSS = Enable/Disable"            , ""                                   , "> Hide the button legend allowing for more space and menu displayed!" },
-  {"Alternative font for Categories"  , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3846 , OFF , cdr_alternativefont  , "CROSS = Enable/Disable"            , ""                                   , "> Use an alternative font for categories just like the main menu does." },
+  {"Collapsible Categories"           , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365A , ON  , cdr_collapsecats     , "CROSS: Enable/Disable"            , ""                                   , "Choose between collapsible or always expanded categories." },
+  {"Show popular cheats on top"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3C42 , ON  , cdr_showpopular      , "CROSS: Enable/Disable"            , ""                                   , "Enabling will show a preset selection of popular Cheats on top." },
+  {"Hide some UserInterfaces in Menu" , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3881 , ON  , cdr_allowuiblocking  , "CROSS: Enable/Disable"            , ""                                   , "Allow Games's UserInterface elements to be blocked in some menus etc" },
+  {"Freeze Game when in Menu"         , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x3F9E , OFF , cdr_freezegameinmenu , "CROSS: Enable/Disable"            , ""                                   , "Freeze the Game when the CheatDevice Menu is in use." },
+  {"Hide Button Legend & Info"        , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365B , OFF , cdr_uselegend        , "CROSS: Enable/Disable"            , ""                                   , "Hide the button legend allowing for more space and menu displayed!" },
+  {"Alternative font for Categories"  , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3846 , OFF , cdr_alternativefont  , "CROSS: Enable/Disable"            , ""                                   , "Use an alternative font for categories just like the main menu does." },
   
+  #ifdef LANG
+  {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Change Cheat Device Remastered's Language for your native one!"},
+  #endif
+
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
   #ifdef USERSCRIPTS
-  {"User Scripts"                     , CAT_MAIN    , MENU_CDR_USCM    , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , user_scripts         , "CROSS = Open UserScripts"          , "TRIANGLE = Open Location"           , "> Basic GTA Scripting Language Interpreter. See Readme on how to use" },
+  {"User Scripts"                     , CAT_MAIN    , MENU_CDR_USCM    , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , user_scripts         , "CROSS: Open UserScripts"          , "TRIANGLE: Open Location"           , "Basic GTA Scripting Language Interpreter. See Readme on how to use" },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //   
   
   #ifdef HEXEDITOR
-  {"Hex Editor"                       , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditor            , "CROSS = Open HexEditor"            , ""                                   , "> A fully fledged HexEditor to directly monitor and work in memory!" },
-  {"Hex Edit 'pplayer'"               , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditpplayer       , "CROSS = Open HexEditor"            , ""                                   , "> Open Object in Hex Editor" },
-  {"Hex Edit 'pcar'"                  , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditpcar          , "CROSS = Open HexEditor"            , ""                                   , "> Open Object in Hex Editor" },
+  {"Hex Editor"                       , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditor            , "CROSS: Open HexEditor"            , ""                                   , "A fully fledged HexEditor to directly monitor and work in memory!" },
+  {"Hex Edit 'pplayer'"               , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditpplayer       , "CROSS: Open HexEditor"            , ""                                   , "Open Object in Hex Editor" },
+  {"Hex Edit 'pcar'"                  , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditpcar          , "CROSS: Open HexEditor"            , ""                                   , "Open Object in Hex Editor" },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
   
   #ifdef FREECAM
-  {"Free Camera"                      , CAT_MAIN    , MENU_CDR_FREECAM , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , freecam              , "CROSS = Free Camera Mode"          , "TRIANGLE = Open in HexEditor"       , "> Unbind the camera to freely explore the world!" },
+  {"Free Camera"                      , CAT_MAIN    , MENU_CDR_FREECAM , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , freecam              , "CROSS: Free Camera Mode"          , "TRIANGLE: Open in HexEditor"       , "Unbind the camera to freely explore the world!" },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //   
   
   #ifdef EDITORS
-  {"People Objects Editor"            , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D7E , -1  , editor_pedobj        , "CROSS = Open Editor"               , ""                                   , "> Edit Pedestrian objects" },
-  {"Vehicle Objects Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x46AA , -1  , editor_vehicleobj    , "CROSS = Open Editor"               , ""                                   , "> Edit Vehicle objects" },
-  {"World Objects Editor"             , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x48AB , -1  , editor_worldobj      , "CROSS = Open Editor"               , ""                                   , "> Edit World objects" },
-  {"Business Objects Editor"          , CAT_MAIN    , MENU_CDR_EDITOR  , FALSE , TRUE  , TRUE  , TRUE  , 0x4EF2 , -1  , editor_businessobj   , "CROSS = Open Editor"               , ""                                   , "> Edit Business objects" },
-  {"Pickups Editor"                   , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4DD7 , -1  , editor_pickups       , "CROSS = Open Editor"               , ""                                   , "> Edit Pickups objects" },
-  {"Mapicons Editor"                  , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4814 , -1  , editor_mapicons      , "CROSS = Open Editor"               , ""                                   , "> Edit Mapicon objects" },
-  {"Parked Vehicles Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x47F1 , -1  , editor_vehspawns     , "CROSS = Open Editor"               , ""                                   , "> Edit the parked world vehicles values and create new spawns." },
-  {"Garage Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x4D66 , -1  , editor_garage        , "CROSS = Open Editor"               , ""                                   , "> Edit your stored Garage Vehicles. Garage must be closed!" },
+  {"People Objects Editor"            , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D7E , -1  , editor_pedobj        , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian objects" },
+  {"Vehicle Objects Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x46AA , -1  , editor_vehicleobj    , "CROSS: Open Editor"               , ""                                   , "Edit Vehicle objects" },
+  {"World Objects Editor"             , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x48AB , -1  , editor_worldobj      , "CROSS: Open Editor"               , ""                                   , "Edit World objects" },
+  {"Business Objects Editor"          , CAT_MAIN    , MENU_CDR_EDITOR  , FALSE , TRUE  , TRUE  , TRUE  , 0x4EF2 , -1  , editor_businessobj   , "CROSS: Open Editor"               , ""                                   , "Edit Business objects" },
+  {"Pickups Editor"                   , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4DD7 , -1  , editor_pickups       , "CROSS: Open Editor"               , ""                                   , "Edit Pickups objects" },
+  {"Mapicons Editor"                  , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4814 , -1  , editor_mapicons      , "CROSS: Open Editor"               , ""                                   , "Edit Mapicon objects" },
+  {"Parked Vehicles Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x47F1 , -1  , editor_vehspawns     , "CROSS: Open Editor"               , ""                                   , "Edit the parked world vehicles values and create new spawns." },
+  {"Garage Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x4D66 , -1  , editor_garage        , "CROSS: Open Editor"               , ""                                   , "Edit your stored Garage Vehicles. Garage must be closed!" },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //   
   
-  {"IDEs"                             , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x437E , -1  , editor_ide           , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemDefinitions' of Peds, Vehicles, Ojects etc " },
+  {"IDEs"                             , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x437E , -1  , editor_ide           , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemDefinitions' of Peds, Vehicles, Objects, etc..." },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   
-  {"Buildings.ipl"                    , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x45AB , -1  , editor_buildingsipl  , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemPlacement' of Buildings" },
-  {"Treadables.ipl"                   , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , FALSE , TRUE  , TRUE  , 0x44D7 , -1  , editor_treadablesipl , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemPlacement' of Roads, Grounds etc" },
-  {"Dummys.ipl"                       , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D78 , -1  , editor_dummysipl     , "CROSS = Open Editor"               , ""                                   , "> Edit 'ItemPlacement' of Doors, Objects etc" },
-  {"Carcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x411E , -1  , editor_carcolsdat    , "CROSS = Open Editor"               , ""                                   , "> Edit Vehicle color presets." },
-  {"Pedcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , FALSE , TRUE  , TRUE  , TRUE  , 0x465F , -1  , editor_pedcolsdat    , "CROSS = Open Editor"               , ""                                   , "> Edit Pedestrian color presets." },
-  {"Handling.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4632 , -1  , editor_handlingcfg   , "CROSS = Open Editor"               , ""                                   , "> Adjust a Vehicles' handling behavior." },
-  {"Particle.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4624 , -1  , editor_particlecfg   , "CROSS = Open Editor"               , ""                                   , "> Adjust particle color, behaviour, timings etc" },
-  {"Pedstats.dat"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4DB4 , -1  , editor_pedstatsdat   , "CROSS = Open Editor"               , ""                                   , "> Edit Pedestrian's behaviour, abilities and statistics." },
-  {"Weapon.dat"                       , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x41A2 , -1  , editor_weapondat     , "CROSS = Open Editor"               , ""                                   , "> Edit Weapon's behaviour, abilities and animations." },
-  {"Timecyc.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4143 , -1  , editor_timecycdat    , "CROSS = Open Editor"               , ""                                   , "> Edit World's colors per hour and weather" },
+  {"Buildings.ipl"                    , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x45AB , -1  , editor_buildingsipl  , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Buildings" },
+  {"Treadables.ipl"                   , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , FALSE , TRUE  , TRUE  , 0x44D7 , -1  , editor_treadablesipl , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Roads, Grounds etc" },
+  {"Dummys.ipl"                       , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D78 , -1  , editor_dummysipl     , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Doors, Objects etc" },
+  {"Carcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x411E , -1  , editor_carcolsdat    , "CROSS: Open Editor"               , ""                                   , "Edit Vehicle color presets." },
+  {"Pedcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , FALSE , TRUE  , TRUE  , TRUE  , 0x465F , -1  , editor_pedcolsdat    , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian color presets." },
+  {"Handling.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4632 , -1  , editor_handlingcfg   , "CROSS: Open Editor"               , ""                                   , "Adjust a Vehicles' handling behavior." },
+  {"Particle.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4624 , -1  , editor_particlecfg   , "CROSS: Open Editor"               , ""                                   , "Adjust particle color, behaviour, timings etc" },
+  {"Pedstats.dat"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4DB4 , -1  , editor_pedstatsdat   , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian's behaviour, abilities and statistics." },
+  {"Weapon.dat"                       , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x41A2 , -1  , editor_weapondat     , "CROSS: Open Editor"               , ""                                   , "Edit Weapon's behaviour, abilities and animations." },
+  {"Timecyc.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4143 , -1  , editor_timecycdat    , "CROSS: Open Editor"               , ""                                   , "Edit World's colors per hour and weather" },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },
   #endif
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
   
   #ifdef CONFIG
-  {"Save Settings to Config"          , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , save_config          , "CROSS = Save settings to config"   , ""                                   , "> Save your current preferences to the config file." },
-  {"Load Settings from Config"        , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_config          , "CROSS = Reload config"             , ""                                   , "> Load custom saved settings from the config file." },
+  {"Save Settings to Config"          , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , save_config          , "CROSS: Save settings to config"   , ""                                   , "Save your current preferences to the config file." },
+  {"Load Settings from Config"        , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_config          , "CROSS: Reload config"             , ""                                   , "Load custom saved settings from the config file." },
   #endif
-  {"Restore default Settings"         , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_defaults        , "CROSS = Reset cheats to default"   , ""                                   , "> Reset all menu cheats to their default disabled values." },
+  {"Restore default Settings"         , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_defaults        , "CROSS: Reset cheats to default"   , ""                                   , "Reset all menu cheats to their default disabled values." },
   
   {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                                , NULL                                 , NULL },  
-  {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , exit_game            , "CROSS = Exit game"                 , ""                                   , "> Exit the game and return to the main menu." },
+  {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , exit_game            , "CROSS: Exit game"                 , ""                                   , "Exit the game and return to the main menu." },
   
   {"",0,0,-1,-1,-1,-1,-1,-1,NULL,NULL,NULL,NULL}
 }; int menu_size = (sizeof(main_menu)/sizeof(Menu_pack))-1;
@@ -862,12 +867,12 @@ int usercheats_draw() {
     drawLegendBox(3, COLOR_BACKGROUND);
     
     if( usercheat_selector == 1 ) { // cursor in top menu (txt select)
-      drawLegendMessage("L+UP/DOWN = Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage("UP/DOWN = Navigate Menu",      1, 2, COLOR_TEXT); // right side, first row
-      drawLegendMessage("LEFT/RIGHT = Navigate files",  0, 1, COLOR_TEXT); // left side, second row
-      drawLegendMessage("TRIANGLE = Open in Editor",    1, 1, COLOR_TEXT); // right side, second row
-      drawLegendMessage("CROSS = Enable/Disable Cheat", 0, 0, COLOR_TEXT); // left side, third row
-      drawLegendMessage("CIRCLE = Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
+      drawLegendMessage("L+UP/DOWN: Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
+      drawLegendMessage("UP/DOWN: Navigate Menu",      1, 2, COLOR_TEXT); // right side, first row
+      drawLegendMessage("LEFT/RIGHT: Navigate files",  0, 1, COLOR_TEXT); // left side, second row
+      drawLegendMessage("TRIANGLE: Open in Editor",    1, 1, COLOR_TEXT); // right side, second row
+      drawLegendMessage("CROSS: Enable/Disable Cheat", 0, 0, COLOR_TEXT); // left side, third row
+      drawLegendMessage("CIRCLE: Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
     
     } else { /// draw Cheat data instead
       snprintf(buffer, sizeof(buffer), "Author: %s", meta_author );
@@ -1084,7 +1089,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   char buffer[256];
 
   /// draw title  
-  drawString("User Scripts", ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
+  drawString(translate_string("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
   
   /// draw folder  
   if( script_subfldrs[0] != 0x00 ) {
@@ -1104,8 +1109,8 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     } */
     
     if( userscript_options == 0 ) { // folder found but empty
-      drawString("No UserScript files found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
-      snprintf(buffer, sizeof(buffer), "Place .txt files to '%s%s%s/'", basefolder, folder_scripts, LCS ? "LCS" : "VCS");
+      drawString(translate_string("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+      snprintf(buffer, sizeof(buffer), translate_string("Place .txt files to '%s%s%s/'"), basefolder, folder_scripts, LCS ? "LCS" : "VCS");
       drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
       return -1; // no cheats folder
     }
@@ -1369,12 +1374,12 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     drawLegendBox(3, COLOR_BACKGROUND);
     
     /// draw button legend
-    //drawLegendMessage("L+UP/DOWN = Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
-    //drawLegendMessage("UP/DOWN = Navigate Menu",      1, 2, COLOR_TEXT); // right side, first row
-    //drawLegendMessage("LEFT/RIGHT = Navigate files",  0, 1, COLOR_TEXT); // left side, second row
-    //drawLegendMessage("TRIANGLE = Open in Editor",    1, 1, COLOR_TEXT); // right side, second row
-    //drawLegendMessage("CROSS = Enable/Disable Cheat", 0, 0, COLOR_TEXT); // left side, third row
-    //drawLegendMessage("CIRCLE = Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
+    //drawLegendMessage("L+UP/DOWN: Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
+    //drawLegendMessage("UP/DOWN: Navigate Menu",      1, 2, COLOR_TEXT); // right side, first row
+    //drawLegendMessage("LEFT/RIGHT: Navigate files",  0, 1, COLOR_TEXT); // left side, second row
+    //drawLegendMessage("TRIANGLE: Open in Editor",    1, 1, COLOR_TEXT); // right side, second row
+    //drawLegendMessage("CROSS: Enable/Disable Cheat", 0, 0, COLOR_TEXT); // left side, third row
+    //drawLegendMessage("CIRCLE: Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
     
     
     /// draw data instead
@@ -1382,31 +1387,31 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 10.0f, RED);
     if( doesFileExist(buffer) == 1 ) { // its a file
       if( !stricmp(currentexten, ".txt") ) { // and its a txt
-        snprintf(buffer, sizeof(buffer), "Author: %s", meta_author );
+        snprintf(buffer, sizeof(buffer), translate_string("Author: %s"), meta_author );
         drawLegendMessage(buffer, 0, 2, COLOR_TEXT); // left side, first row
           
-        snprintf(buffer, sizeof(buffer), "Version: %s", meta_version );
+        snprintf(buffer, sizeof(buffer), translate_string("Version: %s"), meta_version );
         drawLegendMessage(buffer, 1, 2, COLOR_TEXT); // right side, first row
           
-        snprintf(buffer, sizeof(buffer), "Category: %s", meta_category );
+        snprintf(buffer, sizeof(buffer), translate_string("Category: %s"), meta_category );
         drawLegendMessage(buffer, 0, 1, COLOR_TEXT); // left side, second row
           
-        snprintf(buffer, sizeof(buffer), "Date: %s", meta_date );
+        snprintf(buffer, sizeof(buffer), translate_string("Date: %s"), meta_date );
         drawLegendMessage(buffer, 1, 1, COLOR_TEXT); // right side, second row
           
-        snprintf(buffer, sizeof(buffer), "Description: %s", meta_description );
+        snprintf(buffer, sizeof(buffer), translate_string("Description: %s"), meta_description );
         drawLegendMessage(buffer, 0, 0, COLOR_TEXT); // left side, third row
           
-      } else drawLegendMessage("This is not a valid .txt file!", 0, 2, COLOR_TEXT); // left side, first row
+      } else drawLegendMessage(translate_string("This is not a valid .txt file!"), 0, 2, COLOR_TEXT); // left side, first row
     
     } else { //its a folder
       if( countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) {
-        drawLegendMessage("CROSS = Enter Folder",    1, 2, COLOR_TEXT); // right side, first row
-        drawLegendMessage("TRIANGLE = Leave Folder", 1, 1, COLOR_TEXT); // right side, second row
-        drawLegendMessage("CIRCLE = Exit to Menu",   1, 0, COLOR_TEXT); // right side, third row
+        drawLegendMessage(translate_string("CROSS: Enter Folder"),    1, 2, COLOR_TEXT); // right side, first row
+        drawLegendMessage(translate_string("TRIANGLE: Leave Folder"), 1, 1, COLOR_TEXT); // right side, second row
+        drawLegendMessage(translate_string("CIRCLE: Exit to Menu"),   1, 0, COLOR_TEXT); // right side, third row
           
       } else {
-        drawLegendMessage("This folder is empty!",   0, 2, COLOR_TEXT); // left side, first row
+        drawLegendMessage(translate_string("This folder is empty!"),  0, 2, COLOR_TEXT); // left side, first row
       }
     }
   }
@@ -1565,7 +1570,6 @@ int userscripts_ctrl() {
             unk_label[i][0] = 0;
           int unk_label_pos_cur = 0;
           int lastif = -1, opcodessinceif = -1;
-        
           //int blockcomment = 0;
           
           /// read in line by line /////////////////////////////////////////////////////////////////
@@ -1598,7 +1602,7 @@ int userscripts_ctrl() {
 
             /// error exit - script too big
             if( pos >= SCRIPT_SIZE ) {
-              snprintf(buffer, sizeof(buffer), "~r~Error: Script exceeds currently supported size! Sorry");
+              snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Script exceeds currently supported size! Sorry"));
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -1785,7 +1789,7 @@ int userscripts_ctrl() {
                       /// TODO
                       //eg: " 024C: request_model #SCRIPT_SALCHAIR "
                       
-                      snprintf(buffer, sizeof(buffer), "~r~Error: '%s' in line %i not yet supported!", token, line);
+                      snprintf(buffer, sizeof(buffer), translate_string("~r~Error: '%s' in line %i not yet supported!"), token, line);
                       setTimedTextbox(buffer, 7.00f); //
                       sceIoClose(file);
                       goto scripterror_exit;
@@ -1797,7 +1801,7 @@ int userscripts_ctrl() {
                       
                         /// error 
                         if ( VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
-                          snprintf(buffer, sizeof(buffer), "~r~Error: Label '%s' in line %i needs to be 3 or more chars!", token, line);
+                          snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
                           setTimedTextbox(buffer, 7.00f); //
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -1954,7 +1958,7 @@ int userscripts_ctrl() {
                             
                             customtextcounter++;
                           } else {
-                            snprintf(buffer, sizeof(buffer), "~r~Error: Custom strings limit of %i reached.", CSTGXTS);
+                            snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Custom strings limit of %i reached."), CSTGXTS);
                             setTimedTextbox(buffer, 7.00f); //
                             sceIoClose(file);
                             goto scripterror_exit;
@@ -1975,7 +1979,7 @@ int userscripts_ctrl() {
                         ctr++;
 
                         if( ctr > 7 ) { // a gxt id string can't be longer than 7 chars!!
-                          snprintf(buffer, sizeof(buffer), "~r~Error: String '%s' in line %i too long!", identifier, line);
+                          snprintf(buffer, sizeof(buffer), translate_string("~r~Error: String '%s' in line %i too long!"), identifier, line);
                           setTimedTextbox(buffer, 7.00f);
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -2213,7 +2217,7 @@ int userscripts_ctrl() {
               
               /// error check: SUPPORT_LABEL count
               if( label_pos_cur >= SUPPORT_LABEL ) { //label matches
-                snprintf(buffer, sizeof(buffer), "~r~Error: Too many labels. (%i is max)", SUPPORT_LABEL);
+                snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
                 setTimedTextbox(buffer, 7.00f); //
                 sceIoClose(file);
                 goto scripterror_exit;
@@ -2226,7 +2230,7 @@ int userscripts_ctrl() {
                 logPrintf("comparing for doubles: '%s' with '%s'", token, label_ch_arr[k]);
                 #endif  
                 if( strcmp(token, label_ch_arr[k]) == 0 ) { // label matches
-                  snprintf(buffer, sizeof(buffer), "~r~Error: Found already used label '%s' in line %i?", token, line);
+                  snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Found already used label '%s' in line %i?"), token, line);
                   setTimedTextbox(buffer, 7.00f); //
                   sceIoClose(file);
                   goto scripterror_exit;
@@ -2254,7 +2258,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 04 00   DB E7   07 01   //$4071 = 1 
               
-              snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2265,7 +2269,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 39 00   2F     07 02    //35@ == 2   
               
-              snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2388,7 +2392,7 @@ int userscripts_ctrl() {
                   
                   /// error goto label not found in Labels
                   if( tempint == placeholder + j ) { // if tempint not overwriten (ugly)
-                    snprintf(buffer, sizeof(buffer), "~r~Error: Label '%s' not found?!!", unk_label[j]);
+                    snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Label '%s' not found?!!"), unk_label[j]);
                     setTimedTextbox(buffer, 7.00f); //
                     goto scripterror_exit;
                   }
@@ -2409,9 +2413,9 @@ int userscripts_ctrl() {
           u8 tempbuffffff[128]; // quick temp printout (which also crashes for bigger scripts)
           memset(&tempbuffffff, 0, sizeof(tempbuffffff)); 
           for( i = 0; i < (pos < 128 ? pos : 128); i++ ) // otherwise crash of emulator
-            sprintf(tempbuffffff, "%s %02X", tempbuffffff, script[i]);
+            snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
           logPrintf("\nSCRIPT:%s\n\n", tempbuffffff);
-          #endif  
+          #endif
           
           CustomScriptExecute(addr);
         }
@@ -2512,7 +2516,7 @@ int editor_create(int mode, int toptions, const char *editortitle, Editor_pack *
   logPrintf("[INFO] %i: editor_create() ..'%s'", getGametime(), editortitle);
   #endif
   
-  sprintf(editor_titlebuffer, "Editor - %s", editortitle);
+  sprintf(editor_titlebuffer, "Editor - %s", translate_string(editortitle));
     
   editor_menumode = mode; 
   editor_toptions = toptions;
@@ -2575,10 +2579,10 @@ int editor_draw() {
       editor_block_current = editor_pedobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPedObjectIsActive(editor_base_adr) ) {
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getPedID(editor_base_adr), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getPedID(editor_base_adr), translate_string("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
         editor_draw_lower = 1; // there is a PED here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks); // block menu  
         editor_draw_lower = 0;  // no active PED -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2588,7 +2592,7 @@ int editor_draw() {
       editor_block_current = editor_vehicleobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
-        sprintf(buffer_top0, "Slot: %i/%i      ID: %i    Name: ", editor_block_current+1, editor_blocks, getVehicleID(editor_base_adr)); // block menu
+        sprintf(buffer_top0, translate_string("%s: %i/%i      %s: %i    %s: "), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getVehicleID(editor_base_adr), translate_string("Name")); // block menu
         
         sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
@@ -2597,7 +2601,7 @@ int editor_draw() {
         
         editor_draw_lower = 1; // there is a Vehicle here 
       } else { 
-        sprintf(buffer_top0, "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active Vehicle here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2607,10 +2611,10 @@ int editor_draw() {
       editor_block_current = editor_worldobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2620,10 +2624,10 @@ int editor_draw() {
       editor_block_current = editor_businessobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2633,10 +2637,10 @@ int editor_draw() {
       editor_block_current = editor_pickup_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPickupIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      ID: %i    Name: %s", editor_block_current+1, editor_blocks, getPickupID(editor_base_adr), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getPickupID(editor_base_adr), translate_string("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2647,12 +2651,12 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getMapiconIsActive(editor_base_adr) ){
         if( getMapiconID(editor_base_adr) == 0 ) // objective (destination, enemy, etc)
-          snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      Icon: %s   Type: %s", editor_block_current+1, editor_blocks, getMapiconNameByID(getMapiconID(editor_base_adr)), getMapiconTypeName(editor_base_adr) ); //block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %s   %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)), translate_string("Type"), getMapiconTypeName(editor_base_adr) ); //block menu  
         else
-          snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i      Icon: %s", editor_block_current+1, editor_blocks, getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2666,7 +2670,7 @@ int editor_draw() {
       // garage doesn't use editor_block_current but 2 globals directly
       editor_base_adr = editor_firstobj + (editor_garage_current * editor_blocksize * 4) + (editor_garageslot_current * editor_blocksize); // calc base address
     
-      snprintf(buffer_top0, sizeof(buffer_top0), "Slot: %i", editor_garageslot_current+1 );
+      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i"), translate_string("Slot"), editor_garageslot_current+1 );
       if( getGarageVehicleSlotIsActive(editor_base_adr) ){ // vehicle id for detecting if slot is used
         ///print vehicle name
         /*snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
@@ -2680,28 +2684,28 @@ int editor_draw() {
         editor_selector = 1; // don't allow going to down_menu
       }
       
-      snprintf(buffer_top1, sizeof(buffer_top1), "Garage: %s", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
+      snprintf(buffer_top1, sizeof(buffer_top1), translate_string("%s: %s"), translate_string("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
       break;
         
     case EDITOR_VEHWORLDSPAWNS: 
       editor_block_current = editor_vehiclespawn_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleWorldSpawnSlotIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        sprintf(buffer_top0, "Slot: %i/%i      ID: %i", editor_block_current+1, editor_blocks, getInt(editor_base_adr)); // block menu
+        sprintf(buffer_top0, translate_string("%s: %i/%i      %s: %i"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getInt(editor_base_adr)); // block menu
         
         ///add vehicle name
         sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
           sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
-        sprintf(buffer_top0, "%s    Name: %s", buffer_top0, buffer_top1);
+        sprintf(buffer_top0, translate_string("%s    %s: %s"), buffer_top0, translate_string("Name"), buffer_top1);
         
         ///add custom created indicator
         if( isCustomParkedVehicleSpawnViaSlot(editor_block_current) )
-          sprintf(buffer_top0, "%s    (custom)", buffer_top0);
+          sprintf(buffer_top0, translate_string("%s    (%s)"), buffer_top0, translate_string("custom"));
           
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, "Slot: %i/%i", editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2715,7 +2719,7 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       
       if( getInt(editor_base_adr) ){ // there is a pointer here
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      Type: '%s'   Name: %s", editor_block_current, editor_blocks-1, getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: '%s'   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), translate_string("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
         editor_draw_lower = 1; 
     
         editor_base_adr = getInt(editor_base_adr);
@@ -2738,7 +2742,7 @@ int editor_draw() {
         optionAdjust(); // "re-adjust"  
 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
         editor_temp_blocksize = 0x4; // size of pointer
@@ -2758,13 +2762,13 @@ int editor_draw() {
         editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
           
         if( getInt(editor_base_adr) && getByte( getInt(editor_base_adr) + 0x10 ) == MODELINFO_VEHICLE ) { // there is a pointer here AND its vehicle type
-          snprintf(buffer_top0, sizeof(buffer_top0), "ID: %i    GXT: %s", editor_block_current, getGxtIdentifierForVehicleViaID(editor_block_current)); 
-          snprintf(buffer_top0, sizeof(buffer_top0), "%s    Name: %s", buffer_top0, getRealVehicleNameViaID(editor_block_current)); // fix  
+          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i    %s: %s"), translate_string("ID"), editor_block_current, translate_string("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current)); 
+          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s    %s: %s"), buffer_top0, translate_string("Name"), getRealVehicleNameViaID(editor_block_current)); // fix  
           editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // todo (var_handlingcfgslotsize)
           editor_base_adr = getAddressOfHandlingSlotForID(editor_block_current);
           editor_draw_lower = 1;
         } else { 
-          snprintf(buffer_top0, sizeof(buffer_top0), "IDE: %i/%i", editor_block_current, editor_blocks ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks ); // block menu  
           editor_draw_lower = 0; // not allowed to draw lower menu
           editor_selector = 1; // don't allow going to down_menu
           editor_temp_blocksize = 0x4; // back to size of pointer
@@ -2776,10 +2780,10 @@ int editor_draw() {
       editor_block_current = editor_buildingsIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2789,10 +2793,10 @@ int editor_draw() {
       editor_block_current = editor_treadablesIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2802,10 +2806,10 @@ int editor_draw() {
       editor_block_current = editor_dummysIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x58), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2814,7 +2818,7 @@ int editor_draw() {
     case EDITOR_CARCOLSDAT:
       editor_block_current = editor_carcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), "Color: %i/%i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Color"), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2831,7 +2835,7 @@ int editor_draw() {
     case EDITOR_PEDCOLSDAT: //VCS only
       editor_block_current = editor_pedcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), "Color: %i/%i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Color"), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2845,21 +2849,21 @@ int editor_draw() {
     case EDITOR_PARTICLECFG:
       editor_block_current = editor_particleCFG_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_PEDSTATSDAT:
       editor_block_current = editor_pedstatsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i", editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_WEAPONDAT:
       editor_block_current = editor_weaponDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), "No: %i/%i      ID: %i   Name: %s", editor_block_current, editor_blocks-1, getShort(editor_base_adr+0x60), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x60), translate_string("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
       editor_draw_lower = 1; 
       break;
      
@@ -2868,7 +2872,7 @@ int editor_draw() {
     int weather = editor_block_current / 24;
     int time = editor_block_current % 24;
     editor_base_adr = editor_firstobj + (8 * time) + weather;
-      snprintf(buffer_top0, sizeof(buffer_top0), "Weather: %s   Time: %02i:00", LCS ? weather_lcs[weather] : weather_vcs[weather], time); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %s   %s: %02i:00"), translate_string("Weather"), translate_string( LCS ? weather_lcs[weather] : weather_vcs[weather] ), translate_string("Time"), time); //block menu  
       editor_draw_lower = 1; 
     editor_temp_blocksize = 0x2bf0; // LCS & VCS! todo?
       break;
@@ -2962,7 +2966,7 @@ int editor_draw() {
       #endif
         
       ///Name selected
-      drawString(editor_curmenu[i].name, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
+      drawString(translate_string(editor_curmenu[i].name), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
       
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything    
         func = editor_curmenu[i].value;
@@ -3001,16 +3005,16 @@ int editor_draw() {
               snprintf(buffer, sizeof(buffer), "FALSE");
             } else snprintf(buffer, sizeof(buffer), "ERROR");*/
       if( *(unsigned char*)(adr) == 1 ) {
-              snprintf(buffer, sizeof(buffer), "TRUE");
+              snprintf(buffer, sizeof(buffer), translate_string("TRUE"));
             } else if(*(unsigned char*)(adr) == 0 ) {
-              snprintf(buffer, sizeof(buffer), "FALSE");
-            } else snprintf(buffer, sizeof(buffer), "ERROR");
+              snprintf(buffer, sizeof(buffer), translate_string("FALSE"));
+            } else snprintf(buffer, sizeof(buffer), translate_string("ERROR"));
             break;
             
           case TYPE_BIT:
             if( *(char*)(adr) & (1 << pre) ) {
-              snprintf(buffer, sizeof(buffer), "TRUE"); // bit is set
-            } else snprintf(buffer, sizeof(buffer), "FALSE");
+              snprintf(buffer, sizeof(buffer), translate_string("TRUE")); // bit is set
+            } else snprintf(buffer, sizeof(buffer), translate_string("FALSE"));
             break;
             
           case TYPE_NIBBLE_LOW:  // eg: 0xE6  -> 6  0110
@@ -3046,8 +3050,8 @@ int editor_draw() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE: // on VCS the vehicles are loaded into the garage on spawn!!!!! (TODO - can this be checked elsewhere?)
-        drawString("No vehicle found or garage open!", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
-        if( VCS ) drawString("Info: Vehicles are loaded on spawn! Open & close garage once.", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
+        drawString(translate_string("No vehicle found or garage open!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        if( VCS ) drawString(translate_string("Info: Vehicles are loaded on spawn! Open & close garage once."), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
         break;
 
       case EDITOR_PEDOBJ:
@@ -3061,11 +3065,11 @@ int editor_draw() {
       case EDITOR_DUMMYSIPL:
       case EDITOR_MAPICONS: 
       case EDITOR_HANDLINGCFG: 
-        drawString("No active object in this slot!", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawString(translate_string("No active object in this slot!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
         break;
         
       case EDITOR_IDE: 
-        drawString("No IDE here!", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawString(translate_string("No IDE here!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
         break;
                     
       default: break;
@@ -3110,17 +3114,17 @@ int editor_draw() {
     drawLegendBox(2, COLOR_BACKGROUND); // only 2 lines in small legend mode
     
     /* if( !flag_small_legend) {
-      drawLegendMessage("UP/DOWN = Select Entry", 0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage("LEFT/RIGHT = Change Value", 1, 2, COLOR_TEXT); // right side, first row
+      drawLegendMessage("UP/DOWN: Select Entry", 0, 2, COLOR_TEXT); // left side, first row
+      drawLegendMessage("LEFT/RIGHT: Change Value", 1, 2, COLOR_TEXT); // right side, first row
     } */
   
     //+//+// OPTION //+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//
     if( editor_menumode == EDITOR_VEHICLEOBJ ) {
       if( editor_selector && pcar && editor_base_adr != pcar ) {  
-        drawLegendMessage("SELECT = Current Vehicle", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Current Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
       if(editor_selector && !pcar && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {  
-        drawLegendMessage("SELECT = Touched Vehicle", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Touched Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
       
       if( editor_selector 
@@ -3128,13 +3132,13 @@ int editor_draw() {
         && getShort(editor_base_adr+0x62) != -1 //
         && getInt(editor_base_adr+0x1C) == 0    //
         && editor_base_adr != pcar ) {          // no need to teleport to own coordinates
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       
     }
     if( editor_menumode == EDITOR_PEDOBJ  ) {
       if( editor_selector && pplayer && editor_base_adr != pplayer ) {
-        drawLegendMessage("SELECT = Player Object", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Player Object"), 0, 0, COLOR_TEXT); // left side, third row
       }
       
       if( editor_selector 
@@ -3142,79 +3146,79 @@ int editor_draw() {
         && getInt(editor_base_adr+0x40) != 0      //
         && getByte(editor_base_adr+0x43) == 0x09  //
         && editor_base_adr != pplayer ) {         // no need to teleport to own coordinates
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }      
     }
     if( editor_menumode == EDITOR_GARAGE  ) {
       if(editor_selector && getShort(editor_base_adr) != 0 && getFloat(editor_base_adr+0x4) != 0.0f) { // detect saved vehicle
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && getShort(editor_base_adr) == 0 && editor_garageslot_current == 0 ) {  
-        drawLegendMessage("SELECT = Generate Vehicle", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Generate Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WORLDOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f && getWorldObjectIsActive(editor_base_adr) ) {
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {
-        drawLegendMessage("SELECT = Touched Object", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Touched Object"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_BUSINESSOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f ) {
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_PICKUPS  ) {
       if( editor_selector && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) {
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_MAPICONS  ) {
       if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_HANDLINGCFG  ) {
       if( editor_selector && pcar && pcar_id != editor_vehicle_current) {
-        drawLegendMessage("SELECT = Set current vehicle", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SELECT: Set current vehicle"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_VEHWORLDSPAWNS  ) {
       if( editor_selector && getFloat(editor_base_adr+(0xC)) != 0 ) {
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && pcar) {
-        drawLegendMessage("SELECT = Overwrite Vehicle", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Overwrite Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_BUILDINGSIPL || editor_menumode == EDITOR_TREADABLESIPL || editor_menumode == EDITOR_DUMMYSIPL ) {
       if( editor_selector && getFloat(editor_base_adr+(0x38)) != 0 ) {
-        drawLegendMessage("SQUARE = Teleport there", 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {  
-        drawLegendMessage("SELECT = Touched Entity", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Touched Entity"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WEAPONDAT  ) {
       if( editor_selector ) {  
-        drawLegendMessage("SELECT = Current Weapon", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Current Weapon"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
   if( editor_menumode == EDITOR_TIMECYCDAT  ) {
       if( editor_selector ) {  
-        drawLegendMessage("SELECT = Current Cycle", 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(translate_string("SELECT: Current Cycle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     #ifdef HEXEDITOR
     if( editor_curmenu[editor_selection_val].address >= 0) {
-      drawLegendMessage("TRIANGLE = Open in HexEditor", 1, 1, COLOR_TEXT); // right side, second row
+      drawLegendMessage(translate_string("TRIANGLE: Open in HexEditor"), 1, 1, COLOR_TEXT); // right side, second row
     }
     #endif
-    drawLegendMessage("CIRCLE = Exit to Menu", 1, 0, COLOR_TEXT); // right side, third row
+    drawLegendMessage(translate_string("CIRCLE: Exit to Menu"), 1, 0, COLOR_TEXT); // right side, third row
   }
 
   return 0;
@@ -3734,7 +3738,7 @@ int editor_ctrl() {
         break;
     
       case EDITOR_TIMECYCDAT: 
-      snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02i:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
+        snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02i:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
         break;
                 
       default: 
@@ -4160,9 +4164,9 @@ int freecam_draw() {
   
   if( printinfo ) {
     
-    drawString("Free Camera", ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
+    drawString(translate_string("Free Camera"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
     
-    drawString("Player position:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
+    drawString(translate_string("Player position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
       snprintf(buffer, sizeof(buffer), "x: %.2f", player_x);
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE);
       snprintf(buffer, sizeof(buffer), "y: %.2f", player_y);
@@ -4171,7 +4175,7 @@ int freecam_draw() {
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE);
       
       
-    drawString("Camera position:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
+    drawString(translate_string("Camera position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
       snprintf(buffer, sizeof(buffer), "x: %.2f", camera_x); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE);
       snprintf(buffer, sizeof(buffer), "y: %.2f", camera_y);
@@ -4195,37 +4199,37 @@ int freecam_draw() {
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE);
     */
     
-    snprintf(buffer, sizeof(buffer), "cutscene = %X", getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
+    snprintf(buffer, sizeof(buffer), translate_string("cutscene: %X"), getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY);
     
-    snprintf(buffer, sizeof(buffer), "camera = %X", getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
+    snprintf(buffer, sizeof(buffer), translate_string("camera: %X"), getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY);
     
 
-    snprintf(buffer, sizeof(buffer), "FOV = %.2f", fov);
+    snprintf(buffer, sizeof(buffer), translate_string("FOV: %.2f"), fov);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, GREY);
     
-    snprintf(buffer, sizeof(buffer), "movespeed = %.2f", movespeed);
+    snprintf(buffer, sizeof(buffer), translate_string("movespeed: %.2f"), movespeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 125.0f, GREY);
-    snprintf(buffer, sizeof(buffer), "turnspeed = %.3f", turnspeed);
+    snprintf(buffer, sizeof(buffer), translate_string("turnspeed: %.3f"), turnspeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, GREY);
       
-    snprintf(buffer, sizeof(buffer), "radius = %.2f", radius);
+    snprintf(buffer, sizeof(buffer), translate_string("radius: %.2f"), radius);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 170.0f, GREY);
-    snprintf(buffer, sizeof(buffer), "inclination = %.2f", inclination);
+    snprintf(buffer, sizeof(buffer), translate_string("inclination: %.2f"), inclination);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 185.0f, GREY);
-    snprintf(buffer, sizeof(buffer), "azimuth = %.2f", azimuth);
+    snprintf(buffer, sizeof(buffer), translate_string("azimuth: %.2f"), azimuth);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 200.0f, GREY);
       
 
     if( flag_use_legend ) {
       drawLegendBox(3, COLOR_BACKGROUND);
-      drawLegendMessage("D-PAD = Move Camera position",    0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage("TRIANGLE = Show/Hide text",       1, 2, COLOR_TEXT); // right side, first row
-      drawLegendMessage("CROSS + D-PAD = Turn Camera",     0, 1, COLOR_TEXT); // left side, second row
-      drawLegendMessage("L/R (+ CROSS) = Adjust Speed(s)", 1, 1, COLOR_TEXT); // right side, second row
-      drawLegendMessage("SQUARE + D-PAD = Height & FOV",   0, 0, COLOR_TEXT); // left side, third row
-      drawLegendMessage("CIRCLE = Exit to Menu",           1, 0, COLOR_TEXT); // right side, third row
+      drawLegendMessage(translate_string("D-PAD: Move Camera position"),    0, 2, COLOR_TEXT); // left side, first row
+      drawLegendMessage(translate_string("TRIANGLE: Show/Hide text"),       1, 2, COLOR_TEXT); // right side, first row
+      drawLegendMessage(translate_string("CROSS + D-PAD: Turn Camera"),     0, 1, COLOR_TEXT); // left side, second row
+      drawLegendMessage(translate_string("L/R (+ CROSS): Adjust Speed(s)"), 1, 1, COLOR_TEXT); // right side, second row
+      drawLegendMessage(translate_string("SQUARE + D-PAD: Height & FOV"),   0, 0, COLOR_TEXT); // left side, third row
+      drawLegendMessage(translate_string("CIRCLE: Exit to Menu"),           1, 0, COLOR_TEXT); // right side, third row
     }
   }
 
@@ -4289,12 +4293,12 @@ int address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
   drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString("Enter Address", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 200.0f, 85.0f, COLOR_TITLE);
+  drawString(translate_string("Enter Address"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 200.0f, 85.0f, COLOR_TITLE);
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
   
   /// draw physical address
   unsigned int i = 0, x = 320, y = 130, temp = tempaddress; // x = 290
-  drawString("physical:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
+  drawString(translate_string("Physical:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
   while( temp ) {
     snprintf(buffer, sizeof(buffer), "%X", temp % 0x10);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, COLOR_TEXT);
@@ -4323,7 +4327,7 @@ int address_draw() {
   /// draw $gp depending address
   if( VCS ) {
     i = 0, x = 320, y += 45, temp = tempaddress - gp;
-    drawString("to $gp:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
+    drawString(translate_string("To $gp:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
     while( temp ) {
       snprintf(buffer, sizeof(buffer), "%X", temp % 0x10); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, ORANGE);
@@ -4364,8 +4368,8 @@ int address_draw() {
   }  
   #endif
   
-  //drawString("CROSS = Open Address", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 100.0f, 200.0f, COLOR_TEXT);
-  //drawString("CIRCLE = Abort", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 300.0f, 200.0f, COLOR_TEXT);
+  //drawString("CROSS: Open Address", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 100.0f, 200.0f, COLOR_TEXT);
+  //drawString("CIRCLE: Abort", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 300.0f, 200.0f, COLOR_TEXT);
 
   return 0;
 }
@@ -4454,7 +4458,7 @@ int editbyte_draw() {
   drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString("Edit Byte", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 215.0f, 100.0f, COLOR_TITLE);
+  drawString(translate_string("Edit Byte"), ALIGN_SCREENCENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 0.0F, 100.0F, COLOR_TITLE);
   
   int x = 225, y = 140;
 
@@ -4611,7 +4615,7 @@ int hexeditor_create(int address, int mode, int low, int high, const char *infos
   hexeditor_mode = mode;
   hexeditor_lowbound = low;
   hexeditor_highbound = high;
-  snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "%s", infostring);
+  snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "%s", translate_string(infostring));
   
   hexeditor_lines = (hexeditor_highbound - hexeditor_lowbound) / 0x10;
   if( ((hexeditor_highbound - hexeditor_lowbound) % 0x10) > 0 )
@@ -4695,7 +4699,7 @@ int hexeditor_draw() {
     hex_adr = (hexeditor_address+(hexeditor_browse_y*0x10)+(hexeditor_browse_x*0x01)); // update address depending on cursor position
     
     /// draw Title
-    drawString("HexEditor", ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX);
+    drawString(translate_string("HexEditor"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX);
     
     
     /// draw "infostring"
@@ -4847,15 +4851,15 @@ int hexeditor_draw() {
   
   /// current values
   if( flag_use_legend ) {
-    drawString("short:",   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT);
-    drawString("integer:", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT);
-    drawString("float:",   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT);
-    drawString("address:", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT);
+    drawString(translate_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT);
+    drawString(translate_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT);
+    drawString(translate_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT);
+    drawString(translate_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT);
   } else {
-    drawString("short:",   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT);
-    drawString("integer:", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT);
-    drawString("float:",   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT);
-    drawString("address:", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT);
+    drawString(translate_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT);
+    drawString(translate_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT);
+    drawString(translate_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT);
+    drawString(translate_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT);
   } 
 
   switch( hex_adr % 0x10 ) {
@@ -4902,17 +4906,17 @@ int hexeditor_draw() {
   if( flag_use_legend && !flag_draw_DBGVALS ) {
     #ifndef DEBUG
     drawBox(320, 220, 155, 50, COLOR_BACKGROUND);
-    drawString("CROSS = Edit selected Byte",  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
-    drawString("SQUARE = Set Byte to 0x00",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
-    drawString("TRIANGLE = Open Address",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
-    drawString("CIRCLE = Exit HexEditor",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
+    drawString(translate_string("CROSS: Edit selected Byte"),  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
+    drawString(translate_string("SQUARE: Set Byte to 0x00"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
+    drawString(translate_string("TRIANGLE: Open Address"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
+    drawString(translate_string("CIRCLE: Exit HexEditor"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
     
     drawBox(160, 220, 155, 50, COLOR_BACKGROUND);
-    drawString("R + SQUARE = Zero 4 Bytes",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
-    drawString("R + TRIANGLE = Teleport xyz", ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
-    drawString("SELECT = Cycle Baseadr.",     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
+    drawString(translate_string("R + SQUARE: Zero 4 Bytes"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
+    drawString(translate_string("R + TRIANGLE: Teleport xyz"), ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
+    drawString(translate_string("SELECT: Cycle Baseadr."),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
     #ifdef HEXMARKERS
-    drawString("R + CROSS = Mark selected",   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
+    drawString(translate_string("R + CROSS: Mark selected"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
     #endif
    #endif
   }
@@ -5124,7 +5128,7 @@ void draw() { // called by hijacked game function
     #ifdef LOG
     logPrintf("[INFO] %i: drawing welcome message", getGametime());
     #endif  
-    setTimedTextbox(welcomemsg, 7.00f);
+    setTimedTextbox(translate_string(welcomemsg), 7.00f);
     flag_draw_welcomsg = 0;
   }
 
@@ -5259,7 +5263,7 @@ void draw() { // called by hijacked game function
   /// free Memory (when enabled)
   if( flag_draw_MEM == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
   getSizeString(buffer, memory_main_free);
-    drawString("MEM:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE);
+    drawString(translate_string("MEM:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 48.0f, 5.0f, (memory_main_free < 150*1000 ? (memory_main_free < 100*1000 ? (memory_main_free < 50*1000 ? RED : ORANGE) : YELLOW) : GREEN) );
   }
   
@@ -5267,7 +5271,7 @@ void draw() { // called by hijacked game function
   /// FPS indicator (when enabled)
   if( flag_draw_FPS == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
     snprintf(buffer, sizeof(buffer), "%.0f", fps);
-    drawString("FPS:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE);
+    drawString(translate_string("FPS:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 30.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN) );
   }
   
@@ -5662,7 +5666,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   void *(* surrent_get)();
   
   /// title
-  snprintf(buffer, sizeof(buffer), "CheatDevice Remastered %s by Freakler", VERSION);
+  snprintf(buffer, sizeof(buffer), translate_string("CheatDevice Remastered %s by Freakler"), VERSION);
   drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE);
   
   /// GameID & version
@@ -5788,7 +5792,15 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       /// draw menu
       //if( menu_list[i].type != MENU_DUMMY ) {
         memset(&buffer[0], 0, sizeof(buffer));
-        snprintf(buffer, sizeof(buffer), "%s%s", menu_list[i].path, val);
+        
+        char* buffer_menu_path = menu_list[i].path;
+
+        if ( buffer_menu_path[strlen(buffer_menu_path)-1] == ':')
+          snprintf(buffer, sizeof(buffer), "%s %s", translate_string(menu_list[i].path), translate_string(val));
+        else
+          snprintf(buffer, sizeof(buffer), "%s%s", translate_string(menu_list[i].path), translate_string(val));
+
+
         if( flag_use_cataltfont && menu_list[i].type == MENU_CATEGORY ) // alternative font
           drawString(buffer, ALIGN_FREE, FONT_GTA, LCS ? 0.9 : 0.33, SHADOW_ON, x, y, color);
         else
@@ -5805,9 +5817,15 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       /// draw message
       if( flag_use_legend ) {
         if( i == menu_sel ) {
-          drawLegendMessage(menu_list[i].msg1, 0, 1, COLOR_TEXT); // left side, second row
-          drawLegendMessage(menu_list[i].msg2, 1, 1, COLOR_TEXT); // right side, second row
-          drawLegendMessage(menu_list[i].desc, 0, 0, COLOR_TEXT); // left side, third row
+          drawLegendMessage(translate_string(menu_list[i].msg1), 0, 1, COLOR_TEXT); // left side, second row
+          drawLegendMessage(translate_string(menu_list[i].msg2), 1, 1, COLOR_TEXT); // right side, second row
+
+          if (strlen(menu_list[i].desc) > 0) {
+            char desc_formatted[128];
+            snprintf(desc_formatted, sizeof(desc_formatted), "> %s", translate_string(menu_list[i].desc));
+
+            drawLegendMessage(desc_formatted, 0, 0, COLOR_TEXT); // left side, third row
+          }
         }
       }
       
@@ -5817,8 +5835,8 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   /// msg
   if( flag_use_legend ) {
     drawLegendBox(3, COLOR_BACKGROUND);
-    drawLegendMessage("L+UP/DOWN = Toggle Menu", 0, 2, COLOR_TEXT);
-    drawLegendMessage("UP/DOWN = Navigate Cheats", 1, 2, COLOR_TEXT);
+    drawLegendMessage(translate_string("L+UP/DOWN: Toggle Menu"), 0, 2, COLOR_TEXT);
+    drawLegendMessage(translate_string("UP/DOWN: Navigate Cheats"), 1, 2, COLOR_TEXT);
   }
   
   /// draw debug stuff (when enabled)

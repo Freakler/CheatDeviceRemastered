@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <math.h>
+#include <ctype.h>
 
 #include "utils.h"
 #include "main.h" // for LOG
@@ -32,12 +33,18 @@ extern char file_log[];
 extern const char *basefolder;
 
 int logPrintf(const char *text, ...) { 
+
   va_list list;
   char string[256];
 
   va_start(list, text);
   vsprintf(string, text, list);
   va_end(list);
+
+  if (PPSSPP) {
+    sceKernelPrintf(string);
+    return 0;
+  }
 
   char buffer[128];
   snprintf(buffer, sizeof(buffer), "%s%s", basefolder, file_log);
@@ -232,19 +239,19 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
     *save_ptr = s;
     return NULL;
   }
-  /* Scan leading delimiters.  */
+  // Scan leading delimiters.
   s += strspn (s, delim);
   if( *s == '\0' ) {
     *save_ptr = s;
     return NULL;
   }
-  /* Find the end of the token.  */
+  // Find the end of the token. 
   end = s + strcspn (s, delim);
   if( *end == '\0' ) {
     *save_ptr = end;
     return s;
   }
-  /* Terminate the token and make *SAVE_PTR point past it.  */
+  // Terminate the token and make *SAVE_PTR point past it.  
   *end = '\0';
   *save_ptr = end + 1;
   return s;
@@ -329,4 +336,27 @@ void getSizeString(char string[16], uint64_t size) {
     i++;
   }
   snprintf(string, 16, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
+}
+
+// Convert a string to a lowercase string
+char* string_to_lower(char* c) {
+  if ( c == NULL ) return NULL;
+
+  size_t i;
+  size_t c_length = strlen(c);
+
+  for ( i = 0; i < c_length; i++ ) 
+  {
+    if ( isupper(c[i]) ) {
+      c[i] = tolower(c[i]);
+    }
+  }
+
+  return c;
+}
+
+// Check if filename (or path) ends with extension
+int fileEndsWithExtension(char *filename, const char* extension) {
+  // sometimes filenames are uppercase (for some reason idk)
+  return strcmp(string_to_lower(filename) + strlen(filename) - strlen(extension), string_to_lower(extension)) == 0;
 }
