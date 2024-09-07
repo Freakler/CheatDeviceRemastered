@@ -2104,7 +2104,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x0009F778
-    setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy
+    if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
     return 1;
   } 
   
@@ -3838,7 +3838,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x002FDDA0
-    setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy
+    if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
     return 1;
   }
   

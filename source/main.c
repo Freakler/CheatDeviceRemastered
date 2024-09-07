@@ -5559,8 +5559,8 @@ void applyOnce() { //called by hijacked game function
   
   
   /// heli height limit (also planes in VCS)
-  //setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
-  // -> now set in Patch function(s) so that its being set as early as possible so that PPSSPP doesn't crash (for some strange jit bug reason)
+  if( !PPSSPP ) setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
+  // -> for PPSSPP this is set in Patch function(s) so that its being set as early as possible so that PPSSPP doesn't crash (for some strange jit bug reason)
   
   ///Custom Vehicle Spawns in World
   if( LCS ) {
