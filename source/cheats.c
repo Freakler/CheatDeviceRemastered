@@ -2345,7 +2345,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   } 
   
-  #ifdef PREVIEW
+  #ifdef SWIM
   /// swimming
   if( _lw(addr + 0x18) == 0x3C04C5BB && _lw(addr + 0x5C) == 0x3C04C5BB ) { // FUN_000e7d70_CCam_IsTargetInWater 
     HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0);
@@ -4654,7 +4654,7 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   return ret; 
 }
 
-#ifdef PREVIEW
+#ifdef SWIM
 /// fake swimming
 int FUN_000e7d70_CCam_IsTargetInWater_patched(int param_1) {
   return (fake_swimming(FUNC_GET_STATUS, -1, -1, -1) ? 0 : FUN_000e7d70_CCam_IsTargetInWater(param_1));
@@ -11874,7 +11874,7 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
 }
 #endif
 
-#ifdef PREVIEW
+#ifdef SWIM
 /** fake_swimming ************************************************************************************
  *
  * Completion: 
