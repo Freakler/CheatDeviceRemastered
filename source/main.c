@@ -221,9 +221,6 @@ const Menu_pack main_menu[] = {
   {"Hover Bike & Car"                 , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hover_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle hovers and can fly like a hovercraft." },
   {"Button Up:"                       , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , up_button            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
   {"Button Down:"                     , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , down_button          , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
-  #ifdef SWIM
-  {"Swimming"                         , CAT_ALIAS   , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning"},
-  #endif
   {""                                 , CAT_ALIAS   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   
   // // CHEATS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
@@ -243,6 +240,9 @@ const Menu_pack main_menu[] = {
   {"Maximum Health:"                  , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1D7D , -1  , max_health           , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra health! ('Health Plus')" },
   {"Maximum Armor:"                   , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x178E , -1  , max_armor            , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
   {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E4A , OFF , powerjump            , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
+  #ifdef SWIM
+  {"Swimming"                         , CAT_PLAYER  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning"},
+  #endif
   {""                                 , CAT_PLAYER  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   
   {"Current Vehicle"                  , CAT_VEHICL  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x258B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
@@ -5523,10 +5523,12 @@ void applyCheats() { // called by hijacked game function
     }  
   }
   
-  if (pcar && ( (LCS && (pcar_id ==  0xC8 || pcar_id == 0xC9) || (!LCS && pcar_id == 0x118)))){
+  #ifdef SPECIAL_VEHICLES
+  // temporary controls (todo create custom physics like for dodo)
+  if( pcar && ((LCS && (pcar_id == 0xC8 || pcar_id == 0xC9)) || (VCS && pcar_id == 0x118)) ){ // AEROPL & (Dead)DODO
     hover_vehicle(FUNC_APPLY, -1, -1); // apply hover cheat in loop
   }
-  
+  #endif
 }
 
 void applyOnce() { //called by hijacked game function
