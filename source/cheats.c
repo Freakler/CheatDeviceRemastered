@@ -4730,7 +4730,7 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     setFloat(pplayer+0x4E0, getFloat(pplayer+0x4E4)); // continuously setting current dir
      
     /// set current weapon to be fist slot
-    setByte(pplayer + 0xB84,  0x00);
+    //setByte(pplayer + 0xB84,  0x00);
  
     /// set camera to not go below sea level
     // todo although only nice to have
