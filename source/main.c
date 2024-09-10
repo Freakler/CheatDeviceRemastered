@@ -5523,6 +5523,10 @@ void applyCheats() { // called by hijacked game function
     }  
   }
   
+  if (pcar && ( (LCS && (pcar_id ==  0xC8 || pcar_id == 0xC9) || (!LCS && pcar_id == 0x118)))){
+    hover_vehicle(FUNC_APPLY, -1, -1); // apply hover cheat in loop
+  }
+  
 }
 
 void applyOnce() { //called by hijacked game function

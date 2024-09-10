@@ -10393,6 +10393,19 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
               setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
             }
           } // HAS to be reset after spawn todo
+          /*
+          if (LCS){
+            for( i = 0; i < sizeof(blacklist_lcs)/sizeof(blacklist_lcs[0]); i++ ) {
+              if( id == blacklist_lcs[i] ) {
+                //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
+                setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
+              }
+            }
+          }
+          else if (id == blacklist_vcs[0]){
+            setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 0);
+          }
+          */
           #endif
           
           CustomScriptExecute((int)&script_becomevehicle); // make game execute it
