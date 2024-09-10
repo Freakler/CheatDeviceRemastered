@@ -7956,7 +7956,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         lastcar = pcar;
       }
       
-      if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) { // in vehicle!
+      if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE || pcar_type == VEHICLE_BOAT) ) { // in vehicle!
         /// get speed
         speed = getVehicleSpeed(pcar);
         xyspeed = sqrt((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144)))); // SQRT( x^2 + y^2 )
