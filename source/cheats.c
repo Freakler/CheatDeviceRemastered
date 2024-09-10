@@ -4673,9 +4673,9 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     int cross = (flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
     float crawl = ((ystick < 0.0f) && cross) ? -ystick*0.3f : 0.0f; // only if stick forward & cross pressed
 
-    char buffer[128]; // commenting this block out will NOT make it work for real hardware ?!? (when it was at other position in file)
-    snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
+    //char buffer[128]; // commenting this block out will NOT make it work for real hardware ?!? (when it was at other position in file)
+    //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
+    //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
  
    /** TODO ********
     * - make boost static so that player accelerates and keeps some momentum
@@ -4730,7 +4730,7 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     setFloat(pplayer+0x4E0, getFloat(pplayer+0x4E4)); // continuously setting current dir
      
     /// set current weapon to be fist slot
-    setByte(pplayer + 0xB84,  0x00);
+    //setByte(pplayer + 0xB84,  0x00);
  
     /// set camera to not go below sea level
     // todo although only nice to have
@@ -7956,7 +7956,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         lastcar = pcar;
       }
       
-      if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) { // in vehicle!
+      if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE || pcar_type == VEHICLE_BOAT) ) { // in vehicle!
         /// get speed
         speed = getVehicleSpeed(pcar);
         xyspeed = sqrt((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144)))); // SQRT( x^2 + y^2 )
@@ -10234,7 +10234,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && id > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
         id--;
-        #ifndef DEBUG
+        #ifndef SPECIAL_VEHICLES
         for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id--;
@@ -10245,7 +10245,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
-        #ifndef DEBUG
+        #ifndef SPECIAL_VEHICLES
         for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id++;
@@ -10384,6 +10384,16 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           
           writeShort(&script_becomevehicle[3], id); // insert vehicle_id
           writeShort(&script_becomevehicle[28], id); // insert vehicle_id
+
+          // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
+          #ifdef SPECIAL_VEHICLES
+          for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
+            if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+              //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
+              setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
+            }
+          } // HAS to be reset after spawn todo
+          #endif
           
           CustomScriptExecute((int)&script_becomevehicle); // make game execute it
           
@@ -10393,7 +10403,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
       } else if( keypress == PSP_CTRL_CROSS ) {
         
         // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
-        #ifdef DEBUG
+        #ifdef SPECIAL_VEHICLES
         for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
