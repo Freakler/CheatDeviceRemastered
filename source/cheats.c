@@ -10384,6 +10384,16 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           
           writeShort(&script_becomevehicle[3], id); // insert vehicle_id
           writeShort(&script_becomevehicle[28], id); // insert vehicle_id
+
+          // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
+          #ifdef DEBUG
+          for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
+            if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+              //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
+              setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
+            }
+          } // HAS to be reset after spawn todo
+          #endif
           
           CustomScriptExecute((int)&script_becomevehicle); // make game execute it
           
