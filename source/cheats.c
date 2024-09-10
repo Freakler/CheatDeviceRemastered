@@ -10234,7 +10234,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && id > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
         id--;
-        #ifndef DEBUG
+        #ifndef SPECIAL_VEHICLES
         for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id--;
@@ -10245,7 +10245,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
-        #ifndef DEBUG
+        #ifndef SPECIAL_VEHICLES
         for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id++;
@@ -10386,7 +10386,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           writeShort(&script_becomevehicle[28], id); // insert vehicle_id
 
           // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
-          #ifdef DEBUG
+          #ifdef SPECIAL_VEHICLES
           for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
             if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
               //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
@@ -10403,7 +10403,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
       } else if( keypress == PSP_CTRL_CROSS ) {
         
         // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
-        #ifdef DEBUG
+        #ifdef SPECIAL_VEHICLES
         for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type

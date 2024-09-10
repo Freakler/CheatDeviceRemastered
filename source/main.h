@@ -49,7 +49,8 @@
 //#define MEMORY  // display memory usage on screen (LCS US v3.00 only)
 //#define GAMELOG // display developer logs on screen + to file (LCS US v3.00 only)
 
-//#define SWIM 
+#define SWIM
+#define SPECIAL_VEHICLES
 
 /**********************************************************************************************************************/
 
