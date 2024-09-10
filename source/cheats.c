@@ -4673,9 +4673,9 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     int cross = (flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
     float crawl = ((ystick < 0.0f) && cross) ? -ystick*0.3f : 0.0f; // only if stick forward & cross pressed
 
-    char buffer[128]; // commenting this block out will NOT make it work for real hardware ?!? (when it was at other position in file)
-    snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
+    //char buffer[128]; // commenting this block out will NOT make it work for real hardware ?!? (when it was at other position in file)
+    //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
+    //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
  
    /** TODO ********
     * - make boost static so that player accelerates and keeps some momentum
