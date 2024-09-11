@@ -15,7 +15,7 @@ USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
 
 #LIBS = -lpspsystemctrl_kernel -lm
-LIBS = -lpspsystemctrl_user -lm -lpsprtc
+LIBS = -lpspexploit -lpspsystemctrl_user -lm -lpsprtc
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build_prx.mak

@@ -28,6 +28,7 @@
 #include <math.h>
 #include <malloc.h>
 #include <pspsysmem.h>
+#include <libpspexploit.h>
 
 #include "main.h"
 #include "utils.h"
@@ -139,7 +140,7 @@ u32 mod_text_size;
 u32 mod_data_size;
 register int gp asm("gp");
 static STMOD_HANDLER previous;
-int ADRENALINE = 0, PPSSPP = 0, LCS = 0, VCS = 0;
+int ADRENALINE = 0, PPSSPP = 0, LCS = 0, VCS = 0, GTA_REMASTERED = 0;
 char buffer[256];
 #ifdef CONFIG
 char config[128];
@@ -6389,6 +6390,16 @@ int OnModuleStart(SceModule2 *mod) {
   char *modname = mod->modname;
   
   if( strcmp(modname, "GTA3") == 0 ) {
+
+    if (pspXploitFindFunction("GTARemastered", "GTARemasteredLib", 0x49346935) != 0){
+      if (pspXploitFindFunction("GTARemastered", "GTARemasteredLib", 0xF1396FCD) != 0){
+        GTA_REMASTERED = 1; // v1
+      }
+      else {
+        GTA_REMASTERED = 2; // v2
+      }
+    }
+
     mod_text_addr = mod->text_addr;
     mod_text_size = mod->text_size;
     mod_data_size = mod->data_size;

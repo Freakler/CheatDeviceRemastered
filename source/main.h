@@ -242,5 +242,6 @@ void hex_marker_clear();
 #endif
 
 extern int LCS;
+extern int GTA_REMASTERED;
 
 #endif

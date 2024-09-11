@@ -7987,7 +7987,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         setFloat(pcar + (LCS?0x88:0x78), -0.04 * xstick); // spin vehicle around Z world axis (slow turning -0.02 | -0.05 faster turning)
         
         ///manual hovering up/down
-        if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) 
+        if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & ((GTA_REMASTERED==2)?PSP_CTRL_CROSS:PSP_CTRL_RTRIGGER))) && flag_menu_running == 0 ) 
           setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) + 0.02); // 0.015 for LCS?
         if( (current_buttons & PSP_CTRL_DOWN) && ((xyspeed < 0.1f) || (current_buttons & PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) {
           setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) - 0.02);
@@ -8010,7 +8010,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       
         ///////////////////////////////////////////////////////////
 
-        if( !(current_buttons & PSP_CTRL_RTRIGGER) && flag_menu_running == 0 ) { /// "handbrake" keeps momentum (old style)
+        if( !(current_buttons & ((GTA_REMASTERED==2)?PSP_CTRL_CROSS:PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) { /// "handbrake" keeps momentum (old style)
           if( xyspeed > 0.1f ) { // to allow hover animation without force forward
             if( getVehicleCurrentGear(pcar) > 0 ) { // not in reverse
               /// keep the momentum in the direction the vehicle
@@ -8027,7 +8027,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         }
              
         /// thrust, reverse & automatically slowing down (could also be done by setting lower/higher speed but I'd like to keep the "handbrake feature")
-        if( current_buttons & PSP_CTRL_CROSS && flag_menu_running == 0 ) {  /// forward
+        if( current_buttons & ((GTA_REMASTERED!=2)?PSP_CTRL_CROSS:PSP_CTRL_RTRIGGER) && flag_menu_running == 0 ) {  /// forward
           setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * 0.010);
           setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * 0.010);
           setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * 0.022);

@@ -19,41 +19,10 @@
 #ifndef __CHEATS_H__
 #define __CHEATS_H__
 
+#include <libpspexploit.h>
 
 int PatchLCS(u32 addr, u32 text_addr);
 int PatchVCS(u32 addr, u32 text_addr);
-
-#define MAKE_CALL(a, f) _sw(0x0C000000 | (((u32)(f) >> 2) & 0x03FFFFFF), a);
-
-#define MAKE_JUMP(a, f) _sw(0x08000000 | (((u32)(f) & 0x0FFFFFFC) >> 2), a);
-
-#define HIJACK_FUNCTION(a, f, ptr) { \
-  u32 _func_ = a; \
-  static u32 patch_buffer[3]; \
-  _sw(_lw(_func_), (u32)patch_buffer); \
-  _sw(_lw(_func_ + 4), (u32)patch_buffer + 8);\
-  MAKE_JUMP((u32)patch_buffer + 4, _func_ + 8); \
-  _sw(0x08000000 | (((u32)(f) >> 2) & 0x03FFFFFF), _func_); \
-  _sw(0, _func_ + 4); \
-  ptr = (void *)patch_buffer; \
-}
-
-#define REDIRECT_FUNCTION(a, f) { \
-  u32 _func_ = a; \
-  _sw(0x08000000 | (((u32)(f) >> 2) & 0x03FFFFFF), _func_); \
-  _sw(0, _func_ + 4); \
-}
-
-#define MAKE_DUMMY_FUNCTION(a, r) { \
-  u32 _func_ = a; \
-  if (r == 0) { \
-    _sw(0x03E00008, _func_); \
-    _sw(0x00001021, _func_ + 4); \
-  } else { \
-    _sw(0x03E00008, _func_); \
-    _sw(0x24020000 | r, _func_ + 4); \
-  } \
-}
 
 
 typedef struct {

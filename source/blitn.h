@@ -19,6 +19,7 @@
 #ifndef __BLITN_H__
 #define __BLITN_H__
 
+#include <libpspexploit.h>
 
 #define SCREEN_WIDTH 480.0f
 #define SCREEN_HEIGHT 272.0f
@@ -66,21 +67,7 @@ u32 boxcol[MAX_BOXES];
 #define SIZE_VCS_SMALL 0.46f //0.5f
 #define SIZE_VCS_NORMAL 0.6f
 #define SIZE_VCS_BIG 0.8f 
-#define SIZE_VCS_HUGE 1.0f 
-
-
-#define MAKE_JUMP(a, f) _sw(0x08000000 | (((u32)(f) & 0x0FFFFFFC) >> 2), a);
-
-#define HIJACK_FUNCTION(a, f, ptr) { \
-  u32 _func_ = a; \
-  static u32 patch_buffer[3]; \
-  _sw(_lw(_func_), (u32)patch_buffer); \
-  _sw(_lw(_func_ + 4), (u32)patch_buffer + 8);\
-  MAKE_JUMP((u32)patch_buffer + 4, _func_ + 8); \
-  _sw(0x08000000 | (((u32)(f) >> 2) & 0x03FFFFFF), _func_); \
-  _sw(0, _func_ + 4); \
-  ptr = (void *)patch_buffer; \
-}
+#define SIZE_VCS_HUGE 1.0f
 
 
 /// box
