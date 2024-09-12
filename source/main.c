@@ -6391,12 +6391,14 @@ int OnModuleStart(SceModule2 *mod) {
   
   if( strcmp(modname, "GTA3") == 0 ) {
 
-    if (pspXploitFindFunction("GTARemastered", "GTARemasteredLib", 0x49346935) != 0){
-      if (pspXploitFindFunction("GTARemastered", "GTARemasteredLib", 0xF1396FCD) != 0){
-        GTA_REMASTERED = 1; // v1
-      }
-      else {
-        GTA_REMASTERED = 2; // v2
+    if (!PPSSPP){
+      if (pspXploitFindFunction("GTARemastered", "GTARemasteredLib", 0x49346935) != 0){
+        if (pspXploitFindFunction("GTARemastered", "GTARemasteredLib", 0xF1396FCD) != 0){
+          GTA_REMASTERED = 1; // v1
+        }
+        else {
+          GTA_REMASTERED = 2; // v2
+        }
       }
     }
 
