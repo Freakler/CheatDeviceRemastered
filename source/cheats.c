@@ -84,6 +84,7 @@ extern short flag_freecam;
 extern short flag_use_cataltfont;
 extern short flag_ui_blocking;
 extern short flag_use_legend;
+extern short flag_swapxr;
 
 extern u32 memory_low;
 extern u32 memory_high;
@@ -5330,6 +5331,36 @@ void *cdr_alternativefont(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
+void *cdr_swapacceleration(int calltype, int keypress, int defaultstatus) {
+  static int status;
+  
+  switch( calltype ) {
+    case FUNC_GET_STATUS: return (int*)status;
+    case FUNC_CHANGE_VALUE:
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        if( status ) {
+          swapacceleration_disable:
+          flag_swapxr = 0;
+          status = 0;  
+              
+        } else {
+          swapacceleration_enable:
+          flag_swapxr = 1;
+          status = 1;
+          
+        }
+      } break;
+    case FUNC_SET: 
+      status = defaultstatus;
+      if( status ) 
+        goto swapacceleration_enable;
+      else goto swapacceleration_disable;
+      break;
+  }
+  
+  return NULL;
+}
+
 #ifdef CONFIG
 void *cdr_liveconfig(int calltype, int keypress, int defaultstatus) {
   static int status;
@@ -5496,7 +5527,13 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
         if (lang < main_file_table->size-1)
           lang++;
           status = (CurrentLanguageID == lang);
-      }
+      } 
+	  
+	  else if ( keypress == PSP_CTRL_CIRCLE ) {
+        lang = 0;
+        update_lang(lang);
+        status = 1;
+      } 
       break;
     
     case FUNC_SET:
@@ -6935,7 +6972,7 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
           float speed = sqrt((getFloat(pplayer+(LCS?0x70:0x140)) * getFloat(pplayer+(LCS?0x70:0x140))) + (getFloat(pplayer+(LCS?0x74:0x144)) * getFloat(pplayer+(LCS?0x74:0x144)))); // SQRT( x^2 + y^2 )
           
           /// forward-thrust
-          setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4) * speed );
+          setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4) * speed);
           setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer) * speed);
         
           /// up-thrust
@@ -7406,7 +7443,7 @@ void *nitro(int calltype, int keypress, int defaultstatus) {
           setInt( exhaust_offs + (LCS ? 0x70 : 0x60), 0x00CC1111 ); // blue-ish
         }
         
-        if( pcar && (current_buttons & PSP_CTRL_CROSS ) && flag_menu_running == 0 && isVehicleInAir( pcar ) == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
+        if( pcar && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && flag_menu_running == 0 && isVehicleInAir( pcar ) == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
           
           /// FOV
           setFieldOfView( getFieldOfView() + 4.0f);
@@ -7480,7 +7517,7 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
       return (void *)retbuf;
         
     case FUNC_APPLY:    
-      if( pcar && boost > 0 && (current_buttons & PSP_CTRL_CROSS ) && flag_menu_running == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
+      if( pcar && boost > 0 && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && flag_menu_running == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
         
         /// boats are inWater = true and inAir = true
         if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
@@ -7987,9 +8024,9 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         setFloat(pcar + (LCS?0x88:0x78), -0.04 * xstick); // spin vehicle around Z world axis (slow turning -0.02 | -0.05 faster turning)
         
         ///manual hovering up/down
-        if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) 
+        if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && flag_menu_running == 0 ) 
           setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) + 0.02); // 0.015 for LCS?
-        if( (current_buttons & PSP_CTRL_DOWN) && ((xyspeed < 0.1f) || (current_buttons & PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) {
+        if( (current_buttons & PSP_CTRL_DOWN) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && flag_menu_running == 0 ) {
           setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) - 0.02);
         }
          
@@ -8010,7 +8047,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       
         ///////////////////////////////////////////////////////////
 
-        if( !(current_buttons & PSP_CTRL_RTRIGGER) && flag_menu_running == 0 ) { /// "handbrake" keeps momentum (old style)
+        if( !(current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) { /// "handbrake" keeps momentum (old style)
           if( xyspeed > 0.1f ) { // to allow hover animation without force forward
             if( getVehicleCurrentGear(pcar) > 0 ) { // not in reverse
               /// keep the momentum in the direction the vehicle
@@ -8027,7 +8064,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         }
              
         /// thrust, reverse & automatically slowing down (could also be done by setting lower/higher speed but I'd like to keep the "handbrake feature")
-        if( current_buttons & PSP_CTRL_CROSS && flag_menu_running == 0 ) {  /// forward
+        if( current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS) && flag_menu_running == 0 ) {  /// forward
           setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * 0.010);
           setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * 0.010);
           setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * 0.022);
@@ -11889,8 +11926,8 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
  *
  * Completion: 
  * 
- * Todo:  There must be some null pointer somewhere in the hooked function. There is very weird behaviour on real hardware. 
- *        This needs investigating..   
+ * Todo:  
+ *        
  * 
  * Notes: all logic is inside the hooked functions
  **************************************************************************************************************************************/

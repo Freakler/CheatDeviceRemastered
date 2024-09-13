@@ -269,6 +269,7 @@ void *cdr_uselegend(int calltype, int keypress, int defaultstatus);
 void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus);
 void *cdr_liveconfig(int calltype, int keypress, int defaultstatus);
 void *cdr_advancedconfig(int calltype, int keypress, int defaultstatus);
+void *cdr_swapacceleration(int calltype, int keypress, int defaultstatus);
 
 #ifdef LANG
 void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultval);

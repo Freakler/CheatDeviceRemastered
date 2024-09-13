@@ -50,7 +50,7 @@
 //#define GAMELOG // display developer logs on screen + to file (LCS US v3.00 only)
 
 #define SWIM
-#define SPECIAL_VEHICLES
+//#define SPECIAL_VEHICLES
 
 /**********************************************************************************************************************/
 

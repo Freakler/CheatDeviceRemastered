@@ -100,6 +100,7 @@ short flag_draw_welcomsg  = 0; // lets the welcome message appear after spawning
 short flag_customusic     = 0; // number of custom tracks found for custom music cheat
 short flag_hudwashidden   = 0; // keeps track of previously hidden HUD (for re-enabling if necessary)
 short flag_mapwashidden   = 0; // keeps track of previously hidden MAP (for re-enabling if necessary)
+short flag_swapxr         = 0; // swap acceleration in special cheats (to match gta_remastered's X and R swap)
 
 
 /// color definitions 
@@ -241,7 +242,7 @@ const Menu_pack main_menu[] = {
   {"Maximum Armor:"                   , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x178E , -1  , max_armor            , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
   {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E4A , OFF , powerjump            , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
   #ifdef SWIM
-  {"Swimming"                         , CAT_PLAYER  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning"},
+  {"Swimming"                         , CAT_PLAYER  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning. Experimental though!"},
   #endif
   {""                                 , CAT_PLAYER  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   
@@ -376,6 +377,7 @@ const Menu_pack main_menu[] = {
   {"Freeze Game when in Menu"         , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x3F9E , OFF , cdr_freezegameinmenu , "CROSS: Enable/Disable"            , ""                                   , "Freeze the Game when the CheatDevice Menu is in use." },
   {"Hide Button Legend & Info"        , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365B , OFF , cdr_uselegend        , "CROSS: Enable/Disable"            , ""                                   , "Hide the button legend allowing for more space and menu displayed!" },
   {"Alternative font for Categories"  , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3846 , OFF , cdr_alternativefont  , "CROSS: Enable/Disable"            , ""                                   , "Use an alternative font for categories just like the main menu does." },
+  {"Swap X with R for acceleration"   , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x7F92 , OFF , cdr_swapacceleration , "CROSS: Enable/Disable"            , ""                                   , "Activate this if you use gta_remastered's X and R swapped controls." },
   
   #ifdef LANG
   {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Change Cheat Device Remastered's Language for your native one!"},
@@ -5511,7 +5513,7 @@ void applyCheats() { // called by hijacked game function
   
   /// make Dodo flyable
   if( LCS && pcar_id == 0xA4 && flag_menu_running == 0) {
-    if( current_buttons & PSP_CTRL_CROSS ) {  // thrust
+    if( current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS) ) {  // thrust
       setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * (getVehicleSpeed(pcar) + 5.0f) * 0.001 ); 
       setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * (getVehicleSpeed(pcar) + 5.0f) * 0.001 );
       setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * (getVehicleSpeed(pcar) + 5.0f) * 0.002 );
