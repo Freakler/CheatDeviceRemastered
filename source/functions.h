@@ -174,6 +174,8 @@ char getMaxArmorMultiplier();
 void setMaxArmorMultiplier(char value);
 char getUnlimitedSprintStatus();
 void setUnlimitedSprintStatus(char value);
+char getUnlimitedSwimStatus();
+void setUnlimitedSwimStatus(char value);
 
 float getPedFacingDirectionInDegree(int ped_base_adr);
 

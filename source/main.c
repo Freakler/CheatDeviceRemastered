@@ -230,6 +230,7 @@ const Menu_pack main_menu[] = {
   {"Infinite Health & Armor"          , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A93 , OFF , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
   {"Unlimited Ammo & No reloading"    , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AB , OFF , unlimited_ammo       , "CROSS: Enable/Disable Cheat"      , ""                                   , "All your Weapons have unlimited ammunition and no reloading needed." },
   {"Unlimited sprinting"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x11E0 , -1  , unlimited_sprinting  , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from sprinting ever again." },
+  {"Unlimited swimming"               , CAT_PLAYER  , MENU_SWITCH      , FALSE , TRUE  , TRUE  , FALSE , 0x11E1 , -1  , unlimited_swimming   , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from swimming ever again." },
   {"Walking Speed:"                   , CAT_PLAYER  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x192C , OFF , walking_speed        , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust your speed of walking, sprinting etc" },
   {"Invisible"                        , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1D18 , OFF , invisible            , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are invisible but can still be attacked." },
   {"Ignored by everyone"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x155A , OFF , ignored              , "CROSS: Enable/Disable Cheat"      , ""                                   , "Everyone including police and mission enemys will ignore you." },
@@ -4175,21 +4176,21 @@ int freecam_draw() {
     drawString(translate_string("Free Camera"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
     
     drawString(translate_string("Player position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
-      snprintf(buffer, sizeof(buffer), "x: %.2f", player_x);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE);
-      snprintf(buffer, sizeof(buffer), "y: %.2f", player_y);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 70.0f, COLOR_VALUE);
-      snprintf(buffer, sizeof(buffer), "z: %.2f", player_z);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE);
+    snprintf(buffer, sizeof(buffer), "x: %.2f", player_x);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE);
+    snprintf(buffer, sizeof(buffer), "y: %.2f", player_y);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 70.0f, COLOR_VALUE);
+    snprintf(buffer, sizeof(buffer), "z: %.2f", player_z);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE);
       
       
     drawString(translate_string("Camera position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
-      snprintf(buffer, sizeof(buffer), "x: %.2f", camera_x); 
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE);
-      snprintf(buffer, sizeof(buffer), "y: %.2f", camera_y);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, COLOR_VALUE);
-      snprintf(buffer, sizeof(buffer), "z: %.2f", camera_z);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 165.0f, COLOR_VALUE);
+    snprintf(buffer, sizeof(buffer), "x: %.2f", camera_x); 
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE);
+    snprintf(buffer, sizeof(buffer), "y: %.2f", camera_y);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, COLOR_VALUE);
+    snprintf(buffer, sizeof(buffer), "z: %.2f", camera_z);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 165.0f, COLOR_VALUE);
     
 
     /*snprintf(buffer, sizeof(buffer), "cam_coord_x1 = %.2f", cam_coord_x1); //D0
@@ -4301,7 +4302,7 @@ int address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
   drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString(translate_string("Enter Address"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 200.0f, 85.0f, COLOR_TITLE);
+  drawString("Enter Address", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 200.0f, 85.0f, COLOR_TITLE);
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
   
   /// draw physical address
@@ -4466,7 +4467,7 @@ int editbyte_draw() {
   drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString(translate_string("Edit Byte"), ALIGN_SCREENCENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 0.0F, 100.0F, COLOR_TITLE);
+  drawString("Edit Byte", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 215.0f, 100.0f, COLOR_TITLE);
   
   int x = 225, y = 140;
 
@@ -5271,7 +5272,7 @@ void draw() { // called by hijacked game function
   /// free Memory (when enabled)
   if( flag_draw_MEM == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
   getSizeString(buffer, memory_main_free);
-    drawString(translate_string("MEM:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE);
+    drawString("MEM:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 48.0f, 5.0f, (memory_main_free < 150*1000 ? (memory_main_free < 100*1000 ? (memory_main_free < 50*1000 ? RED : ORANGE) : YELLOW) : GREEN) );
   }
   
@@ -5279,8 +5280,8 @@ void draw() { // called by hijacked game function
   /// FPS indicator (when enabled)
   if( flag_draw_FPS == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
     snprintf(buffer, sizeof(buffer), "%.0f", fps);
-    drawString(translate_string("FPS:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 30.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN) );
+    drawString("FPS:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE);
+    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 29.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN) );
   }
   
   
@@ -5295,14 +5296,23 @@ void draw() { // called by hijacked game function
   /// Coordinates (when enabled)
   if( flag_draw_COORDS == 1 && flag_draw_DEBUG == 0 ) {
     if( pplayer > 0 ) {
-      snprintf(buffer, sizeof(buffer), "x: %.2f", getFloat(pplayer+0x30));
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 100.0f, COLOR_VALUE);
-      snprintf(buffer, sizeof(buffer), "y: %.2f", getFloat(pplayer+0x34));
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 120.0f, COLOR_VALUE);
-      snprintf(buffer, sizeof(buffer), "z: %.2f", getFloat(pplayer+0x38));
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 140.0f, COLOR_VALUE);
-      snprintf(buffer, sizeof(buffer), "%.0f", getPedFacingDirectionInDegree(pplayer) );
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 165.0f, COLOR_VALUE);
+      drawString(translate_string("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
+      drawUiBox(385.0f, 115.0f, 85.0f, 75.0f, 2.0f, BLACK, ALPHABLACK);
+      
+      drawString("X", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 117.0f, WHITE);
+      drawString("Y", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 131.0f, WHITE);
+      drawString("Z", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 144.0f, WHITE);
+      drawString("R", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 170.0f, WHITE);
+      
+      snprintf(buffer, sizeof(buffer), "%.2f", getFloat(pplayer+0x30));
+      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 117.0f, GREEN);
+      snprintf(buffer, sizeof(buffer), "%.2f", getFloat(pplayer+0x34));
+      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 131.0f, GREEN);
+      snprintf(buffer, sizeof(buffer), "%.2f", getFloat(pplayer+0x38));
+      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 144.0f, GREEN);
+      snprintf(buffer, sizeof(buffer), "%.0f", getPedFacingDirectionInDegree(pplayer));
+      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 170.0f, GREEN);
+
      /* if( pcar ) { // beacause og CD
          snprintf(buffer, sizeof(buffer), "%.0f", getVehicleSpeed(pcar) * 100 );
          drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 190.0f, COLOR_VALUE);
