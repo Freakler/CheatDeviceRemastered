@@ -250,13 +250,13 @@ void mymenurender_LCS_patched() {
       SetRightJustifyWrap(0.0f);
     }
     
-    if( textorigin[i] == 6 ) { // ALIGN_SCREENCENTER (did this to match VCS)
+    /*if( textorigin[i] == 6 ) { // ALIGN_SCREENCENTER (did this to match VCS) TODO
       SetRightJustifyOff();
       SetJustifyOff();  
       SetCentreOn(); 
       SetCentreSize(SCREEN_WIDTH);
-      xpos[i] = SCREEN_WIDTH / 2.0f;
-    }
+      xpos[i] = SCREEN_WIDTH / 2.0f; // this crashes LCS Pause Menu
+    }*/
     
     SetPropOn(); // proportional
     SetBackgroundOff();  

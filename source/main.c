@@ -4302,7 +4302,7 @@ int address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
   drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString(translate_string("Enter Address"), ALIGN_SCREENCENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 0.0f, 85.0f, COLOR_TITLE);
+  drawString(translate_string("Enter Address"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE);
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
   
   /// draw physical address
@@ -4467,7 +4467,7 @@ int editbyte_draw() {
   drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
 
-  drawString(translate_string("Edit Byte"), ALIGN_SCREENCENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 0.0f, 100.0f, COLOR_TITLE);
+  drawString(translate_string("Edit Byte"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 100.0f, COLOR_TITLE);
   
   int x = 225, y = 140;
 
