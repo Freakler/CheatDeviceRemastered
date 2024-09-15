@@ -587,14 +587,14 @@ int usercheats_draw() {
       sceIoDclose(fd);
     
     } else { // no cheats folder 
-      drawString("No user cheats folder found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+      drawString("No user cheats folder found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT);
       sprintf(local_buff, "Create '%s' and place .txt there", buffer);
       drawString(local_buff, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT);
       return -1;
     }
     
     if( cur_dirno <= 0 ) { // folder found but empty
-      drawString("No user cheat files found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+      drawString("No user cheat files found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT);
       sprintf(local_buff, "Place .txt files to '%s'", buffer);
       drawString(local_buff, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT);
       return -1;
@@ -1100,10 +1100,13 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   /// draw title  
   drawString(translate_string("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
   
+  x = 40.0f; // horizontal menu start
+  y = 35.0f; // vertical menu start
+  
   /// draw folder  
   if( script_subfldrs[0] != 0x00 ) {
     snprintf(buffer, sizeof(buffer), "/%s", script_subfldrs);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 120.0f, 7.0f, COLOR_TEXT);
+    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 410.0f+x-5.0f, 7.0f, COLOR_TEXT);
   }
   
   /// check folder and files
@@ -1118,15 +1121,12 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     } */
     
     if( userscript_options == 0 ) { // folder found but empty
-      drawString(translate_string("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+      drawString(translate_string("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
       snprintf(buffer, sizeof(buffer), translate_string("Place .txt files to '%s%s%s/'"), basefolder, folder_scripts, LCS ? "LCS" : "VCS");
       drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
       return -1; // no cheats folder
     }
 
-  x = 40.0f; // horizontal menu start
-  y = 35.0f; // vertical menu start
-  
   /// draw UI 
   drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? 190.0f : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
     
@@ -4302,7 +4302,7 @@ int address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
   drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString("Enter Address", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 200.0f, 85.0f, COLOR_TITLE);
+  drawString(translate_string("Enter Address"), ALIGN_SCREENCENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 0.0f, 85.0f, COLOR_TITLE);
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
   
   /// draw physical address
@@ -4466,8 +4466,8 @@ int editbyte_create() {
 int editbyte_draw() {
   drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
-  
-  drawString("Edit Byte", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 215.0f, 100.0f, COLOR_TITLE);
+
+  drawString(translate_string("Edit Byte"), ALIGN_SCREENCENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 0.0f, 100.0f, COLOR_TITLE);
   
   int x = 225, y = 140;
 
@@ -5294,7 +5294,7 @@ void draw() { // called by hijacked game function
   
   
   /// Coordinates (when enabled)
-  if( flag_draw_COORDS == 1 && flag_draw_DEBUG == 0 ) {
+  if( flag_draw_COORDS == 1 && flag_draw_DEBUG == 0 && flag_hexeditor == 0 && flag_freecam == 0 && flag_userscripts == 0 && flag_editor == 0 ) {
     if( pplayer > 0 ) {
       drawString(translate_string("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
       drawUiBox(385.0f, 115.0f, 85.0f, 75.0f, 2.0f, BLACK, ALPHABLACK);
