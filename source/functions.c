@@ -2691,7 +2691,7 @@ void setClockFreeze(int boolean) {
 void setClockTime(char hours, char minutes, char seconds) {
   setByte(global_clockmultiplier + 0x4 + (LCS ? 0 : gp), hours);
   setByte(global_clockmultiplier + 0x5 + (LCS ? 0 : gp), minutes);
-  setByte(global_clockmultiplier + 0x6 + (LCS ? 0 : gp), seconds); // fix mistake (was 'hours' before)
+  setByte(global_clockmultiplier + 0x6 + (LCS ? 0 : gp), seconds);
 }
 
 void setClockHours(char hours) {
