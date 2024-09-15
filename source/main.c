@@ -5294,7 +5294,21 @@ void draw() { // called by hijacked game function
   
   
   /// Coordinates (when enabled)
-  if( flag_draw_COORDS == 1 && flag_draw_DEBUG == 0 && flag_hexeditor == 0 && flag_freecam == 0 && flag_userscripts == 0 && flag_editor == 0 ) {
+  if( flag_draw_COORDS == 1 &&  
+     #ifdef HEXEDITOR
+	 flag_hexeditor == 0 &&
+     #endif
+	 #ifdef FREECAM
+	 flag_freecam == 0 &&
+     #endif
+	 #ifdef USERSCRIPTS
+	 flag_userscripts == 0 &&
+     #endif
+	 #ifdef EDITORS
+	 flag_editor == 0 &&
+     #endif
+     flag_draw_DEBUG == 0 ) {
+    
     if( pplayer > 0 ) {
       drawString(translate_string("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
       drawUiBox(385.0f, 115.0f, 85.0f, 75.0f, 2.0f, BLACK, ALPHABLACK);
@@ -5313,10 +5327,10 @@ void draw() { // called by hijacked game function
       snprintf(buffer, sizeof(buffer), "%.0f", getPedFacingDirectionInDegree(pplayer));
       drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 170.0f, GREEN);
 
-     /* if( pcar ) { // beacause og CD
-         snprintf(buffer, sizeof(buffer), "%.0f", getVehicleSpeed(pcar) * 100 );
-         drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 190.0f, COLOR_VALUE);
-     } */
+   /* if( pcar ) { // beacause og CD
+        snprintf(buffer, sizeof(buffer), "%.0f", getVehicleSpeed(pcar) * 100 );
+        drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 190.0f, COLOR_VALUE);
+      } */
     }
   }
   

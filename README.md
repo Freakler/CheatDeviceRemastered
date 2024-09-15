@@ -48,6 +48,23 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 
 
 ## Changelog
+<details><summary>v1.0h "The Translation Release" (15th Sep. 2024)</summary><ul>
+<li>added minigun to pickup spawner and mark on map cheat for VCS
+<li>fixed 'if and' / 'if or' conditions for user scripts
+<li>fixed vehicle spawner blacklist in VCS (thx NABNOOB)
+<li>vehicles created with vehicle spawner now disappear when not close (thx NABNOOB)
+<li>added option to switch back to "real" speedometer speed calculation
+<li>added PED Clothes Colors to Pedestrian Editor
+<li>enabled Handling- & ModelFlags in Handling Editor (thx NABNOOB)
+<li>doubled the maximum user script size & custom strings to 32
+<li>fixed a problem with heli-height-patch in combination with PPSSPP
+<li>added experimental Swimming Cheat for LCS
+<li>added Option to swap X with R for special cheats (for gta_remastered's swapped controls)
+<li>added unlimited swimming cheat for VCS (by danssmnt)
+<li>the whole menu can now be translated!! (by danssmnt)
+<li>more optimizations and fixes
+</ul></details>
+
 <details><summary>v1.0g2 (3rd Mar. 2024)</summary><ul>
 <li>better hover vehicle controls 
 <li>added VCS garage fix 
@@ -212,7 +229,7 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 <br />
 
 ## Thanks & Greetings
-Edison Carter, vettefan88, Waterbottle, Jeremie Blanc, ADePSP, Joek2100, PSPHacker108, Sousanator, Rasal, Mister Enchilada, Skiller, theY4Kman, Noru, KING_REY-S, thehambone, the NSA, gtaforums.com, gtamods.com, gtamodding.ru, TheFlow, aap, Firehead, Silent, neur0n, Samilop "Cimmerian" Iter, darkdraggy, hrydgard, unknownbrackets, Micsuit, NielsB, metehan989, DenielX
+Edison Carter, vettefan88, Waterbottle, Jeremie Blanc, ADePSP, Joek2100, PSPHacker108, Sousanator, Rasal, Mister Enchilada, Skiller, theY4Kman, Noru, KING_REY-S, thehambone, the NSA, gtaforums.com, gtamods.com, gtamodding.ru, TheFlow, aap, Firehead, Silent, neur0n, Samilop "Cimmerian" Iter, darkdraggy, hrydgard, unknownbrackets, Micsuit / danssmnt, NielsB, metehan989, DenielX, Acid_Snake
 
 People on the [CheatDeviceRemastered Discord Server](https://discord.gg/7DERFmkgYq) and everyone else contributing and supporting!
 
