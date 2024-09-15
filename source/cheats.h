@@ -202,6 +202,7 @@ void *driveonwater(int calltype, int keypress, int defaultstatus);
 void *automaticflipover(int calltype, int keypress, int defaultstatus) ;
 void *driveonwalls(int calltype, int keypress, int defaultstatus);
 void *unlimited_sprinting(int calltype, int keypress, int defaultstatus);
+void *unlimited_swimming(int calltype, int keypress, int defaultstatus);
 void *pickup_spawner(int calltype, int keypress, int defaultstatus, int defaultval);
 void *player_model(int calltype, int keypress, int defaultstatus, int defaultval);
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval);

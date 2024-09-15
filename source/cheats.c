@@ -159,6 +159,7 @@ u32 global_timescale        = -1;
 u32 global_maxhealthmult    = -1;
 u32 global_maxarmormult     = -1;
 u32 global_unlimtedsprint   = -1;
+u32 global_unlimtedswim     = -1;
 u32 global_ismultiplayer    = -1;
 u32 global_clockmultiplier  = -1;
 u32 global_cheatusedboolean = -1;
@@ -2872,6 +2873,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x00144800: 0x90A5014D 'M...' - lbu        $a1, 333($a1)
     *******************************************************************/
     global_unlimtedsprint = (_lh(addr+0x50) * 0x10000) + (int16_t)_lh(addr+0x58) + _lh(addr+0x60); // actual address!
+    global_unlimtedswim = global_unlimtedsprint-1; // Yes, it is always 1 byte behind unlimited_sprinting bool
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_003da5fd_playerNeverGetsTired
     #endif
@@ -4485,7 +4487,7 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
       draw();
     #ifdef LANG
     if ( gametimer >= 1000 ) { // 
-      static int lang_ran = 1;
+      static char lang_ran = 1;
       if (lang_ran) {
         setup_lang(CurrentLanguageID);
         lang_ran = 0;
@@ -4942,7 +4944,7 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
         sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed(pcar) * 180.0f * (real ? 1 : 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
         
         /// gears
-        sprintf(gear, "Gear: %X", getVehicleCurrentGear( pcar ) );
+        sprintf(gear, translate_string("Gear: %X"), getVehicleCurrentGear( pcar ) );
       }
       break;
       
@@ -6087,6 +6089,7 @@ char * readMissionNameFromSCM(int mission_number) {
   FILE *fp = NULL;
   if( ( fp = fopen(LCS ? "disc0:/PSP_GAME/USRDIR/DATA/MAIN.SCM" : "disc0:/PSP_GAME/USRDIR/RUNDATA/MAIN.SCM", "rb")) == NULL ) {
     sprintf(ret, "ERROR");
+    return ret;
   }
 
   offset = 0; // first chunk address
@@ -9266,6 +9269,53 @@ void *unlimited_sprinting(int calltype, int keypress, int defaultstatus) {
       if( pplayer > 0 ) { // check if game in playable state
         if( !status ) 
           goto unlimsprint_disable;
+      }
+      break;
+  }
+   
+  return NULL;
+}
+
+void *unlimited_swimming(int calltype, int keypress, int defaultstatus) {
+  static int status;
+  
+  switch( calltype ) {
+    case FUNC_GET_STATUS: 
+      return (int*)status;
+      
+    case FUNC_APPLY:
+      setUnlimitedSwimStatus(0x1);
+      break;
+      
+    case FUNC_CHECK:
+      if( !status ) 
+        status = getUnlimitedSwimStatus();
+      break;  
+      
+    case FUNC_CHANGE_VALUE:
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        if( status ) {
+          unlimswim_disable:
+          setUnlimitedSwimStatus(0x0);
+          status = 0;
+        } else status = 1;
+      }
+      if( keypress == PSP_CTRL_TRIANGLE ) {
+        #ifdef HEXMARKERS
+        hex_marker_clear();
+        hex_marker_addx(global_unlimtedswim, sizeof(char));
+        #endif
+        #ifdef HEXEDITOR  
+        hexeditor_create(global_unlimtedswim, 0, memory_low, memory_high, "> unlimted swimming bool");
+        #endif
+      } 
+      break;
+      
+    case FUNC_SET: // todo - not used currently
+      status = defaultstatus;
+      if( pplayer > 0 ) { // check if game in playable state
+        if( !status ) 
+          goto unlimswim_disable;
       }
       break;
   }
