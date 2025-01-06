@@ -50,7 +50,7 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 
 ## Changelog
 <details><summary>v1.0h2  (6th Jan. 2025)</summary><ul>
-<li>made TOPFUN spawnable in VCS
+<li>made TOPFUN spawnable in VCS (thx @Parik)
 <li>fixed GXT-less Vehicles names in Garage Editor
 <li>added a warning message when running low on memory
 <li>fixed config saving on real hardware
@@ -62,18 +62,18 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 
 <details><summary>v1.0h "The Translation Release" (15th Sep. 2024)</summary><ul>
 <li>added minigun to pickup spawner and mark on map cheat for VCS
-<li>fixed 'if and' / 'if or' conditions for user scripts
-<li>fixed vehicle spawner blacklist in VCS (thx NABNOOB)
-<li>vehicles created with vehicle spawner now disappear when not close (thx NABNOOB)
+<li>fixed 'if and' / 'if or' conditions for user scripts (thx @Parik)
+<li>fixed vehicle spawner blacklist in VCS (thx @NABN00B)
+<li>vehicles created with vehicle spawner now disappear when not close (thx @NABN00B)
 <li>added option to switch back to "real" speedometer speed calculation
 <li>added PED Clothes Colors to Pedestrian Editor
-<li>enabled Handling- & ModelFlags in Handling Editor (thx NABNOOB)
+<li>enabled Handling- & ModelFlags in Handling Editor (thx @NABN00B)
 <li>doubled the maximum user script size & custom strings to 32
-<li>fixed a problem with heli-height-patch in combination with PPSSPP
+<li>fixed a problem with heli-height-patch in combination with PPSSPP (thx @Parik)
 <li>added experimental Swimming Cheat for LCS
 <li>added Option to swap X with R for special cheats (for gta_remastered's swapped controls)
-<li>added unlimited swimming cheat for VCS (by danssmnt)
-<li>the whole menu can now be translated!! (by danssmnt)
+<li>added unlimited swimming cheat for VCS (by @danssmnt)
+<li>the whole menu can now be translated!! (by @danssmnt)
 <li>more optimizations and fixes
 </ul></details>
 
