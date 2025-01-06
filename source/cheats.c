@@ -5043,6 +5043,15 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
             /// Global Pointer Register
             snprintf(buffer, sizeof(buffer), "$gp = 0x%08X (0x%08X)", gp, gp-mod_text_addr);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE);
+             
+			 
+            /// PPSSPP
+            snprintf(buffer, sizeof(buffer), "PPSSPP %d", PPSSPP);
+            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, WHITE);
+			
+            /// ADRENALINE
+            snprintf(buffer, sizeof(buffer), "ADRENALINE %d", ADRENALINE);
+            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, WHITE);
                 
 
         } else if( i == 1 ) { // Globals
@@ -5457,7 +5466,6 @@ void *cdr_collapsecats(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-
 void *cdr_autostartmenu(int calltype, int keypress, int defaultstatus) {
   static int status;
   
@@ -5581,7 +5589,11 @@ void exit_game() {
   #ifdef LOG
   logPrintf("[INFO] %i: exit_game()", getGametime());
   #endif
-  closeMenu(); // in case flag_use_liveconfig is true
+  
+  /// TODO - needs a save_thread still running check probably
+  flag_use_liveconfig = 0; // in case its true
+  closeMenu(); // config will not be saved now
+  
   sceKernelExitGame();
 }
 
@@ -6720,10 +6732,11 @@ void *skip_intros(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_SET: 
       status = defaultstatus;
-      if( status ) 
+      if( status ) {
         MAKE_DUMMY_FUNCTION(addr_skipIntroMovie, 0);
         clearICacheFor(addr_skipIntroMovie);
         clearICacheFor(addr_skipIntroMovie+0x4);
+	  }
       break;
   }
    
@@ -10289,9 +10302,8 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
  * Completion:   95 %
  * 
  * Todo:  - 
- *        - check for blocking vehicle and unload (like debug version)
  * 
- * Notes:     
+ * Notes: https://gtaforums.com/topic/993259-the-reason-why-boats-spawn-scheme-works-for-helicopters-and-planes-in-gta-3-and-vc/    
  ******************************************************************************************************************************************************/
 void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
   static short id = 172; // default
@@ -10299,11 +10311,20 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
 
   //#ifndef DEBUG
   static int i = 0;
-  static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI, AEROPL, DODO
-  static short blacklist_vcs[] = { 0x118 }; // AEROPL
+  static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI ("escape"), AEROPL, DODO ("deaddodo")
+  static short blacklist_vcs[] = { 0x118 }; // AEROPL  (TOPFUN 0xF2 already patched)
   //#endif
   static int status = 0;
-  //int typebackup = -1;
+  
+  
+  #ifdef SPECIAL_VEHICLES
+  /// reset to original type after spawn - If not you can no longer enter trains in LCS for example
+  static int typebackup = 0;
+  if( typebackup ) {
+	  setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), typebackup); // set original type
+	  typebackup = 0;
+  }
+  #endif
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -10472,14 +10493,14 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           writeShort(&script_becomevehicle[3], id); // insert vehicle_id
           writeShort(&script_becomevehicle[28], id); // insert vehicle_id
 
-          // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
+          /// if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
           #ifdef SPECIAL_VEHICLES
           for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
             if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-              //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
+              typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
               setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
             }
-          } // HAS to be reset after spawn todo
+          } // HAS to be reset after spawn
           #endif
           
           CustomScriptExecute((int)&script_becomevehicle); // make game execute it
@@ -10489,14 +10510,14 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         
       } else if( keypress == PSP_CTRL_CROSS ) {
         
-        // if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
+        /// if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
         #ifdef SPECIAL_VEHICLES
         for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-            //typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
+            typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
             setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
           }
-        } // HAS to be reset after spawn todo
+        } // HAS to be reset after spawn
         #endif
 
         /// calculate coordinate in front of player

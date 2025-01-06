@@ -52,6 +52,9 @@ float row_spacing = 15.0f; // pixels between rows
 u32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
 u32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
 char welcomemsg[] = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
+#ifndef LITE
+char memwarning[] = "~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!";
+#endif
 
 const char *basefolder  = "ms0:/PSP/PLUGINS/cheatdevice_remastered/";
 
@@ -97,6 +100,7 @@ short flag_draw_DBGVALS   = 0; // draw Debug values bool
 short flag_draw_COORDS    = 0; // draw player coordinates bool
 short flag_draw_SPEEDO    = 0; // draw speedometer and gear monitor bool
 short flag_draw_welcomsg  = 0; // lets the welcome message appear after spawning the first time
+short flag_draw_memwarn   = 0; // displays a low memory warning message when running low
 short flag_customusic     = 0; // number of custom tracks found for custom music cheat
 short flag_hudwashidden   = 0; // keeps track of previously hidden HUD (for re-enabling if necessary)
 short flag_mapwashidden   = 0; // keeps track of previously hidden MAP (for re-enabling if necessary)
@@ -360,7 +364,9 @@ const Menu_pack main_menu[] = {
   {"Game Options"                     , CAT_GAME    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2542 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
   {"Developer Flag"                   , CAT_GAME    , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x14C0 , OFF , dev_flag             , "CROSS: Enable/Disable Cheat"      , ""                                   , "Spawn at Debug area on New Game & Start Multiplayer alone" },
   {"Gamespeed:"                       , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1965 , OFF , gamespeed            , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust the games speed." },
+  #ifdef CONFIG
   {"Skip Intro Movies"                , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DD1 , OFF , skip_intros          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Skip Rockstar Logo and Intro Movie when starting the game." },
+  #endif
   {"Debug Messages on Loadscreen"     , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x184C , OFF , debug_loadscreens    , "CROSS: Enable/Disable"            , ""                                   , "Re-enable some of Rockstars debug messages on the Loadscreen." },
   {"Random Loadscreens"               , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18D3 , OFF , random_loadscreens   , "CROSS: Enable/Disable"            , ""                                   , "Real random Loadscreens including Multiplayer ones!" },
   {"Disable World Textures"           , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x17CF , OFF , disable_textures     , "CROSS: Enable/Disable"            , ""                                   , "Stop World Textures from being applied to models." },
@@ -368,8 +374,8 @@ const Menu_pack main_menu[] = {
   {""                                 , CAT_GAME    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   
   {"CheatDevice Options"              , CAT_CHDEV   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x285E , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS: Enable/Disable"            , ""                                   , "Enabling will automatically start the CheatDevice after spawning." },
   #ifdef CONFIG
+  {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS: Enable/Disable"            , ""                                   , "Enabling will automatically start the CheatDevice after spawning." },
   {"Autosave Settings to Config"      , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3E81 , OFF , cdr_liveconfig       , "CROSS: Enable/Disable"            , ""                                   , "All settings will be auto-saved to config when closing the menu." },
   #endif
   {"Collapsible Categories"           , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365A , ON  , cdr_collapsecats     , "CROSS: Enable/Disable"            , ""                                   , "Choose between collapsible or always expanded categories." },
@@ -2682,7 +2688,7 @@ int editor_draw() {
       snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i"), translate_string("Slot"), editor_garageslot_current+1 );
       if( getGarageVehicleSlotIsActive(editor_base_adr) ){ // vehicle id for detecting if slot is used
         ///print vehicle name
-        /*snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        /*sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
           snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getShort(editor_base_adr))); // ..use the GXT identifier-name then
         snprintf(buffer_top0, sizeof(buffer_top0), "%s     '%s'", buffer_top0, buffer_top1);*/
@@ -5140,7 +5146,18 @@ void draw() { // called by hijacked game function
     setTimedTextbox(translate_string(welcomemsg), 7.00f);
     flag_draw_welcomsg = 0;
   }
-
+  
+  /// draw low-memory message in textbox
+  #ifndef LITE
+  if( flag_draw_memwarn && !flag_menu_running && !isTextboxShowing() && getGametime() > 14000 && memory_main_free < (120*1000) ) { // only show after 14 seconds into game & when there is less than 120 KB 
+    #ifdef LOG
+    logPrintf("[INFO] %i: drawing memory message", getGametime());
+    #endif  
+    setTimedTextbox(translate_string(memwarning), 10.00f);
+    flag_draw_memwarn = 0;
+  }
+  #endif
+  
   /// draw Menu and everything that uses button input
   if( flag_menu_running == 1 && flag_menu_show == 1 ) {
     
@@ -5579,6 +5596,11 @@ void applyOnce() { //called by hijacked game function
     setByte(getAddressOfHandlingSlotForID(0xD3) + 0xD0, 16); // RCGOBLIN
     setByte(getAddressOfHandlingSlotForID(0xD4) + 0xD0, 16); // RCRAIDER
     setByte(getAddressOfHandlingSlotForID(201) + 0xD0, 16); // "DeadDodo"
+  }
+
+  /// make "TOPFUN" spawnable (this sets the missing colision model of "TOPFUN" to the "PONY" one)
+  if( VCS ) {
+    setInt(getAddressOfIdeSlotForID(0xF2) + 0x14, getInt(getAddressOfIdeSlotForID(0xD2) + 0x14));
   }
   
   /// disable map legend by default
@@ -6273,8 +6295,14 @@ int patch() {
   /// decide draw "welcome helpbox"
   if( flag_menu_start == 0 ) 
     flag_draw_welcomsg = 1;
-  
-  
+
+
+  /// decide draw "low memory warning"
+  #ifndef LITE
+  if( !PPSSPP ) 
+    flag_draw_memwarn = 1;  
+  #endif
+
   /// set text draw sizes
   SIZE_SMALL    = LCS ? SIZE_LCS_SMALL  : SIZE_VCS_SMALL;
   SIZE_HEXEDIT  = LCS ? SIZE_LCS_SMALL  : 0.5f;
@@ -6345,10 +6373,10 @@ int patch() {
     //https://github.com/DaveeFTW/Chronoswitch/blob/master/src/main.c#L53
     //https://github.com/TheOfficialFloW/Adrenaline/blob/e0fef64b5c7514398532f93176f210bc4c5f4a08/cef/systemctrl/adrenaline.c#L70
   }*/
-  
+
   
   /// PREVIEW ONLY STUFF
-  #ifdef PREVIEW
+  #ifdef PREVIEW 
   skip_intros(FUNC_SET, -1, ON); //skip intro movies
   cdr_autostartmenu(FUNC_SET, -1, ON); //autostart on
   #endif
@@ -6418,7 +6446,7 @@ int OnModuleStart(SceModule2 *mod) {
     mod_text_addr = mod->text_addr;
     mod_text_size = mod->text_size;
     mod_data_size = mod->data_size;
-
+	
     initTextBlit(mod_text_addr, mod_text_size); // see blit.c (HAS ITS OWN SEARCHING LOOP!)
     int ret = patch();
     if( ret != 0 ) // patching returned error
@@ -6468,20 +6496,20 @@ int module_start(SceSize argc, void* argp) {
 
   /// check available memory (high memory layout)                                         
   memory_high = getHighMemBound();
-  // memory_high = 0x0C000000;
   #ifdef LOG
   logPrintf("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   logPrintf("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
   #endif
   
-   
+  
   /// check PPSSPP
   if( sceIoDevctl("kemulator:", 0x00000003, NULL, 0, NULL, 0) == 0 ) {
     PPSSPP = 1;
     #ifdef LOG
     logPrintf("[INFO] PPSSPP detected!");
     #endif
-  }
+	sceKernelDelayThread(10*1000); // 10ms (bad fix for invalid memory crash with lite version?!)
+  } 
 
 
   /// check Adrenaline eCFW
@@ -6492,7 +6520,7 @@ int module_start(SceSize argc, void* argp) {
     #endif
   }
   
-  
+ 
   /// startup key combos
   #ifdef CONFIG
   if( pad.Buttons & PSP_CTRL_RTRIGGER ) { //delete config .ini file
@@ -6503,7 +6531,7 @@ int module_start(SceSize argc, void* argp) {
   }
   #endif
   
-  
+ 
   if( PPSSPP ) 
     CheckModules(); // scan the modules using normal/official syscalls (https://github.com/hrydgard/ppsspp/pull/13335#issuecomment-689026242)
   else // PSP

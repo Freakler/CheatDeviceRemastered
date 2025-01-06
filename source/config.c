@@ -31,7 +31,7 @@
 extern int gp_; // a thread has its own gp register obviously
 extern int gametimer;
 
-extern char config[256];
+extern char config[128];
 extern const Menu_pack main_menu[];
 extern achievement_pack achievement[];
 extern int achievement_size;
@@ -233,11 +233,12 @@ int save_config(const Menu_pack *menu_list, int menu_max) {
   
   ///////////////////////
   if( saveing == 0 ) { // only start thread if not running already
-    SceUID thid = sceKernelCreateThread("save_thread", save_thread, 0x18, 0x10000, PSP_THREAD_ATTR_USER, NULL);
+    SceUID thid = sceKernelCreateThread("save_thread", save_thread, 0x18, 0x1000, PSP_THREAD_ATTR_USER, NULL);
     if( thid < 0 ) {
       #ifdef LOG
-      logPrintf("[INFO] Error, could not create thread 0x%08X\n", thid);
+      logPrintf("[ERROR] Could not create thread 0x%08X\n", thid);
       #endif  
+	  // 0x80020190 = nomemory (for stackSize 0x10000)
       //sceKernelSleepThread(); // TODO ?
       return thid;
     }

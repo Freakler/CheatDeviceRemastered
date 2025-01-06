@@ -253,7 +253,7 @@ void *garage_vehicle(int calltype, int keypress, int base_address, int address) 
   
   switch( calltype ) {
     case FUNC_GET_STRING:
-      snprintf(buffer, sizeof(buffer), "%s", getRealVehicleNameViaID(getShort(address))); // on error print hex
+      sprintf(buffer, "%s", getRealVehicleNameViaID(getShort(address))); // on error print hex
       if( buffer[0] == '\0' ) // some vehicles don't have translations..
         snprintf(buffer, sizeof(buffer), "%s", getGxtIdentifierForVehicleViaID(getShort(address))); // on error print hex  
       // snprintf(buffer, sizeof(buffer), "%s - %i", getShort(address), buffer); //on error print hex
@@ -1357,7 +1357,7 @@ const Editor_pack lcs_ipl_menu[] = { // todo for rotation : https://gtamods.com/
 
 
 const Editor_pack lcs_ide_menu[] = { 
-  //name                                 //postfix   //address  //edit_bool  //type        //precision  //*value    //steps    //min    //max  
+  //name                                 //postfix   //address  //edit_bool  //type        //precision  //*value    //steps   
   {"Name (CRC32 hashed)"                   , ""      , 0x08      , TRUE    , TYPE_INTEGER   , HEX    , 0            , 1      },
   {"Type"                                  , ""      , 0x10      , TRUE    , TYPE_BYTE      , DEC    , 0            , 1      },
   {"Number of 2dfx"                        , ""      , 0x11      , TRUE    , TYPE_BYTE      , DEC    , 0            , 1      },
@@ -1458,7 +1458,7 @@ const Editor_pack lcs_ide_ped_menu[] = {  /// 7 - ped
 };
 
 const Editor_pack vcs_ide_menu[] = { 
-  //name                               //postfix    //address  //edit_bool  //type        //precision  //*value  //steps    //min    //max  
+  //name                               //postfix    //address  //edit_bool  //type        //precision  //*value  //steps   
   {"Name (CRC32 hashed)"                  , ""      , 0x08      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Type"                                 , ""      , 0x10      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      },
   {"Number of 2dfx"                       , ""      , 0x11      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      },
@@ -1516,6 +1516,7 @@ const Editor_pack vcs_ide_hier_menu[] = {
 };
 
 const Editor_pack vcs_ide_cars_menu[] = { 
+  {"Collision Model Pointer"  , ""           , 0x14      , FALSE   , TYPE_INTEGER  , HEX    , 0            , 1      },
 /*{"Colouring R"              , " of 255"    , 0x30      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      }, 
   {"Colouring G"              , " of 255"    , 0x31      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      },
   {"Colouring B"              , " of 255"    , 0x32      , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      },
@@ -1539,7 +1540,11 @@ const Editor_pack vcs_ide_cars_menu[] = {
   
   {"Name"                     , ""           , 0x158     , TRUE    , TYPE_STRING   , 8      , 0            , 0      },
   
-//{"?"                        , ""           , 0x168     , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      , INT_MIN , INT_MAX  },
+  {"Color ?"                  , ""           , 0x162     , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      },
+  
+//{"?"                        , ""           , 0x168     , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
+
+  {"Decal ?"                  , ""           , 0x277     , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      },
   
   {NULL,NULL,0,0,0,0,0}
 };

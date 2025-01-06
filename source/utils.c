@@ -43,7 +43,6 @@ int logPrintf(const char *text, ...) {
 
   if (PPSSPP) {
     sceKernelPrintf(string);
-    return 0;
   }
 
   char buffer[128];
@@ -299,21 +298,39 @@ void makedirs(char *path) { // recursively create path
 int getHighMemBound() { // thx Acid_Snake :)
   // PSP Fat -> ~24 MB 
   // PSP Slim/Go/Street (~54 MB with High Memory Layout)
-  // Adrenaline -> 0x09FC0000 (crashes > 0x0C000000)
-  // Adrenaline High Memory Layout -> 0x0BBC0000 (crashes > 0x0C000000)
-  // PPSSPP (with "memory = 64") -> 0x0C000000
-  // PPSSPP (with "memory = 93") -> 0x0DD00000
+  
+  /***************************************************************************************
+                Normal          High Memory
+  Adrenaline    0x09FC0000      0x0BBC0000      -> you can always access the higher memory in Adrenaline up to 0x0C000000 without crashing.. (although the games wont use it)
+  ARK-4         0x09FC0000      0x0B2BF700      -> you can always access the higher memory here too. (4.20.69 r151)
+  ME 2.3        0x09FC0000      0x09FC0000      -> feature not working? (access yes, available to game no)
+  PRO-C2        0x09FC0000      0x09FC0000      -> feature not working? (access yes, available to game no)
+  PPSSPP (64)   0x0C000000
+  PPSSPP (93)   0x0DD00000
+  
+  ***************************************************************************************/
+  
+  // in PRO-C2 CFW basically plugins load first and extra ram is enabled second  
+  // https://github.com/MrColdbird/procfw/blob/d9435ff4af6ba60466b46019393f6bbd1fc72ac0/SystemControl/mediasync_patch.c#L152
+   
+  // For high memory support there are always two patches:
+  //  One to make the memory read/write for user
+  //  One to force it into p2 (the user partition)
+  
   
   SceUID block = sceKernelAllocPartitionMemory(2, "test", PSP_SMEM_High, 100, NULL);
-  int address = (int)sceKernelGetBlockHeadAddr(block)+0x100; // still not perfect though
+  int address = (int)sceKernelGetBlockHeadAddr(block)+0x100; // highest address is not calculated precisely this way either but it gives a rough idea
   sceKernelFreePartitionMemory(block);
   
-  // sigh!
+  
+  /// manual adjustment for non-highmem
   if( address == 0x09FC0000 ) 
     address = 0x0A000000;
-
-  if( adrenalineCheck() ) 
-    address = 0x0C000000;
+  
+  /// manual adjustment for high-mem 
+  if( address >= 0x0B000000 && !PPSSPP ) 
+    address = 0x0C000000; // SHOULD be the same for all CFWs
+  
   
   return address;
 }

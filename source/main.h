@@ -19,9 +19,11 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define VERSION "v1.0h" // displayed in title
+#define VERSION "v1.0h2" // displayed in title
 
 /** FEATURE-FLAGS *****************************************************************************************************/
+
+//#define LITE // 'Lite' version with less features for more memory on PSP-1000
 
 //#define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 //#define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
@@ -33,15 +35,19 @@
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
-#define NAMERESOLV // (~10KB) name resolver system for translating hashes (also remove minIni from makefile if off)
+#ifndef LITE
 
-#define FREECAM // (~22KB)
-#define EDITORS // (~105KB)
-#define USERSCRIPTS // (~19KB)
-#define HEXEDITOR // (~30KB)
-#define CONFIG // (~8KB)
-#define HEXMARKERS // (~4KB)
-#define LANG // (~6KB)
+ #define NAMERESOLV // (~10KB) name resolver system for translating hashes (also remove minIni from makefile if off)
+
+ #define FREECAM // (~22KB)
+ #define EDITORS // (~105KB)
+ #define USERSCRIPTS // (~19KB)
+ #define HEXEDITOR // (~30KB)
+ #define CONFIG // (~8KB)
+ #define HEXMARKERS // (~4KB)
+ #define LANG // (~6KB)
+ 
+#endif
 
 //#define ACHIEVEMENTS // (~4KB) discontinued
 //#define SAVEDITOR // (?KB) removed
@@ -50,7 +56,7 @@
 //#define GAMELOG // display developer logs on screen + to file (LCS US v3.00 only)
 
 #define SWIM
-//#define SPECIAL_VEHICLES
+//#define SPECIAL_VEHICLES // todo -> LCS: spawn "HELI" (0xC6)  VCS: Plane crashes because of something else
 
 /**********************************************************************************************************************/
 

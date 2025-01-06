@@ -358,16 +358,16 @@ const radio_pack vcs_radiostations[] = {
   {0xBD,  VEHICLE_CAR,   "HOTROD",   "Thunder-Rodd",     62,   TRUE  },
   {0xBE,  VEHICLE_CAR,   "SINDACO",  "Sindacco Argento", 63,   TRUE  },
   {0xBF,  VEHICLE_CAR,   "FORELLI",  "Forelli ExSess",   64,   TRUE  },
-  {0xC0,  VEHICLE_FERRY, "FERRY",    "Ferry",            32,   FALSE  },
-  {0xC1,  VEHICLE_BOAT,  "GHOST",    "Ghost",            -1,   FALSE  }, // boat without texture
+  {0xC0,  VEHICLE_FERRY, "FERRY",    "Ferry",            32,   FALSE },
+  {0xC1,  VEHICLE_BOAT,  "GHOST",    "Ghost",            -1,   FALSE }, // boat without texture
   {0xC2,  VEHICLE_BOAT,  "SPEEDER",  "Speeder",          73,   TRUE  },
   {0xC3,  VEHICLE_BOAT,  "REEFER",   "Reefer",           74,   TRUE  },
   {0xC4,  VEHICLE_BOAT,  "PREDATR",  "Predator",         72,   TRUE  },
-  {0xC5,  VEHICLE_TRAIN, "TRAIN",    "Train",            31,   FALSE  }, 
-  {0xC6,  VEHICLE_HELI,  "HELI",     "Helicopter",       -1,   FALSE  },
-  {0xC7,  VEHICLE_HELI,  "HELI",     "Helicopter",       33,   TRUE  }, // aka: tiny invisible helicopter
-  {0xC8,  VEHICLE_PLANE, "AEROPL",   "Aeroplane",        41,   FALSE  },
-  {0xC9,  VEHICLE_PLANE, "DODO",     "Dodo",             42,   FALSE  }, // 201
+  {0xC5,  VEHICLE_TRAIN, "TRAIN",    "Train",            31,   FALSE }, 
+  {0xC6,  VEHICLE_HELI,  "HELI",     "Helicopter",       -1,   FALSE }, // "escape" 
+  {0xC7,  VEHICLE_HELI,  "HELI",     "Helicopter",       33,   TRUE  }, // "chopper"    (aka: tiny invisible helicopter)
+  {0xC8,  VEHICLE_PLANE, "AEROPL",   "Aeroplane",        41,   FALSE },
+  {0xC9,  VEHICLE_PLANE, "DODO",     "Dodo",             42,   FALSE }, // 201
   {0xCA,  VEHICLE_BIKE,  "ANGEL",    "Angel",            68,   TRUE  }, 
   {0xCB,  VEHICLE_BIKE,  "PIZZABO",  "Pizzaboy",         66,   TRUE  }, // hndlng_no same as FAGGIO
   {0xCC,  VEHICLE_BIKE,  "NOODLBO",  "Noodleboy",        66,   TRUE  }, // hndlng_no same as FAGGIO
@@ -1442,7 +1442,7 @@ const mapicons_pack vcs_mapicons[] = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 u32 memory_low  = 0x08400000; // memory bounds
-u32 memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C000000) dyanmic overwritten in module_start
+u32 memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C000000) dynamicly overwritten in module_start
 
 int isInMemBounds(int valtocheck) {
   return (valtocheck >= memory_low && valtocheck < memory_high);
@@ -2263,10 +2263,20 @@ int getVehicleBackseatRightHandle(int vehicle_base_adr) {
 }
 
 void setHeliHeightLimit(float height) {
-  int local = getInt((int)&height) >> 16; // only upper part of float needed eg: 80.0f = 0x42A0
-  setShort(addr_heliheight, local); // 80.0f is default
+  int local = 0;
+  memcpy(&local, &height, sizeof(int));
+  short upper = local >> 16;
+  //logPrintf("local = 0x%08X, upper = 0x%04X", local, upper);
+  setShort(addr_heliheight, upper); // 80.0f is default
+  
+  /// In ARK-4 when high memory is enabled the height value was out of the calculated bounds (and thus getInt fails) -> this should work now but I reworked it anyways
+  //int local = getInt((int)&height) >> 16; // only upper part of float needed eg: 80.0f = 0x42A0
+  //setShort(addr_heliheight, local); // 80.0f is default
+  
+  /// set the full instruction
   //int local = getShort(addr_heliheight + 2) * 0x10000 + (getInt((int)&height) >> 16);
   //setInt(addr_heliheight, local); // set the full instruction (and not individual bytes) is an easy fix for ppsspp jit problem apparently (Update: apparently not)
+
   clearICacheFor(addr_heliheight); // needed for PPSSPP
 }
 
