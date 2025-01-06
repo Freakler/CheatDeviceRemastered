@@ -22,7 +22,8 @@ Copy the whole ```cheatdevice_remastered``` folder into the ```/PSP/PLUGINS/``` 
 2. Edit ```ms0:/seplugins/GAME.TXT``` file (create it if not already there) and add the line ```ms0:seplugins/cheatdevice_remastered.prx 1``` <br />
 (If you are using the [native resolution patch by TheFloW](https://github.com/TheOfficialFloW/GTANativeRes) make sure to load the CheatDevice first) (Vita only!)
 3. In the VSH-menu enable 333Mhz in Game-mode for a smoother experience.
-4. Enable extra RAM in Recovery Menu (aka. "Force High Memory Layout")
+4. Enable extra RAM in Recovery Menu (aka. "Force High Memory Layout") <br />
+(This feature might be broken on older CFWs like ME/PRO! It is confirmed working on Adrenaline and ARK-4)
 
 :warning: **If you are using a PSP 1000 (Fat) model**<br>
 Please use ```cheatdevice_remastered_lite.prx``` instead.
@@ -48,6 +49,17 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 
 
 ## Changelog
+<details><summary>v1.0h2  (6th Jan. 2025)</summary><ul>
+<li>made TOPFUN spawnable in VCS
+<li>fixed GXT-less Vehicles names in Garage Editor
+<li>added a warning message when running low on memory
+<li>fixed config saving on real hardware
+<li>fixed config corruption when "Exit Game"
+<li>fixed Heli-height issue with ARK-4 with "Extra memory" enabled
+<li>fixed Lite version crashing on PPSSPP for VCS
+<li>more minor fixes & adjustments
+</ul></details>
+
 <details><summary>v1.0h "The Translation Release" (15th Sep. 2024)</summary><ul>
 <li>added minigun to pickup spawner and mark on map cheat for VCS
 <li>fixed 'if and' / 'if or' conditions for user scripts
