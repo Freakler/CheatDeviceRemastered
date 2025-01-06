@@ -6494,15 +6494,7 @@ int module_start(SceSize argc, void* argp) {
     category_index[i] = 1;
 
 
-  /// check available memory (high memory layout)                                         
-  memory_high = getHighMemBound();
-  #ifdef LOG
-  logPrintf("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
-  logPrintf("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
-  #endif
-  
-  
-  /// check PPSSPP
+ /// check PPSSPP
   if( sceIoDevctl("kemulator:", 0x00000003, NULL, 0, NULL, 0) == 0 ) {
     PPSSPP = 1;
     #ifdef LOG
@@ -6511,6 +6503,14 @@ int module_start(SceSize argc, void* argp) {
 	sceKernelDelayThread(10*1000); // 10ms (bad fix for invalid memory crash with lite version?!)
   } 
 
+
+  /// check available memory (high memory layout)                                         
+  memory_high = getHighMemBound();
+  #ifdef LOG
+  logPrintf("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
+  logPrintf("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
+  #endif 
+ 
 
   /// check Adrenaline eCFW
   if( !PPSSPP && adrenalineCheck() ) {
