@@ -8,24 +8,26 @@ If you wanna start translating CDR, it's really simple:
         "{Language Code of the Country}_{Country Code}.ini" (example: pt_PT.ini for Portugues (Portugal))
 
         Countries' Language Code (use Set 1) -> https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
-        Countries' Country Code (Alpha-2 code) -> http://www.davros.org/misc/iso3166.html
+        Countries' Country Code -> https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
 
     - Change the info variables in section [INFO] (at the start of the .ini file)
     - Start translating!
 
 
-VVV READ BEFORE TRANSLATING!!! VVV
+VVVVVVV READ BEFORE TRANSLATING!!! VVVVVVV
 
 When translating, you need to take in mind the following:
 
-    - The file size can't be longer than 65535 bytes (~65.5 KB)
-    - You can only use ASCII letters -> https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html
-    If you try to use accented characters, they will be cut when displayed.
+    - The language file size can't be longer than 65535 bytes (~65.5 KB)
+    - You can only use ASCII Printable letters -> https://en.wikipedia.org/wiki/ASCII#Printable_character_table
+    If you try to use accented or other types of characters, they will be cut when displayed.
 
-    - If you dont want to translate a string, just leave it blank (it will default to english in CDR)
+    - If you dont want to translate a string, just leave it blank (it will default to english in CDR).
 
     - If you don't wanna delete an ini file but don't want it to show on CDR, simply add "_ignore.ini" to its filename.
 
     If you have other questions or problems related to translation, contact us in CheatDevice Remastered's official Discord Server -> https://discord.gg/7DERFmkgYq
+
+^^^^^^^ READ BEFORE TRANSLATING!!! ^^^^^^^
 
 That's it, have fun! ;)
