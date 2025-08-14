@@ -45,12 +45,13 @@ extern int vehicles_base;
 extern int worldobjs_max;
 extern int worldobjs_cur;
 extern int worldobjs_base;
-extern int businessobjs_max;
-extern int businessobjs_cur;
-extern int businessobjs_base;
+//extern int businessobjs_max;
+//extern int businessobjs_cur;
+//extern int businessobjs_base;
 extern int pickups_cur;
 extern int mapicons_cur;
 extern int vehspawns_cur;
+extern int empire_cur;
 extern int handlingcfg_cur;
 extern int garage_cur;
 
@@ -93,6 +94,7 @@ extern u32 ptr_timecycDAT;
 extern u32 ptr_IDEs;
 extern u32 ptr_IDETable;
 extern u32 global_garagedata;
+extern u32 global_ScriptSpace;
 extern u32 var_garageslots;
 extern u32 var_garageslotsize;
 extern u32 addr_vehiclesworldspawn;
@@ -1763,8 +1765,8 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
 
 
 
-const Editor_pack vcs_businessobj_menu[] = { 
-  //name                  //postfix    //address  //edit_bool  //type  //precision  //*value       //steps    //min    //max  
+/*const Editor_pack vcs_businessobj_menu[] = { 
+  //name                  //postfix    //address  //edit_bool  //type  //precision  // *value       //steps    //min    //max  
   {"World Coord X"      , ""      , 0x30      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"      , ""      , 0x34      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Z"      , ""      , 0x38      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -1772,7 +1774,7 @@ const Editor_pack vcs_businessobj_menu[] = {
   {"Identifier"              , ""      , 0x58      , FALSE    , TYPE_SHORT   , DEC    , 0            , 0x1    },
   
   {NULL,NULL,0,0,0,0,0}
-};
+};*/
 
 
 
@@ -2013,6 +2015,257 @@ float LightsOnGroundBrightness = char LightsOnGroundBrightness / 10;
 */
 
 
+const Editor_pack vcs_empire_menu[] = { 
+  //name             //postfix    //address  //edit_bool  //type  //precision  //*value                //steps  
+  {"Ownership"          , ""       , 0x0      , TRUE    , TYPE_INTEGER    , DEC      , empire_owner     , 1    }, // 373
+  {"Type"               , ""       , 0xF0     , TRUE    , TYPE_INTEGER    , DEC      , empire_type      , 1    }, // 433
+  {"Scale"              , ""       , 0x168    , TRUE    , TYPE_INTEGER    , DEC      , empire_scale     , 1    }, // 463
+  {"Condition"          , ""       , 0x1E0    , TRUE    , TYPE_INTEGER    , DEC      , empire_condition , 1    }, // 493
+  {"State"              , ""       , 0x258    , TRUE    , TYPE_INTEGER    , DEC      , empire_state     , 1    }, // 523
+  {"Gang Density"       , ""       , 0x78     , TRUE    , TYPE_INTEGER    , DEC      , 0                , 100  }, // 403 (depends on scale)
+  {"Contruction Timer"  , " ms"    , 0x2D0    , TRUE    , TYPE_INTEGER    , DEC      , 0                , 1000 }, // 553
+  {NULL,NULL,0,0,0,0,0}
+};
+
+static u8 empire_script[] = { 
+  /// set_empire_xyz A value B
+  0x5F, 0x04, 0x07, 0, 0x07, 0, //
+  
+  ///terminate_this_script
+  0x23, 0x00
+}; 
+
+char *empire_owner_name(int val) {
+/* switch(val) {
+	case -1: return "None";
+	case 0: return "Umbertos Guys"; // PR_GAN1
+	case 1: return "Cholos"; // PR_GAN2
+	case 2: return "Sharks"; // ..
+	case 3: return "Army";
+	case 4: return "Security";
+	case 5: return "Bikers";
+	case 6: return "Martys / Vance (poor)"; // if $645 gang_wars_config == 0 then: PR_GA10 , else: PR_GAN7 + " (poor)" (concat or string "Vance (poor)")
+	case 7: return "Golfers";
+	case 8: return "Vance (rich)";
+	default: return "Unknown";
+  } */
+  static char buf[16];
+  if( val == -1 ) {
+    return getGxtTranslation("PR_NONE");
+  } else if( val == 6 ) { // special case
+	if( getScriptGlobalValue(645) == 0 ) { // $645 gang_wars_config 
+	  return getGxtTranslation("PR_GA10"); // "Marty's"
+    } else {
+      sprintf(buf, "%s (poor)", getGxtTranslation("PR_GAN7")); // "Vance"
+	  return buf;
+    }
+  } else if( val == 8 ) { // special case
+    sprintf(buf, "%s (rich)", getGxtTranslation("PR_GAN9")); // "Vance"
+	return buf;
+  } else if( val >= 0 && val <= 8 ) {
+    sprintf(buf, "PR_GAN%i", val+1);
+    return getGxtTranslation(buf);
+  } else return "Unknown";
+}
+	
+void *empire_owner(int calltype, int keypress, int base_address, int address, int steps, int slot) { 
+  static int i = 0;  
+  static char buffer[32];
+  
+  switch( calltype ) {
+    case FUNC_GET_STRING:
+      i = getInt(address);
+      snprintf(buffer, sizeof(buffer), "%s", empire_owner_name(i));
+      return (void *)buffer;
+      
+    case FUNC_CHANGE_VALUE:
+      if( keypress ) {
+        i = getInt(address);
+        if( keypress == PSP_CTRL_LEFT && i >= 0 ) { ///LEFT
+          i--;
+        } else if( keypress == PSP_CTRL_RIGHT ) { ///RIGHT
+          if( i < 8 ) 
+            i++;
+        }
+        setInt(address, i); // set global var first
+        writeShort(&empire_script[0], 0x045F); // set opcode
+        empire_script[3] = slot; // insert slot
+        empire_script[5] = i; // insert value
+        CustomScriptExecute((int)&empire_script); // make game execute it
+      }
+      break;
+  }
+  return NULL;
+}
+
+
+char *empire_type_name(int val) {
+/* switch(val) {
+	case -1: return "Random"; 
+	case 0: return "Un-Developed"; // PROP_T1
+	case 1: return "Protection Racket"; // PROP_T2
+	case 2: return "Loan Shark";
+	case 3: return "Prostitution";
+	case 4: return "Drugs";
+	case 5: return "Smuggling";
+	case 6: return "Robbery"; // PROP_T7
+	default: return "Unknown"; 
+  } */ 
+  static char buf[16];	  
+  if( val == -1 ) { // not selectable in editor though
+    return "Random";
+  } else if( val >= 0 && val <= 6 ) {
+    sprintf(buf, "PROP_T%i", val+1);
+    return getGxtTranslation(buf);
+  } else return "Unknown";
+}
+	
+void *empire_type(int calltype, int keypress, int base_address, int address, int steps, int slot) { 
+  static int i = 0;  
+  static char buffer[32];
+  
+  switch( calltype ) {
+    case FUNC_GET_STRING:
+      i = getInt(address);
+      snprintf(buffer, sizeof(buffer), "%s", empire_type_name(i));
+      return (void *)buffer;
+      
+    case FUNC_CHANGE_VALUE:
+      if( keypress ) {
+        i = getInt(address);
+        if( keypress == PSP_CTRL_LEFT && i > 0 ) { ///LEFT
+          i--;
+        } else if( keypress == PSP_CTRL_RIGHT ) { ///RIGHT
+          if( i < 6 ) 
+            i++;
+        }
+        setInt(address, i); // set global var first
+        writeShort(&empire_script[0], 0x0460); // set opcode
+        empire_script[3] = slot; // insert slot
+        empire_script[5] = i; // insert value
+        CustomScriptExecute((int)&empire_script); // make game execute it
+      }
+      break;
+  }
+  return NULL;
+}
+
+
+char *empire_state_name(int val) {
+ switch(val) {
+    case 0: return getGxtTranslation("PROPST1"); // "Normal";
+    case 1: return getGxtTranslation("PROPST2"); // "For Sale"
+    case 2: return "?";
+    case 3: return "Under Attack"; // getGxtTranslation("PROPST3"); // = "Damaged"
+    case 4: return "Locked";
+    case 5: return "Under Construction";
+    default: return "Unknown";
+  }
+}
+	
+void *empire_state(int calltype, int keypress, int base_address, int address, int steps, int slot) { 
+  static int i = 0;  
+  static char buffer[32];
+  
+  switch( calltype ) {
+    case FUNC_GET_STRING:
+      i = getInt(address);
+      snprintf(buffer, sizeof(buffer), "%s", empire_state_name(i));
+      return (void *)buffer;
+      
+    case FUNC_CHANGE_VALUE:
+      if( keypress ) {
+        i = getInt(address);
+        if( keypress == PSP_CTRL_LEFT && i > 0 ) { ///LEFT
+          i--;
+        } else if( keypress == PSP_CTRL_RIGHT ) { ///RIGHT
+          if( i < 5 ) 
+            i++;
+        }
+        setInt(address, i); // set global var first
+        writeShort(&empire_script[0], 0x0464); // set opcode
+        empire_script[3] = slot; // insert slot
+        empire_script[5] = i; // insert value
+        CustomScriptExecute((int)&empire_script); // make game execute it
+      }
+      break;
+  }
+  return NULL;
+}
+
+char *empire_scale_name(int val) {
+/*switch(val) {
+	case 1: return "Small-time";
+	case 2: return "Medium Venture";
+	case 3: return "High-Roller";
+	default: return "Unknown";
+  }*/
+  static char buf[32];
+  if( val >= 1 && val <= 3 ) {
+    sprintf(buf, "PROP_S%i", val);
+    return getGxtTranslation(buf);
+  } else return "Unknown";
+}
+
+void *empire_scale(int calltype, int keypress, int base_address, int address, int steps, int slot) { 
+  static int i = 0;  
+  static char buffer[16];
+  
+  switch( calltype ) {
+    case FUNC_GET_STRING:
+      i = getInt(address);
+      snprintf(buffer, sizeof(buffer), "%s", empire_scale_name(i));
+      return (void *)buffer;
+      
+    case FUNC_CHANGE_VALUE:
+      if( keypress ) {
+        i = getInt(address);
+        if( keypress == PSP_CTRL_LEFT && i > 1 ) { ///LEFT
+          i--;
+        } else if( keypress == PSP_CTRL_RIGHT ) { ///RIGHT
+          if( i < 3 ) 
+            i++;
+        }
+        setInt(address, i); // set global var first
+        writeShort(&empire_script[0], 0x0461); // set opcode
+        empire_script[3] = slot; // insert slot
+        empire_script[5] = i; // insert value
+        CustomScriptExecute((int)&empire_script); // make game execute it
+      }
+      break;
+  }
+  return NULL;
+}
+
+void *empire_condition(int calltype, int keypress, int base_address, int address, int steps, int slot) { 
+  static int i = 0;  
+  static char buffer[8];
+  
+  switch( calltype ) {
+    case FUNC_GET_STRING:
+      i = getInt(address);
+      snprintf(buffer, sizeof(buffer), "%i", i);
+      return (void *)buffer;
+      
+    case FUNC_CHANGE_VALUE:
+      if( keypress ) {
+        i = getInt(address);
+        if( keypress == PSP_CTRL_LEFT /*&& i > 0*/ ) { ///LEFT
+          i--;
+        } else if( keypress == PSP_CTRL_RIGHT ) { ///RIGHT
+          //if( i < 4 ) 
+            i++;
+        }
+        setInt(address, i); // set global var first
+        writeShort(&empire_script[0], 0x0462); // set opcode
+        empire_script[3] = slot; // insert slot
+        empire_script[5] = i; // insert value
+        CustomScriptExecute((int)&empire_script); // make game execute it
+      }
+      break;
+  }
+  return NULL;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2089,7 +2342,7 @@ void *editor_worldobj(int calltype, int value) {
   return NULL;
 }
 
-extern int editor_businessobj_current;
+/*extern int editor_businessobj_current;
 void *editor_businessobj(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
@@ -2105,7 +2358,7 @@ void *editor_businessobj(int calltype, int value) {
   }
   editor_create(EDITOR_BUSINESSOBJ, 1, "Business Objects", vcs_businessobj_menu, businessobjs_base, var_bsnobjsize, businessobjs_max);
   return NULL;
-}
+}*/
 
 extern int editor_pickup_current;
 void *editor_pickups(int calltype, int value) {
@@ -2157,6 +2410,26 @@ void *editor_vehspawns(int calltype, int value) {
     return 0;
   }
   editor_create(EDITOR_VEHWORLDSPAWNS, 1, "Parked Vehicle Spawns", (LCS ? lcs_vehiclespawns_menu : vcs_vehiclespawns_menu), addr_vehiclesworldspawn, var_vehiclesworldspawnslotsize, var_vehiclesworldspawnslots);
+  return NULL;
+}
+
+
+extern int editor_empire_current;
+void *editor_empire(int calltype, int value) {
+  //static char buffer[16];
+  if( calltype == FUNC_GET_STRING ) { 
+    //snprintf(buffer, sizeof(buffer), " (x/%i)", 30);
+    //return (void *)buffer;
+    return "";
+	
+  } else if( calltype == FUNC_GET_VALUE ) {
+    return (int*)editor_empire_current;
+  
+  } else if( calltype == FUNC_SET ) {
+    editor_empire_current = value;
+    return 0;
+  }
+  editor_create(EDITOR_EMPIRE, 1, "Empire", vcs_empire_menu, getInt(global_ScriptSpace + gp) + (373 * 4), 999, 30); //todo 999 "blocksize" to 4 
   return NULL;
 }
 

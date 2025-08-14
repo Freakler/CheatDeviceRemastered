@@ -421,11 +421,12 @@ const Menu_pack main_menu[] = {
   {"People Objects Editor"            , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D7E , -1  , editor_pedobj        , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian objects" },
   {"Vehicle Objects Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x46AA , -1  , editor_vehicleobj    , "CROSS: Open Editor"               , ""                                   , "Edit Vehicle objects" },
   {"World Objects Editor"             , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x48AB , -1  , editor_worldobj      , "CROSS: Open Editor"               , ""                                   , "Edit World objects" },
-  {"Business Objects Editor"          , CAT_MAIN    , MENU_CDR_EDITOR  , FALSE , TRUE  , TRUE  , TRUE  , 0x4EF2 , -1  , editor_businessobj   , "CROSS: Open Editor"               , ""                                   , "Edit Business objects" },
+//{"Business Objects Editor"          , CAT_MAIN    , MENU_CDR_EDITOR  , FALSE , TRUE  , TRUE  , TRUE  , 0x4EF2 , -1  , editor_businessobj   , "CROSS: Open Editor"               , ""                                   , "Edit Business objects" },
   {"Pickups Editor"                   , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4DD7 , -1  , editor_pickups       , "CROSS: Open Editor"               , ""                                   , "Edit Pickups objects" },
   {"Mapicons Editor"                  , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4814 , -1  , editor_mapicons      , "CROSS: Open Editor"               , ""                                   , "Edit Mapicon objects" },
   {"Parked Vehicles Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x47F1 , -1  , editor_vehspawns     , "CROSS: Open Editor"               , ""                                   , "Edit the parked world vehicles values and create new spawns." },
   {"Garage Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x4D66 , -1  , editor_garage        , "CROSS: Open Editor"               , ""                                   , "Edit your stored Garage Vehicles. Garage must be closed!" },
+  {"Empire Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , FALSE , TRUE  , TRUE  , FALSE , 0x7B96 , -1  , editor_empire        , "CROSS: Open Editor"               , ""                                   , "Edit your Empire Locations" },
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //   
@@ -1785,7 +1786,7 @@ int userscripts_ctrl() {
                       } else if( strcmp(token, "ONMISSION") == 0 ) {
                         tempint = (LCS ? 560 : 789);
                         if( VCS && mod_text_size == 0x00377D30 ) tempint = 766; // for ULUS v1.01
-                  if( LCS && mod_text_size == 0x00320A34 ) tempint = 558; // for ULUS v1.02
+                        if( LCS && mod_text_size == 0x00320A34 ) tempint = 558; // for ULUS v1.02
                   
                       } else {
                         tempint = strtol(token, NULL, 0); // convert 
@@ -2425,9 +2426,9 @@ int userscripts_ctrl() {
           CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
           
           #if defined(LOG) || defined(USERSCRIPTLOG)
-          u8 tempbuffffff[128]; // quick temp printout (which also crashes for bigger scripts)
+          u8 tempbuffffff[256]; // quick temp printout (which also crashes for bigger scripts)
           memset(&tempbuffffff, 0, sizeof(tempbuffffff)); 
-          for( i = 0; i < (pos < 128 ? pos : 128); i++ ) // otherwise crash of emulator
+          for( i = 0; i < (pos < 256 ? pos : 256); i++ ) // otherwise crash of emulator
             snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
           logPrintf("\nSCRIPT:%s\n\n", tempbuffffff);
           #endif
@@ -2477,11 +2478,12 @@ int editor_blocks    = -1; // blocks available
 int editor_pedobj_current        = 0;
 int editor_vehicleobj_current    = 0;
 int editor_worldobj_current      = 0;
-int editor_businessobj_current   = 0;
+//int editor_businessobj_current   = 0;
 int editor_pickup_current        = 0;
 int editor_mapicon_current       = 0;
 int editor_vehiclespawn_current  = 0;
 int editor_garage_current        = 0;
+int editor_empire_current        = 0;
 int editor_garageslot_current    = 0;
 int editor_vehicle_current       = 0; // used for multiple
 int editor_buildingsIPL_current  = 0;
@@ -2635,7 +2637,7 @@ int editor_draw() {
       }
       break;
       
-    case EDITOR_BUSINESSOBJ: 
+  /*case EDITOR_BUSINESSOBJ: 
       editor_block_current = editor_businessobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
@@ -2646,7 +2648,7 @@ int editor_draw() {
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
-      break;
+      break;*/
       
     case EDITOR_PICKUPS: 
       editor_block_current = editor_pickup_current;
@@ -2723,6 +2725,15 @@ int editor_draw() {
         sprintf(buffer_top0, translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
+      }
+      break;
+    
+    case EDITOR_EMPIRE: 
+      editor_block_current = editor_empire_current;
+      editor_base_adr = editor_firstobj + (editor_block_current * 4); // calc base address
+      if( 1 ) { // 
+        sprintf(buffer_top0, translate_string("%s: %i/%i"), translate_string("Business"), editor_block_current+1, editor_blocks); // block menu        
+        editor_draw_lower = 1; 
       }
       break;
     
@@ -3072,7 +3083,7 @@ int editor_draw() {
       case EDITOR_PEDOBJ:
       case EDITOR_VEHICLEOBJ: 
       case EDITOR_WORLDOBJ: 
-      case EDITOR_BUSINESSOBJ: 
+      //case EDITOR_BUSINESSOBJ: 
       case EDITOR_PICKUPS: 
       case EDITOR_VEHWORLDSPAWNS: 
       case EDITOR_BUILDINGSIPL: 
@@ -3097,6 +3108,9 @@ int editor_draw() {
     
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {    
+    snprintf(buffer, sizeof(buffer), "editor_block_current = %d", editor_block_current );
+    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 60.0f, RED);
+ 
     snprintf(buffer, sizeof(buffer), "editor_selector = %d", editor_selector );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 80.0f, RED);
     
@@ -3180,8 +3194,14 @@ int editor_draw() {
         drawLegendMessage(translate_string("SELECT: Touched Object"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
-    if( editor_menumode == EDITOR_BUSINESSOBJ  ) {
+  /*if( editor_menumode == EDITOR_BUSINESSOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f ) {
+        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+      }
+    }*/
+	if( editor_menumode == EDITOR_EMPIRE  ) {
+      if( editor_selector ) {
+        drawLegendMessage(translate_string("SELECT: Toggle Visible Damage"), 0, 0, COLOR_TEXT); // left side, first row
         drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
@@ -3222,7 +3242,7 @@ int editor_draw() {
         drawLegendMessage(translate_string("SELECT: Current Weapon"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
-  if( editor_menumode == EDITOR_TIMECYCDAT  ) {
+    if( editor_menumode == EDITOR_TIMECYCDAT  ) {
       if( editor_selector ) {  
         drawLegendMessage(translate_string("SELECT: Current Cycle"), 0, 0, COLOR_TEXT); // left side, third row
       }
@@ -3275,9 +3295,9 @@ int editor_ctrl() {
       if( (editor_menumode == EDITOR_WORLDOBJ) && getFloat(editor_base_adr+0x30) != 0 && getWorldObjectIsActive(editor_base_adr) ) { 
         editor_trigger = 1; // trigger teleport
       }
-      if( (editor_menumode == EDITOR_BUSINESSOBJ) && getFloat(editor_base_adr+0x30) != 0 ) { 
+    /*if( (editor_menumode == EDITOR_BUSINESSOBJ) && getFloat(editor_base_adr+0x30) != 0 ) { 
         editor_trigger = 1; // trigger teleport
-      }
+      }*/
       if( (editor_menumode == EDITOR_PICKUPS) && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) { 
         editor_trigger = 1; // trigger teleport
       }
@@ -3291,6 +3311,9 @@ int editor_ctrl() {
         editor_trigger = 1; // trigger teleport
       }
       if( (editor_menumode == EDITOR_BUILDINGSIPL || editor_menumode == EDITOR_TREADABLESIPL || editor_menumode == EDITOR_DUMMYSIPL) && getFloat(editor_base_adr+0x30) != 0 ) { 
+        editor_trigger = 1; // trigger teleport
+      }
+      if( editor_menumode == EDITOR_EMPIRE  ) { 
         editor_trigger = 1; // trigger teleport
       }
       
@@ -3343,6 +3366,16 @@ int editor_ctrl() {
     
       if( editor_menumode == EDITOR_TIMECYCDAT ) {
         editor_block_current = getWeather() * 24 + getClockHours();
+      }
+	  
+      if( editor_menumode == EDITOR_EMPIRE ) {
+		static u8 empire_script_damage[] = { // must be static for CustomScriptExecut()! 
+            0x63, 0x04, 0x07, 0x00, 0x07, 0x00, // 0463: set_empire_visual_damage 0@ flag 0
+			0x23, 0x00 // 0023: terminate_this_script
+		};
+		empire_script_damage[3] = editor_empire_current;
+		empire_script_damage[5] = 1 - empire_script_damage[5];
+		CustomScriptExecute((int)&empire_script_damage); // make game execute it
       }
       
       if( editor_menumode == EDITOR_GARAGE && getShort(editor_base_adr) == 0 && editor_garageslot_current == 0 ) {
@@ -3472,7 +3505,7 @@ int editor_ctrl() {
           if( hold_buttons & PSP_CTRL_RIGHT ) 
             keypress = PSP_CTRL_RIGHT;
           func = (void *)(editor_curmenu[editor_selection_val].value);
-          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].address+editor_base_adr, (int)editor_curmenu[editor_selection_val].steps);
+          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].address+editor_base_adr, (int)editor_curmenu[editor_selection_val].steps, editor_block_current);
           editor_wasused++;
           
         } else {
@@ -3689,9 +3722,9 @@ int editor_ctrl() {
         snprintf(buffer, sizeof(buffer), "World Object %i/%i", editor_block_current+1, editor_blocks);
         break;
         
-      case EDITOR_BUSINESSOBJ: 
+    /*case EDITOR_BUSINESSOBJ: 
         snprintf(buffer, sizeof(buffer), "Business Object %i/%i", editor_block_current+1, editor_blocks);
-        break;
+        break;**/
       
       case EDITOR_PICKUPS: 
         snprintf(buffer, sizeof(buffer), "Pickup %i/%i", editor_block_current+1, editor_blocks);
@@ -3703,6 +3736,10 @@ int editor_ctrl() {
       
       case EDITOR_VEHWORLDSPAWNS: 
         snprintf(buffer, sizeof(buffer), "Parked Vehicle Spawn %i/%i", editor_block_current+1, editor_blocks);
+        break;
+		
+      case EDITOR_EMPIRE: 
+        snprintf(buffer, sizeof(buffer), "Empire %i/%i", editor_block_current+1, editor_blocks);
         break;
       
       /// /// /// /// /// 
@@ -3823,14 +3860,14 @@ int editor_ctrl() {
       }
       break;
       
-    case EDITOR_BUSINESSOBJ: 
+  /*case EDITOR_BUSINESSOBJ: 
       editor_businessobj_current = editor_block_current;
       if( editor_trigger ) {
         teleport(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0; 
       }
-      break;
+      break;*/
     
     case EDITOR_PICKUPS: 
       editor_pickup_current = editor_block_current;
@@ -3914,6 +3951,28 @@ int editor_ctrl() {
       editor_vehiclespawn_current = editor_block_current;
       if( editor_trigger ) {
         teleport(getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8), getFloat(editor_base_adr+0xC)+2.00f);
+        //closeMenu(); // close menu
+        editor_trigger = 0; 
+      }
+      break;
+	  
+    case EDITOR_EMPIRE: 
+      editor_empire_current = editor_block_current;
+      if( editor_trigger ) {
+        static u8 empire_script_teleport[] = { // must be static for CustomScriptExecut()! 
+			0x04, 0x00, 0x0D, 0x07, 0x0C,  // 0004: 0@ = 12 // (int)
+			0x65, 0x04, 0x0D, 0x0E, 0x0F, 0x10, // 0465: get_empire_coords 0@ store_to 1@ 2@ 3@
+			0x6C, 0x04, 0x0D, 0x11, // 046C: get_empire_heading 0@ store_to 4@
+			0x44, 0x00, 0xD0, 0x0E, 0x0E, 0x0F, 0x10, // 0044: set_char_coordinates $PLAYER_CHAR to 1@ 2@ 3@
+			0xCF, 0x00, 0xD0, 0x0E, 0x11, // 00CF: set_char_heading $PLAYER_CHAR to 4@
+			0xEE, 0x02, 0xD0, 0x0E, 0x01, 0x04, 0x90, 0xC1, 0x01, 0x0E, 0x0F, 0x10,  // 02EE: get_offset_from_char_in_world_coords $PLAYER_CHAR offset 0 -18.0 0 store_to 1@ 2@ 3@ // 18 meters behind player
+			0x44, 0x00, 0xD0, 0x0E, 0x0E, 0x0F, 0x10, //0044: set_char_coordinates $PLAYER_CHAR to 1@ 2@ 3@ // adjust
+			0xCF, 0x00, 0xD0, 0x0E, 0x11, // 00CF: set_char_heading $PLAYER_CHAR to 4@
+			0x21, 0x02, // 0221: set_camera_behind_player
+			0x23, 0x00 // 0023: terminate_this_script
+		};
+		empire_script_teleport[4] = editor_empire_current;
+		CustomScriptExecute((int)&empire_script_teleport); // make game execute it
         //closeMenu(); // close menu
         editor_trigger = 0; 
       }
@@ -5133,9 +5192,9 @@ void draw() { // called by hijacked game function
   #endif
   
   /// add 'watermark'
-  #ifdef PREVIEW
+// #ifdef PREVIEW
   drawString("PREVIEW", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, WHITE);
-  #endif
+//  #endif
   
 
   /// draw welcome message in textbox (only when menu autostart is disabled!)
@@ -5601,6 +5660,18 @@ void applyOnce() { //called by hijacked game function
   /// make "TOPFUN" spawnable (this sets the missing colision model of "TOPFUN" to the "PONY" one)
   if( VCS ) {
     setInt(getAddressOfIdeSlotForID(0xF2) + 0x14, getInt(getAddressOfIdeSlotForID(0xD2) + 0x14));
+  }
+  
+  /// set unused gang colors
+  if( VCS ) {
+    static u8 empire_gang_colors[] = { 
+      0x86, 0x04, 0x07, 0, 0x07, 228, 0x07, 125, 0x07,  69, 0x07, 0, // (0, 228, 125,  69, 0); // Umberto's guys
+      0x86, 0x04, 0x07, 3, 0x07,   0, 0x07, 139, 0x07, 139, 0x07, 3, // (3,   0, 139, 139, 3); // Army
+      0x86, 0x04, 0x07, 4, 0x07,   0, 0x07, 183, 0x07, 255, 0x07, 4, // (4,   0, 183, 255, 4); // Security
+      0x86, 0x04, 0x07, 7, 0x07, 246, 0x07, 134, 0x07, 244, 0x07, 7, // (7, 246, 134, 244, 7); // Golfer
+      0x23, 0x00 // 0023: terminate_this_script
+    };
+    CustomScriptExecute((int)&empire_gang_colors); // make game execute it
   }
   
   /// disable map legend by default

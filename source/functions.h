@@ -405,4 +405,6 @@ void CustomScriptClear(int address, int codesize);
 void CustomScriptPlace(u8 *script, int address, int codesize);
 void CustomScriptExecute(int var);
 
+int getScriptGlobalValue(int var);
+
 #endif

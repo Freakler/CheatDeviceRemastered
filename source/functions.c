@@ -3327,6 +3327,10 @@ void CustomScriptExecute(int address) {
   StartNewScript(loadadr);
 }
 
+int getScriptGlobalValue(int var) {
+	return getInt(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + (var * 4));
+}
+
 void setRandomPedCheat(char id) {
   if( id == -1 ) {
     setInt(addr_randompedcheat, 0xDFFF1112); // default random

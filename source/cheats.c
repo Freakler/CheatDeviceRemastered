@@ -118,9 +118,9 @@ int vehicles_base = 0;
 int worldobjs_max = 0;
 int worldobjs_cur = 0;
 int worldobjs_base = 0;
-int businessobjs_max = 0;
-int businessobjs_cur = 0;
-int businessobjs_base = 0;
+//int businessobjs_max = 0;
+//int businessobjs_cur = 0;
+//int businessobjs_base = 0;
 
 int garage_cur = 0;
 int pickups_cur = 0;
@@ -4097,14 +4097,14 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   
   
   /// Business Objects
-  if( VCS ) {
+/*if( VCS ) {
     temp = getInt(ptr_businessobj + gp);
     if( isInMemBounds(temp) ) {
       businessobjs_base = getInt(temp);
       businessobjs_max = getInt(temp + 0x8); 
       businessobjs_cur = getWorldActiveObjects(businessobjs_base, businessobjs_max, var_bsnobjsize); // THIS IS THE OBJ FUNCTION!
     }  
-  }
+  }*/
     
   /// Buildings.ipl
   temp = getInt(ptr_buildingsIPL + gp_);

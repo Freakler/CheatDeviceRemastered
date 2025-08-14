@@ -42,6 +42,7 @@ enum {
   EDITOR_STATS,
   EDITOR_HANDLINGCFG,
   EDITOR_VEHWORLDSPAWNS,
+  EDITOR_EMPIRE,
   EDITOR_BUILDINGSIPL,
   EDITOR_TREADABLESIPL,
   EDITOR_DUMMYSIPL,
@@ -94,6 +95,7 @@ void *editor_businessobj(int calltype, int value);
 void *editor_pickups(int calltype, int value);
 void *editor_mapicons(int calltype, int value);
 void *editor_vehspawns(int calltype, int value);
+void *editor_empire(int calltype, int value);
 
 void *editor_ide(int calltype, int value);
 
@@ -123,4 +125,10 @@ void *vehicle_transtype(int calltype, int keypress, int base_address, int addres
 void *handling_flag(int calltype, int keypress, int base_address, int address, int arg);
 void *model_flag(int calltype, int keypress, int base_address, int address, int arg);
 
+void *empire_owner(int calltype, int keypress, int base_address, int address, int steps, int block);
+void *empire_type(int calltype, int keypress, int base_address, int address, int steps, int block);
+void *empire_state(int calltype, int keypress, int base_address, int address, int steps, int block);
+void *empire_scale(int calltype, int keypress, int base_address, int address, int steps, int block);
+void *empire_condition(int calltype, int keypress, int base_address, int address, int steps, int block);
+void *empire_damage(int calltype, int keypress, int base_address, int address, int steps, int block);
 #endif
