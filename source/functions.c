@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -3235,12 +3235,12 @@ int isPedCrouching(int ped) {
 
 void TaskDuck(int ped) {
   if( LCS ) {
-    // *(uint *)(pplayer + 0x198) = *(uint *)(pplayer + 0x198) | 8;
+    // *(unsigned int *)(pplayer + 0x198) = *(unsigned int *)(pplayer + 0x198) | 8;
     setInt(pplayer + 0x198, getInt(pplayer + 0x198) | 8);
     TaskDuckLCS(pplayer); //duck
   } else {
     //if( VCS ) {
-    // *(uint *)(pplayer + 0x1cc) = *(uint *)(pplayer + 0x1cc) | 0x1000;
+    // *(unsigned int *)(pplayer + 0x1cc) = *(unsigned int *)(pplayer + 0x1cc) | 0x1000;
     setInt(pplayer + 0x1cc, getInt(pplayer + 0x1cc) | 0x1000);
     TaskDuckVCS(pplayer, -1, 1); // duck (duration -1 for forever)
   }

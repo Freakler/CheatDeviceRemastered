@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,15 +31,12 @@ Draw Rectangles via:
 #include <pspkernel.h>
 #include <systemctrl.h>
 
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <wchar.h>
 #include <stdarg.h>
 
 #include "blitn.h"
 
-#include "main.h" // for LOG
 #ifdef LOG
  #include "utils.h"
 #endif
@@ -73,9 +70,9 @@ void AsciiToUnicode(const char* in, wchar_t* out) {
 void drawBox(float x, float y, float width, float height, u32 color) {
   int i;
   for( i = 0; i < MAX_BOXES; i++ ) {
-    if( bool[i] == (x+y+width+height) ) break;
-    if( bool[i] == 0 ) {
-      bool[i] = x+y+width+height;
+    if( bool_box[i] == (x+y+width+height) ) break;
+    if( bool_box[i] == 0 ) {
+      bool_box[i] = x+y+width+height;
       xbox[i] = x;
       ybox[i] = y;
       wbox[i] = width;
@@ -208,11 +205,11 @@ void mymenurender_LCS_patched() {
   
   /// BOXes
   for( i = 0; i < MAX_BOXES; i++ ) {
-    if( bool[i] != 0 ) {  
+    if( bool_box[i] != 0 ) {  
       ptr_coords = (float *)SetBoxCoords(xbox[i], ybox[i], xbox[i]+wbox[i], ybox[i]+hbox[i], coordinates);
       DrawRect(ptr_coords, &boxcol[i], 0x1);
     } else break;
-  } memset(bool, 0, sizeof(bool));
+  } memset(bool_box, 0, sizeof(bool_box));
   
   
   /// TEXTs
@@ -281,11 +278,11 @@ void mymenurender_VCS_patched() {
 
   /// BOXes
   for( i = 0; i < MAX_BOXES; i++ ) {
-    if( bool[i] != 0 ) {  
+    if( bool_box[i] != 0 ) {  
       ptr_coords = (float *)SetBoxCoords(xbox[i], ybox[i], xbox[i]+wbox[i], ybox[i]+hbox[i], coordinates);
       DrawRect(ptr_coords, &boxcol[i], 0x1); // todo
     } else break;
-  } memset(bool, 0, sizeof(bool));
+  } memset(bool_box, 0, sizeof(bool_box));
 
   
   /// TEXTs

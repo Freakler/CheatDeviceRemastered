@@ -29,7 +29,7 @@
 #define FILE_SIZE_LIMIT 0xFFFF
 #define MURMURMASH_3_SEED 0x947473
 
-char* translate_string(const char* string);
+char* t_string(const char* string);
 void setup_lang(int langIndex);
 void update_lang(int langIndex);
 

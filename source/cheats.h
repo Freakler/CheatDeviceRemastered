@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 #ifndef __CHEATS_H__
 #define __CHEATS_H__
 
+#include <psptypes.h>
 
 int PatchLCS(u32 addr, u32 text_addr);
 int PatchVCS(u32 addr, u32 text_addr);
@@ -73,11 +74,11 @@ void (* SetNextWeather)(short weathercode);
 void (* SetWeatherNow)(short weathercode);
 void (* ReleaseWeather)(void);
 
-void (* TaskCharWith)(uint ped, int val, uint object);
+void (* TaskCharWith)(unsigned int ped, int val, unsigned int object);
 void (* WarpPedIntoVehicle)(int ped, int vehicle); // FUN_001b90ec_warpPedIntoVehicle(int ped, int veh) (has more attributes in VCS!!!!)
 void (* WarpPedIntoVehicleAsPassenger)(int ped, int vehicle, int seat); // FUN_001b9470_warpPedIntoVehicleAsPassenger(int ped, int veh, int seat)
-void (* RequestModel)(uint model_id, uint param_2); // , uint param_3, uint param_4, uint param_5);
-int (* GiveWeaponAndAmmo)(int ped_obj, int param_2, uint ammo); // , uint param_4, uint param_5);
+void (* RequestModel)(unsigned int model_id, unsigned int param_2); // , unsigned int param_3, unsigned int param_4, unsigned int param_5);
+int (* GiveWeaponAndAmmo)(int ped_obj, int param_2, unsigned int ammo); // , unsigned int param_4, unsigned int param_5);
 void (* SetActorSkinTo)(int ped_obj, const char *name); // name must be lower case!!
 void (* LoadAllModelsNow)(char x);
 void (* RefreshActorSkin)(int ped_obj);
@@ -125,11 +126,11 @@ void FUN_002db0c0_patched(int param_1);
 int (*_checkCustomTracksReady)(int param_1);
 int _checkCustomTracksReady_patched(int param_1);
 
-uint (*loadSplashScreen)(int* x,int y,int z, int a, int b);
-uint loadSplashScreen_patched(int* x,int y,int z, int a, int b);
+unsigned int (*loadSplashScreen)(int* x,int y,int z, int a, int b);
+unsigned int loadSplashScreen_patched(int* x,int y,int z, int a, int b);
 
-void (*Loadscreen)(char * string1, char * string2, char *txdname, uint param_4);
-void Loadscreen_patched(char * string1, char * string2, char *txdname, uint param_4);
+void (*Loadscreen)(char * string1, char * string2, char *txdname, unsigned int param_4);
+void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned int param_4);
 
 void (*DrawLoadingBar)(float param_1);
 void DrawLoadingBar_patched(float param_1);

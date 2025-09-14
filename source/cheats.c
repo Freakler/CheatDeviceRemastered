@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include "cheats.h"
 #include "functions.h"
 #include "main.h"
-#include "editor.h"
 #include "utils.h"
 #include "blitn.h"
 #include "lang.h"
@@ -316,9 +315,9 @@ u32 saveprefix   = -1;
   int (*findFreeVehicleSlot)();
   void (*FUN_000bc3d4)(int param_1);
 
-  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, uint param_7, uint param_8, uint param_9, u32 param_10,char param_11);
+  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, unsigned int param_7, unsigned int param_8, unsigned int param_9, u32 param_10,char param_11);
 
-  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, uint param_7, uint param_8, uint param_9, u32 param_10,char param_11);
+  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, unsigned int param_7, unsigned int param_8, unsigned int param_9, u32 param_10,char param_11);
   
   void (*FUN_002cedc0_spawnParkedVehicles)(int *param_1);
   //int (*FUN_002ce7ec)(int *param_1);
@@ -365,8 +364,8 @@ u32 saveprefix   = -1;
 
   ////////////////////////////////////////////  ////////////////////////////////////////////  ////////////////////////////////////////////
   
-  uint (*testfunc2)(int param_1, uint param_2); 
-  uint testfunc2_patched(int param_1, uint param_2) { //FUN_0016fcd0_CElementGroupModelInfo_GetNodeFromId
+  unsigned int (*testfunc2)(int param_1, unsigned int param_2); 
+  unsigned int testfunc2_patched(int param_1, unsigned int param_2) { //FUN_0016fcd0_CElementGroupModelInfo_GetNodeFromId
     int ret = testfunc2( param_1, param_2);
     logPrintf("ret = 0x%08X, param_1: 0x%08X, param_2: 0x%08X", ret, param_1, param_2);
     static int last = -1;
@@ -378,8 +377,8 @@ u32 saveprefix   = -1;
     return 0;
   }
   
-  void (*testfunc)(int ide, int wheel_no, uint *vectors); 
-  void testfunc_patched(int ide, int wheel_no, uint *vectors) { //FUN_0007243c_CVehicleModelInfo_GetWheelPosn
+  void (*testfunc)(int ide, int wheel_no, unsigned int *vectors); 
+  void testfunc_patched(int ide, int wheel_no, unsigned int *vectors) { //FUN_0007243c_CVehicleModelInfo_GetWheelPosn
     //char buffer[256]; 
     //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
     //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
@@ -4521,8 +4520,8 @@ int _checkCustomTracksReady_patched(int param_1) {
 char *msg1 = NULL;
 char *msg2 = NULL;
 
-void (*Loadscreen)(char * string1, char * string2, char *txdname, uint param_4);
-void Loadscreen_patched(char * string1, char * string2, char *txdname, uint param_4) {
+void (*Loadscreen)(char * string1, char * string2, char *txdname, unsigned int param_4);
+void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned int param_4) {
   //if( txdname != NULL )
     //logPrintf("[INFO] %i: Loadscreen_patched(%s)", getGametime(), txdname);
   
@@ -4944,7 +4943,7 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
         sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed(pcar) * 180.0f * (real ? 1 : 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
         
         /// gears
-        sprintf(gear, translate_string("Gear: %X"), getVehicleCurrentGear( pcar ) );
+        sprintf(gear, t_string("Gear: %X"), getVehicleCurrentGear( pcar ) );
       }
       break;
       
@@ -6000,7 +5999,7 @@ void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) 
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)(translate_string(LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
+      return (void *)(t_string(LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
       
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_LEFT && i > 1 ) { // LEFT
@@ -8445,9 +8444,9 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
       case FUNC_GET_STRING: 
         if( LCS ) sprintf(retbuf, "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? translate_string("Red: %i Green: %i Blue:>%i<") : 
-                          pos == 1 ? translate_string("Red: %i Green:>%i<Blue: %i") : 
-                          pos == 2 ? translate_string("Red:>%i<Green: %i Blue: %i") : translate_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+          sprintf(retbuf, pos == 0 ? t_string("Red: %i Green: %i Blue:>%i<") : 
+                          pos == 1 ? t_string("Red: %i Green:>%i<Blue: %i") : 
+                          pos == 2 ? t_string("Red:>%i<Green: %i Blue: %i") : t_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
         return (void *)retbuf;
       
@@ -8524,9 +8523,9 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
       case FUNC_GET_STRING: 
         if( LCS ) sprintf(retbuf, "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? translate_string("Red: %i Green: %i Blue:>%i<") : 
-                          pos == 1 ? translate_string("Red: %i Green:>%i<Blue: %i") : 
-                          pos == 2 ? translate_string("Red:>%i<Green: %i Blue: %i") : translate_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+          sprintf(retbuf, pos == 0 ? t_string("Red: %i Green: %i Blue:>%i<") : 
+                          pos == 1 ? t_string("Red: %i Green:>%i<Blue: %i") : 
+                          pos == 2 ? t_string("Red:>%i<Green: %i Blue: %i") : t_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
         return (void *)retbuf;
       
@@ -9358,7 +9357,7 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
       return (int*)i;
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, translate_string("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
+      sprintf(retbuf, t_string("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
       return (void*)retbuf;
       
     case FUNC_APPLY:
@@ -9674,7 +9673,7 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
       return (int*)status;
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, " %s", translate_string(state ? "down" : "up"));
+      sprintf(retbuf, " %s", t_string(state ? "down" : "up"));
       return retbuf;
       
     case FUNC_APPLY:
@@ -11066,7 +11065,7 @@ void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)translate_string(buttonCheatNames[i]);
+      return (void *)t_string(buttonCheatNames[i]);
       
     case FUNC_APPLY:
       if( (pressed_buttons & PSP_CTRL_UP) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && flag_menu_running == 0 && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
@@ -11267,7 +11266,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)translate_string(list_names[i]);
+      return (void *)t_string(list_names[i]);
       
     case FUNC_APPLY:
       addr = getObjectsTouchedObjectAddress(pobj);
@@ -11449,12 +11448,12 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     
     case FUNC_GET_STRING: 
       if( j == 0 ) { // pickups
-        snprintf(retbuf, sizeof(retbuf), translate_string("Pickups - %s (%i)"), translate_string((LCS ? lcs_pickups[i].name : vcs_pickups[i].name)), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
+        snprintf(retbuf, sizeof(retbuf), t_string("Pickups - %s (%i)"), t_string((LCS ? lcs_pickups[i].name : vcs_pickups[i].name)), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
           
       } else if( j == 1 ) { // weapons in range
         if( status ) 
-          snprintf(retbuf, sizeof(retbuf), translate_string("Weapons in range (%i)"), res);
-        else snprintf(retbuf, sizeof(retbuf), translate_string("Weapons in range"));
+          snprintf(retbuf, sizeof(retbuf), t_string("Weapons in range (%i)"), res);
+        else snprintf(retbuf, sizeof(retbuf), t_string("Weapons in range"));
         //res = 0; // if apply loop not updating
           
       } else if( j == 2 ) { // stunt jumps
