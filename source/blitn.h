@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 
 #ifndef __BLITN_H__
 #define __BLITN_H__
+
+#include <psptypes.h>
 
 
 #define SCREEN_WIDTH 480.0f
@@ -37,7 +39,7 @@ float ypos[MAX_TEXTS];
 
 /// and boxes too
 #define MAX_BOXES 128
-short bool[MAX_BOXES];
+short bool_box[MAX_BOXES];
 float xbox[MAX_BOXES];
 float ybox[MAX_BOXES];
 float wbox[MAX_BOXES];
@@ -86,7 +88,7 @@ u32 boxcol[MAX_BOXES];
 /// box
 char *(*SetBoxColor)(char *param_1,char alpha,char red,char green,char blue);
 float *(*SetBoxCoords)(float param_1, float param_2, float param_3, float param_4, float *param_5);
-void (*DrawRect)(float *param_1,uint *param_2,char param_3);
+void (*DrawRect)(float *param_1,unsigned int *param_2,char param_3);
 
       
 /// string
@@ -101,7 +103,7 @@ void (*SetJustifyOff)();
 void (*SetColor)(u32* color);
 void (*SetBackgroundColor)(u32* color);
 void (*SetFontStyle)(short style);
-void (*SetDropShadowPosition)(short bool);
+void (*SetDropShadowPosition)(short bool_box);
 void (*SetDropColor)(char* rgba);
 void (*SetScale_LCS)(float width, float height);
 void (*SetScale_VCS)(float scale);

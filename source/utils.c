@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <malloc.h>
 #include <math.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include "utils.h"
 #include "main.h" // for LOG
@@ -58,6 +59,7 @@ int logPrintf(const char *text, ...) {
   return 0;
 }
 
+// NOTE: You can't verify folders by using this function on Android (sceIoOpen returns 3 on folders for some reason)
 int doesFileExist(const char* path) {
   SceUID dir = sceIoOpen(path, PSP_O_RDONLY, 0777);
   if( dir >= 0 ) {

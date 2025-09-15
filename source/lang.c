@@ -33,7 +33,7 @@
 extern char folder_translations[];
 extern const char *basefolder;
 
-int translated_strings_left = TRANSLATED_STRINGS_LIMIT;
+static int translated_strings_left = TRANSLATED_STRINGS_LIMIT;
 
 LangHashTable *create_lang_table() {
     LangHashTable *ht = (LangHashTable *)malloc(sizeof(LangHashTable));
@@ -45,7 +45,7 @@ LangHashTable *create_lang_table() {
 }
 
 // MurmurHash3 hash function
-uint32_t hash(const char *key, uint32_t len, uint32_t seed) {
+static uint32_t hash(const char *key, uint32_t len, uint32_t seed) {
     uint32_t c1 = 0xcc9e2d51;
     uint32_t c2 = 0x1b873593;
     uint32_t r1 = 15;
@@ -254,15 +254,16 @@ void GetINIInfo(LangFileTable *table, const char *filename) {
     ini_gets("INFO", "Translate Language", "None", Language, sizeof(Language), filepath);
 
 #if defined(LOG) && defined(LANG_DEBUG)
-        logPrintf("Info from file '%s': Version '%s', Author '%s', Language '%s'", filename, Version, Author, Language);
+    logPrintf("Info from file '%s': Version '%s', Author '%s', Language '%s'", filename, Version, Author, Language);
 #endif
 
     LangFileAppend(table, Version, Author, Language, filename);
 }
 
-
+#if defined(LOG) && defined(LANG_DEBUG)
 u64 curr_time, after_time;
 char bufDebug[64];
+#endif
 
 void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int index) 
 {
@@ -272,7 +273,9 @@ void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int i
     char lang_path[128];
     SceUID fp;
 
+#if defined(LOG) && defined(LANG_DEBUG)
     curr_time = sceKernelGetSystemTimeWide();
+#endif
 
     snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->FileName);
 
@@ -356,7 +359,7 @@ void setup_lang(int langIndex) {
 
 #endif
 
-char* translate_string(const char* string) {
+char* t_string(const char* string) {
     #ifdef LANG
     if (CurrentLanguageID != 0)
         return lang_table_search(main_lang_table, string);

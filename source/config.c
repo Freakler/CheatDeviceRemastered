@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <pspkernel.h> // VS Code is annoying and keeps spamming "u32" undefined errors
+#include <pspkernel.h>
 
 #include "main.h"
 #include "cheats.h"

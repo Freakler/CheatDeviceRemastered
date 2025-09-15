@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,8 +19,10 @@
 #ifndef __UTILSS_H__
 #define __UTILSS_H__
 
-#define LOG_SIZE 128
+#include <psptypes.h>
+#include <pspkerneltypes.h>
 
+#define LOG_SIZE 128
 
 int logPrintf(const char *text, ...);
 

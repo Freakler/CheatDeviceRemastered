@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,14 +19,17 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#include <pspkerneltypes.h>
+#include <pspiofilemgr.h>
+
 #define VERSION "v1.0h3" // displayed in title
 
 /** FEATURE-FLAGS *****************************************************************************************************/
 
 //#define LITE // 'Lite' version with less features for more memory on PSP-1000
 
-//#define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
-//#define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
+// #define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
+// #define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
 //#define LOG // logging to logfile
 //#define MEMLOG // logging bad memory access to logfile
@@ -180,8 +183,6 @@ int menu_setDefaults(const Menu_pack *menu_list, int menu_max /*, char *config*/
 int menu_apply(const Menu_pack *menu_list, int menu_max);
 int menu_check(const Menu_pack *menu_list, int menu_max);
 
-int menu_toggleCheat(void *value, int bool, int param );
-
 void *category_toggle(int type, int cat, int set);
 
 int module_stop(int argc, char *argv[]);
@@ -195,6 +196,12 @@ extern int menu_size;
 int editor_create();
 int editor_draw();
 int editor_ctrl();
+
+struct script_file
+{
+  SceIoDirent dirent;
+  int files_folders_count;
+};
 
 int usercheats_create();
 int usercheats_draw();

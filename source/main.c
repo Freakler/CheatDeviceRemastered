@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2023, Freakler
+ *  Copyright (C) 2017-2025, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,12 @@
 #include <math.h>
 #include <malloc.h>
 #include <pspsysmem.h>
+#include <ctype.h>
 
 #include "main.h"
+#include "pspiofilemgr.h"
+#include "pspiofilemgr_dirent.h"
+#include "pspiofilemgr_stat.h"
 #include "utils.h"
 #include "cheats.h"
 #include "blitn.h"
@@ -1055,7 +1059,7 @@ int userscript_readtxtneeded = 1; // if 1
 //int userscript_readfolderneeded = 1; // if 1 filename of current txt will be read + total files
 
 char currentfile[64]; // current txt
-char currentexten[5]; // 
+char currentexten[5]; // file extension
 
 char script_subfldrs[128]; // contains additional path eg "/WIP/vehicles/" and will be merged to with script_folder
 char script_workfldr[256]; // into this one
@@ -1072,6 +1076,62 @@ ushort custom_gxts[CSTGXTS][CSTGXTLGT];
 
 #define SUPPORT_LABEL 256   // maximum supported Labels
 #define MAX_LABEL_LENGTH 32 // max length of a Label
+
+// If needed, could be lower/higher
+#define USERSCRIPT_FILE_LIMIT 64
+
+// Array where scripts / folders file info is stored
+static struct script_file userscript_currentdir_scripts[USERSCRIPT_FILE_LIMIT];
+static unsigned char userscript_cd_scripts_count = 0; // Number of scripts / folder in array
+int currentdir_files_folders_count = 0; // Files & Folders count on current dir
+
+int userscripts_get_scripts()
+{
+  // Check if there are files & folders to store
+  if (countFilesInFolder(script_workfldr) + countFoldersInFolder(script_workfldr) == 0)
+  {
+    return 0;
+  }
+  
+  // Open current dir
+  SceUID dir = sceIoDopen(script_workfldr);
+  if (dir < 0)
+  {
+    return -1;
+  }
+
+  if (userscript_cd_scripts_count > 0) // Redo script list with new dir
+  {
+    userscript_cd_scripts_count = 0;
+  }
+
+  SceIoDirent dirent;
+  memset(&dirent,0,sizeof(SceIoDirent)); // prevents a crash
+
+  // While scripts loaded on array < 64 and can read from dir
+  while (userscript_cd_scripts_count < USERSCRIPT_FILE_LIMIT && sceIoDread(dir, &dirent) > 0) {
+    
+    if (dirent.d_name[0] == '.') continue; // Skip "." entries
+
+    // Copy dirent
+    memcpy(&userscript_currentdir_scripts[userscript_cd_scripts_count].dirent, &dirent, sizeof(dirent));
+
+    // Check if is folder
+    if (dirent.d_stat.st_attr & FIO_SO_IFDIR)
+    {
+      // Calc files and folders count
+      userscript_currentdir_scripts[userscript_cd_scripts_count].files_folders_count = countFilesInFolder(userscript_currentdir_scripts[userscript_cd_scripts_count].dirent.d_name) + countFoldersInFolder(userscript_currentdir_scripts[userscript_cd_scripts_count].dirent.d_name);
+    }
+
+    userscript_cd_scripts_count++;
+
+    // Clear dirent
+    memset(&dirent, 0, sizeof(SceIoDirent));
+  }
+
+  sceIoDclose(dir);
+  return 0;
+}
   
 
 int userscripts_create() {
@@ -1093,8 +1153,10 @@ int userscripts_create() {
   //userscript_readfolderneeded = 1; // now
   
   sprintf(script_workfldr, "%s%s%s/%s%s", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/");
+  userscripts_get_scripts();
   
   flag_userscripts = 1; // only set here!
+
   return 0;
 }
 
@@ -1105,7 +1167,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   char buffer[256];
 
   /// draw title  
-  drawString(translate_string("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
+  drawString(t_string("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
   
   x = 40.0f; // horizontal menu start
   y = 35.0f; // vertical menu start
@@ -1116,9 +1178,6 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 410.0f+x-5.0f, 7.0f, COLOR_TEXT);
   }
   
-  /// check folder and files
-  userscript_options = countFilesInFolder(script_workfldr) + countFoldersInFolder(script_workfldr); // with folder support
-  
     // no longer needed as we auto-create the path and folder
     /* if( userscript_options == 0x80010002 ) { // no folder (doesn't work like this anymore since + countFolder... anyways)
       drawString("No user scripts folder found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
@@ -1127,9 +1186,9 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
       return -1; // no cheats folder
     } */
     
-    if( userscript_options == 0 ) { // folder found but empty
-      drawString(translate_string("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
-      snprintf(buffer, sizeof(buffer), translate_string("Place .txt files to '%s%s%s/'"), basefolder, folder_scripts, LCS ? "LCS" : "VCS");
+    if( userscript_cd_scripts_count == 0 ) { // folder found but empty
+      drawString(t_string("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
+      snprintf(buffer, sizeof(buffer), t_string("Place .txt files to '%s%s%s/'"), basefolder, folder_scripts, LCS ? "LCS" : "VCS");
       drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
       return -1; // no cheats folder
     }
@@ -1140,32 +1199,30 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// 
   
-  if( userscript_options > 0 )
+  if( userscript_cd_scripts_count > 0 )
     userscript_draw_lower = 1;
   
   userscript_showoptions = (flag_use_legend ? 12 : 14) - userscript_toptions; // reset
         
-  if ( userscript_showoptions > userscript_options ) 
-    userscript_showoptions = userscript_options; // adjust showoptions (there can't be more showoptions than options itself)
+  if ( userscript_showoptions > userscript_cd_scripts_count ) 
+    userscript_showoptions = userscript_cd_scripts_count; // adjust showoptions (there can't be more showoptions than options itself)
         
 
   /// draw Scrollbar
-  if( (userscript_options > userscript_showoptions) && userscript_draw_lower ) { // draw only if there are more options than can be displayed
+  if( (userscript_cd_scripts_count > userscript_showoptions) && userscript_draw_lower ) { // draw only if there are more options than can be displayed
     float scrollbar_x = 455.0f;
     float scrollbar_y = 33.0f + ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
     float scrollbar_bg_width = 5.0f;
     float scrollbar_bg_height = (flag_use_legend ? 190.0f : 224.0f) - ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
-    float scrollbar_cursor_height = scrollbar_bg_height * ((float)userscript_showoptions/(float)(userscript_options-1)); // 1.0 wenn alles sichtbar  0.2 bei 20% sichtbar  
-    float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)userscript_top) * 100.0f / ((float)(userscript_options-userscript_showoptions))) ); /// scroll only when entries move (like it should be)
+    float scrollbar_cursor_height = scrollbar_bg_height * ((float)userscript_showoptions/(float)(userscript_cd_scripts_count-1)); // 1.0 wenn alles sichtbar  0.2 bei 20% sichtbar  
+    float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)userscript_top) * 100.0f / ((float)(userscript_cd_scripts_count-userscript_showoptions))) ); /// scroll only when entries move (like it should be)
 
-    if( userscript_top + userscript_showoptions >= userscript_options-1 ) // when last item is visible -> cursor must be at bottom
+    if( userscript_top + userscript_showoptions >= userscript_cd_scripts_count-1 ) // when last item is visible -> cursor must be at bottom
       scrollbar_bg_height -= 0.01f; // fix because of blit bug when two rectangles on same position
     
     drawBox(scrollbar_x, scrollbar_y, scrollbar_bg_width, scrollbar_bg_height, COLOR_BACKGROUND); // background 
     drawBox(scrollbar_x, scrollbar_cursor_y, scrollbar_bg_width, scrollbar_cursor_height, COLOR_SCROLLBAR); // cursor 
-  }  
-
-  int counter = 0;  
+  }
       
   /// draw the lower Menu
   if(userscript_draw_lower) {
@@ -1173,71 +1230,57 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     if ( userscript_selected_val < userscript_top ) 
       userscript_top = userscript_selected_val;  // for scrolling up with selection  
      
-    SceIoDirent d_dir;
-    memset(&d_dir,0,sizeof(SceIoDirent)); // prevents a crash
-    SceUID fd = sceIoDopen(script_workfldr);
-    
-    if(fd >= 0)  {
-      while((sceIoDread(fd, &d_dir) > 0) && counter <= userscript_top) { // skip (auto-scroll)
-        counter++;
+    for(i = userscript_top; i < userscript_showoptions + userscript_top; i++, y += userscript_row_spacing) 
+    {
+      // Get info from initialized array (no constant reading :D)
+      SceIoDirent* d_dir = &userscript_currentdir_scripts[i].dirent;
+      int files_folders_count = userscript_currentdir_scripts[i].files_folders_count;
+
+      memcpy(extension, d_dir->d_name + strlen(d_dir->d_name) - 4, 5);
+      strcpy(filename, d_dir->d_name); // save filename
+
+      #ifdef DEBUG
+      if( flag_draw_DBGVALS ) {
+        ///draw number
+        snprintf(buffer, sizeof(buffer), "%d", i+1);
+        drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED);
       }
-      
-      for(i = userscript_top; i < userscript_showoptions + userscript_top; i++, y += userscript_row_spacing) {
-    //  do { // skip folders (old)
-    //    sceIoDread(fd, &d_dir);
-    //  } while( FIO_SO_ISDIR(d_dir.d_stat.st_attr) );
-        do { // skip "." entries
-          sceIoDread(fd, &d_dir);
-        } while(d_dir.d_name[0] == '.');
-      
-        memcpy(extension, d_dir.d_name + strlen(d_dir.d_name) - 4, 5);
-        strcpy(filename, d_dir.d_name); // save filename
-            
-        #ifdef DEBUG
-        if( flag_draw_DBGVALS ) {
-          ///draw number
-          snprintf(buffer, sizeof(buffer), "%d", i+1);
-          drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED);
-        }
-        #endif
-                
-        if ( i == userscript_selected_val && userscript_selector == 0) {
-          /// save stuff
-          strcpy(currentfile, filename);
-          strcpy(currentexten, extension);
-          
-          /// draw cursor
-          drawBox(x-5.0f, y, 410.0f, 16.0f, COLOR_CURSOR); // float x, float y, float width, float height, u32 color
-        }
-    
-        /// draw name  
-        COLOR_TEMP = COLOR_CHEAT_OFF;
-        if( stricmp(extension, ".txt") ) {
-           
-          if( d_dir.d_stat.st_attr & FIO_SO_IFDIR ) { // check folder
-            
-            snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, filename);
-            if( countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0) )
-              COLOR_TEMP = WHITE;
-            
-            else // folder is empty
-              COLOR_TEMP = GREY;
-            
-            sprintf(filename, "%s/", filename); // add slash because looks nicer
-            
-          } else   
-            COLOR_TEMP = GREY; // not a valid txt file (grey out)
-          
-        } else
-          filename[strlen(filename)-4] = '\0'; // remove .txt from displayed name
+      #endif
+              
+      if ( i == userscript_selected_val && userscript_selector == 0) {
+        /// save stuff
+        strcpy(currentfile, filename);
+        strcpy(currentexten, extension);
+        currentdir_files_folders_count = files_folders_count;
         
-        snprintf(buffer, sizeof(buffer), "%s", filename); 
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);      
+        /// draw cursor
+        drawBox(x-5.0f, y, 410.0f, 16.0f, COLOR_CURSOR); // float x, float y, float width, float height, u32 color
       }
-    
-      sceIoDclose(fd);
+  
+      /// draw name  
+      COLOR_TEMP = COLOR_CHEAT_OFF;
+      if( stricmp(extension, ".txt") ) {
+         
+        if( d_dir->d_stat.st_attr & FIO_SO_IFDIR ) { // check folder
+          
+          snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, filename);
+          if( files_folders_count > 0 )
+            COLOR_TEMP = WHITE;
+          
+          else // folder is empty
+            COLOR_TEMP = GREY;
+          
+          sprintf(filename, "%s/", filename); // add slash because looks nicer
+          
+        } else   
+          COLOR_TEMP = GREY; // not a valid txt file (grey out)
+        
+      } else
+        filename[strlen(filename)-4] = '\0'; // remove .txt from displayed name
+      
+      snprintf(buffer, sizeof(buffer), "%s", filename); 
+      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);      
     }
-    
   } 
   
   /// error checks of selected file
@@ -1364,7 +1407,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     snprintf(buffer, sizeof(buffer), "userscript_selected_val = %i", userscript_selected_val );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 160.0f, RED);
     
-    snprintf(buffer, sizeof(buffer), "userscript_options = %i", userscript_options );
+    snprintf(buffer, sizeof(buffer), "userscript_cd_scripts_count = %i", userscript_cd_scripts_count );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 180.0f, RED);
     
     snprintf(buffer, sizeof(buffer), "userscript_showoptions = %i", userscript_showoptions );
@@ -1399,35 +1442,34 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     
     
     /// draw data instead
-    snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
     //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 10.0f, RED);
-    if( doesFileExist(buffer) == 1 ) { // its a file
+    if( userscript_currentdir_scripts[userscript_selected_val].dirent.d_stat.st_attr & FIO_SO_IFREG ) { // its a file
       if( !stricmp(currentexten, ".txt") ) { // and its a txt
-        snprintf(buffer, sizeof(buffer), translate_string("Author: %s"), meta_author );
+        snprintf(buffer, sizeof(buffer), t_string("Author: %s"), meta_author );
         drawLegendMessage(buffer, 0, 2, COLOR_TEXT); // left side, first row
           
-        snprintf(buffer, sizeof(buffer), translate_string("Version: %s"), meta_version );
+        snprintf(buffer, sizeof(buffer), t_string("Version: %s"), meta_version );
         drawLegendMessage(buffer, 1, 2, COLOR_TEXT); // right side, first row
           
-        snprintf(buffer, sizeof(buffer), translate_string("Category: %s"), meta_category );
+        snprintf(buffer, sizeof(buffer), t_string("Category: %s"), meta_category );
         drawLegendMessage(buffer, 0, 1, COLOR_TEXT); // left side, second row
           
-        snprintf(buffer, sizeof(buffer), translate_string("Date: %s"), meta_date );
+        snprintf(buffer, sizeof(buffer), t_string("Date: %s"), meta_date );
         drawLegendMessage(buffer, 1, 1, COLOR_TEXT); // right side, second row
           
-        snprintf(buffer, sizeof(buffer), translate_string("Description: %s"), meta_description );
+        snprintf(buffer, sizeof(buffer), t_string("Description: %s"), meta_description );
         drawLegendMessage(buffer, 0, 0, COLOR_TEXT); // left side, third row
           
-      } else drawLegendMessage(translate_string("This is not a valid .txt file!"), 0, 2, COLOR_TEXT); // left side, first row
+      } else drawLegendMessage(t_string("This is not a valid .txt file!"), 0, 2, COLOR_TEXT); // left side, first row
     
     } else { //its a folder
-      if( countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) {
-        drawLegendMessage(translate_string("CROSS: Enter Folder"),    1, 2, COLOR_TEXT); // right side, first row
-        drawLegendMessage(translate_string("TRIANGLE: Leave Folder"), 1, 1, COLOR_TEXT); // right side, second row
-        drawLegendMessage(translate_string("CIRCLE: Exit to Menu"),   1, 0, COLOR_TEXT); // right side, third row
+      if( currentdir_files_folders_count > 0 ) {
+        drawLegendMessage(t_string("CROSS: Enter Folder"),    1, 2, COLOR_TEXT); // right side, first row
+        drawLegendMessage(t_string("TRIANGLE: Leave Folder"), 1, 1, COLOR_TEXT); // right side, second row
+        drawLegendMessage(t_string("CIRCLE: Exit to Menu"),   1, 0, COLOR_TEXT); // right side, third row
           
       } else {
-        drawLegendMessage(translate_string("This folder is empty!"),  0, 2, COLOR_TEXT); // left side, first row
+        drawLegendMessage(t_string("This folder is empty!"),  0, 2, COLOR_TEXT); // left side, first row
       }
     }
   }
@@ -1452,26 +1494,26 @@ int userscripts_ctrl() {
     
   if( hold_buttons & PSP_CTRL_DOWN ) {
     if( userscript_showoptions == 1 ) { // handling 1 option only
-      if( userscript_selected_val >= userscript_options-1 ) 
-        userscript_selected_val = userscript_options-1; // selection = 0;
+      if( userscript_selected_val >= userscript_cd_scripts_count-1 ) 
+        userscript_selected_val = userscript_cd_scripts_count-1; // selection = 0;
       else 
         userscript_selected_val += 1;
       
       userscript_top = userscript_selected_val;
       
     } else {
-      if ( userscript_selected_val >= userscript_options-1 ) 
-        userscript_selected_val = userscript_options-1; // selection = 0;
+      if ( userscript_selected_val >= userscript_cd_scripts_count-1 ) 
+        userscript_selected_val = userscript_cd_scripts_count-1; // selection = 0;
       
       else {
         userscript_selected_val += 1;
         
-        if( userscript_top + userscript_showoptions < userscript_options ) { // scroll
+        if( userscript_top + userscript_showoptions < userscript_cd_scripts_count ) { // scroll
           if( userscript_selected_val >= userscript_top + userscript_showoptions-1 ) 
             userscript_top++; 
         }
       }  
-      if( userscript_top + userscript_showoptions < userscript_options ) { // scroll
+      if( userscript_top + userscript_showoptions < userscript_cd_scripts_count ) { // scroll
         if( userscript_selected_val == userscript_top + userscript_showoptions-1 ) 
           userscript_top++; 
       }
@@ -1500,7 +1542,8 @@ int userscripts_ctrl() {
       memset(script_subfldrs, 0, sizeof(script_subfldrs)); // clear
       sprintf(script_workfldr, "%s", buffer); 
     }
-  
+
+    userscripts_get_scripts();
     userscript_selected_val = 0;
     userscript_top = 0;
   }
@@ -1508,9 +1551,16 @@ int userscripts_ctrl() {
     
     if( pressed_buttons & PSP_CTRL_CROSS ) { // toggle cheat
       snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
-      if( doesFileExist(buffer) != 1 && (countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) ) {  // check folder + not empty
+
+      // doesFileExist doesn't work the same on Android, so, let's check the correct way
+      SceIoStat currentfile_stat = {0};
+
+      sceIoGetstat(buffer, &currentfile_stat);
+
+      if( currentfile_stat.st_attr & FIO_SO_IFDIR && (countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) ) {  // check folder + not empty
         sprintf(script_subfldrs, "%s%s%s", script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/", currentfile);
         sprintf(script_workfldr, "%s%s%s/%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs);
+        userscripts_get_scripts();
         
         userscript_selected_val = 0;
         userscript_top = 0;
@@ -1618,7 +1668,7 @@ int userscripts_ctrl() {
 
             /// error exit - script too big
             if( pos >= SCRIPT_SIZE ) {
-              snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Script exceeds currently supported size! Sorry"));
+              snprintf(buffer, sizeof(buffer), t_string("~r~Error: Script exceeds currently supported size! Sorry"));
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -1805,7 +1855,7 @@ int userscripts_ctrl() {
                       /// TODO
                       //eg: " 024C: request_model #SCRIPT_SALCHAIR "
                       
-                      snprintf(buffer, sizeof(buffer), translate_string("~r~Error: '%s' in line %i not yet supported!"), token, line);
+                      snprintf(buffer, sizeof(buffer), t_string("~r~Error: '%s' in line %i not yet supported!"), token, line);
                       setTimedTextbox(buffer, 7.00f); //
                       sceIoClose(file);
                       goto scripterror_exit;
@@ -1817,7 +1867,7 @@ int userscripts_ctrl() {
                       
                         /// error 
                         if ( VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
-                          snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
+                          snprintf(buffer, sizeof(buffer), t_string("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
                           setTimedTextbox(buffer, 7.00f); //
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -1974,7 +2024,7 @@ int userscripts_ctrl() {
                             
                             customtextcounter++;
                           } else {
-                            snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Custom strings limit of %i reached."), CSTGXTS);
+                            snprintf(buffer, sizeof(buffer), t_string("~r~Error: Custom strings limit of %i reached."), CSTGXTS);
                             setTimedTextbox(buffer, 7.00f); //
                             sceIoClose(file);
                             goto scripterror_exit;
@@ -1995,7 +2045,7 @@ int userscripts_ctrl() {
                         ctr++;
 
                         if( ctr > 7 ) { // a gxt id string can't be longer than 7 chars!!
-                          snprintf(buffer, sizeof(buffer), translate_string("~r~Error: String '%s' in line %i too long!"), identifier, line);
+                          snprintf(buffer, sizeof(buffer), t_string("~r~Error: String '%s' in line %i too long!"), identifier, line);
                           setTimedTextbox(buffer, 7.00f);
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -2233,7 +2283,7 @@ int userscripts_ctrl() {
               
               /// error check: SUPPORT_LABEL count
               if( label_pos_cur >= SUPPORT_LABEL ) { //label matches
-                snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
+                snprintf(buffer, sizeof(buffer), t_string("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
                 setTimedTextbox(buffer, 7.00f); //
                 sceIoClose(file);
                 goto scripterror_exit;
@@ -2246,7 +2296,7 @@ int userscripts_ctrl() {
                 logPrintf("comparing for doubles: '%s' with '%s'", token, label_ch_arr[k]);
                 #endif  
                 if( strcmp(token, label_ch_arr[k]) == 0 ) { // label matches
-                  snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Found already used label '%s' in line %i?"), token, line);
+                  snprintf(buffer, sizeof(buffer), t_string("~r~Error: Found already used label '%s' in line %i?"), token, line);
                   setTimedTextbox(buffer, 7.00f); //
                   sceIoClose(file);
                   goto scripterror_exit;
@@ -2274,7 +2324,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 04 00   DB E7   07 01   //$4071 = 1 
               
-              snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), t_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2285,7 +2335,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 39 00   2F     07 02    //35@ == 2   
               
-              snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), t_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2408,7 +2458,7 @@ int userscripts_ctrl() {
                   
                   /// error goto label not found in Labels
                   if( tempint == placeholder + j ) { // if tempint not overwriten (ugly)
-                    snprintf(buffer, sizeof(buffer), translate_string("~r~Error: Label '%s' not found?!!"), unk_label[j]);
+                    snprintf(buffer, sizeof(buffer), t_string("~r~Error: Label '%s' not found?!!"), unk_label[j]);
                     setTimedTextbox(buffer, 7.00f); //
                     goto scripterror_exit;
                   }
@@ -2533,7 +2583,7 @@ int editor_create(int mode, int toptions, const char *editortitle, Editor_pack *
   logPrintf("[INFO] %i: editor_create() ..'%s'", getGametime(), editortitle);
   #endif
   
-  sprintf(editor_titlebuffer, "Editor - %s", translate_string(editortitle));
+  sprintf(editor_titlebuffer, "Editor - %s", t_string(editortitle));
     
   editor_menumode = mode; 
   editor_toptions = toptions;
@@ -2596,10 +2646,10 @@ int editor_draw() {
       editor_block_current = editor_pedobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPedObjectIsActive(editor_base_adr) ) {
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getPedID(editor_base_adr), translate_string("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getPedID(editor_base_adr), t_string("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
         editor_draw_lower = 1; // there is a PED here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks); // block menu  
         editor_draw_lower = 0;  // no active PED -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2609,7 +2659,7 @@ int editor_draw() {
       editor_block_current = editor_vehicleobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
-        sprintf(buffer_top0, translate_string("%s: %i/%i      %s: %i    %s: "), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getVehicleID(editor_base_adr), translate_string("Name")); // block menu
+        sprintf(buffer_top0, t_string("%s: %i/%i      %s: %i    %s: "), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getVehicleID(editor_base_adr), t_string("Name")); // block menu
         
         sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
@@ -2618,7 +2668,7 @@ int editor_draw() {
         
         editor_draw_lower = 1; // there is a Vehicle here 
       } else { 
-        sprintf(buffer_top0, translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active Vehicle here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2628,10 +2678,10 @@ int editor_draw() {
       editor_block_current = editor_worldobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2641,10 +2691,10 @@ int editor_draw() {
       editor_block_current = editor_businessobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2654,10 +2704,10 @@ int editor_draw() {
       editor_block_current = editor_pickup_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPickupIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i    %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getPickupID(editor_base_adr), translate_string("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getPickupID(editor_base_adr), t_string("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2668,12 +2718,12 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getMapiconIsActive(editor_base_adr) ){
         if( getMapiconID(editor_base_adr) == 0 ) // objective (destination, enemy, etc)
-          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %s   %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)), translate_string("Type"), getMapiconTypeName(editor_base_adr) ); //block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %s   %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)), t_string("Type"), getMapiconTypeName(editor_base_adr) ); //block menu  
         else
-          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %s"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2687,7 +2737,7 @@ int editor_draw() {
       // garage doesn't use editor_block_current but 2 globals directly
       editor_base_adr = editor_firstobj + (editor_garage_current * editor_blocksize * 4) + (editor_garageslot_current * editor_blocksize); // calc base address
     
-      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i"), translate_string("Slot"), editor_garageslot_current+1 );
+      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i"), t_string("Slot"), editor_garageslot_current+1 );
       if( getGarageVehicleSlotIsActive(editor_base_adr) ){ // vehicle id for detecting if slot is used
         ///print vehicle name
         /*sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
@@ -2701,28 +2751,28 @@ int editor_draw() {
         editor_selector = 1; // don't allow going to down_menu
       }
       
-      snprintf(buffer_top1, sizeof(buffer_top1), translate_string("%s: %s"), translate_string("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
+      snprintf(buffer_top1, sizeof(buffer_top1), t_string("%s: %s"), t_string("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
       break;
         
     case EDITOR_VEHWORLDSPAWNS: 
       editor_block_current = editor_vehiclespawn_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleWorldSpawnSlotIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        sprintf(buffer_top0, translate_string("%s: %i/%i      %s: %i"), translate_string("Slot"), editor_block_current+1, editor_blocks, translate_string("ID"), getInt(editor_base_adr)); // block menu
+        sprintf(buffer_top0, t_string("%s: %i/%i      %s: %i"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getInt(editor_base_adr)); // block menu
         
         ///add vehicle name
         sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
           sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
-        sprintf(buffer_top0, translate_string("%s    %s: %s"), buffer_top0, translate_string("Name"), buffer_top1);
+        sprintf(buffer_top0, t_string("%s    %s: %s"), buffer_top0, t_string("Name"), buffer_top1);
         
         ///add custom created indicator
         if( isCustomParkedVehicleSpawnViaSlot(editor_block_current) )
-          sprintf(buffer_top0, translate_string("%s    (%s)"), buffer_top0, translate_string("custom"));
+          sprintf(buffer_top0, t_string("%s    (%s)"), buffer_top0, t_string("custom"));
           
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, translate_string("%s: %i/%i"), translate_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2732,7 +2782,7 @@ int editor_draw() {
       editor_block_current = editor_empire_current;
       editor_base_adr = editor_firstobj + (editor_block_current * 4); // calc base address
       if( 1 ) { // 
-        sprintf(buffer_top0, translate_string("%s: %i/%i"), translate_string("Business"), editor_block_current+1, editor_blocks); // block menu        
+        sprintf(buffer_top0, t_string("%s: %i/%i"), t_string("Business"), editor_block_current+1, editor_blocks); // block menu        
         editor_draw_lower = 1; 
       }
       break;
@@ -2745,7 +2795,7 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       
       if( getInt(editor_base_adr) ){ // there is a pointer here
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: '%s'   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), translate_string("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: '%s'   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), t_string("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
         editor_draw_lower = 1; 
     
         editor_base_adr = getInt(editor_base_adr);
@@ -2768,7 +2818,7 @@ int editor_draw() {
         optionAdjust(); // "re-adjust"  
 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
         editor_temp_blocksize = 0x4; // size of pointer
@@ -2788,13 +2838,13 @@ int editor_draw() {
         editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
           
         if( getInt(editor_base_adr) && getByte( getInt(editor_base_adr) + 0x10 ) == MODELINFO_VEHICLE ) { // there is a pointer here AND its vehicle type
-          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i    %s: %s"), translate_string("ID"), editor_block_current, translate_string("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current)); 
-          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s    %s: %s"), buffer_top0, translate_string("Name"), getRealVehicleNameViaID(editor_block_current)); // fix  
+          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i    %s: %s"), t_string("ID"), editor_block_current, t_string("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current)); 
+          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s    %s: %s"), buffer_top0, t_string("Name"), getRealVehicleNameViaID(editor_block_current)); // fix  
           editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // todo (var_handlingcfgslotsize)
           editor_base_adr = getAddressOfHandlingSlotForID(editor_block_current);
           editor_draw_lower = 1;
         } else { 
-          snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks ); // block menu  
           editor_draw_lower = 0; // not allowed to draw lower menu
           editor_selector = 1; // don't allow going to down_menu
           editor_temp_blocksize = 0x4; // back to size of pointer
@@ -2806,10 +2856,10 @@ int editor_draw() {
       editor_block_current = editor_buildingsIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2819,10 +2869,10 @@ int editor_draw() {
       editor_block_current = editor_treadablesIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2832,10 +2882,10 @@ int editor_draw() {
       editor_block_current = editor_dummysIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x58), translate_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2844,7 +2894,7 @@ int editor_draw() {
     case EDITOR_CARCOLSDAT:
       editor_block_current = editor_carcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Color"), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Color"), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2861,7 +2911,7 @@ int editor_draw() {
     case EDITOR_PEDCOLSDAT: //VCS only
       editor_block_current = editor_pedcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("Color"), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Color"), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2875,21 +2925,21 @@ int editor_draw() {
     case EDITOR_PARTICLECFG:
       editor_block_current = editor_particleCFG_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_PEDSTATSDAT:
       editor_block_current = editor_pedstatsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i"), translate_string("No."), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_WEAPONDAT:
       editor_block_current = editor_weaponDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %i/%i      %s: %i   %s: %s"), translate_string("No."), editor_block_current, editor_blocks-1, translate_string("ID"), getShort(editor_base_adr+0x60), translate_string("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x60), t_string("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
       editor_draw_lower = 1; 
       break;
      
@@ -2898,7 +2948,7 @@ int editor_draw() {
     int weather = editor_block_current / 24;
     int time = editor_block_current % 24;
     editor_base_adr = editor_firstobj + (8 * time) + weather;
-      snprintf(buffer_top0, sizeof(buffer_top0), translate_string("%s: %s   %s: %02i:00"), translate_string("Weather"), translate_string( LCS ? weather_lcs[weather] : weather_vcs[weather] ), translate_string("Time"), time); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %s   %s: %02i:00"), t_string("Weather"), t_string( LCS ? weather_lcs[weather] : weather_vcs[weather] ), t_string("Time"), time); //block menu  
       editor_draw_lower = 1; 
     editor_temp_blocksize = 0x2bf0; // LCS & VCS! todo?
       break;
@@ -2992,7 +3042,7 @@ int editor_draw() {
       #endif
         
       ///Name selected
-      drawString(translate_string(editor_curmenu[i].name), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
+      drawString(t_string(editor_curmenu[i].name), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
       
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything    
         func = editor_curmenu[i].value;
@@ -3031,16 +3081,16 @@ int editor_draw() {
               snprintf(buffer, sizeof(buffer), "FALSE");
             } else snprintf(buffer, sizeof(buffer), "ERROR");*/
       if( *(unsigned char*)(adr) == 1 ) {
-              snprintf(buffer, sizeof(buffer), translate_string("TRUE"));
+              snprintf(buffer, sizeof(buffer), t_string("TRUE"));
             } else if(*(unsigned char*)(adr) == 0 ) {
-              snprintf(buffer, sizeof(buffer), translate_string("FALSE"));
-            } else snprintf(buffer, sizeof(buffer), translate_string("ERROR"));
+              snprintf(buffer, sizeof(buffer), t_string("FALSE"));
+            } else snprintf(buffer, sizeof(buffer), t_string("ERROR"));
             break;
             
           case TYPE_BIT:
             if( *(char*)(adr) & (1 << pre) ) {
-              snprintf(buffer, sizeof(buffer), translate_string("TRUE")); // bit is set
-            } else snprintf(buffer, sizeof(buffer), translate_string("FALSE"));
+              snprintf(buffer, sizeof(buffer), t_string("TRUE")); // bit is set
+            } else snprintf(buffer, sizeof(buffer), t_string("FALSE"));
             break;
             
           case TYPE_NIBBLE_LOW:  // eg: 0xE6  -> 6  0110
@@ -3076,8 +3126,8 @@ int editor_draw() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE: // on VCS the vehicles are loaded into the garage on spawn!!!!! (TODO - can this be checked elsewhere?)
-        drawString(translate_string("No vehicle found or garage open!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
-        if( VCS ) drawString(translate_string("Info: Vehicles are loaded on spawn! Open & close garage once."), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
+        drawString(t_string("No vehicle found or garage open!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        if( VCS ) drawString(t_string("Info: Vehicles are loaded on spawn! Open & close garage once."), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
         break;
 
       case EDITOR_PEDOBJ:
@@ -3091,11 +3141,11 @@ int editor_draw() {
       case EDITOR_DUMMYSIPL:
       case EDITOR_MAPICONS: 
       case EDITOR_HANDLINGCFG: 
-        drawString(translate_string("No active object in this slot!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawString(t_string("No active object in this slot!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
         break;
         
       case EDITOR_IDE: 
-        drawString(translate_string("No IDE here!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawString(t_string("No IDE here!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
         break;
                     
       default: break;
@@ -3150,10 +3200,10 @@ int editor_draw() {
     //+//+// OPTION //+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//
     if( editor_menumode == EDITOR_VEHICLEOBJ ) {
       if( editor_selector && pcar && editor_base_adr != pcar ) {  
-        drawLegendMessage(translate_string("SELECT: Current Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Current Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
       if(editor_selector && !pcar && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {  
-        drawLegendMessage(translate_string("SELECT: Touched Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Touched Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
       
       if( editor_selector 
@@ -3161,13 +3211,13 @@ int editor_draw() {
         && getShort(editor_base_adr+0x62) != -1 //
         && getInt(editor_base_adr+0x1C) == 0    //
         && editor_base_adr != pcar ) {          // no need to teleport to own coordinates
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       
     }
     if( editor_menumode == EDITOR_PEDOBJ  ) {
       if( editor_selector && pplayer && editor_base_adr != pplayer ) {
-        drawLegendMessage(translate_string("SELECT: Player Object"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Player Object"), 0, 0, COLOR_TEXT); // left side, third row
       }
       
       if( editor_selector 
@@ -3175,85 +3225,85 @@ int editor_draw() {
         && getInt(editor_base_adr+0x40) != 0      //
         && getByte(editor_base_adr+0x43) == 0x09  //
         && editor_base_adr != pplayer ) {         // no need to teleport to own coordinates
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }      
     }
     if( editor_menumode == EDITOR_GARAGE  ) {
       if(editor_selector && getShort(editor_base_adr) != 0 && getFloat(editor_base_adr+0x4) != 0.0f) { // detect saved vehicle
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && getShort(editor_base_adr) == 0 && editor_garageslot_current == 0 ) {  
-        drawLegendMessage(translate_string("SELECT: Generate Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Generate Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WORLDOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f && getWorldObjectIsActive(editor_base_adr) ) {
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {
-        drawLegendMessage(translate_string("SELECT: Touched Object"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Touched Object"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
   /*if( editor_menumode == EDITOR_BUSINESSOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f ) {
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }*/
 	if( editor_menumode == EDITOR_EMPIRE  ) {
       if( editor_selector ) {
-        drawLegendMessage(translate_string("SELECT: Toggle Visible Damage"), 0, 0, COLOR_TEXT); // left side, first row
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SELECT: Toggle Visible Damage"), 0, 0, COLOR_TEXT); // left side, first row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_PICKUPS  ) {
       if( editor_selector && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) {
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_MAPICONS  ) {
       if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_HANDLINGCFG  ) {
       if( editor_selector && pcar && pcar_id != editor_vehicle_current) {
-        drawLegendMessage(translate_string("SELECT: Set current vehicle"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SELECT: Set current vehicle"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_VEHWORLDSPAWNS  ) {
       if( editor_selector && getFloat(editor_base_adr+(0xC)) != 0 ) {
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && pcar) {
-        drawLegendMessage(translate_string("SELECT: Overwrite Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Overwrite Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_BUILDINGSIPL || editor_menumode == EDITOR_TREADABLESIPL || editor_menumode == EDITOR_DUMMYSIPL ) {
       if( editor_selector && getFloat(editor_base_adr+(0x38)) != 0 ) {
-        drawLegendMessage(translate_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {  
-        drawLegendMessage(translate_string("SELECT: Touched Entity"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Touched Entity"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WEAPONDAT  ) {
       if( editor_selector ) {  
-        drawLegendMessage(translate_string("SELECT: Current Weapon"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Current Weapon"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_TIMECYCDAT  ) {
       if( editor_selector ) {  
-        drawLegendMessage(translate_string("SELECT: Current Cycle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(t_string("SELECT: Current Cycle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     #ifdef HEXEDITOR
     if( editor_curmenu[editor_selection_val].address >= 0) {
-      drawLegendMessage(translate_string("TRIANGLE: Open in HexEditor"), 1, 1, COLOR_TEXT); // right side, second row
+      drawLegendMessage(t_string("TRIANGLE: Open in HexEditor"), 1, 1, COLOR_TEXT); // right side, second row
     }
     #endif
-    drawLegendMessage(translate_string("CIRCLE: Exit to Menu"), 1, 0, COLOR_TEXT); // right side, third row
+    drawLegendMessage(t_string("CIRCLE: Exit to Menu"), 1, 0, COLOR_TEXT); // right side, third row
   }
 
   return 0;
@@ -4238,9 +4288,9 @@ int freecam_draw() {
   
   if( printinfo ) {
     
-    drawString(translate_string("Free Camera"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
+    drawString(t_string("Free Camera"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
     
-    drawString(translate_string("Player position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
+    drawString(t_string("Player position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
     snprintf(buffer, sizeof(buffer), "x: %.2f", player_x);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE);
     snprintf(buffer, sizeof(buffer), "y: %.2f", player_y);
@@ -4249,7 +4299,7 @@ int freecam_draw() {
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE);
       
       
-    drawString(translate_string("Camera position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
+    drawString(t_string("Camera position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
     snprintf(buffer, sizeof(buffer), "x: %.2f", camera_x); 
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE);
     snprintf(buffer, sizeof(buffer), "y: %.2f", camera_y);
@@ -4273,37 +4323,37 @@ int freecam_draw() {
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE);
     */
     
-    snprintf(buffer, sizeof(buffer), translate_string("cutscene: %X"), getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
+    snprintf(buffer, sizeof(buffer), t_string("cutscene: %X"), getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY);
     
-    snprintf(buffer, sizeof(buffer), translate_string("camera: %X"), getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
+    snprintf(buffer, sizeof(buffer), t_string("camera: %X"), getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY);
     
 
-    snprintf(buffer, sizeof(buffer), translate_string("FOV: %.2f"), fov);
+    snprintf(buffer, sizeof(buffer), t_string("FOV: %.2f"), fov);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, GREY);
     
-    snprintf(buffer, sizeof(buffer), translate_string("movespeed: %.2f"), movespeed);
+    snprintf(buffer, sizeof(buffer), t_string("movespeed: %.2f"), movespeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 125.0f, GREY);
-    snprintf(buffer, sizeof(buffer), translate_string("turnspeed: %.3f"), turnspeed);
+    snprintf(buffer, sizeof(buffer), t_string("turnspeed: %.3f"), turnspeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, GREY);
       
-    snprintf(buffer, sizeof(buffer), translate_string("radius: %.2f"), radius);
+    snprintf(buffer, sizeof(buffer), t_string("radius: %.2f"), radius);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 170.0f, GREY);
-    snprintf(buffer, sizeof(buffer), translate_string("inclination: %.2f"), inclination);
+    snprintf(buffer, sizeof(buffer), t_string("inclination: %.2f"), inclination);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 185.0f, GREY);
-    snprintf(buffer, sizeof(buffer), translate_string("azimuth: %.2f"), azimuth);
+    snprintf(buffer, sizeof(buffer), t_string("azimuth: %.2f"), azimuth);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 200.0f, GREY);
       
 
     if( flag_use_legend ) {
       drawLegendBox(3, COLOR_BACKGROUND);
-      drawLegendMessage(translate_string("D-PAD: Move Camera position"),    0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage(translate_string("TRIANGLE: Show/Hide text"),       1, 2, COLOR_TEXT); // right side, first row
-      drawLegendMessage(translate_string("CROSS + D-PAD: Turn Camera"),     0, 1, COLOR_TEXT); // left side, second row
-      drawLegendMessage(translate_string("L/R (+ CROSS): Adjust Speed(s)"), 1, 1, COLOR_TEXT); // right side, second row
-      drawLegendMessage(translate_string("SQUARE + D-PAD: Height & FOV"),   0, 0, COLOR_TEXT); // left side, third row
-      drawLegendMessage(translate_string("CIRCLE: Exit to Menu"),           1, 0, COLOR_TEXT); // right side, third row
+      drawLegendMessage(t_string("D-PAD: Move Camera position"),    0, 2, COLOR_TEXT); // left side, first row
+      drawLegendMessage(t_string("TRIANGLE: Show/Hide text"),       1, 2, COLOR_TEXT); // right side, first row
+      drawLegendMessage(t_string("CROSS + D-PAD: Turn Camera"),     0, 1, COLOR_TEXT); // left side, second row
+      drawLegendMessage(t_string("L/R (+ CROSS): Adjust Speed(s)"), 1, 1, COLOR_TEXT); // right side, second row
+      drawLegendMessage(t_string("SQUARE + D-PAD: Height & FOV"),   0, 0, COLOR_TEXT); // left side, third row
+      drawLegendMessage(t_string("CIRCLE: Exit to Menu"),           1, 0, COLOR_TEXT); // right side, third row
     }
   }
 
@@ -4367,12 +4417,12 @@ int address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
   drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString(translate_string("Enter Address"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE);
+  drawString(t_string("Enter Address"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE);
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
   
   /// draw physical address
   unsigned int i = 0, x = 320, y = 130, temp = tempaddress; // x = 290
-  drawString(translate_string("Physical:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
+  drawString(t_string("Physical:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
   while( temp ) {
     snprintf(buffer, sizeof(buffer), "%X", temp % 0x10);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, COLOR_TEXT);
@@ -4401,7 +4451,7 @@ int address_draw() {
   /// draw $gp depending address
   if( VCS ) {
     i = 0, x = 320, y += 45, temp = tempaddress - gp;
-    drawString(translate_string("To $gp:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
+    drawString(t_string("To $gp:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
     while( temp ) {
       snprintf(buffer, sizeof(buffer), "%X", temp % 0x10); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, ORANGE);
@@ -4532,7 +4582,7 @@ int editbyte_draw() {
   drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
 
-  drawString(translate_string("Edit Byte"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 100.0f, COLOR_TITLE);
+  drawString(t_string("Edit Byte"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 100.0f, COLOR_TITLE);
   
   int x = 225, y = 140;
 
@@ -4689,7 +4739,7 @@ int hexeditor_create(int address, int mode, int low, int high, const char *infos
   hexeditor_mode = mode;
   hexeditor_lowbound = low;
   hexeditor_highbound = high;
-  snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "%s", translate_string(infostring));
+  snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "%s", t_string(infostring));
   
   hexeditor_lines = (hexeditor_highbound - hexeditor_lowbound) / 0x10;
   if( ((hexeditor_highbound - hexeditor_lowbound) % 0x10) > 0 )
@@ -4773,7 +4823,7 @@ int hexeditor_draw() {
     hex_adr = (hexeditor_address+(hexeditor_browse_y*0x10)+(hexeditor_browse_x*0x01)); // update address depending on cursor position
     
     /// draw Title
-    drawString(translate_string("HexEditor"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX);
+    drawString(t_string("HexEditor"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX);
     
     
     /// draw "infostring"
@@ -4925,15 +4975,15 @@ int hexeditor_draw() {
   
   /// current values
   if( flag_use_legend ) {
-    drawString(translate_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT);
-    drawString(translate_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT);
-    drawString(translate_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT);
-    drawString(translate_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT);
+    drawString(t_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT);
+    drawString(t_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT);
+    drawString(t_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT);
+    drawString(t_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT);
   } else {
-    drawString(translate_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT);
-    drawString(translate_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT);
-    drawString(translate_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT);
-    drawString(translate_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT);
+    drawString(t_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT);
+    drawString(t_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT);
+    drawString(t_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT);
+    drawString(t_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT);
   } 
 
   switch( hex_adr % 0x10 ) {
@@ -4980,17 +5030,17 @@ int hexeditor_draw() {
   if( flag_use_legend && !flag_draw_DBGVALS ) {
     #ifndef DEBUG
     drawBox(320, 220, 155, 50, COLOR_BACKGROUND);
-    drawString(translate_string("CROSS: Edit selected Byte"),  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
-    drawString(translate_string("SQUARE: Set Byte to 0x00"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
-    drawString(translate_string("TRIANGLE: Open Address"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
-    drawString(translate_string("CIRCLE: Exit HexEditor"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
+    drawString(t_string("CROSS: Edit selected Byte"),  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
+    drawString(t_string("SQUARE: Set Byte to 0x00"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
+    drawString(t_string("TRIANGLE: Open Address"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
+    drawString(t_string("CIRCLE: Exit HexEditor"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
     
     drawBox(160, 220, 155, 50, COLOR_BACKGROUND);
-    drawString(translate_string("R + SQUARE: Zero 4 Bytes"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
-    drawString(translate_string("R + TRIANGLE: Teleport xyz"), ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
-    drawString(translate_string("SELECT: Cycle Baseadr."),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
+    drawString(t_string("R + SQUARE: Zero 4 Bytes"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
+    drawString(t_string("R + TRIANGLE: Teleport xyz"), ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
+    drawString(t_string("SELECT: Cycle Baseadr."),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
     #ifdef HEXMARKERS
-    drawString(translate_string("R + CROSS: Mark selected"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
+    drawString(t_string("R + CROSS: Mark selected"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
     #endif
    #endif
   }
@@ -5202,7 +5252,7 @@ void draw() { // called by hijacked game function
     #ifdef LOG
     logPrintf("[INFO] %i: drawing welcome message", getGametime());
     #endif  
-    setTimedTextbox(translate_string(welcomemsg), 7.00f);
+    setTimedTextbox(t_string(welcomemsg), 7.00f);
     flag_draw_welcomsg = 0;
   }
   
@@ -5212,7 +5262,7 @@ void draw() { // called by hijacked game function
     #ifdef LOG
     logPrintf("[INFO] %i: drawing memory message", getGametime());
     #endif  
-    setTimedTextbox(translate_string(memwarning), 10.00f);
+    setTimedTextbox(t_string(memwarning), 10.00f);
     flag_draw_memwarn = 0;
   }
   #endif
@@ -5386,7 +5436,7 @@ void draw() { // called by hijacked game function
      flag_draw_DEBUG == 0 ) {
     
     if( pplayer > 0 ) {
-      drawString(translate_string("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
+      drawString(t_string("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
       drawUiBox(385.0f, 115.0f, 85.0f, 75.0f, 2.0f, BLACK, ALPHABLACK);
       
       drawString("X", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 117.0f, WHITE);
@@ -5757,7 +5807,7 @@ void *category_toggle(int type, int cat, int set) {
   static char buffer[8];
   if( type == FUNC_GET_STRING ) { // add indicator if category hidden
     if( !flag_coll_cats ) 
-    return ""; // categories can't be expanded/collapsed -> don't show any indicator
+      return ""; // categories can't be expanded/collapsed -> don't show any indicator
   
     snprintf(buffer, sizeof(buffer), !category_index[cat] ? " +" : " -");
     return (void *)buffer;
@@ -5797,7 +5847,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   void *(* surrent_get)();
   
   /// title
-  snprintf(buffer, sizeof(buffer), translate_string("CheatDevice Remastered %s by Freakler"), VERSION);
+  snprintf(buffer, sizeof(buffer), t_string("CheatDevice Remastered %s by Freakler"), VERSION);
   drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE);
   
   /// GameID & version
@@ -5927,9 +5977,9 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
         char* buffer_menu_path = menu_list[i].path;
 
         if ( buffer_menu_path[strlen(buffer_menu_path)-1] == ':')
-          snprintf(buffer, sizeof(buffer), "%s %s", translate_string(menu_list[i].path), translate_string(val));
+          snprintf(buffer, sizeof(buffer), "%s %s", t_string(menu_list[i].path), t_string(val));
         else
-          snprintf(buffer, sizeof(buffer), "%s%s", translate_string(menu_list[i].path), translate_string(val));
+          snprintf(buffer, sizeof(buffer), "%s%s", t_string(menu_list[i].path), t_string(val));
 
 
         if( flag_use_cataltfont && menu_list[i].type == MENU_CATEGORY ) // alternative font
@@ -5948,12 +5998,12 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       /// draw message
       if( flag_use_legend ) {
         if( i == menu_sel ) {
-          drawLegendMessage(translate_string(menu_list[i].msg1), 0, 1, COLOR_TEXT); // left side, second row
-          drawLegendMessage(translate_string(menu_list[i].msg2), 1, 1, COLOR_TEXT); // right side, second row
+          drawLegendMessage(t_string(menu_list[i].msg1), 0, 1, COLOR_TEXT); // left side, second row
+          drawLegendMessage(t_string(menu_list[i].msg2), 1, 1, COLOR_TEXT); // right side, second row
 
           if (strlen(menu_list[i].desc) > 0) {
             char desc_formatted[128];
-            snprintf(desc_formatted, sizeof(desc_formatted), "> %s", translate_string(menu_list[i].desc));
+            snprintf(desc_formatted, sizeof(desc_formatted), "> %s", t_string(menu_list[i].desc));
 
             drawLegendMessage(desc_formatted, 0, 0, COLOR_TEXT); // left side, third row
           }
@@ -5966,8 +6016,8 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   /// msg
   if( flag_use_legend ) {
     drawLegendBox(3, COLOR_BACKGROUND);
-    drawLegendMessage(translate_string("L+UP/DOWN: Toggle Menu"), 0, 2, COLOR_TEXT);
-    drawLegendMessage(translate_string("UP/DOWN: Navigate Cheats"), 1, 2, COLOR_TEXT);
+    drawLegendMessage(t_string("L+UP/DOWN: Toggle Menu"), 0, 2, COLOR_TEXT);
+    drawLegendMessage(t_string("UP/DOWN: Navigate Cheats"), 1, 2, COLOR_TEXT);
   }
   
   /// draw debug stuff (when enabled)
