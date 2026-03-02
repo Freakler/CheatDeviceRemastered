@@ -56,14 +56,14 @@ enum {
 };
 
 typedef struct {
-  char *name;
-  char *postfix;
-  short address;
-  char edit_bool; // can be edited in editor (if false it will be greyed out, only for info)
-  char type;
-  char precision; // float accuracy after dot / bitflag position
+  const char *name;
+  const char *postfix;
+  const short address;
+  const char edit_bool; // can be edited in editor (if false it will be greyed out, only for info)
+  const char type;
+  const char precision; // float accuracy after dot / bitflag position
   void *value;
-  float steps;
+  const float steps;
   //int min;
   //int max;
 } Editor_pack;

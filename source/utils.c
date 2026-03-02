@@ -59,44 +59,12 @@ int logPrintf(const char *text, ...) {
   return 0;
 }
 
-// NOTE: You can't verify folders by using this function on Android (sceIoOpen returns 3 on folders for some reason)
-// int doesFileExist(const char* path) {
-//   SceUID dir = sceIoOpen(path, PSP_O_RDONLY, 0777);
-//   if( dir >= 0 ) {
-//     sceIoClose(dir);
-//     #ifdef LOG
-//     logPrintf("[INFO] doesFileExist('%s') -> yes", path);
-//     #endif   
-//     return 1; // true
-//   }
-//   #ifdef LOG
-//   logPrintf("[INFO] doesFileExist('%s') -> no", path);
-//   #endif 
-//   return 0; // false
-// }
-
-// int doesDirExist(const char* path) {
-//   SceUID dir = sceIoDopen(path); 
-//   if( dir >= 0 ) {
-//     sceIoDclose(dir); 
-//     #ifdef LOG
-//     logPrintf("[INFO] doesDirExist('%s') -> yes", path);
-//     #endif 
-//   return 1; // true
-//   }
-//   #ifdef LOG
-//   logPrintf("[INFO] doesDirExist('%s') -> no", path);
-//   #endif 
-//   return 0; // false
-// } 
-
-// Use iostat (which is way faster and reliable) instead of opening and closing files
-int doesFileExist(const char* path)
-{
-  SceIoStat stat = {0};
+// Check if file exists
+int doesFileExist(const char* path) {
+  SceIoStat stat;
+  memset(&stat, 0, sizeof(SceIoStat));
   
-  if ( sceIoGetstat(path, &stat) < 0 )
-  {
+  if ( sceIoGetstat(path, &stat) < 0 ) {
     #ifdef LOG
       logPrintf("[INFO] doesFileExist('%s') -> no", path);
     #endif
@@ -110,13 +78,12 @@ int doesFileExist(const char* path)
   return FIO_SO_ISREG(stat.st_attr);
 }
 
-// Use iostat (which is way faster and reliable) instead of opening and closing dirs
-int doesDirExist(const char* path)
-{
-  SceIoStat stat = {0};
+// Check if dir exists
+int doesDirExist(const char* path) {
+  SceIoStat stat;
+  memset(&stat, 0, sizeof(SceIoStat));
   
-  if ( sceIoGetstat(path, &stat) < 0 )
-  {
+  if ( sceIoGetstat(path, &stat) < 0 ) {
     #ifdef LOG
       logPrintf("[INFO] doesDirExist('%s') -> no", path);
     #endif
@@ -233,10 +200,16 @@ void clearICacheFor(u32 address) {
   //asm("li $t0,0x08A0E898\n"); //this works.. but i want to store "address"
   
   #ifdef LOG
-  //logPrintf("[INFO] clearICacheFor(0x%08X)", address);
+  // logPrintf("[INFO] clearICacheFor(0x%08X)", address);
   #endif 
   
-  asm("cache 8, 0($a0)\n"); // $t0
+  asm volatile // volatile so compiler won't mess with this
+  (
+    "cache 8, 0(%0)\n"
+    :
+    : "r"(address)
+    : "memory"
+  );
 }
 
 
@@ -313,7 +286,7 @@ char *_fgets(char *s, int size, SceUID stream) {
   return s;
 }
 
-void makedirs(char *path) { // recursively create path
+void makedirs(const char *path) { // recursively create path
   char *sep = strrchr(path, '/');
   if( sep != NULL ) {
     *sep = 0;
@@ -361,6 +334,8 @@ int getHighMemBound() { // thx Acid_Snake :)
   
   
   SceUID block = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "test", PSP_SMEM_High, 0x100, NULL);
+  if ( block < 0 ) return -1; // Shouldn't fail but we never know...
+
   int address = (int)sceKernelGetBlockHeadAddr(block) + 0x100; // highest address is not calculated precisely this way either but it gives a rough idea
   sceKernelFreePartitionMemory(block);
   
@@ -378,11 +353,11 @@ int getHighMemBound() { // thx Acid_Snake :)
 }
 
 int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius) {
-  return (sqrt(pow(a-x, 2) + pow(b-y, 2) + pow(c-z, 2)) <= radius);
+  return (sqrtf(powf(a-x, 2) + powf(b-y, 2) + powf(c-z, 2)) <= radius);
 }
 
 float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2) {
-  return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2) * 1.0);
+  return sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2) + powf(z2 - z1, 2));
 }
 
 void getSizeString(char string[16], uint64_t size) { 
@@ -398,7 +373,76 @@ void getSizeString(char string[16], uint64_t size) {
 }
 
 // Check if filename (or path) ends with extension
-int fileEndsWithExtension(const char *filename, const char* extension) 
+int fileEndsWithExtension(const char* path, const char* extension) 
 {
-  return !strcasecmp(filename + strlen(filename) - strlen(extension), extension);
+  if ( !path || !extension || *path == '\0' || *extension == '\0' ) return 0;
+  
+  return !strcasecmp(path + strlen(path) - strlen(extension), extension);
+}
+
+// Get extension length
+int getExtensionLength(const char* path)
+{
+  if ( !path || *path == '\0' ) return 0;
+
+  char* dot = strrchr(path, '.'); // Find last dot
+  if ( !dot ) return 0;
+
+  return (int)(strlen(path) - (size_t)(dot - path));
+}
+
+// FUNC: MurmurHash3 hash function
+uint32_t hash(const char *key, uint32_t len, uint32_t seed)
+{
+  uint32_t c1 = 0xcc9e2d51;
+  uint32_t c2 = 0x1b873593;
+  uint32_t r1 = 15;
+  uint32_t r2 = 13;
+  uint32_t m = 5;
+  uint32_t n = 0xe6546b64;
+  uint32_t h = seed;
+  uint32_t k = 0;
+  const uint8_t *d = (const uint8_t *)key;
+  const uint32_t *chunks = (const uint32_t *)(d);
+  const uint8_t *tail = (const uint8_t *)(d + (len / 4) * 4);
+
+  int l = len / 4;
+
+  // Process the body (4-byte chunks)
+  int i;
+  for (i = 0; i < l; ++i) {
+    k = chunks[i];
+    k *= c1;
+    k = (k << r1) | (k >> (32 - r1));
+    k *= c2;
+
+    h ^= k;
+    h = (h << r2) | (h >> (32 - r2));
+    h = h * m + n;
+  }
+
+  k = 0;
+
+  // Process the tail (remaining bytes)
+  switch (len & 3)
+  {
+    case 3: k ^= (tail[2] << 16);
+
+    case 2: k ^= (tail[1] << 8);
+
+    case 1: k ^= tail[0];
+            k *= c1;
+            k = (k << r1) | (k >> (32 - r1));
+            k *= c2;
+            h ^= k;
+  }
+
+  h ^= len;
+  h ^= (h >> 16);
+  h *= 0x85ebca6b;
+  h ^= (h >> 13);
+  h *= 0xc2b2ae35;
+  h ^= (h >> 16);
+
+  return h;
 }

@@ -26,6 +26,7 @@
 #include "editor.h"
 #include "functions.h"
 #include "utils.h"
+#include "lang.h"
 
 #ifdef EDITORS
 register int gp asm("gp");
@@ -1118,7 +1119,7 @@ void *handling_flag(int calltype, int keypress, int base_address, int address, i
 void *vehicle_enginetype(int calltype, int keypress, int base_address, int address) { 
   const char *list_name[] = { "Diesel", "Electro", "Petrol"};
   const unsigned char list_val[] = { 0x44, 0x45, 0x50 };
-  static short list_size = (sizeof(list_val)/sizeof(*list_val));
+  static short list_size = ARRAY_SIZE(list_val) + 1;
   static short i = 0;  
   static char buffer[16];
   unsigned char current;
@@ -1156,7 +1157,7 @@ void *vehicle_enginetype(int calltype, int keypress, int base_address, int addre
 void *vehicle_lights_front(int calltype, int keypress, int base_address, int address ) {  
   const char *list_name[] = { "Long", "Small", "Big", "Tall"};
   const unsigned char list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
-  static short list_size = (sizeof(list_val)/sizeof(*list_val));
+  static short list_size = ARRAY_SIZE(list_val) + 1;
   static short i = 0;  
   static char buffer[16];
   unsigned char current;
@@ -1194,7 +1195,7 @@ void *vehicle_lights_front(int calltype, int keypress, int base_address, int add
 void *vehicle_lights_rear(int calltype, int keypress, int base_address, int address ) {  
   const char *list_name[] = { "Long", "Small", "Big", "Tall"};
   const unsigned char list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
-  static short list_size = (sizeof(list_val)/sizeof(*list_val));
+  static short list_size = ARRAY_SIZE(list_val) + 1;
   static short i = 0;  
   static char buffer[16];
   unsigned char current;
@@ -1232,7 +1233,7 @@ void *vehicle_lights_rear(int calltype, int keypress, int base_address, int addr
 void *vehicle_transtype(int calltype, int keypress, int base_address, int address ) { 
   const char *list_name[] = { "Rear", "Front", "4-Wheel"};
   const unsigned char list_val[] = { 0x52, 0x46, 0x34 };
-  static short list_size = (sizeof(list_val)/sizeof(*list_val));
+  static short list_size = ARRAY_SIZE(list_val) + 1;
   static short i = 0;  
   static char buffer[16];
   unsigned char current;
@@ -2054,11 +2055,11 @@ char *empire_owner_name(int val) {
 	if( getScriptGlobalValue(645) == 0 ) { // $645 gang_wars_config 
 	  return getGxtTranslation("PR_GA10"); // "Marty's"
     } else {
-      sprintf(buf, "%s (poor)", getGxtTranslation("PR_GAN7")); // "Vance"
+      sprintf(buf, "%s %s", getGxtTranslation("PR_GAN7"), _t("(poor)")); // "Vance"
 	  return buf;
     }
   } else if( val == 8 ) { // special case
-    sprintf(buf, "%s (rich)", getGxtTranslation("PR_GAN9")); // "Vance"
+    sprintf(buf, "%s %s", getGxtTranslation("PR_GAN9"), _t("(rich)")); // "Vance"
 	return buf;
   } else if( val >= 0 && val <= 8 ) {
     sprintf(buf, "PR_GAN%i", val+1);
@@ -2073,7 +2074,7 @@ void *empire_owner(int calltype, int keypress, int base_address, int address, in
   switch( calltype ) {
     case FUNC_GET_STRING:
       i = getInt(address);
-      snprintf(buffer, sizeof(buffer), "%s", empire_owner_name(i));
+      snprintf(buffer, sizeof(buffer), "%s", _t(empire_owner_name(i)));
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:
@@ -2125,7 +2126,7 @@ void *empire_type(int calltype, int keypress, int base_address, int address, int
   switch( calltype ) {
     case FUNC_GET_STRING:
       i = getInt(address);
-      snprintf(buffer, sizeof(buffer), "%s", empire_type_name(i));
+      snprintf(buffer, sizeof(buffer), "%s", _t(empire_type_name(i)));
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:
@@ -2168,7 +2169,7 @@ void *empire_state(int calltype, int keypress, int base_address, int address, in
   switch( calltype ) {
     case FUNC_GET_STRING:
       i = getInt(address);
-      snprintf(buffer, sizeof(buffer), "%s", empire_state_name(i));
+      snprintf(buffer, sizeof(buffer), "%s", _t(empire_state_name(i)));
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:
@@ -2212,7 +2213,7 @@ void *empire_scale(int calltype, int keypress, int base_address, int address, in
   switch( calltype ) {
     case FUNC_GET_STRING:
       i = getInt(address);
-      snprintf(buffer, sizeof(buffer), "%s", empire_scale_name(i));
+      snprintf(buffer, sizeof(buffer), "%s", _t(empire_scale_name(i)));
       return (void *)buffer;
       
     case FUNC_CHANGE_VALUE:

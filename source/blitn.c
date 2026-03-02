@@ -60,8 +60,24 @@ Draw Rectangles via:
 ~TGSUB~
 ~VEWEP~   // ~w~To perform a ~h~drive-by~w~, hold~h~ ~k~ ~VELL~ ~w~or~h~ ~k~ ~VELR~ ~w~and fire using~h~ ~k~ ~VEWEP~.
 ************/
+
+static wchar_t wideBuffer[MAX_TEXTS][MSGLENGTH];
+static u32 fontcolor[MAX_TEXTS];
+static short fontstyle[MAX_TEXTS];
+static short fontshadow[MAX_TEXTS];
+static int textorigin[MAX_TEXTS];
+static float fontscale[MAX_TEXTS];
+static float xpos[MAX_TEXTS];
+static float ypos[MAX_TEXTS];
+
+static short bool_box[MAX_BOXES];
+static float xbox[MAX_BOXES];
+static float ybox[MAX_BOXES];
+static float wbox[MAX_BOXES];
+static float hbox[MAX_BOXES];
+static u32 boxcol[MAX_BOXES];
    
-void AsciiToUnicode(const char* in, wchar_t* out) {
+static void AsciiToUnicode(const char* in, wchar_t* out) {
   while( *in != '\0' ) {
     *out++ = *in++;
   } *out = '\0';
@@ -93,7 +109,7 @@ void drawUiBox(float x, float y, float width, float height, float bordersize, u3
   drawBox(x+width, y, bordersize, height, bordercolor); // right
 }
 
-void drawString(char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
+void drawString(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
   int i;
   for( i = 0; i < MAX_TEXTS; i++ ) {
     if( wideBuffer[i][0] == 0 ) {
@@ -111,7 +127,7 @@ void drawString(char *string, int origin, short style, float scale, short shadow
   
 }
 
-void drawStringLCS(char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
+void drawStringLCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
   wchar_t str[MSGLENGTH] = L" ";
   AsciiToUnicode(string, str);
   
@@ -131,7 +147,7 @@ void drawStringLCS(char *string, int origin, short style, float scale, short sha
   PrintString_LCS(x,y, str, 0);
 }
 
-void drawStringVCS(char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
+void drawStringVCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
   float coords[4];
   
   wchar_t str[MSGLENGTH] = L" ";

@@ -34,7 +34,7 @@ extern char config[128];
 extern const Menu_pack main_menu[];
 extern achievement_pack achievement[];
 extern int achievement_size;
-extern int menu_size;
+extern const int menu_size;
 extern int LCS, VCS;
 extern short flag_coll_cats;
 extern char category_index[];

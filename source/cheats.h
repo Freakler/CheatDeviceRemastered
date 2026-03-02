@@ -21,6 +21,8 @@
 
 #include <psptypes.h>
 
+#include "main.h"
+
 int PatchLCS(u32 addr, u32 text_addr);
 int PatchVCS(u32 addr, u32 text_addr);
 
@@ -277,13 +279,13 @@ void *cdr_swapacceleration(int calltype, int keypress, int defaultstatus);
 void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultval);
 #endif
 
-void load_defaults();
+void load_defaults(const Menu_pack *menu_list, int menu_max);
 void exit_game();
 
-void user_cheats();
-void user_scripts();
+void user_cheats(int calltype, int keypress, int defaultstatus);
+void user_scripts(int calltype, int keypress, int defaultstatus);
 void savegame_editor();
-void freecam();
+void freecam(int calltype, int keypress, int defaultstatus);
 void hexeditor();
 void hexeditpplayer();
 void hexeditpcar();

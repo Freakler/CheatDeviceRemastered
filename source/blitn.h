@@ -28,24 +28,9 @@
 /// my ugly text storeing thingy 
 #define MAX_TEXTS 512  // number of texts that can be displayed at once
 #define MSGLENGTH 128  // length messages can have
-wchar_t wideBuffer[MAX_TEXTS][MSGLENGTH];
-u32 fontcolor[MAX_TEXTS];
-short fontstyle[MAX_TEXTS];
-short fontshadow[MAX_TEXTS];
-int textorigin[MAX_TEXTS];
-float fontscale[MAX_TEXTS];
-float xpos[MAX_TEXTS];
-float ypos[MAX_TEXTS];
 
 /// and boxes too
 #define MAX_BOXES 128
-short bool_box[MAX_BOXES];
-float xbox[MAX_BOXES];
-float ybox[MAX_BOXES];
-float wbox[MAX_BOXES];
-float hbox[MAX_BOXES];
-u32 boxcol[MAX_BOXES];
-
 
 #define FONT_NAMES 0   // used for LOCATION NAME, VEHICLE NAME, RADIO-STATION NAME, MENU TABs (italic on VCS)
 #define FONT_DIALOG 1  // used for DIALOGS, in MESSAGE BOX etc
@@ -160,15 +145,12 @@ void (*SetSlantRefPoint)(float param_1, float param_2);
 #define LCS_ARMOR    0xFFBE782A
 #define VCS_ARMOR    0xFFCFD714 // not 100% original 
 
-
-void AsciiToUnicode(const char* in, wchar_t* out);
-
 void drawBox(float x, float y, float width, float height, u32 color);
 void drawUiBox(float x, float y, float width, float height, float bordersize, u32 bordercolor, u32 bgcolor);
 
-void drawString(char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
-void drawStringLCS(char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
-void drawStringVCS(char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
+void drawString(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
+void drawStringLCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
+void drawStringVCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
 
 void cWorldStream_Render_LCS_Patched(void *this, int mode);
 void cWorldStream_Render_VCS_Patched(void *this, int mode);

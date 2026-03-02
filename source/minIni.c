@@ -266,7 +266,7 @@ static int getkeystring(INI_FILETYPE *fp, const TCHAR *Section, const TCHAR *Key
   return 1;
 }
 
-int iniReadLine(const TCHAR **currentPosition, const TCHAR *endOfString, TCHAR *Buffer, int BufferSize) {
+static int iniReadLine(const TCHAR **currentPosition, const TCHAR *endOfString, TCHAR *Buffer, int BufferSize) {
     // Check if the current position has reached or exceeded the end of the string
     if (*currentPosition >= endOfString) {
         return 0; // End of string reached

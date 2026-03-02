@@ -201,18 +201,18 @@ u32 global_WindClipped      = -1;
 
 
 u32 global_displaysettings  = -1; // VCS only
- u32 global_radarbool       = -1; // LCS only
- u32 global_hudbool         = -1; // LCS only
- u32 global_maplegendbool   = -1; // LCS only
+u32 global_radarbool        = -1; // LCS only
+u32 global_hudbool          = -1; // LCS only
+u32 global_maplegendbool    = -1; // LCS only
  
  
 u32 global_helpbox                = -1; // VCS only
- u32 global_helpbox_string        = -1; // LCS only
- u32 global_helpbox_timedisplayed = -1; // LCS only
- u32 global_helpbox_displaybool   = -1; // LCS only
- u32 global_helpbox_permboxbool   = -1; // LCS only
- u32 global_helpbox_duration      = -1; // LCS only
- u32 global_dialog_string         = -1; // LCS only
+u32 global_helpbox_string         = -1; // LCS only
+u32 global_helpbox_timedisplayed  = -1; // LCS only
+u32 global_helpbox_displaybool    = -1; // LCS only
+u32 global_helpbox_permboxbool    = -1; // LCS only
+u32 global_helpbox_duration       = -1; // LCS only
+u32 global_dialog_string          = -1; // LCS only
  
 u32 global_bmxjumpmult      = -1; // VCS only
 
@@ -4486,10 +4486,10 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
       draw();
     #ifdef LANG
     if ( gametimer >= 1000 ) { // 
-      static char lang_ran = 1;
-      if (lang_ran) {
-        setup_lang(CurrentLanguageID);
-        lang_ran = 0;
+      static int lang_ran = 0;
+      if (!lang_ran) {
+        langTableSetup(currLanguageID);
+        lang_ran = 1;
       }
     }
     #endif
@@ -4712,8 +4712,8 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     /// forward-thrust
     if( ystick < -0.25 ) { // stick forward
       extern float walkspd_mult; // to allow "Walking Speed" cheat have effect on swim speed as well
-      setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabs(ystick*boost*walkspd_mult)); // thrust
-      setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*fabs(ystick*boost*walkspd_mult));  // thrust
+      setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabsf(ystick*boost*walkspd_mult)); // thrust
+      setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*fabsf(ystick*boost*walkspd_mult));  // thrust
     } 
  
     /// adjust player height in water
@@ -4943,7 +4943,7 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
         sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed(pcar) * 180.0f * (real ? 1 : 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
         
         /// gears
-        sprintf(gear, t_string("Gear: %X"), getVehicleCurrentGear( pcar ) );
+        sprintf(gear, _t("Gear: %X"), getVehicleCurrentGear( pcar ) );
       }
       break;
       
@@ -5507,42 +5507,41 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
     case FUNC_GET_STRING:
 
       // Lang files not found
-      if ( main_file_table == NULL || main_file_table->size==1 ) {
+      if ( !main_file_table || main_file_table->size==1 ) {
         snprintf(langBuf, sizeof(langBuf), "English (United States)");
         return (void*)langBuf;
       } 
     
       // Versions don't match (probably old)
-      if (strlen(main_file_table->lang_files[lang]->Version) != 0 && strcmp(main_file_table->lang_files[lang]->Version, VERSION) != 0) {
-        snprintf(langBuf, sizeof(langBuf), "%s (%s)", main_file_table->lang_files[lang]->Language, main_file_table->lang_files[lang]->Version);
+      if ( strlen(main_file_table->lang_files[lang]->version) != 0 && strcmp(main_file_table->lang_files[lang]->version, VERSION) != 0 ) {
+        snprintf(langBuf, sizeof(langBuf), "%s (%s)", main_file_table->lang_files[lang]->lang_name, main_file_table->lang_files[lang]->version);
         return (void*)langBuf;
       } 
 
-      snprintf(langBuf, sizeof(langBuf), "%s", main_file_table->lang_files[lang]->Language);
+      snprintf(langBuf, sizeof(langBuf), "%s", main_file_table->lang_files[lang]->lang_name);
       return (void*)langBuf;
 
     case FUNC_CHANGE_VALUE:
-      if ( keypress == PSP_CTRL_CROSS && CurrentLanguageID != lang) {
-        update_lang(lang);
+      if ( keypress == PSP_CTRL_CROSS && currLanguageID != lang ) {
+        langTableUpdate(lang);
         status = 1;
       } 
 
-      else if( keypress == PSP_CTRL_LEFT && lang > 0 && (main_file_table != NULL && main_file_table->size>1)) {
+      else if( keypress == PSP_CTRL_LEFT && lang > 0 && ( main_file_table && main_file_table->size > 1 )) {
         lang--;
-        status = (CurrentLanguageID == lang);
+        status = (currLanguageID == lang);
       }
 
-      else if ( keypress == PSP_CTRL_RIGHT && main_file_table != NULL ) {
-        if (lang < main_file_table->size-1)
-          lang++;
-          status = (CurrentLanguageID == lang);
-      } 
+      else if ( keypress == PSP_CTRL_RIGHT && main_file_table && lang < main_file_table->size-1 ) {
+        lang++;
+        status = (currLanguageID == lang);
+      }
 	  
-	  else if ( keypress == PSP_CTRL_CIRCLE ) {
+	    else if ( keypress == PSP_CTRL_CIRCLE ) {
         lang = 0;
-        update_lang(lang);
+        langTableUpdate(lang);
         status = 1;
-      } 
+      }
       break;
     
     case FUNC_SET:
@@ -5552,7 +5551,7 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
       } else {
         lang = 0;
       }
-      CurrentLanguageID = lang;
+      currLanguageID = lang;
       status = 1;
       break;
   }
@@ -5592,6 +5591,8 @@ void exit_game() {
   /// TODO - needs a save_thread still running check probably
   flag_use_liveconfig = 0; // in case its true
   closeMenu(); // config will not be saved now
+
+  free_alloc_mem_cdr();
   
   sceKernelExitGame();
 }
@@ -5999,7 +6000,7 @@ void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) 
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)(t_string(LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
+      return (void *)(_t(LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
       
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_LEFT && i > 1 ) { // LEFT
@@ -6984,7 +6985,7 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
         if( getByte(pplayer+(LCS?0x10A:136)) == 0 ) { // player not touching ground (better check todo?)
          
           /// calc current speed
-          float speed = sqrt((getFloat(pplayer+(LCS?0x70:0x140)) * getFloat(pplayer+(LCS?0x70:0x140))) + (getFloat(pplayer+(LCS?0x74:0x144)) * getFloat(pplayer+(LCS?0x74:0x144)))); // SQRT( x^2 + y^2 )
+          float speed = sqrtf((getFloat(pplayer+(LCS?0x70:0x140)) * getFloat(pplayer+(LCS?0x70:0x140))) + (getFloat(pplayer+(LCS?0x74:0x144)) * getFloat(pplayer+(LCS?0x74:0x144)))); // sqrtf( x^2 + y^2 )
           
           /// forward-thrust
           setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4) * speed);
@@ -8011,7 +8012,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE || pcar_type == VEHICLE_BOAT) ) { // in vehicle!
         /// get speed
         speed = getVehicleSpeed(pcar);
-        xyspeed = sqrt((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144)))); // SQRT( x^2 + y^2 )
+        xyspeed = sqrtf((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144)))); // sqrtf( x^2 + y^2 )
         
         /// disable world gravity for vehicle
         setVehicleGravityApplies(pcar, FALSE);
@@ -8227,8 +8228,8 @@ void *aim_of_death(int calltype, int keypress, int defaultstatus) {
  **************************************************************************************************************************************/
 void stepthroughwall() {
   if( pplayer ) {
-    setFloat(pobj+0x30, getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2 ) );
-    setFloat(pobj+0x34, getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2 ) );
+    setFloat(pobj+0x30, getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2 ) );
+    setFloat(pobj+0x34, getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2 ) );
   }
 }
 
@@ -8444,9 +8445,9 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
       case FUNC_GET_STRING: 
         if( LCS ) sprintf(retbuf, "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? t_string("Red: %i Green: %i Blue:>%i<") : 
-                          pos == 1 ? t_string("Red: %i Green:>%i<Blue: %i") : 
-                          pos == 2 ? t_string("Red:>%i<Green: %i Blue: %i") : t_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+          sprintf(retbuf, pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") : 
+                          pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") : 
+                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
         return (void *)retbuf;
       
@@ -8523,9 +8524,9 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
       case FUNC_GET_STRING: 
         if( LCS ) sprintf(retbuf, "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? t_string("Red: %i Green: %i Blue:>%i<") : 
-                          pos == 1 ? t_string("Red: %i Green:>%i<Blue: %i") : 
-                          pos == 2 ? t_string("Red:>%i<Green: %i Blue: %i") : t_string("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+          sprintf(retbuf, pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") : 
+                          pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") : 
+                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
         return (void *)retbuf;
       
@@ -8789,7 +8790,7 @@ void *peds_density(int calltype, int keypress, int defaultstatus) {
         
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXMARKERS
-        hex_marker_clear();  
+        hex_marker_clear();
         hex_marker_addx(global_peddensity + gp_, sizeof(float));
         #endif
         #ifdef HEXEDITOR  
@@ -9357,7 +9358,7 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
       return (int*)i;
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, t_string("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
+      sprintf(retbuf, _t("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
       return (void*)retbuf;
       
     case FUNC_APPLY:
@@ -9673,7 +9674,7 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
       return (int*)status;
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, " %s", t_string(state ? "down" : "up"));
+      sprintf(retbuf, " %s", _t(state ? "down" : "up"));
       return retbuf;
       
     case FUNC_APPLY:
@@ -10112,8 +10113,8 @@ void *pickup_spawner(int calltype, int keypress, int defaultstatus, int defaultv
       } else if( keypress == PSP_CTRL_CROSS || keypress == PSP_CTRL_SQUARE ) { 
         
         /// calculate coordinate in front of player
-        x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
-        y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
+        x = getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
+        y = getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
         z = getFloat(pplayer+0x38);
         
         char type = 0x3; // (LCS ? lcs_pickups[i].type : vcs_pickups[i].type);
@@ -10237,7 +10238,7 @@ char *lcs_playerModels[] = {  // 8 chars max
 /// only special chars for LCS and very experimental
 void *player_model(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int i = 0;
-  static int list_size = (sizeof(lcs_playerModels)/sizeof(*lcs_playerModels))-1;
+  static int list_size = ARRAY_SIZE(lcs_playerModels);
   static char buf[16] = "";
   
   switch( calltype ) {
@@ -10520,8 +10521,8 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         #endif
 
         /// calculate coordinate in front of player
-        x = getFloat(pplayer+0x30) + ( cos( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
-        y = getFloat(pplayer+0x34) + ( sin( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
+        x = getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
+        y = getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
         z = getFloat(pplayer+0x38); // z will be calculated by game though (via find ground)
                     
         /// calc degree (with driver door facing player!)
@@ -11055,7 +11056,7 @@ void buttonApplyOnce(int i) { // apply once on button press
 
 void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status, i = 10; // default position  
-  static int list_size = (sizeof(buttonCheatNames)/sizeof(*buttonCheatNames))-1;
+  static int list_size = ARRAY_SIZE(buttonCheatNames);
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -11065,7 +11066,7 @@ void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)t_string(buttonCheatNames[i]);
+      return (void *)_t(buttonCheatNames[i]);
       
     case FUNC_APPLY:
       if( (pressed_buttons & PSP_CTRL_UP) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && flag_menu_running == 0 && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
@@ -11102,7 +11103,7 @@ void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
   
 void *down_button(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status, i = 9; // default position    
-  static int list_size = (sizeof(buttonCheatNames)/sizeof(*buttonCheatNames))-1;
+  static int list_size = ARRAY_SIZE(buttonCheatNames);
   
   switch( calltype ) {
     case FUNC_GET_STATUS: 
@@ -11162,7 +11163,7 @@ void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaul
                                #endif
                              };
                 
-  static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
+  static int list_size = ARRAY_SIZE(list_names);
   static int addr;
   
   switch( calltype ) {
@@ -11255,7 +11256,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
                                "open in HexEditor",      // 12
                                #endif
                              };
-  static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
+  static int list_size = ARRAY_SIZE(list_names);
   static int addr;
   
   switch( calltype ) {
@@ -11266,7 +11267,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      return (void *)t_string(list_names[i]);
+      return (void *)_t(list_names[i]);
       
     case FUNC_APPLY:
       addr = getObjectsTouchedObjectAddress(pobj);
@@ -11369,7 +11370,7 @@ void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval
                                #endif
                              };
                 
-  static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
+  static int list_size = ARRAY_SIZE(list_names);
   static int addr;
   
   switch( calltype ) {
@@ -11448,12 +11449,12 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     
     case FUNC_GET_STRING: 
       if( j == 0 ) { // pickups
-        snprintf(retbuf, sizeof(retbuf), t_string("Pickups - %s (%i)"), t_string((LCS ? lcs_pickups[i].name : vcs_pickups[i].name)), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
+        snprintf(retbuf, sizeof(retbuf), _t("Pickups - %s (%i)"), _t((LCS ? lcs_pickups[i].name : vcs_pickups[i].name)), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
           
       } else if( j == 1 ) { // weapons in range
         if( status ) 
-          snprintf(retbuf, sizeof(retbuf), t_string("Weapons in range (%i)"), res);
-        else snprintf(retbuf, sizeof(retbuf), t_string("Weapons in range"));
+          snprintf(retbuf, sizeof(retbuf), _t("Weapons in range (%i)"), res);
+        else snprintf(retbuf, sizeof(retbuf), _t("Weapons in range"));
         //res = 0; // if apply loop not updating
           
       } else if( j == 2 ) { // stunt jumps
@@ -11784,8 +11785,8 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
       
     case FUNC_APPLY: 
       /// calculate position to gather too
-      x = getFloat(pobj+0x30) + ( cos( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
-      y = getFloat(pobj+0x34) + ( sin( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
+      x = getFloat(pobj+0x30) + ( cosf( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
+      y = getFloat(pobj+0x34) + ( sinf( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
       z = getFloat(pobj+0x38) + 6.00f;
       
       /// Vehicles

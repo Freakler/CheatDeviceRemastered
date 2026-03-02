@@ -24,6 +24,8 @@
 
 #define LOG_SIZE 128
 
+#define MURMURMASH_3_SEED 0x947473
+
 int logPrintf(const char *text, ...);
 
 int doesFileExist(const char* path);
@@ -46,7 +48,7 @@ void writeFloat(uint8_t *address, float value);
 char *strtok_r(char *s, const char *delim, char **save_ptr);
 char *_fgets(char *s, int size, SceUID stream);
 
-void makedirs(char *path);
+void makedirs(const char *path);
 int getHighMemBound();
 
 int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius);
@@ -54,6 +56,11 @@ float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float
 
 void getSizeString(char string[16], uint64_t size);
 
-int fileEndsWithExtension(const char *filename, const char* extension);
+int fileEndsWithExtension(const char *path, const char* extension);
+int getExtensionLength(const char* path);
+
+uint32_t hash(const char *key, uint32_t len, uint32_t seed);
+
+#define ARRAY_SIZE(x) ((sizeof(x) / sizeof((x)[0])) - 1)
 
 #endif

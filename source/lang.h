@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-2026, Freakler
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,11 +25,6 @@
 #define LANG_FILES_LIMIT 8
 #define TRANSLATED_STRINGS_LIMIT TABLE_SIZE
 #define FILE_SIZE_LIMIT 0xFFFF
-#define MURMURMASH_3_SEED 0x947473
-
-char* t_string(const char* string);
-void setup_lang(int langIndex);
-void update_lang(int langIndex);
 
 typedef struct string_lang
 {
@@ -43,12 +38,14 @@ typedef struct LangHashTable
   string_lang *table[TABLE_SIZE]; // Array of pointers to string_lang nodes
 } LangHashTable;
 
+void langTableFree(LangHashTable* ht);
+
 typedef struct
 {
-  char* Language;
-  char* Author;
-  char* Version;
-  char* FileName;
+  char *lang_name;
+  char *author_name;
+  char *version;
+  char *path;
 } LanguageFile;
 
 typedef struct
@@ -57,11 +54,18 @@ typedef struct
   int size;
 } LangFileTable;
 
-void GetINIInfo(LangFileTable *table, const char* filename);
+char *_t(const char *string);
+
+void langTableSetup(int langIndex);
+void langTableUpdate(int langIndex);
+
+void langFileTableFree(LangFileTable *table);
+
+void GetLangINIInfo(LangFileTable *table, const char *filename);
 
 extern LangHashTable *main_lang_table;
 extern LangFileTable *main_file_table;
 
-extern int CurrentLanguageID;
+extern int currLanguageID;
 
 #endif

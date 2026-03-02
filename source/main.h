@@ -22,6 +22,8 @@
 #include <pspkerneltypes.h>
 #include <pspiofilemgr.h>
 
+#include "editor.h"
+
 #define VERSION "v1.0h3" // displayed in title
 
 /** FEATURE-FLAGS *****************************************************************************************************/
@@ -31,10 +33,10 @@
 // #define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 // #define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
-//#define LOG // logging to logfile
-//#define MEMLOG // logging bad memory access to logfile
-//#define PATCHLOG // debug logging for detected patch locations only
-//#define USERSCRIPTLOG // debug logging for userscripts only
+// #define LOG // logging to logfile
+// #define MEMLOG // logging bad memory access to logfile
+// #define PATCHLOG // debug logging for detected patch locations only
+// #define USERSCRIPTLOG // debug logging for userscripts only
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
@@ -74,19 +76,19 @@ enum {
 };
 
 typedef struct {
-  char *path;
-  short cat;
-  char type;
-  char LC; // for Liberty City Stories
-  char VC; // for Vice City Stories
-  char SP; // for Singleplayer
-  char MP; // for Multiplayer
-  short conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
-  char def_stat;
+  const char *path;
+  const short cat;
+  const char type;
+  const char LC; // for Liberty City Stories
+  const char VC; // for Vice City Stories
+  const char SP; // for Singleplayer
+  const char MP; // for Multiplayer
+  const short conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
+  const char def_stat;
   void *value;
-  char *msg1;
-  char *msg2;
-  char *desc;
+  const char *msg1;
+  const char *msg2;
+  const char *desc;
 } Menu_pack;
 
 
@@ -174,9 +176,6 @@ void applyCheats();
 void applyOnce();
 void checkCheats();
 
-void setDefaultColors();
-void saveCurrentColorsToConfig();
-
 int menu_draw(const Menu_pack *menu_list, int menu_max);
 int menu_ctrl(const Menu_pack *menu_list, int menu_max);
 int menu_setDefaults(const Menu_pack *menu_list, int menu_max /*, char *config*/ );
@@ -185,32 +184,30 @@ int menu_check(const Menu_pack *menu_list, int menu_max);
 
 void *category_toggle(int type, int cat, int set);
 
-int module_stop(int argc, char *argv[]);
+int module_stop(SceSize argc, void* argp);
 int module_start(SceSize argc, void* argp);
 
 extern const Menu_pack main_menu[];
-extern int menu_size;
+extern const int menu_size;
 
 /////////////////////////////////////////////
 
-int editor_create();
-int editor_draw();
-int editor_ctrl();
+int editor_create(int mode, int toptions, const char *editortitle, const Editor_pack *editor_menu, int first_obj, int block_size, int blocks);
 
-struct script_file
+typedef struct userscript_entry
 {
-  SceIoDirent dirent;
+  char* path; // Allocated when needed
+  int attr;
   int files_folders_count;
-};
+} userscript_entry;
 
 int usercheats_create();
 int usercheats_draw();
 int usercheats_ctrl();
 
 #ifdef USERSCRIPTS
+int free_userscripts_array();
 int userscripts_create();
-int userscripts_draw();
-int userscripts_ctrl();
 #endif
 
 /*
@@ -227,32 +224,20 @@ int saveditor_ctrl();
 
 #ifdef FREECAM
 int freecam_create();
-int freecam_draw();
-int freecam_ctrl();
 #endif
 
-#ifdef HEXEDITOR  
-void add_adr_to_history(int address);
+#ifdef HEXEDITOR
 int address_create();
-int address_draw();
-int address_ctrl();
-
-int editbyte_create();
-int editbyte_draw();
-int editbyte_ctrl();
-
 int hexeditor_create(int hexadr, int hexmode, int lowbound, int highbound, const char *infostring);
-int hexeditor_draw();
-int hexeditor_ctrl();
-#endif
 
 #ifdef HEXMARKERS
-void hex_marker_add(u32 address);
-int hex_marker_check(u32 address);
 void hex_marker_addx(u32 address, int size);
-void hex_marker_remove(u32 address);
 void hex_marker_clear();
 #endif
+
+#endif
+
+void free_alloc_mem_cdr();
 
 extern int LCS;
 

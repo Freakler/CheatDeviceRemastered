@@ -1,6 +1,6 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-2026, Freakler
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,78 +35,22 @@ extern const char *basefolder;
 
 static int translated_strings_left = TRANSLATED_STRINGS_LIMIT;
 
-LangHashTable *create_lang_table()
+LangHashTable *langTableCreate()
 {
   LangHashTable *ht = (LangHashTable *)malloc(sizeof(LangHashTable));
 
-  if (!ht) return NULL;
+  if ( !ht ) return NULL;
 
   // Initialize table to NULL
-  memset(ht->table, 0, sizeof(string_lang *) * TABLE_SIZE);
+  memset(ht->table, 0, sizeof(ht->table));
   return ht;
 }
 
-// FUNC: MurmurHash3 hash function
-static uint32_t hash(const char *key, uint32_t len, uint32_t seed)
+void langTableInsert(LangHashTable *ht, const char *original_string, const char *trans_string)
 {
-  uint32_t c1 = 0xcc9e2d51;
-  uint32_t c2 = 0x1b873593;
-  uint32_t r1 = 15;
-  uint32_t r2 = 13;
-  uint32_t m = 5;
-  uint32_t n = 0xe6546b64;
-  uint32_t h = seed;
-  uint32_t k = 0;
-  const uint8_t *d = (const uint8_t *)key;
-  const uint32_t *chunks = (const uint32_t *)(d);
-  const uint8_t *tail = (const uint8_t *)(d + (len / 4) * 4);
+  if ( !ht || !main_file_table || !original_string || !trans_string ) return;
 
-  int l = len / 4;
-
-  // Process the body (4-byte chunks)
-  int i;
-  for (i = 0; i < l; ++i) {
-    k = chunks[i];
-    k *= c1;
-    k = (k << r1) | (k >> (32 - r1));
-    k *= c2;
-
-    h ^= k;
-    h = (h << r2) | (h >> (32 - r2));
-    h = h * m + n;
-  }
-
-  k = 0;
-
-  // Process the tail (remaining bytes)
-  switch (len & 3) 
-  {
-    case 3: k ^= (tail[2] << 16);
-
-    case 2: k ^= (tail[1] << 8);
-
-    case 1: k ^= tail[0];
-            k *= c1;
-            k = (k << r1) | (k >> (32 - r1));
-            k *= c2;
-            h ^= k;
-  }
-
-  h ^= len;
-  h ^= (h >> 16);
-  h *= 0x85ebca6b;
-  h ^= (h >> 13);
-  h *= 0xc2b2ae35;
-  h ^= (h >> 16);
-
-  return h % TABLE_SIZE;
-}
-
-void lang_table_insert(LangHashTable *ht, const char *original_string, const char *trans_string)
-{
-  if ( ht == NULL || main_file_table == NULL || original_string == NULL || trans_string == NULL ) return;
-
-  uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED);
+  uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED) & TABLE_SIZE;
 
   string_lang *new_kv = (string_lang *)malloc(sizeof(string_lang));
 
@@ -118,11 +62,11 @@ void lang_table_insert(LangHashTable *ht, const char *original_string, const cha
   ht->table[index] = new_kv; // Insert new_kv at the beginning
 }
 
-char *lang_table_search(LangHashTable *ht, const char *original_string) 
+char *langTableSearch(LangHashTable *ht, const char *original_string)
 {
-  if ( ht == NULL || main_file_table == NULL || main_file_table->size==1 || original_string == NULL ) return (char*)original_string;
+  if ( !ht || !original_string ) return (char *)original_string;
 
-  uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED);
+  uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED) & TABLE_SIZE;
   string_lang *current = ht->table[index];
 
   while (current) {
@@ -133,16 +77,18 @@ char *lang_table_search(LangHashTable *ht, const char *original_string)
   }
 
   // If not found, return the original string
-  return (char*)original_string;
+  return (char *)original_string;
 }
 
-void free_table(LangHashTable *ht)
+void langTableFree(LangHashTable *ht)
 {
+  if ( !ht ) return;
+
   int i;
   for (i = 0; i < TABLE_SIZE; i++)
   {
     string_lang *current = ht->table[i];
-    while (current) 
+    while (current)
     {
       string_lang *tmp = current;
       current = current->next;
@@ -152,44 +98,42 @@ void free_table(LangHashTable *ht)
     }
   }
   free(ht);
+  ht = NULL;
+
+  #if defined(LOG) && defined(LANG_DEBUG)
+    logPrintf("Language table has been freed!");
+  #endif
 }
 
-LangHashTable *main_lang_table;
-LangFileTable *main_file_table;
+LangHashTable *main_lang_table = NULL;
+LangFileTable *main_file_table = NULL;
 
 // Initialize the LangFileTable
-LangFileTable *initLangFileTable()
+LangFileTable *langFileTableInit()
 {
   LangFileTable *table = (LangFileTable *)malloc(sizeof(LangFileTable));
-
   if (!table) return NULL;
 
-  int i;
-  for (i = 0; i < LANG_FILES_LIMIT; i++) 
-  {
-    table->lang_files[i] = NULL; // Initialize all pointers to NULL
-  }
-
-  table->size = 0;
+  memset(table, 0, sizeof(LangFileTable));
   return table;
 }
 
-int CurrentLanguageID = 0;
+int currLanguageID = 0;
 
 // Append a LanguageFile to the LangFileTable
-void LangFileAppend(LangFileTable *table, const char *version, const char *author, const char *language, const char *filename)
+void langFileTableAppend(LangFileTable *table, const char *version, const char *author, const char *language, const char *filename)
 {
-  if (table == NULL || filename == NULL || table->size >= LANG_FILES_LIMIT) return;
+  if ( !table || !filename || table->size >= LANG_FILES_LIMIT ) return;
 
   // Allocate memory for new LanguageFile
   LanguageFile *new_lf = (LanguageFile *)malloc(sizeof(LanguageFile));
   if (!new_lf) return;
 
   // Duplicate strings and assign to new LanguageFile
-  new_lf->Language = strdup(language);
-  new_lf->Author = strdup(author);
-  new_lf->Version = strdup(version);
-  new_lf->FileName = strdup(filename);
+  new_lf->lang_name = strdup(language);
+  new_lf->author_name = strdup(author);
+  new_lf->version = strdup(version);
+  new_lf->path = strdup(filename);
 
   // Append new LanguageFile to table
   table->lang_files[table->size] = new_lf;
@@ -197,36 +141,41 @@ void LangFileAppend(LangFileTable *table, const char *version, const char *autho
 }
 
 // Free memory allocated for LangFileTable
-void freeLangFileTable(LangFileTable *table)
+void langFileTableFree(LangFileTable *table)
 {
-  if (!table) return;
+  if ( !table ) return;
 
   int i;
   for (i = 0; i < table->size; i++)
   {
-    free(table->lang_files[i]->Language);
-    free(table->lang_files[i]->Author);
-    free(table->lang_files[i]->Version);
-    free(table->lang_files[i]->FileName);
+    free(table->lang_files[i]->lang_name);
+    free(table->lang_files[i]->author_name);
+    free(table->lang_files[i]->version);
+    free(table->lang_files[i]->path);
     free(table->lang_files[i]);
   }
 
   free(table);
+  table = NULL;
+
+  #if defined(LOG) && defined(LANG_DEBUG)
+    logPrintf("Language file table has been freed!");
+  #endif
 }
 
-LangFileTable *SearchLangFiles() 
+void langFileTableSearch()
 {
-  main_file_table = initLangFileTable();
-  if (!main_file_table) return NULL;
+  main_file_table = langFileTableInit();
+  if ( !main_file_table ) return;
 
   // Create an english default
-  LangFileAppend(main_file_table, VERSION, "Freakler", "English (United States)", "");
+  langFileTableAppend(main_file_table, VERSION, "Freakler", "English (United States)", "");
 
+  // Open Directory
   char buffer[128];
   snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_translations);
   SceUID dir = sceIoDopen(buffer);
-
-  if (dir < 0) return main_file_table;
+  if ( dir < 0 ) return;
 
   SceIoDirent dirent;
 
@@ -240,8 +189,9 @@ LangFileTable *SearchLangFiles()
       // Suffix to ignore an .ini file (add "_ignore.ini" to the filename)
       if ( fileEndsWithExtension(dirent.d_name, "_ignore.ini") ) continue;
 
-      if ( fileEndsWithExtension(dirent.d_name, ".ini") && strcmp(dirent.d_name, "sample.ini") != 0 )
-        GetINIInfo(main_file_table, dirent.d_name);
+      // If file is an .ini and is the 'sample.ini' file, get info from it (to add to menu selections)
+      if ( fileEndsWithExtension(dirent.d_name, ".ini") && strcasecmp(dirent.d_name, "sample.ini") != 0 )
+        GetLangINIInfo(main_file_table, dirent.d_name);
     }
 
     // Clear dirent
@@ -250,29 +200,29 @@ LangFileTable *SearchLangFiles()
 
   sceIoDclose(dir);
 
-  return main_file_table;
+  return;
 }
 
-void GetINIInfo(LangFileTable *table, const char *filename)
+void GetLangINIInfo(LangFileTable *table, const char *filename)
 {
-  if (table == NULL || filename == NULL) return;
+  if ( !table || !filename ) return;
 
-  char Version[8];
-  char Author[32];
-  char Language[32];
-  char filepath[256];
+  char version[8];
+  char author[32];
+  char lang[32];
+  char path[256];
 
-  snprintf(filepath, sizeof(filepath), "%s%s%s", basefolder, folder_translations, filename);
+  snprintf(path, sizeof(path), "%s%s%s", basefolder, folder_translations, filename);
 
-  ini_gets("INFO", "Translate Version", "None", Version, sizeof(Version), filepath);
-  ini_gets("INFO", "Translate Author", "None", Author, sizeof(Author), filepath);
-  ini_gets("INFO", "Translate Language", "None", Language, sizeof(Language), filepath);
+  ini_gets("INFO", "Translate Version", VERSION, version, sizeof(version), path);
+  ini_gets("INFO", "Translate Author", "unknown", author, sizeof(author), path);
+  ini_gets("INFO", "Translate Language", "unknown", lang, sizeof(lang), path);
 
   #if defined(LOG) && defined(LANG_DEBUG)
-    logPrintf("Info from file '%s': Version '%s', Author '%s', Language '%s'", filename, Version, Author, Language);
+    logPrintf("Info from file '%s': Version '%s', Author '%s', Language '%s'", filename, version, author, lang);
   #endif
 
-  LangFileAppend(table, Version, Author, Language, filename);
+  langFileTableAppend(table, version, author, lang, filename);
 }
 
 #if defined(LOG) && defined(LANG_DEBUG)
@@ -280,28 +230,45 @@ u64 curr_time, after_time;
 char bufDebug[64];
 #endif
 
-void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int index)
+static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection, int index)
 {
-  if (table == NULL || INISection == NULL) return;
+  if ( !table || !INISection || *INISection == '\0' || index < 0 ) return;
 
-  char fileread[FILE_SIZE_LIMIT];
   char original_string[256];
   char translated_string[256];
   char lang_path[128];
   SceUID fp;
+  SceIoStat stat;
 
   #if defined(LOG) && defined(LANG_DEBUG)
     curr_time = sceKernelGetSystemTimeWide();
   #endif
 
-    snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->FileName);
+  snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->path);
 
   #if defined(LOG) && defined(LANG_DEBUG)
     logPrintf("Reading Section '%s' from INI file '%s'", INISection, lang_path);
   #endif
 
-  if ( !ini_openread(lang_path, &fp) ) return;
-  if ( !sceIoRead(fp, &fileread, sizeof(fileread)) ) goto CLOSE_INI;
+  // Get file size (to allocate)
+  memset(&stat, 0, sizeof(SceIoStat));
+  if ( sceIoGetstat(lang_path, &stat) < 0 ) return;
+  if (stat.st_size <= 0) return; // Invalid file size
+
+  SceSize alloc_size = stat.st_size + 1;
+
+  char *fileread = (char *)malloc(alloc_size); // Allocate needed bytes
+  if ( !fileread ) return; // Couldn't allocate
+
+  #if defined(LOG) && defined(LANG_DEBUG)
+    logPrintf("Allocated %u bytes for file", alloc_size);
+  #endif
+
+  if ( !ini_openread(lang_path, &fp) ) goto END_READING_TRANSLATIONS;
+
+  if ( sceIoRead(fp, fileread, stat.st_size) < 0 ) goto END_READING_TRANSLATIONS;
+
+  fileread[stat.st_size] = '\0'; // Terminate string
 
   int i;
   int temp_trans_strings_left = translated_strings_left;
@@ -315,15 +282,21 @@ void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int i
     ini_getsfromstring(INISection, original_string, original_string, translated_string, sizeof(translated_string), fileread);
 
     // Don't load any English or empty string (it defaults to English)
-    if ( !strcmp(original_string, translated_string) || translated_string[0] == '\0' )
+    if ( translated_string[0] == '\0' || !strcmp(original_string, translated_string) )
       continue;
 
     // Insert on table
-    lang_table_insert(table, original_string, translated_string);
+    langTableInsert(table, original_string, translated_string);
     translated_strings_left--;
   }
 
-  CLOSE_INI:
+  END_READING_TRANSLATIONS:
+  free(fileread); // Free allocated memory
+
+  #if defined(LOG) && defined(LANG_DEBUG)
+    logPrintf("Freed %u bytes", alloc_size);
+  #endif
+
   ini_close(&fp);
 
   #if defined(LOG) && defined(LANG_DEBUG)
@@ -333,47 +306,42 @@ void ReadTranslationsFromINI(LangHashTable *table, const char* INISection, int i
   #endif
 }
 
-void update_lang(int langIndex) 
+void langTableUpdate(int langIndex)
 {
   // Avoid mem leaks
   translated_strings_left = TRANSLATED_STRINGS_LIMIT;
 
-  if (main_lang_table != NULL)
-    free_table(main_lang_table);
+  if (main_lang_table) langTableFree(main_lang_table);
+  if (main_file_table) langFileTableFree(main_file_table);
 
-  if (main_file_table != NULL)
-    freeLangFileTable(main_file_table);
-
-  setup_lang(langIndex);
+  langTableSetup(langIndex);
 }
 
-void setup_lang(int langIndex) 
+void langTableSetup(int langIndex)
 {
-  main_lang_table = create_lang_table();
-  main_file_table = SearchLangFiles();
+  currLanguageID = langIndex;
 
-  // If current language is English
-  if (langIndex == 0) {
-    CurrentLanguageID = langIndex;
-    return;
-  }
+  main_lang_table = langTableCreate();
+  if ( !main_lang_table ) return;
 
-  if ( main_lang_table == NULL || main_file_table == NULL || main_file_table->size == 1 ) return;
+  langFileTableSearch();
+  if ( !main_file_table || main_file_table->size == 1 ) return;
+
+  // If current language is English (lang and file tables still need to be created)
+  if (langIndex == 0) return;
 
   ReadTranslationsFromINI(main_lang_table, "GENERAL", langIndex);
   ReadTranslationsFromINI(main_lang_table, LCS ? "LCS" : "VCS", langIndex);
-
-  CurrentLanguageID = langIndex;
 }
 
 #endif
 
-char* t_string(const char* string)
+// Get translated string from .ini file
+char *_t(const char *string)
 {
   #ifdef LANG
-  if ( CurrentLanguageID != 0 )
-    return lang_table_search(main_lang_table, string);
+    if ( currLanguageID != 0 ) return langTableSearch(main_lang_table, string);
   #endif
 
-  return (char*)string;
+  return (char *)string;
 }

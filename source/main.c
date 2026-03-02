@@ -46,44 +46,45 @@
   #include "minIni.h"
 #endif
 
-PSP_MODULE_INFO("CheatDeviceRemastered", 0, 1, 0); // user
+PSP_MODULE_INFO("CheatDeviceRemastered", PSP_MODULE_USER, 1, 0); // user
 
 
 /// settings
-int menuopendelay = 2000;  // wait ~2 seconds before showing menu & applying after spawning
-short showoptions = 12;    // the number of options / lines that should be displayed at once
-float row_spacing = 15.0f; // pixels between rows
-u32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
-u32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
-char welcomemsg[] = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
+const int menuopendelay = 2000;  // wait ~2 seconds before showing menu & applying after spawning
+const short showoptions = 12;    // the number of options / lines that should be displayed at once
+static const float row_spacing = 15.0f; // pixels between rows
+static const u32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
+static const u32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
+static const char welcomemsg[] = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
+
 #ifndef LITE
-char memwarning[] = "~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!";
+static const char memwarning[] = "~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!";
 #endif
 
 const char *basefolder  = "ms0:/PSP/PLUGINS/cheatdevice_remastered/";
 
-char file_log[] = "log.txt";
+const char file_log[] = "log.txt";
 
 #ifdef CONFIG
-char file_config[] = "cheatdevice_remastered.cfg";
+static const char file_config[] = "cheatdevice_remastered.cfg";
 #endif
 
 #ifdef NAMERESOLV
-char file_names_lcs[] = "cheatdevice_names_lcs.ini";
-char file_names_vcs[] = "cheatdevice_names_vcs.ini";
+static const char file_names_lcs[] = "cheatdevice_names_lcs.ini";
+static const char file_names_vcs[] = "cheatdevice_names_vcs.ini";
 #endif
 
 #ifdef USERSCRIPTS
-char folder_scripts[] = "SCRIPTS/"; // inside basefolder
+static const char folder_scripts[] = "SCRIPTS/"; // inside basefolder
 #endif
 
 #ifdef PREVIEW
-char folder_cheats[] = "CHEATS/"; // inside basefolder
-char folder_textures[] = "TEXTURES/"; // inside basefolder
+static const char folder_cheats[] = "CHEATS/"; // inside basefolder
+static const char folder_textures[] = "TEXTURES/"; // inside basefolder
 #endif
 
 #ifdef LANG
-char folder_translations[] = "TRANSLATIONS/"; // inside basefolder
+const char folder_translations[] = "TRANSLATIONS/"; // inside basefolder
 #endif
 
 
@@ -113,25 +114,25 @@ short flag_swapxr         = 0; // swap acceleration in special cheats (to match 
 
 /// color definitions 
 u32 COLOR_TEMP;
-u32 COLOR_TEXT         = WHITE;
-u32 COLOR_CURSOR       = CHDVC_MAGENTA - 0x77000000; // add alpha
-u32 COLOR_TITLE        = WHITE;
-u32 COLOR_CATEGORY     = WHITE;
-u32 COLOR_DEBUG        = RED; 
-u32 COLOR_VALUE        = CHDVC_GREEN;
-u32 COLOR_CHEAT_ON     = CHDVC_YELLOW;
-u32 COLOR_CHEAT_OFF    = 0; // set later because different for LCS/VCS
-u32 COLOR_BACKGROUND   = ALPHABLACK;
-u32 COLOR_SCROLLBAR    = CHDVC_MAGENTA - 0x33000000; // add alpha
-u32 COLOR_FREECAM      = ORANGERED;
-u32 COLOR_USERCHEATS   = DARKGREEN;
-u32 COLOR_SAVEDITOR    = VIOLET;
-u32 COLOR_HEX          = CHDVC_AZURE;
-u32 COLOR_HEX_MARKER   = CHDVC_MAGENTA - 0x77000000; // add alpha
-u32 COLOR_EDITOR       = GREEN;
-u32 COLOR_FILES        = LIGHTBLUE;
-u32 COLOR_UIBORDER     = BLACK;
-u32 COLOR_UIBACKGROUND = ALPHABLACK;
+static const u32 COLOR_TEXT         = WHITE;
+static const u32 COLOR_CURSOR       = CHDVC_MAGENTA - 0x77000000; // add alpha
+static const u32 COLOR_TITLE        = WHITE;
+static const u32 COLOR_CATEGORY     = WHITE;
+static const u32 COLOR_DEBUG        = RED; 
+static const u32 COLOR_VALUE        = CHDVC_GREEN;
+static const u32 COLOR_CHEAT_ON     = CHDVC_YELLOW;
+static u32 COLOR_CHEAT_OFF          = 0; // set later because different for LCS/VCS
+static const u32 COLOR_BACKGROUND   = ALPHABLACK;
+static const u32 COLOR_SCROLLBAR    = CHDVC_MAGENTA - 0x33000000; // add alpha
+static const u32 COLOR_FREECAM      = ORANGERED;
+static const u32 COLOR_USERCHEATS   = DARKGREEN;
+static const u32 COLOR_SAVEDITOR    = VIOLET;
+static const u32 COLOR_HEX          = CHDVC_AZURE;
+static const u32 COLOR_HEX_MARKER   = CHDVC_MAGENTA - 0x77000000; // add alpha
+static const u32 COLOR_EDITOR       = GREEN;
+static const u32 COLOR_FILES        = LIGHTBLUE;
+static const u32 COLOR_UIBORDER     = BLACK;
+static const u32 COLOR_UIBACKGROUND = ALPHABLACK;
 
 
 /// textscales (initial values)
@@ -146,18 +147,26 @@ float SIZE_HEXEDIT= 1.00f;
 u32 mod_text_addr;
 u32 mod_text_size;
 u32 mod_data_size;
+
 register int gp asm("gp");
+
 static STMOD_HANDLER previous;
+
 int ADRENALINE = 0, PPSSPP = 0, LCS = 0, VCS = 0;
+
 char buffer[256];
+
 #ifdef CONFIG
 char config[128];
 #endif
+
 char category_index[CAT_COUNTER]; // 1 = visible/expanded/enabled (init by module_start & taken care of by menu_setDefaults)
+
 SceCtrlData pad;
 int hold_n = 0;
 u32 old_buttons = 0, current_buttons = 0, pressed_buttons = 0, hold_buttons = 0, lx, ly, rx, ry;
 float xstick, ystick, xstick_, ystick_;
+
 int hex_adr = -1; // mem address for HexEditor
 
 
@@ -191,7 +200,7 @@ const Menu_pack main_menu[] = {
   {"Debug Monitor:"                   , CAT_DEBUG   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F00 , OFF , debug_monitor        , ""                                 , ""                                   , "" },
   {"Display vars"                     , CAT_DEBUG   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F01 , ON  , debug_vars           , ""                                 , ""                                   , "" },
   #ifdef LANG
-  {"Update Language Strings"          , CAT_DEBUG   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , update_lang          , "CROSS: Reset"                     , ""                                   , "Update Menu Language" },  // arg / index though?!
+  {"Update Language Strings"          , CAT_DEBUG   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , langTableUpdate      , "CROSS: Reset"                     , ""                                   , "Update Menu Language" },  // arg / index though?!
   #endif
   {"- - - - - - - - - - - - - - - - -", CAT_DEBUG   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   {""                                 , CAT_DEBUG   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
@@ -391,7 +400,7 @@ const Menu_pack main_menu[] = {
   {"Swap X with R for acceleration"   , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x7F92 , OFF , cdr_swapacceleration , "CROSS: Enable/Disable"            , ""                                   , "Activate this if you use gta_remastered's X and R swapped controls." },
   
   #ifdef LANG
-  {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Change Cheat Device Remastered's Language for your native one!"},
+  {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Translation made by someone"}, // Description will be automatically generated
   #endif
 
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
@@ -463,7 +472,7 @@ const Menu_pack main_menu[] = {
   {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , exit_game            , "CROSS: Exit game"                 , ""                                   , "Exit the game and return to the main menu." },
   
   {"",0,0,-1,-1,-1,-1,-1,-1,NULL,NULL,NULL,NULL}
-}; int menu_size = (sizeof(main_menu)/sizeof(Menu_pack))-1;
+}; const int menu_size = ARRAY_SIZE(main_menu);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -471,7 +480,7 @@ void drawLegendBox(int rows, u32 color) {
   drawBox(15.0f, 266.0f - (rows * 12.0f), 450.0f, 4.0f + (rows * 12.0f), color);
 }
 
-void drawLegendMessage(char *str, int side, int pos, u32 color) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
+void drawLegendMessage(const char *str, int side, int pos, u32 color) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
   drawString(str, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, side ? 240.0f : 20.0f, 256.0f - (pos * 12.0f), color);
 }
 
@@ -479,7 +488,6 @@ void drawLegendMessage(char *str, int side, int pos, u32 color) { // side: 0 = L
 
 
 #if defined(PREVIEW) || defined(USERSCRIPTS)
-char extension[5];
 char filename[64];
 
 #define META_DESC_SIZE 90  // max length
@@ -589,7 +597,6 @@ int usercheats_draw() {
           if( d_dir.d_name[0] == '.' )
             continue;
           if( cur_dirno == usercheat_dirno ) { // this is the selected file
-            memcpy(extension, d_dir.d_name + strlen(d_dir.d_name) - 4, 5);
             strcpy(filename, d_dir.d_name); // save filename
           }
         }
@@ -599,14 +606,14 @@ int usercheats_draw() {
     
     } else { // no cheats folder 
       drawString("No user cheats folder found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT);
-      sprintf(local_buff, "Create '%s' and place .txt there", buffer);
+      sprintf(local_buff, "Create '%s' and place usercheat there", buffer);
       drawString(local_buff, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT);
       return -1;
     }
     
     if( cur_dirno <= 0 ) { // folder found but empty
       drawString("No user cheat files found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT);
-      sprintf(local_buff, "Place .txt files to '%s'", buffer);
+      sprintf(local_buff, "Place usercheat files to '%s'", buffer);
       drawString(local_buff, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT);
       return -1;
     }
@@ -635,7 +642,7 @@ int usercheats_draw() {
   }
   
   /// error checks of selected file
-  if( !stricmp(extension, ".txt") ) { // check for txt
+  if( fileEndsWithExtension(filename, '.txt') ) { // check for txt
     
     /// read in ALL cheat names and CURRENT selected cheat's meta data
     if( readtxtneeded || (usercheat_waittime > 0 && getGametime() > usercheat_waittime) ) {
@@ -786,13 +793,13 @@ int usercheats_draw() {
       
     } else if( usercheat_options <= 0 ) {
       usercheat_draw_lower = 0;
-      drawString("No cheats found in this .txt", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+      drawString("No cheats found in this file", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
     }
   
   } else {
     usercheat_selector = 1; // jump cursor back to top menu
     usercheat_draw_lower = 0;
-    drawString("Not a txt file!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+    drawString("Not a usercheat file!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
   }
   
 
@@ -1059,7 +1066,6 @@ int userscript_readtxtneeded = 1; // if 1
 //int userscript_readfolderneeded = 1; // if 1 filename of current txt will be read + total files
 
 char currentfile[64]; // current txt
-char currentexten[5]; // file extension
 
 char script_subfldrs[128]; // contains additional path eg "/WIP/vehicles/" and will be merged to with script_folder
 char script_workfldr[256]; // into this one
@@ -1077,56 +1083,104 @@ ushort custom_gxts[CSTGXTS][CSTGXTLGT];
 #define SUPPORT_LABEL 256   // maximum supported Labels
 #define MAX_LABEL_LENGTH 32 // max length of a Label
 
-// If needed, could be lower/higher
-#define USERSCRIPT_FILE_LIMIT 64
+static userscript_entry* userscript_currentdir_scripts = NULL; // Array where scripts / folders file info is stored
+static int userscript_cd_scripts_count = 0;     // Number of scripts / folder in array
+static int currentdir_files_folders_count = 0;  // Files & Folders count on current dir
 
-// Array where scripts / folders file info is stored
-static struct script_file userscript_currentdir_scripts[USERSCRIPT_FILE_LIMIT];
-static unsigned char userscript_cd_scripts_count = 0; // Number of scripts / folder in array
-int currentdir_files_folders_count = 0; // Files & Folders count on current dir
+static const char* userscript_valid_extensions[] = { ".txt", ".sc" }; // Valid extensions for userscripts
+static const int userscript_valid_extensions_num = ARRAY_SIZE(userscript_valid_extensions);
 
-int userscripts_get_scripts()
+// Checks file extension to see if it is a valid userscript file
+static int is_file_userscript(const char* path)
 {
+  if ( !path || *path == '\0' ) return 0;
+
+  int i;
+  for (i = 0; i < userscript_valid_extensions_num; i++)
+  {
+    if ( fileEndsWithExtension(path, userscript_valid_extensions[i]) ) return 1;
+  }
+
+  return 0;
+}
+
+int free_userscripts_array()
+{
+  if ( !userscript_currentdir_scripts ) return 0;
+
+  int i;
+
+  for (i = 0; i < userscript_cd_scripts_count; i++)
+  {
+    // If name was allocated, free it
+    if ( userscript_currentdir_scripts[i].path )
+    {
+      free(userscript_currentdir_scripts[i].path);
+    }
+  }
+
+  // Free allocated array
+  free(userscript_currentdir_scripts);
+  userscript_currentdir_scripts = NULL;
+
+  return 0;
+}
+
+static int userscripts_update_array()
+{
+  userscript_cd_scripts_count = countFilesInFolder(script_workfldr) + countFoldersInFolder(script_workfldr);
+
   // Check if there are files & folders to store
-  if (countFilesInFolder(script_workfldr) + countFoldersInFolder(script_workfldr) == 0)
+  if ( userscript_cd_scripts_count == 0 )
   {
     return 0;
   }
+
+  // If there's mem allocated, free it before allocating again
+  if (userscript_currentdir_scripts) free_userscripts_array();
+
+  // Alloc needed mem for scripts array
+  userscript_currentdir_scripts = (userscript_entry*)malloc(sizeof(userscript_entry) * userscript_cd_scripts_count);
+  if ( !userscript_currentdir_scripts ) return -1;
   
   // Open current dir
   SceUID dir = sceIoDopen(script_workfldr);
   if (dir < 0)
   {
+    free(userscript_currentdir_scripts);
+    userscript_currentdir_scripts = NULL;
     return -1;
   }
 
-  if (userscript_cd_scripts_count > 0) // Redo script list with new dir
-  {
-    userscript_cd_scripts_count = 0;
-  }
-
   SceIoDirent dirent;
-  memset(&dirent,0,sizeof(SceIoDirent)); // prevents a crash
+  memset(&dirent, 0, sizeof(SceIoDirent));
 
-  // While scripts loaded on array < 64 and can read from dir
-  while (userscript_cd_scripts_count < USERSCRIPT_FILE_LIMIT && sceIoDread(dir, &dirent) > 0) {
+  int i = 0;
+
+  // While we can read from dir
+  while ( i < userscript_cd_scripts_count && sceIoDread(dir, &dirent) > 0 ) {
     
     if (dirent.d_name[0] == '.') continue; // Skip "." entries
 
-    // Copy dirent
-    memcpy(&userscript_currentdir_scripts[userscript_cd_scripts_count].dirent, &dirent, sizeof(dirent));
+    userscript_entry* uscript = &userscript_currentdir_scripts[i];
+
+    // Copy filename
+    uscript->path = strdup(dirent.d_name);
+    if ( !uscript->path ) break; // If couldn't copy / allocate, stop
+
+    // Copy attr
+    uscript->attr = dirent.d_stat.st_attr;
 
     // Check if is folder
-    if (dirent.d_stat.st_attr & FIO_SO_IFDIR)
+    if ( FIO_SO_ISDIR(dirent.d_stat.st_attr) )
     {
       // Calc files and folders count
-      userscript_currentdir_scripts[userscript_cd_scripts_count].files_folders_count = countFilesInFolder(userscript_currentdir_scripts[userscript_cd_scripts_count].dirent.d_name) + countFoldersInFolder(userscript_currentdir_scripts[userscript_cd_scripts_count].dirent.d_name);
+      uscript->files_folders_count = countFilesInFolder(uscript->path) + countFoldersInFolder(uscript->path);
     }
-
-    userscript_cd_scripts_count++;
 
     // Clear dirent
     memset(&dirent, 0, sizeof(SceIoDirent));
+    i++;
   }
 
   sceIoDclose(dir);
@@ -1153,21 +1207,21 @@ int userscripts_create() {
   //userscript_readfolderneeded = 1; // now
   
   sprintf(script_workfldr, "%s%s%s/%s%s", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/");
-  userscripts_get_scripts();
+  userscripts_update_array();
   
   flag_userscripts = 1; // only set here!
 
   return 0;
 }
 
-int userscripts_draw() { // this is the worst code and I'm not proud of it
+static int userscripts_draw() { // this is the worst code and I'm not proud of it
   
   int i;
   float x, y;
   char buffer[256];
 
   /// draw title  
-  drawString(t_string("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
+  drawString(_t("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
   
   x = 40.0f; // horizontal menu start
   y = 35.0f; // vertical menu start
@@ -1187,10 +1241,15 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     } */
     
     if( userscript_cd_scripts_count == 0 ) { // folder found but empty
-      drawString(t_string("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
-      snprintf(buffer, sizeof(buffer), t_string("Place .txt files to '%s%s%s/'"), basefolder, folder_scripts, LCS ? "LCS" : "VCS");
+      drawString(_t("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
+      snprintf(buffer, sizeof(buffer), _t("Place User Scripts to '%s%s%s/'"), basefolder, folder_scripts, LCS ? "LCS" : "VCS");
       drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
       return -1; // no cheats folder
+    }
+    else if ( !userscript_currentdir_scripts ) { // No memory???
+      drawString(_t("Well... this shouldn't have happened (the PSP has ran out of memory)"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
+      drawString(_t("Report this screen to the developers (please)"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
+      return -1;
     }
 
   /// draw UI 
@@ -1210,12 +1269,12 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
 
   /// draw Scrollbar
   if( (userscript_cd_scripts_count > userscript_showoptions) && userscript_draw_lower ) { // draw only if there are more options than can be displayed
-    float scrollbar_x = 455.0f;
-    float scrollbar_y = 33.0f + ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
-    float scrollbar_bg_width = 5.0f;
+    const float scrollbar_x = 455.0f;
+    const float scrollbar_y = 33.0f + ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
+    const float scrollbar_bg_width = 5.0f;
     float scrollbar_bg_height = (flag_use_legend ? 190.0f : 224.0f) - ( userscript_toptions ? ((userscript_row_spacing * userscript_toptions) + 8.0f) : 0.0f);
-    float scrollbar_cursor_height = scrollbar_bg_height * ((float)userscript_showoptions/(float)(userscript_cd_scripts_count-1)); // 1.0 wenn alles sichtbar  0.2 bei 20% sichtbar  
-    float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)userscript_top) * 100.0f / ((float)(userscript_cd_scripts_count-userscript_showoptions))) ); /// scroll only when entries move (like it should be)
+    const float scrollbar_cursor_height = scrollbar_bg_height * ((float)userscript_showoptions/(float)(userscript_cd_scripts_count-1)); // 1.0 wenn alles sichtbar  0.2 bei 20% sichtbar  
+    const float scrollbar_cursor_y = scrollbar_y + ((scrollbar_bg_height - scrollbar_cursor_height) / 100.0f * (((float)userscript_top) * 100.0f / ((float)(userscript_cd_scripts_count-userscript_showoptions))) ); /// scroll only when entries move (like it should be)
 
     if( userscript_top + userscript_showoptions >= userscript_cd_scripts_count-1 ) // when last item is visible -> cursor must be at bottom
       scrollbar_bg_height -= 0.01f; // fix because of blit bug when two rectangles on same position
@@ -1232,12 +1291,13 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
      
     for(i = userscript_top; i < userscript_showoptions + userscript_top; i++, y += userscript_row_spacing) 
     {
-      // Get info from initialized array (no constant reading :D)
-      SceIoDirent* d_dir = &userscript_currentdir_scripts[i].dirent;
+      // Don't do anything if nothing was allocated
+      if ( !userscript_currentdir_scripts || !userscript_currentdir_scripts[i].path ) break;
+
+      // Get info from allocated array
       int files_folders_count = userscript_currentdir_scripts[i].files_folders_count;
 
-      memcpy(extension, d_dir->d_name + strlen(d_dir->d_name) - 4, 5);
-      strcpy(filename, d_dir->d_name); // save filename
+      strcpy(filename, userscript_currentdir_scripts[i].path); // save filename
 
       #ifdef DEBUG
       if( flag_draw_DBGVALS ) {
@@ -1247,10 +1307,9 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
       }
       #endif
               
-      if ( i == userscript_selected_val && userscript_selector == 0) {
+      if ( i == userscript_selected_val && userscript_selector == 0 ) {
         /// save stuff
         strcpy(currentfile, filename);
-        strcpy(currentexten, extension);
         currentdir_files_folders_count = files_folders_count;
         
         /// draw cursor
@@ -1259,9 +1318,9 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   
       /// draw name  
       COLOR_TEMP = COLOR_CHEAT_OFF;
-      if( stricmp(extension, ".txt") ) {
+      if( !is_file_userscript(filename) ) {
          
-        if( d_dir->d_stat.st_attr & FIO_SO_IFDIR ) { // check folder
+        if( FIO_SO_ISDIR(userscript_currentdir_scripts[i].attr) ) { // check folder
           
           snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, filename);
           if( files_folders_count > 0 )
@@ -1276,7 +1335,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
           COLOR_TEMP = GREY; // not a valid txt file (grey out)
         
       } else
-        filename[strlen(filename)-4] = '\0'; // remove .txt from displayed name
+        filename[strlen(filename)-getExtensionLength(filename)] = '\0'; // remove extension from displayed name
       
       snprintf(buffer, sizeof(buffer), "%s", filename); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);      
@@ -1284,7 +1343,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   } 
   
   /// error checks of selected file
-  if( !stricmp(currentexten, ".txt") ) { // check for txt
+  if( is_file_userscript(currentfile) ) { // check for userscript
   
     /// read in meta data
     if( userscript_readtxtneeded || (userscript_waittime > 0 && getGametime() > userscript_waittime) ) {
@@ -1398,8 +1457,8 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 70.0f, RED);
 
     
-    snprintf(buffer, sizeof(buffer), "counter = %d", counter );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED);
+    // snprintf(buffer, sizeof(buffer), "counter = %d", counter );
+    // drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED);
     
     snprintf(buffer, sizeof(buffer), "userscript_top = %d", userscript_top );
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 140.0f, RED);
@@ -1443,33 +1502,33 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
     
     /// draw data instead
     //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 10.0f, RED);
-    if( userscript_currentdir_scripts[userscript_selected_val].dirent.d_stat.st_attr & FIO_SO_IFREG ) { // its a file
-      if( !stricmp(currentexten, ".txt") ) { // and its a txt
-        snprintf(buffer, sizeof(buffer), t_string("Author: %s"), meta_author );
+    if( FIO_SO_ISREG(userscript_currentdir_scripts[userscript_selected_val].attr) ) { // its a file
+      if( is_file_userscript(currentfile) ) { // and its a txt
+        snprintf(buffer, sizeof(buffer), _t("Author: %s"), meta_author );
         drawLegendMessage(buffer, 0, 2, COLOR_TEXT); // left side, first row
           
-        snprintf(buffer, sizeof(buffer), t_string("Version: %s"), meta_version );
+        snprintf(buffer, sizeof(buffer), _t("Version: %s"), meta_version );
         drawLegendMessage(buffer, 1, 2, COLOR_TEXT); // right side, first row
           
-        snprintf(buffer, sizeof(buffer), t_string("Category: %s"), meta_category );
+        snprintf(buffer, sizeof(buffer), _t("Category: %s"), meta_category );
         drawLegendMessage(buffer, 0, 1, COLOR_TEXT); // left side, second row
           
-        snprintf(buffer, sizeof(buffer), t_string("Date: %s"), meta_date );
+        snprintf(buffer, sizeof(buffer), _t("Date: %s"), meta_date );
         drawLegendMessage(buffer, 1, 1, COLOR_TEXT); // right side, second row
           
-        snprintf(buffer, sizeof(buffer), t_string("Description: %s"), meta_description );
+        snprintf(buffer, sizeof(buffer), _t("Description: %s"), meta_description );
         drawLegendMessage(buffer, 0, 0, COLOR_TEXT); // left side, third row
           
-      } else drawLegendMessage(t_string("This is not a valid .txt file!"), 0, 2, COLOR_TEXT); // left side, first row
+      } else drawLegendMessage(_t("This is not a valid UserScript file!"), 0, 2, COLOR_TEXT); // left side, first row
     
     } else { //its a folder
       if( currentdir_files_folders_count > 0 ) {
-        drawLegendMessage(t_string("CROSS: Enter Folder"),    1, 2, COLOR_TEXT); // right side, first row
-        drawLegendMessage(t_string("TRIANGLE: Leave Folder"), 1, 1, COLOR_TEXT); // right side, second row
-        drawLegendMessage(t_string("CIRCLE: Exit to Menu"),   1, 0, COLOR_TEXT); // right side, third row
+        drawLegendMessage(_t("CROSS: Enter Folder"),    1, 2, COLOR_TEXT); // right side, first row
+        drawLegendMessage(_t("TRIANGLE: Leave Folder"), 1, 1, COLOR_TEXT); // right side, second row
+        drawLegendMessage(_t("CIRCLE: Exit to Menu"),   1, 0, COLOR_TEXT); // right side, third row
           
       } else {
-        drawLegendMessage(t_string("This folder is empty!"),  0, 2, COLOR_TEXT); // left side, first row
+        drawLegendMessage(_t("This folder is empty!"),  0, 2, COLOR_TEXT); // left side, first row
       }
     }
   }
@@ -1477,7 +1536,7 @@ int userscripts_draw() { // this is the worst code and I'm not proud of it
   return 0;
 }
 
-int userscripts_ctrl() {
+static int userscripts_ctrl() {
   if( hold_buttons & PSP_CTRL_UP ) {
     if( userscript_selected_val <= 0 ) {
     } else userscript_selected_val -= 1;  
@@ -1538,29 +1597,25 @@ int userscripts_ctrl() {
       }
       sprintf(script_workfldr, "%s%s%s", buffer, script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/");
 
+      // Only update HUD if we actually went to parent folder
+      userscripts_update_array();
+      userscript_selected_val = 0;
+      userscript_top = 0;
+
     } else { // reset to be save
       memset(script_subfldrs, 0, sizeof(script_subfldrs)); // clear
       sprintf(script_workfldr, "%s", buffer); 
     }
-
-    userscripts_get_scripts();
-    userscript_selected_val = 0;
-    userscript_top = 0;
   }
     
     
     if( pressed_buttons & PSP_CTRL_CROSS ) { // toggle cheat
       snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
 
-      // doesFileExist doesn't work the same on Android, so, let's check the correct way
-      SceIoStat currentfile_stat = {0};
-
-      sceIoGetstat(buffer, &currentfile_stat);
-
-      if( currentfile_stat.st_attr & FIO_SO_IFDIR && (countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) ) {  // check folder + not empty
+      if( doesDirExist(buffer) && (countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) ) {  // check folder + not empty
         sprintf(script_subfldrs, "%s%s%s", script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/", currentfile);
         sprintf(script_workfldr, "%s%s%s/%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs);
-        userscripts_get_scripts();
+        userscripts_update_array();
         
         userscript_selected_val = 0;
         userscript_top = 0;
@@ -1576,8 +1631,10 @@ int userscripts_ctrl() {
       
       Yes, it somehow works but please do not take it as an example as 
       this is not how it should be done! :D
-      ****************************************************************/  
-      if( !stricmp(currentexten, ".txt") ) {
+
+      TODO: organize this better
+      ****************************************************************/
+      if( is_file_userscript(currentfile) ) {
         closeMenu();  
         
         #if defined(LOG) || defined(USERSCRIPTLOG)
@@ -1668,7 +1725,7 @@ int userscripts_ctrl() {
 
             /// error exit - script too big
             if( pos >= SCRIPT_SIZE ) {
-              snprintf(buffer, sizeof(buffer), t_string("~r~Error: Script exceeds currently supported size! Sorry"));
+              snprintf(buffer, sizeof(buffer), _t("~r~Error: Script exceeds currently supported size! Sorry"));
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -1855,7 +1912,7 @@ int userscripts_ctrl() {
                       /// TODO
                       //eg: " 024C: request_model #SCRIPT_SALCHAIR "
                       
-                      snprintf(buffer, sizeof(buffer), t_string("~r~Error: '%s' in line %i not yet supported!"), token, line);
+                      snprintf(buffer, sizeof(buffer), _t("~r~Error: '%s' in line %i not yet supported!"), token, line);
                       setTimedTextbox(buffer, 7.00f); //
                       sceIoClose(file);
                       goto scripterror_exit;
@@ -1867,7 +1924,7 @@ int userscripts_ctrl() {
                       
                         /// error 
                         if ( VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
-                          snprintf(buffer, sizeof(buffer), t_string("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
+                          snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
                           setTimedTextbox(buffer, 7.00f); //
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -2024,7 +2081,7 @@ int userscripts_ctrl() {
                             
                             customtextcounter++;
                           } else {
-                            snprintf(buffer, sizeof(buffer), t_string("~r~Error: Custom strings limit of %i reached."), CSTGXTS);
+                            snprintf(buffer, sizeof(buffer), _t("~r~Error: Custom strings limit of %i reached."), CSTGXTS);
                             setTimedTextbox(buffer, 7.00f); //
                             sceIoClose(file);
                             goto scripterror_exit;
@@ -2045,7 +2102,7 @@ int userscripts_ctrl() {
                         ctr++;
 
                         if( ctr > 7 ) { // a gxt id string can't be longer than 7 chars!!
-                          snprintf(buffer, sizeof(buffer), t_string("~r~Error: String '%s' in line %i too long!"), identifier, line);
+                          snprintf(buffer, sizeof(buffer), _t("~r~Error: String '%s' in line %i too long!"), identifier, line);
                           setTimedTextbox(buffer, 7.00f);
                           sceIoClose(file);
                           goto scripterror_exit;
@@ -2283,7 +2340,7 @@ int userscripts_ctrl() {
               
               /// error check: SUPPORT_LABEL count
               if( label_pos_cur >= SUPPORT_LABEL ) { //label matches
-                snprintf(buffer, sizeof(buffer), t_string("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
+                snprintf(buffer, sizeof(buffer), _t("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
                 setTimedTextbox(buffer, 7.00f); //
                 sceIoClose(file);
                 goto scripterror_exit;
@@ -2296,7 +2353,7 @@ int userscripts_ctrl() {
                 logPrintf("comparing for doubles: '%s' with '%s'", token, label_ch_arr[k]);
                 #endif  
                 if( strcmp(token, label_ch_arr[k]) == 0 ) { // label matches
-                  snprintf(buffer, sizeof(buffer), t_string("~r~Error: Found already used label '%s' in line %i?"), token, line);
+                  snprintf(buffer, sizeof(buffer), _t("~r~Error: Found already used label '%s' in line %i?"), token, line);
                   setTimedTextbox(buffer, 7.00f); //
                   sceIoClose(file);
                   goto scripterror_exit;
@@ -2324,7 +2381,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 04 00   DB E7   07 01   //$4071 = 1 
               
-              snprintf(buffer, sizeof(buffer), t_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2335,7 +2392,7 @@ int userscripts_ctrl() {
               // enable Write Opcodes in Sanny
               // 39 00   2F     07 02    //35@ == 2   
               
-              snprintf(buffer, sizeof(buffer), t_string("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
+              snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $... 
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
               goto scripterror_exit;
@@ -2458,7 +2515,7 @@ int userscripts_ctrl() {
                   
                   /// error goto label not found in Labels
                   if( tempint == placeholder + j ) { // if tempint not overwriten (ugly)
-                    snprintf(buffer, sizeof(buffer), t_string("~r~Error: Label '%s' not found?!!"), unk_label[j]);
+                    snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' not found?!!"), unk_label[j]);
                     setTimedTextbox(buffer, 7.00f); //
                     goto scripterror_exit;
                   }
@@ -2476,7 +2533,7 @@ int userscripts_ctrl() {
           CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
           
           #if defined(LOG) || defined(USERSCRIPTLOG)
-          u8 tempbuffffff[256]; // quick temp printout (which also crashes for bigger scripts)
+          char tempbuffffff[256]; // quick temp printout (which also crashes for bigger scripts)
           memset(&tempbuffffff, 0, sizeof(tempbuffffff)); 
           for( i = 0; i < (pos < 256 ? pos : 256); i++ ) // otherwise crash of emulator
             snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
@@ -2495,6 +2552,7 @@ int userscripts_ctrl() {
     }
     
     if( pressed_buttons & PSP_CTRL_CIRCLE ) { // exit
+      free_userscripts_array();
       flag_userscripts = 0;
     }
   
@@ -2513,16 +2571,17 @@ int userscripts_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef EDITORS
-short flag_editor = 0;
-char editor_titlebuffer[64];
-const Editor_pack *editor_curmenu;
 
-int editor_menumode  = -1;
-int editor_toptions  = -1;
-int editor_firstobj  = -1; // first object 
-int editor_lastobj   = -1; // last object 
-int editor_blocksize = -1; // size of object
-int editor_blocks    = -1; // blocks available
+static short flag_editor = 0;
+static char editor_titlebuffer[64];
+static const Editor_pack *editor_curmenu;
+
+static int editor_menumode  = -1;
+static int editor_toptions  = -1;
+static int editor_firstobj  = -1; // first object 
+static int editor_lastobj   = -1; // last object 
+static int editor_blocksize = -1; // size of object
+static int editor_blocks    = -1; // blocks available
 
 /// editor position(s) saved globally (init with 0)
 int editor_pedobj_current        = 0;
@@ -2546,28 +2605,28 @@ int editor_pedstatsDAT_current   = 0;
 int editor_weaponDAT_current     = 0;
 int editor_timecycDAT_current    = 0;
 int editor_ide_current           = 0; // 453 = LCS: "plnt_pipepart01" aka ocean-pipe
-int editor_temp_blocksize        = 0; // special
+static int editor_temp_blocksize        = 0; // special
 
-int editor_wasused = 0; // if > 0 at least one value was changed
+static int editor_wasused = 0; // if > 0 at least one value was changed
 
-float editor_row_spacing = 15.f; // pixels between rows
+static const float editor_row_spacing = 15.f; // pixels between rows
 
-int editor_block_current;
-int editor_base_adr;
-int editor_options;       // available options (set later)
-int editor_showoptions;   // the number of value rows that should be displayed at once (0 to 2 possible)  
-int editor_draw_lower;    // some have no data in slots -> those can be disabled here
-int editor_selector;      // is 1 if cursor in topmenu --- 0 when in values
-int editor_selection_top; // selected topmenu option
-int editor_selection_val; // selected option in values number
-int editor_top;           // the values option on top when there are more options than editor_showoptions
-int editor_cur_type;      // value type
-int editor_trigger;       // triggers something like teleporting for pickups / set current car for vehicle editors etc
+static int editor_block_current;
+static int editor_base_adr;
+static int editor_options;       // available options (set later)
+static int editor_showoptions;   // the number of value rows that should be displayed at once (0 to 2 possible)  
+static int editor_draw_lower;    // some have no data in slots -> those can be disabled here
+static int editor_selector;      // is 1 if cursor in topmenu --- 0 when in values
+static int editor_selection_top; // selected topmenu option
+static int editor_selection_val; // selected option in values number
+static int editor_top;           // the values option on top when there are more options than editor_showoptions
+static int editor_cur_type;      // value type
+static int editor_trigger;       // triggers something like teleporting for pickups / set current car for vehicle editors etc
 
-int waittime = 0;
+static int waittime = 0;
 
 
-void optionAdjust() {
+static void optionAdjust() {
   editor_options = 0;
   editor_showoptions = (flag_use_legend ? 12 : 14) - editor_toptions; // the number of value rows that should be displayed at once (0 to 2 possible)  
   
@@ -2578,23 +2637,23 @@ void optionAdjust() {
     editor_showoptions = editor_options; // adjust editor_showoptions (there can't be more "editor_showoptions" than "editor_options" itself)    
 }
 
-int editor_create(int mode, int toptions, const char *editortitle, Editor_pack *editor_menu, int first_obj, int block_size, int blocks) {
+int editor_create(int mode, int toptions, const char *editortitle, const Editor_pack *editor_menu, int first_obj, int block_size, int blocks) {
   #ifdef LOG
   logPrintf("[INFO] %i: editor_create() ..'%s'", getGametime(), editortitle);
   #endif
   
-  sprintf(editor_titlebuffer, "Editor - %s", t_string(editortitle));
+  sprintf(editor_titlebuffer, "Editor - %s", _t(editortitle));
     
   editor_menumode = mode; 
   editor_toptions = toptions;
   editor_curmenu = editor_menu;
-  editor_blocksize = block_size; 
-  editor_blocks = blocks; 
-  editor_firstobj = first_obj; 
-  editor_lastobj = editor_firstobj + (editor_blocks * editor_blocksize); 
+  editor_blocksize = block_size;
+  editor_blocks = blocks;
+  editor_firstobj = first_obj;
+  editor_lastobj = editor_firstobj + (editor_blocks * editor_blocksize);
   editor_base_adr = 0;
   editor_draw_lower = 0;
-  editor_selector = 1;  
+  editor_selector = 1;
   editor_selection_top = editor_toptions-1;
   editor_selection_val = 0;
   editor_top = 0;
@@ -2609,7 +2668,7 @@ int editor_create(int mode, int toptions, const char *editortitle, Editor_pack *
   return 0;
 }
 
-int editor_draw() {
+static int editor_draw() {
   int i, str_pos;
   char buffer[128];
   char buffer_top0[128]; // top option
@@ -2646,10 +2705,10 @@ int editor_draw() {
       editor_block_current = editor_pedobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPedObjectIsActive(editor_base_adr) ) {
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getPedID(editor_base_adr), t_string("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPedID(editor_base_adr), _t("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
         editor_draw_lower = 1; // there is a PED here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks); // block menu  
         editor_draw_lower = 0;  // no active PED -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2659,7 +2718,7 @@ int editor_draw() {
       editor_block_current = editor_vehicleobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
-        sprintf(buffer_top0, t_string("%s: %i/%i      %s: %i    %s: "), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getVehicleID(editor_base_adr), t_string("Name")); // block menu
+        sprintf(buffer_top0, _t("%s: %i/%i      %s: %i    %s: "), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr), _t("Name")); // block menu
         
         sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
@@ -2668,7 +2727,7 @@ int editor_draw() {
         
         editor_draw_lower = 1; // there is a Vehicle here 
       } else { 
-        sprintf(buffer_top0, t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active Vehicle here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2678,10 +2737,10 @@ int editor_draw() {
       editor_block_current = editor_worldobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2691,10 +2750,10 @@ int editor_draw() {
       editor_block_current = editor_businessobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2704,10 +2763,10 @@ int editor_draw() {
       editor_block_current = editor_pickup_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPickupIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i    %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getPickupID(editor_base_adr), t_string("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPickupID(editor_base_adr), _t("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2718,12 +2777,12 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getMapiconIsActive(editor_base_adr) ){
         if( getMapiconID(editor_base_adr) == 0 ) // objective (destination, enemy, etc)
-          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %s   %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)), t_string("Type"), getMapiconTypeName(editor_base_adr) ); //block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %s   %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)), _t("Type"), getMapiconTypeName(editor_base_adr) ); //block menu  
         else
-          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %s"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2737,7 +2796,7 @@ int editor_draw() {
       // garage doesn't use editor_block_current but 2 globals directly
       editor_base_adr = editor_firstobj + (editor_garage_current * editor_blocksize * 4) + (editor_garageslot_current * editor_blocksize); // calc base address
     
-      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i"), t_string("Slot"), editor_garageslot_current+1 );
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i"), _t("Slot"), editor_garageslot_current+1 );
       if( getGarageVehicleSlotIsActive(editor_base_adr) ){ // vehicle id for detecting if slot is used
         ///print vehicle name
         /*sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
@@ -2751,28 +2810,28 @@ int editor_draw() {
         editor_selector = 1; // don't allow going to down_menu
       }
       
-      snprintf(buffer_top1, sizeof(buffer_top1), t_string("%s: %s"), t_string("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
+      snprintf(buffer_top1, sizeof(buffer_top1), _t("%s: %s"), _t("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
       break;
         
     case EDITOR_VEHWORLDSPAWNS: 
       editor_block_current = editor_vehiclespawn_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleWorldSpawnSlotIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        sprintf(buffer_top0, t_string("%s: %i/%i      %s: %i"), t_string("Slot"), editor_block_current+1, editor_blocks, t_string("ID"), getInt(editor_base_adr)); // block menu
+        sprintf(buffer_top0, _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getInt(editor_base_adr)); // block menu
         
         ///add vehicle name
         sprintf(buffer_top1, "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
           sprintf(buffer_top1, "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
-        sprintf(buffer_top0, t_string("%s    %s: %s"), buffer_top0, t_string("Name"), buffer_top1);
+        sprintf(buffer_top0, _t("%s    %s: %s"), buffer_top0, _t("Name"), buffer_top1);
         
         ///add custom created indicator
         if( isCustomParkedVehicleSpawnViaSlot(editor_block_current) )
-          sprintf(buffer_top0, t_string("%s    (%s)"), buffer_top0, t_string("custom"));
+          sprintf(buffer_top0, _t("%s    (%s)"), buffer_top0, _t("custom"));
           
         editor_draw_lower = 1; 
       } else { 
-        sprintf(buffer_top0, t_string("%s: %i/%i"), t_string("Slot"), editor_block_current+1, editor_blocks ); // block menu  
+        sprintf(buffer_top0, _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2782,7 +2841,7 @@ int editor_draw() {
       editor_block_current = editor_empire_current;
       editor_base_adr = editor_firstobj + (editor_block_current * 4); // calc base address
       if( 1 ) { // 
-        sprintf(buffer_top0, t_string("%s: %i/%i"), t_string("Business"), editor_block_current+1, editor_blocks); // block menu        
+        sprintf(buffer_top0, _t("%s: %i/%i"), _t("Business"), editor_block_current+1, editor_blocks); // block menu        
         editor_draw_lower = 1; 
       }
       break;
@@ -2795,7 +2854,7 @@ int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       
       if( getInt(editor_base_adr) ){ // there is a pointer here
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: '%s'   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), t_string("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: '%s'   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
         editor_draw_lower = 1; 
     
         editor_base_adr = getInt(editor_base_adr);
@@ -2818,7 +2877,7 @@ int editor_draw() {
         optionAdjust(); // "re-adjust"  
 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
         editor_temp_blocksize = 0x4; // size of pointer
@@ -2838,13 +2897,13 @@ int editor_draw() {
         editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
           
         if( getInt(editor_base_adr) && getByte( getInt(editor_base_adr) + 0x10 ) == MODELINFO_VEHICLE ) { // there is a pointer here AND its vehicle type
-          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i    %s: %s"), t_string("ID"), editor_block_current, t_string("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current)); 
-          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s    %s: %s"), buffer_top0, t_string("Name"), getRealVehicleNameViaID(editor_block_current)); // fix  
+          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i    %s: %s"), _t("ID"), editor_block_current, _t("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current)); 
+          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getRealVehicleNameViaID(editor_block_current)); // fix  
           editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // todo (var_handlingcfgslotsize)
           editor_base_adr = getAddressOfHandlingSlotForID(editor_block_current);
           editor_draw_lower = 1;
         } else { 
-          snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks ); // block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks ); // block menu  
           editor_draw_lower = 0; // not allowed to draw lower menu
           editor_selector = 1; // don't allow going to down_menu
           editor_temp_blocksize = 0x4; // back to size of pointer
@@ -2856,10 +2915,10 @@ int editor_draw() {
       editor_block_current = editor_buildingsIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2869,10 +2928,10 @@ int editor_draw() {
       editor_block_current = editor_treadablesIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2882,10 +2941,10 @@ int editor_draw() {
       editor_block_current = editor_dummysIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x58), t_string("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
-        snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1 ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu  
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2894,7 +2953,7 @@ int editor_draw() {
     case EDITOR_CARCOLSDAT:
       editor_block_current = editor_carcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Color"), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Color"), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2911,7 +2970,7 @@ int editor_draw() {
     case EDITOR_PEDCOLSDAT: //VCS only
       editor_block_current = editor_pedcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("Color"), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Color"), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       
       /// draw color box
@@ -2925,21 +2984,21 @@ int editor_draw() {
     case EDITOR_PARTICLECFG:
       editor_block_current = editor_particleCFG_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_PEDSTATSDAT:
       editor_block_current = editor_pedstatsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i"), t_string("No."), editor_block_current, editor_blocks-1); // block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1); // block menu  
       editor_draw_lower = 1; 
       break;
       
     case EDITOR_WEAPONDAT:
       editor_block_current = editor_weaponDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %i/%i      %s: %i   %s: %s"), t_string("No."), editor_block_current, editor_blocks-1, t_string("ID"), getShort(editor_base_adr+0x60), t_string("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x60), _t("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
       editor_draw_lower = 1; 
       break;
      
@@ -2948,7 +3007,7 @@ int editor_draw() {
     int weather = editor_block_current / 24;
     int time = editor_block_current % 24;
     editor_base_adr = editor_firstobj + (8 * time) + weather;
-      snprintf(buffer_top0, sizeof(buffer_top0), t_string("%s: %s   %s: %02i:00"), t_string("Weather"), t_string( LCS ? weather_lcs[weather] : weather_vcs[weather] ), t_string("Time"), time); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %s   %s: %02i:00"), _t("Weather"), _t( LCS ? weather_lcs[weather] : weather_vcs[weather] ), _t("Time"), time); //block menu  
       editor_draw_lower = 1; 
     editor_temp_blocksize = 0x2bf0; // LCS & VCS! todo?
       break;
@@ -3042,7 +3101,7 @@ int editor_draw() {
       #endif
         
       ///Name selected
-      drawString(t_string(editor_curmenu[i].name), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
+      drawString(_t(editor_curmenu[i].name), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
       
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything    
         func = editor_curmenu[i].value;
@@ -3052,7 +3111,7 @@ int editor_draw() {
       } else { // plain value editing 
         int adr = editor_curmenu[i].address+editor_base_adr;
         char pre = editor_curmenu[i].precision;    
-        char* fix = editor_curmenu[i].postfix;    
+        const char* fix = editor_curmenu[i].postfix;    
         switch( editor_curmenu[i].type ) {
           case TYPE_BYTE:
             snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%02X%s", *(unsigned char*)(adr), fix);
@@ -3081,16 +3140,16 @@ int editor_draw() {
               snprintf(buffer, sizeof(buffer), "FALSE");
             } else snprintf(buffer, sizeof(buffer), "ERROR");*/
       if( *(unsigned char*)(adr) == 1 ) {
-              snprintf(buffer, sizeof(buffer), t_string("TRUE"));
+              snprintf(buffer, sizeof(buffer), _t("TRUE"));
             } else if(*(unsigned char*)(adr) == 0 ) {
-              snprintf(buffer, sizeof(buffer), t_string("FALSE"));
-            } else snprintf(buffer, sizeof(buffer), t_string("ERROR"));
+              snprintf(buffer, sizeof(buffer), _t("FALSE"));
+            } else snprintf(buffer, sizeof(buffer), _t("ERROR"));
             break;
             
           case TYPE_BIT:
             if( *(char*)(adr) & (1 << pre) ) {
-              snprintf(buffer, sizeof(buffer), t_string("TRUE")); // bit is set
-            } else snprintf(buffer, sizeof(buffer), t_string("FALSE"));
+              snprintf(buffer, sizeof(buffer), _t("TRUE")); // bit is set
+            } else snprintf(buffer, sizeof(buffer), _t("FALSE"));
             break;
             
           case TYPE_NIBBLE_LOW:  // eg: 0xE6  -> 6  0110
@@ -3126,8 +3185,8 @@ int editor_draw() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE: // on VCS the vehicles are loaded into the garage on spawn!!!!! (TODO - can this be checked elsewhere?)
-        drawString(t_string("No vehicle found or garage open!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
-        if( VCS ) drawString(t_string("Info: Vehicles are loaded on spawn! Open & close garage once."), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
+        drawString(_t("No vehicle found or garage open!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        if( VCS ) drawString(_t("Info: Vehicles are loaded on spawn! Open & close garage once."), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
         break;
 
       case EDITOR_PEDOBJ:
@@ -3141,11 +3200,11 @@ int editor_draw() {
       case EDITOR_DUMMYSIPL:
       case EDITOR_MAPICONS: 
       case EDITOR_HANDLINGCFG: 
-        drawString(t_string("No active object in this slot!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawString(_t("No active object in this slot!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
         break;
         
       case EDITOR_IDE: 
-        drawString(t_string("No IDE here!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawString(_t("No IDE here!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
         break;
                     
       default: break;
@@ -3200,10 +3259,10 @@ int editor_draw() {
     //+//+// OPTION //+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//
     if( editor_menumode == EDITOR_VEHICLEOBJ ) {
       if( editor_selector && pcar && editor_base_adr != pcar ) {  
-        drawLegendMessage(t_string("SELECT: Current Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Current Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
       if(editor_selector && !pcar && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {  
-        drawLegendMessage(t_string("SELECT: Touched Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Touched Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
       
       if( editor_selector 
@@ -3211,13 +3270,13 @@ int editor_draw() {
         && getShort(editor_base_adr+0x62) != -1 //
         && getInt(editor_base_adr+0x1C) == 0    //
         && editor_base_adr != pcar ) {          // no need to teleport to own coordinates
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       
     }
     if( editor_menumode == EDITOR_PEDOBJ  ) {
       if( editor_selector && pplayer && editor_base_adr != pplayer ) {
-        drawLegendMessage(t_string("SELECT: Player Object"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Player Object"), 0, 0, COLOR_TEXT); // left side, third row
       }
       
       if( editor_selector 
@@ -3225,91 +3284,91 @@ int editor_draw() {
         && getInt(editor_base_adr+0x40) != 0      //
         && getByte(editor_base_adr+0x43) == 0x09  //
         && editor_base_adr != pplayer ) {         // no need to teleport to own coordinates
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }      
     }
     if( editor_menumode == EDITOR_GARAGE  ) {
       if(editor_selector && getShort(editor_base_adr) != 0 && getFloat(editor_base_adr+0x4) != 0.0f) { // detect saved vehicle
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && getShort(editor_base_adr) == 0 && editor_garageslot_current == 0 ) {  
-        drawLegendMessage(t_string("SELECT: Generate Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Generate Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WORLDOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f && getWorldObjectIsActive(editor_base_adr) ) {
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {
-        drawLegendMessage(t_string("SELECT: Touched Object"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Touched Object"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
   /*if( editor_menumode == EDITOR_BUSINESSOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f ) {
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }*/
 	if( editor_menumode == EDITOR_EMPIRE  ) {
       if( editor_selector ) {
-        drawLegendMessage(t_string("SELECT: Toggle Visible Damage"), 0, 0, COLOR_TEXT); // left side, first row
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SELECT: Toggle Visible Damage"), 0, 0, COLOR_TEXT); // left side, first row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_PICKUPS  ) {
       if( editor_selector && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) {
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_MAPICONS  ) {
       if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_HANDLINGCFG  ) {
       if( editor_selector && pcar && pcar_id != editor_vehicle_current) {
-        drawLegendMessage(t_string("SELECT: Set current vehicle"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SELECT: Set current vehicle"), 0, 1, COLOR_TEXT); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_VEHWORLDSPAWNS  ) {
       if( editor_selector && getFloat(editor_base_adr+(0xC)) != 0 ) {
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       if( editor_selector && pcar) {
-        drawLegendMessage(t_string("SELECT: Overwrite Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Overwrite Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_BUILDINGSIPL || editor_menumode == EDITOR_TREADABLESIPL || editor_menumode == EDITOR_DUMMYSIPL ) {
       if( editor_selector && getFloat(editor_base_adr+(0x38)) != 0 ) {
-        drawLegendMessage(t_string("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
       }
       
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {  
-        drawLegendMessage(t_string("SELECT: Touched Entity"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Touched Entity"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WEAPONDAT  ) {
       if( editor_selector ) {  
-        drawLegendMessage(t_string("SELECT: Current Weapon"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Current Weapon"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_TIMECYCDAT  ) {
       if( editor_selector ) {  
-        drawLegendMessage(t_string("SELECT: Current Cycle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessage(_t("SELECT: Current Cycle"), 0, 0, COLOR_TEXT); // left side, third row
       }
     }
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     #ifdef HEXEDITOR
     if( editor_curmenu[editor_selection_val].address >= 0) {
-      drawLegendMessage(t_string("TRIANGLE: Open in HexEditor"), 1, 1, COLOR_TEXT); // right side, second row
+      drawLegendMessage(_t("TRIANGLE: Open in HexEditor"), 1, 1, COLOR_TEXT); // right side, second row
     }
     #endif
-    drawLegendMessage(t_string("CIRCLE: Exit to Menu"), 1, 0, COLOR_TEXT); // right side, third row
+    drawLegendMessage(_t("CIRCLE: Exit to Menu"), 1, 0, COLOR_TEXT); // right side, third row
   }
 
   return 0;
 }
 
-int editor_ctrl() {
+static int editor_ctrl() {
   #ifdef HEXEDITOR
   int editor_mode = 0; // default 
   #endif
@@ -4107,14 +4166,14 @@ int editor_ctrl() {
 #ifdef FREECAM
 short flag_freecam = 0;
 
-float camera_x, camera_y, camera_z; // camera xyz position in world
-float fov;
-float cam_coord_x1, cam_coord_y1, cam_coord_z1;
-float cam_coord_x2, cam_coord_y2, cam_coord_z2;
-float radius, inclination, azimuth; 
-float movespeed = 0.40, turnspeed = 0.05;
-int printinfo = 1;
-int protofix = 0, protofix2 = 0; // todo make dynamic?!
+static float camera_x, camera_y, camera_z; // camera xyz position in world
+static float fov;
+static float cam_coord_x1, cam_coord_y1, cam_coord_z1;
+static float cam_coord_x2, cam_coord_y2, cam_coord_z2;
+static float radius, inclination, azimuth; 
+static float movespeed = 0.40, turnspeed = 0.05;
+static int printinfo = 1;
+static int protofix = 0, protofix2 = 0; // todo make dynamic?!
 extern u32 global_camera;
 
 int freecam_create() {
@@ -4135,7 +4194,7 @@ int freecam_create() {
   return 0;
 }
 
-int freecam_draw() {
+static int freecam_draw() {
   float player_x = getFloat(pplayer+0x30);
   float player_y = getFloat(pplayer+0x34);
   float player_z = getFloat(pplayer+0x38);
@@ -4158,8 +4217,8 @@ int freecam_draw() {
 
   /// calculate
   radius = 1.00; // root( a^2 + b^2 + c^2 )
-  inclination = acos(cam_coord_z1 / radius); // theta
-  azimuth = atan(cam_coord_y1 / cam_coord_x1); // phi
+  inclination = acosf(cam_coord_z1 / radius); // theta
+  azimuth = atanf(cam_coord_y1 / cam_coord_x1); // phi
 
   azimuth     -= (xstick_ * turnspeed);  
   inclination += (ystick_ * turnspeed);
@@ -4178,12 +4237,12 @@ int freecam_draw() {
   float back_x1 = cam_coord_x1; // for ulgy fix
   float back_y1 = cam_coord_y1;
   
-  cam_coord_x1 = radius * sin(inclination) * cos(azimuth); // x  needs fix
-  cam_coord_y1 = radius * sin(inclination) * sin(azimuth); // y  needs fix
-  cam_coord_z1 = radius * cos(inclination);                // z  OK
-  cam_coord_x2 = radius * cos(inclination) * cos(azimuth); // x2  needs fix
-  cam_coord_y2 = radius * cos(inclination) * sin(azimuth); // y2  needs fix
-  cam_coord_z2 = radius * sin(inclination);                // z2  OK    
+  cam_coord_x1 = radius * sinf(inclination) * cosf(azimuth); // x  needs fix
+  cam_coord_y1 = radius * sinf(inclination) * sinf(azimuth); // y  needs fix
+  cam_coord_z1 = radius * cosf(inclination);                // z  OK
+  cam_coord_x2 = radius * cosf(inclination) * cosf(azimuth); // x2  needs fix
+  cam_coord_y2 = radius * cosf(inclination) * sinf(azimuth); // y2  needs fix
+  cam_coord_z2 = radius * sinf(inclination);                // z2  OK    
     
   /// ugly quick fix TODO  
   if( back_x1 > 0.00 && back_y1 > 0.00 ) { // direction 1
@@ -4288,9 +4347,9 @@ int freecam_draw() {
   
   if( printinfo ) {
     
-    drawString(t_string("Free Camera"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
+    drawString(_t("Free Camera"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
     
-    drawString(t_string("Player position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
+    drawString(_t("Player position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
     snprintf(buffer, sizeof(buffer), "x: %.2f", player_x);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE);
     snprintf(buffer, sizeof(buffer), "y: %.2f", player_y);
@@ -4299,7 +4358,7 @@ int freecam_draw() {
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE);
       
       
-    drawString(t_string("Camera position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
+    drawString(_t("Camera position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
     snprintf(buffer, sizeof(buffer), "x: %.2f", camera_x); 
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE);
     snprintf(buffer, sizeof(buffer), "y: %.2f", camera_y);
@@ -4323,44 +4382,44 @@ int freecam_draw() {
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE);
     */
     
-    snprintf(buffer, sizeof(buffer), t_string("cutscene: %X"), getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
+    snprintf(buffer, sizeof(buffer), _t("cutscene: %X"), getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY);
     
-    snprintf(buffer, sizeof(buffer), t_string("camera: %X"), getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
+    snprintf(buffer, sizeof(buffer), _t("camera: %X"), getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY);
     
 
-    snprintf(buffer, sizeof(buffer), t_string("FOV: %.2f"), fov);
+    snprintf(buffer, sizeof(buffer), _t("FOV: %.2f"), fov);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, GREY);
     
-    snprintf(buffer, sizeof(buffer), t_string("movespeed: %.2f"), movespeed);
+    snprintf(buffer, sizeof(buffer), _t("movespeed: %.2f"), movespeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 125.0f, GREY);
-    snprintf(buffer, sizeof(buffer), t_string("turnspeed: %.3f"), turnspeed);
+    snprintf(buffer, sizeof(buffer), _t("turnspeed: %.3f"), turnspeed);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, GREY);
       
-    snprintf(buffer, sizeof(buffer), t_string("radius: %.2f"), radius);
+    snprintf(buffer, sizeof(buffer), _t("radius: %.2f"), radius);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 170.0f, GREY);
-    snprintf(buffer, sizeof(buffer), t_string("inclination: %.2f"), inclination);
+    snprintf(buffer, sizeof(buffer), _t("inclination: %.2f"), inclination);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 185.0f, GREY);
-    snprintf(buffer, sizeof(buffer), t_string("azimuth: %.2f"), azimuth);
+    snprintf(buffer, sizeof(buffer), _t("azimuth: %.2f"), azimuth);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 200.0f, GREY);
       
 
     if( flag_use_legend ) {
       drawLegendBox(3, COLOR_BACKGROUND);
-      drawLegendMessage(t_string("D-PAD: Move Camera position"),    0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage(t_string("TRIANGLE: Show/Hide text"),       1, 2, COLOR_TEXT); // right side, first row
-      drawLegendMessage(t_string("CROSS + D-PAD: Turn Camera"),     0, 1, COLOR_TEXT); // left side, second row
-      drawLegendMessage(t_string("L/R (+ CROSS): Adjust Speed(s)"), 1, 1, COLOR_TEXT); // right side, second row
-      drawLegendMessage(t_string("SQUARE + D-PAD: Height & FOV"),   0, 0, COLOR_TEXT); // left side, third row
-      drawLegendMessage(t_string("CIRCLE: Exit to Menu"),           1, 0, COLOR_TEXT); // right side, third row
+      drawLegendMessage(_t("D-PAD: Move Camera position"),    0, 2, COLOR_TEXT); // left side, first row
+      drawLegendMessage(_t("TRIANGLE: Show/Hide text"),       1, 2, COLOR_TEXT); // right side, first row
+      drawLegendMessage(_t("CROSS + D-PAD: Turn Camera"),     0, 1, COLOR_TEXT); // left side, second row
+      drawLegendMessage(_t("L/R (+ CROSS): Adjust Speed(s)"), 1, 1, COLOR_TEXT); // right side, second row
+      drawLegendMessage(_t("SQUARE + D-PAD: Height & FOV"),   0, 0, COLOR_TEXT); // left side, third row
+      drawLegendMessage(_t("CIRCLE: Exit to Menu"),           1, 0, COLOR_TEXT); // right side, third row
     }
   }
 
   return 0;
 }
 
-int freecam_ctrl() {
+static int freecam_ctrl() {
   
   if( pressed_buttons & PSP_CTRL_CIRCLE ) {
     flag_freecam = 0;
@@ -4384,15 +4443,15 @@ int freecam_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef HEXEDITOR
-short flag_address = 0;
-int tempaddress = -1; // stores the temp address which may or may not be hex_addr later
-int addresspos = -1;  // position of cursor to digit to be adjusted
+static short flag_address = 0;
+static int tempaddress = -1; // stores the temp address which may or may not be hex_addr later
+static int addresspos = -1;  // position of cursor to digit to be adjusted
 
 #define ADR_HISTORY_SIZE 32
-int adr_history[ADR_HISTORY_SIZE];
-int history_position = 0;
+static int adr_history[ADR_HISTORY_SIZE];
+static int history_position = 0;
 
-void add_adr_to_history(int address) { // new addresses added to beginning.. rest shifted
+static void add_adr_to_history(int address) { // new addresses added to beginning.. rest shifted
   int i;
   if( address != adr_history[0] ) { // only add address if its not the first already
     for( i = ADR_HISTORY_SIZE-1; i > 0; i-- ) {
@@ -4413,16 +4472,16 @@ int address_create() {
   return 0;
 }
 
-int address_draw() {
+static int address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)  
   drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
   
-  drawString(t_string("Enter Address"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE);
+  drawString(_t("Enter Address"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE);
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
   
   /// draw physical address
   unsigned int i = 0, x = 320, y = 130, temp = tempaddress; // x = 290
-  drawString(t_string("Physical:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
+  drawString(_t("Physical:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
   while( temp ) {
     snprintf(buffer, sizeof(buffer), "%X", temp % 0x10);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, COLOR_TEXT);
@@ -4451,7 +4510,7 @@ int address_draw() {
   /// draw $gp depending address
   if( VCS ) {
     i = 0, x = 320, y += 45, temp = tempaddress - gp;
-    drawString(t_string("To $gp:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
+    drawString(_t("To $gp:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
     while( temp ) {
       snprintf(buffer, sizeof(buffer), "%X", temp % 0x10); 
       drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, ORANGE);
@@ -4498,7 +4557,7 @@ int address_draw() {
   return 0;
 }
 
-int address_ctrl() {
+static int address_ctrl() {
   if( hold_buttons & PSP_CTRL_LEFT ) {
     if( addresspos < 6 ) 
       addresspos++;
@@ -4567,22 +4626,22 @@ int address_ctrl() {
 * Edit Byte for HexEditor
 *
 *********************************************************************************************************/
-short flag_editbyte = 0;
-unsigned char editbyte_current = -1;
-unsigned char editbyte_pos = -1;
+static short flag_editbyte = 0;
+static unsigned char editbyte_current = -1;
+static unsigned char editbyte_pos = -1;
 
-int editbyte_create() {
+static int editbyte_create() {
   flag_editbyte = 1; // only set here!
   editbyte_current = getByte(hex_adr);
   editbyte_pos = 1;
   return 0;
 }
 
-int editbyte_draw() {
+static int editbyte_draw() {
   drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
 
-  drawString(t_string("Edit Byte"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 100.0f, COLOR_TITLE);
+  drawString(_t("Edit Byte"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 100.0f, COLOR_TITLE);
   
   int x = 225, y = 140;
 
@@ -4598,7 +4657,7 @@ int editbyte_draw() {
   return 0;
 }
 
-int editbyte_ctrl() {
+static int editbyte_ctrl() {
   if( hold_buttons & PSP_CTRL_LEFT ) editbyte_pos = 0;
   if( hold_buttons & PSP_CTRL_RIGHT ) editbyte_pos = 1;
 
@@ -4646,36 +4705,36 @@ int editbyte_ctrl() {
 * TODO: mode 1 with address higher than low bound and not ending with 0x....0
 *
 *********************************************************************************************************/
-short flag_hexeditor = 0;
+static short flag_hexeditor = 0;
 
 /// settings
-int hexeditor_maxlines   = 14;      // the maximum number of lines that can be displayed - considering max text possible by the game is 512 we are pretty maxed out already
-int hexeditor_colordelay = 3000000; // delay for changed value color (3 seconds)
+static const int hexeditor_maxlines   = 14;      // the maximum number of lines that can be displayed - considering max text possible by the game is 512 we are pretty maxed out already
+static const int hexeditor_colordelay = 3 * 1000 * 1000; // delay for changed value color (3 seconds)
 
 /// set & used by functions
-int hexeditor_mode;      // 0 = use full memory location, 1 = start from 0x00000000 ( = lower bound)
-int hexeditor_lowbound;  // lowest memory address allowed to be displayed
-int hexeditor_highbound; // highest memory address allowed to be displayed
-char hexeditor_infobuffer[64];            // holds the additional string info of location displayed next to Headline
-unsigned char hexeditor_memory[14][0x10]; // copy of displayed hex memory for comparison [lines][colums]
-int hexeditor_memtime[14][0x10];          // holds the time of hex value for color stuff [lines][colums]
-int hexeditor_lines;   // current number of lines that are displayed
-int hexeditor_address; // the addresses displayed on the left on mode 0 (actual memory address)
-int hexeditor_showadr; // the addresses displayed on the left on mode 1 (0x0000000 = starting address)
-int hexeditor_browse_x; // cursor x
-int hexeditor_browse_y; // cursor y
+static int hexeditor_mode;      // 0 = use full memory location, 1 = start from 0x00000000 ( = lower bound)
+static int hexeditor_lowbound;  // lowest memory address allowed to be displayed
+static int hexeditor_highbound; // highest memory address allowed to be displayed
+static char hexeditor_infobuffer[64];            // holds the additional string info of location displayed next to Headline
+static unsigned char hexeditor_memory[14][0x10]; // copy of displayed hex memory for comparison [lines][colums]
+static int hexeditor_memtime[14][0x10];          // holds the time of hex value for color stuff [lines][colums]
+static int hexeditor_lines;   // current number of lines that are displayed
+static int hexeditor_address; // the addresses displayed on the left on mode 0 (actual memory address)
+static int hexeditor_showadr; // the addresses displayed on the left on mode 1 (0x0000000 = starting address)
+static int hexeditor_browse_x; // cursor x
+static int hexeditor_browse_y; // cursor y
 
 //"hex_adr" is physical address cursor is at
 
-int hex_addressmode = 0; // 0 = physical address, module load address, global pointer register
+static int hex_addressmode = 0; // 0 = physical address, module load address, global pointer register
 
 
 #ifdef HEXMARKERS
 #define MARKERS 128
 
-int hex_markers[MARKERS];
+static int hex_markers[MARKERS];
   
-void hex_marker_add(u32 address) {
+static void hex_marker_add(u32 address) {
   int i;
   for( i = 0; i < MARKERS; i++ ) {
     if( hex_markers[i] == address ) 
@@ -4698,7 +4757,7 @@ void hex_marker_addx(u32 address, int size) {
     hex_marker_add(address+i);
 }
 
-int hex_marker_check(u32 address) {
+static int hex_marker_check(u32 address) {
   int i;
   for( i = 0; i < MARKERS; i++ ) {
     if( hex_markers[i] == address ) {
@@ -4708,7 +4767,7 @@ int hex_marker_check(u32 address) {
   return 0;
 }
 
-void hex_marker_remove(u32 address) {
+static void hex_marker_remove(u32 address) {
   int i;
   for( i = 0; i < MARKERS; i++ ) {
     if( hex_markers[i] == address ) {
@@ -4739,7 +4798,7 @@ int hexeditor_create(int address, int mode, int low, int high, const char *infos
   hexeditor_mode = mode;
   hexeditor_lowbound = low;
   hexeditor_highbound = high;
-  snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "%s", t_string(infostring));
+  snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "%s", _t(infostring));
   
   hexeditor_lines = (hexeditor_highbound - hexeditor_lowbound) / 0x10;
   if( ((hexeditor_highbound - hexeditor_lowbound) % 0x10) > 0 )
@@ -4803,7 +4862,7 @@ int hexeditor_create(int address, int mode, int low, int high, const char *infos
   return 0;
 }
 
-int hexeditor_draw() {
+static int hexeditor_draw() {
   
   /// settings
   int hex_spaceing   = 18;
@@ -4823,7 +4882,7 @@ int hexeditor_draw() {
     hex_adr = (hexeditor_address+(hexeditor_browse_y*0x10)+(hexeditor_browse_x*0x01)); // update address depending on cursor position
     
     /// draw Title
-    drawString(t_string("HexEditor"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX);
+    drawString(_t("HexEditor"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX);
     
     
     /// draw "infostring"
@@ -4975,15 +5034,15 @@ int hexeditor_draw() {
   
   /// current values
   if( flag_use_legend ) {
-    drawString(t_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT);
-    drawString(t_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT);
-    drawString(t_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT);
-    drawString(t_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT);
+    drawString(_t("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT);
+    drawString(_t("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT);
+    drawString(_t("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT);
+    drawString(_t("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT);
   } else {
-    drawString(t_string("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT);
-    drawString(t_string("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT);
-    drawString(t_string("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT);
-    drawString(t_string("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT);
+    drawString(_t("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT);
+    drawString(_t("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT);
+    drawString(_t("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT);
+    drawString(_t("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT);
   } 
 
   switch( hex_adr % 0x10 ) {
@@ -5030,17 +5089,17 @@ int hexeditor_draw() {
   if( flag_use_legend && !flag_draw_DBGVALS ) {
     #ifndef DEBUG
     drawBox(320, 220, 155, 50, COLOR_BACKGROUND);
-    drawString(t_string("CROSS: Edit selected Byte"),  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
-    drawString(t_string("SQUARE: Set Byte to 0x00"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
-    drawString(t_string("TRIANGLE: Open Address"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
-    drawString(t_string("CIRCLE: Exit HexEditor"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
+    drawString(_t("CROSS: Edit selected Byte"),  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
+    drawString(_t("SQUARE: Set Byte to 0x00"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
+    drawString(_t("TRIANGLE: Open Address"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
+    drawString(_t("CIRCLE: Exit HexEditor"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
     
     drawBox(160, 220, 155, 50, COLOR_BACKGROUND);
-    drawString(t_string("R + SQUARE: Zero 4 Bytes"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
-    drawString(t_string("R + TRIANGLE: Teleport xyz"), ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
-    drawString(t_string("SELECT: Cycle Baseadr."),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
+    drawString(_t("R + SQUARE: Zero 4 Bytes"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
+    drawString(_t("R + TRIANGLE: Teleport xyz"), ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
+    drawString(_t("SELECT: Cycle Baseadr."),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
     #ifdef HEXMARKERS
-    drawString(t_string("R + CROSS: Mark selected"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
+    drawString(_t("R + CROSS: Mark selected"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
     #endif
    #endif
   }
@@ -5072,7 +5131,7 @@ int hexeditor_draw() {
   
 }
 
-int hexeditor_ctrl() {
+static int hexeditor_ctrl() {
     if( hold_buttons & PSP_CTRL_DOWN ) {
       if( hexeditor_browse_y == hexeditor_lines-1 && (hexeditor_address+(hexeditor_lines*0x10) < hexeditor_highbound) ) {
         hexeditor_address+=0x10;
@@ -5203,28 +5262,28 @@ int hexeditor_ctrl() {
 
 
 /// These functions are 'original display settings -save' and only reset if enabled there!
-void hideHUD() {
+static void hideHUD() {
   if( getDisplaySettingsToggleHUD() ) {
     setDisplaySettingsToggleHUD(OFF);
     flag_hudwashidden = 1;
   }
 }
 
-void showHUD() { // only show if it was enabled before
+static void showHUD() { // only show if it was enabled before
   if( flag_hudwashidden == 1 ) {
     setDisplaySettingsToggleHUD(ON); // re-enable
     flag_hudwashidden = 0;
   }
 }
 
-void hideRadar() {
+static void hideRadar() {
   if( getDisplaySettingsToggleRadar() ) {
     setDisplaySettingsToggleRadar(OFF);
     flag_mapwashidden = 1;
   }
 }
 
-void showRadar() { // only show if it was enabled before
+static void showRadar() { // only show if it was enabled before
   if( flag_mapwashidden == 1 ) {
     setDisplaySettingsToggleRadar(ON); // re-enable
     flag_mapwashidden = 0;
@@ -5252,7 +5311,7 @@ void draw() { // called by hijacked game function
     #ifdef LOG
     logPrintf("[INFO] %i: drawing welcome message", getGametime());
     #endif  
-    setTimedTextbox(t_string(welcomemsg), 7.00f);
+    setTimedTextbox(_t(welcomemsg), 7.00f);
     flag_draw_welcomsg = 0;
   }
   
@@ -5262,7 +5321,7 @@ void draw() { // called by hijacked game function
     #ifdef LOG
     logPrintf("[INFO] %i: drawing memory message", getGametime());
     #endif  
-    setTimedTextbox(t_string(memwarning), 10.00f);
+    setTimedTextbox(_t(memwarning), 10.00f);
     flag_draw_memwarn = 0;
   }
   #endif
@@ -5436,7 +5495,7 @@ void draw() { // called by hijacked game function
      flag_draw_DEBUG == 0 ) {
     
     if( pplayer > 0 ) {
-      drawString(t_string("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
+      drawString(_t("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
       drawUiBox(385.0f, 115.0f, 85.0f, 75.0f, 2.0f, BLACK, ALPHABLACK);
       
       drawString("X", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 117.0f, WHITE);
@@ -5822,7 +5881,7 @@ void *category_toggle(int type, int cat, int set) {
   return NULL;
 }
 
-int checkMenuEntryAllowedToBeDisplayed(const Menu_pack *menu_list, int entry) {
+static int checkMenuEntryAllowedToBeDisplayed(const Menu_pack *menu_list, int entry) {
   if( (menu_list[entry].type != MENU_CATEGORY && !category_index[menu_list[entry].cat]) || 
     (LCS && menu_list[entry].LC == FALSE) || 
     (VCS && menu_list[entry].VC == FALSE) || 
@@ -5834,9 +5893,9 @@ int checkMenuEntryAllowedToBeDisplayed(const Menu_pack *menu_list, int entry) {
 }  
 
 
-int menu_sel;    // currently/last selected option
-int toption = 0; // the option on top when there are more options than showoptions
-int hidden = 0;  // skipping menu draw with disabled entries
+static int menu_sel;    // currently/last selected option
+static int toption = 0; // the option on top when there are more options than showoptions
+static int hidden = 0;  // skipping menu draw with disabled entries
 
 int menu_draw(const Menu_pack *menu_list, int menu_max) {
   static int status;
@@ -5847,7 +5906,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   void *(* surrent_get)();
   
   /// title
-  snprintf(buffer, sizeof(buffer), t_string("CheatDevice Remastered %s by Freakler"), VERSION);
+  snprintf(buffer, sizeof(buffer), _t("CheatDevice Remastered %s by Freakler"), VERSION);
   drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE);
   
   /// GameID & version
@@ -5974,12 +6033,12 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       //if( menu_list[i].type != MENU_DUMMY ) {
         memset(&buffer[0], 0, sizeof(buffer));
         
-        char* buffer_menu_path = menu_list[i].path;
+        const char* buffer_menu_path = menu_list[i].path;
 
         if ( buffer_menu_path[strlen(buffer_menu_path)-1] == ':')
-          snprintf(buffer, sizeof(buffer), "%s %s", t_string(menu_list[i].path), t_string(val));
+          snprintf(buffer, sizeof(buffer), "%s %s", _t(menu_list[i].path), _t(val));
         else
-          snprintf(buffer, sizeof(buffer), "%s%s", t_string(menu_list[i].path), t_string(val));
+          snprintf(buffer, sizeof(buffer), "%s%s", _t(menu_list[i].path), _t(val));
 
 
         if( flag_use_cataltfont && menu_list[i].type == MENU_CATEGORY ) // alternative font
@@ -5998,12 +6057,20 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       /// draw message
       if( flag_use_legend ) {
         if( i == menu_sel ) {
-          drawLegendMessage(t_string(menu_list[i].msg1), 0, 1, COLOR_TEXT); // left side, second row
-          drawLegendMessage(t_string(menu_list[i].msg2), 1, 1, COLOR_TEXT); // right side, second row
+          drawLegendMessage(_t(menu_list[i].msg1), 0, 1, COLOR_TEXT); // left side, second row
+          drawLegendMessage(_t(menu_list[i].msg2), 1, 1, COLOR_TEXT); // right side, second row
 
           if (strlen(menu_list[i].desc) > 0) {
             char desc_formatted[128];
-            snprintf(desc_formatted, sizeof(desc_formatted), "> %s", t_string(menu_list[i].desc));
+
+            if (menu_list[i].conf_id == 0x1FB9) // Replace with author name
+            {
+              void *(* func)() = (void *)(menu_list[i].value);
+              int currSelectedLangID = (int)func(FUNC_GET_VALUE, 0, 0, 0);
+              snprintf(desc_formatted, sizeof(desc_formatted), "> %s %s", _t("Translation made by"), main_file_table->lang_files[currSelectedLangID]->author_name);
+            }
+            else
+              snprintf(desc_formatted, sizeof(desc_formatted), "> %s", _t(menu_list[i].desc));
 
             drawLegendMessage(desc_formatted, 0, 0, COLOR_TEXT); // left side, third row
           }
@@ -6016,8 +6083,8 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   /// msg
   if( flag_use_legend ) {
     drawLegendBox(3, COLOR_BACKGROUND);
-    drawLegendMessage(t_string("L+UP/DOWN: Toggle Menu"), 0, 2, COLOR_TEXT);
-    drawLegendMessage(t_string("UP/DOWN: Navigate Cheats"), 1, 2, COLOR_TEXT);
+    drawLegendMessage(_t("L+UP/DOWN: Toggle Menu"), 0, 2, COLOR_TEXT);
+    drawLegendMessage(_t("UP/DOWN: Navigate Cheats"), 1, 2, COLOR_TEXT);
   }
   
   /// draw debug stuff (when enabled)
@@ -6178,7 +6245,7 @@ int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons
         
         case MENU_FUNCTION: case MENU_CDR_HEX: case MENU_CDR_EDITOR: case MENU_CDR_FILES:
           func = (void *)(menu_list[menu_sel].value);
-          func();
+          func(0, 0);
           break;
           
         case MENU_VALUE: case MENU_SWITCH: case MENU_VALSWITCH: case MENU_CDR_FREECAM: case MENU_CDR_USER: case MENU_CDR_USCM: 
@@ -6280,7 +6347,7 @@ int name_resolver(SceSize args, void *argp) {
 }
 #endif
 
-int patch() {
+static int patch() {
   #ifdef LOG
   logPrintf("[INFO] found 'GTA3' module! mod_text_addr = 0x%08X, text_size = 0x%08X, data_size = 0x%08X", mod_text_addr, mod_text_size, mod_data_size);
   #endif
@@ -6627,6 +6694,8 @@ int module_start(SceSize argc, void* argp) {
 
   /// check available memory (high memory layout)                                         
   memory_high = getHighMemBound();
+  if ( memory_high < 0 ) memory_high = 0x0A000000; // if it alloc mem fails, set default ~32 MB
+
   #ifdef LOG
   logPrintf("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   logPrintf("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
@@ -6659,4 +6728,23 @@ int module_start(SceSize argc, void* argp) {
     previous = sctrlHENSetStartModuleHandler(OnModuleStart); 
   
   return 0;
+}
+
+// On module unload / stop
+int module_stop(SceSize argc, void* argp)
+{
+  free_alloc_mem_cdr();
+  return 0;
+}
+
+void free_alloc_mem_cdr()
+{
+  #ifdef USERSCRIPTS
+  free_userscripts_array();
+  #endif
+
+  #ifdef LANG
+  langTableFree(main_lang_table);
+  langFileTableFree(main_file_table);
+  #endif
 }

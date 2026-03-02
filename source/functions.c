@@ -125,26 +125,26 @@ extern u32 addr_randompedcheat;
 
  
 /// Buttons for cheats 
-char L        = 0x31;
-char R        = 0x32;
-char UP       = 0x55;
-char DOWN     = 0x44;
-char LEFT     = 0x4C;
-char RIGHT    = 0x52;
-char CROSS    = 0x58;
-char CIRCLE   = 0x43;
-char SQUARE   = 0x53;
-char TRIANGLE = 0x54;
-char NONE     = 0x20;
+const char L        = 0x31;
+const char R        = 0x32;
+const char UP       = 0x55;
+const char DOWN     = 0x44;
+const char LEFT     = 0x4C;
+const char RIGHT    = 0x52;
+const char CROSS    = 0x58;
+const char CIRCLE   = 0x43;
+const char SQUARE   = 0x53;
+const char TRIANGLE = 0x54;
+const char NONE     = 0x20;
 char key_to_pad; // for custom button trigger (only cheats currently)
 
 
-char *lcs_garagenames[] = { "Portland", "Staunton Island", "Shoreside Vale" };
-char *vcs_garagenames[] = { "101 Bayshore Avenue", "The Compound", "Clymenus Suite" };
+const char *lcs_garagenames[] = { "Portland", "Staunton Island", "Shoreside Vale" };
+const char *vcs_garagenames[] = { "101 Bayshore Avenue", "The Compound", "Clymenus Suite" };
 
-// So, you can set the weather up to 15 through userscripts (Phil Collins concert in VCS does it, setting it to "10")
-char *weather_vcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Ultra Sunny", "8", "9", "10", "11", "12", "13", "14", "15"};
-char *weather_lcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Snow", "8", "9", "10", "11", "12", "13", "14", "15"};
+// So, you can set the weather up to 15 through userscripts
+const char *weather_vcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Ultra Sunny", "8", "9", "10", "11", "12", "13", "14", "15"};
+const char *weather_lcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Snow", "8", "9", "10", "11", "12", "13", "14", "15"};
 
 
 const teleports_pack lcs_teleports[] = { // z value + 0.20 
@@ -204,7 +204,7 @@ const teleports_pack lcs_teleports[] = { // z value + 0.20
   {"SSV Wing Surfing Location",         -1343,   -852,  18.70 },
   {"SSV Airport Runway",                -1422,  -1012,  11.00 }, // original: -1585,   -936,   11.30
   
-}; int lcs_teleportersize = (sizeof(lcs_teleports)/sizeof(teleports_pack))-1;
+}; const int lcs_teleportersize = ARRAY_SIZE(lcs_teleports);
 
 
 const teleports_pack vcs_teleports[] = { // z value + 0.20 
@@ -263,7 +263,7 @@ const teleports_pack vcs_teleports[] = { // z value + 0.20
   {"Ocean Beach Ammunation",              -53,  -1480,     11 },
   {"Lance's House",                       -84,  -1571,     11 },  
  
-}; int vcs_teleportersize = (sizeof(vcs_teleports)/sizeof(teleports_pack))-1;
+}; const int vcs_teleportersize = ARRAY_SIZE(vcs_teleports);
 
 /* const radio_pack lcs_radiostations[] = { 
   {"Head Radio",      0x00}, // FEA_FM0
@@ -1245,7 +1245,7 @@ const pickups_pack lcs_pickups[] = {
   
   
   // {"Cooking Pod",      0xFA2, 0x03,   0x00 },  
-}; int lcs_pickupsize = (sizeof(lcs_pickups)/sizeof(pickups_pack))-1;  
+}; const int lcs_pickupsize = ARRAY_SIZE(lcs_pickups);  
 
 const pickups_pack vcs_pickups[] = { 
   ///name                //id     //type  //amount
@@ -1308,7 +1308,7 @@ const pickups_pack vcs_pickups[] = {
   {"Rampage",           0x1CE9,   0x03,   0x00 }, 
   {"Buy Vehicle",       0x1D42,   0x03,   0x00 }, 
   
-}; int vcs_pickupsize = (sizeof(vcs_pickups)/sizeof(pickups_pack))-1;  
+}; const int vcs_pickupsize = ARRAY_SIZE(vcs_pickups);  
 
 
 /* const mapicons_pack lcs_mapicons[] = { 
@@ -1442,7 +1442,7 @@ const mapicons_pack vcs_mapicons[] = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 u32 memory_low  = 0x08400000; // memory bounds
-u32 memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C000000) dynamicly overwritten in module_start
+u32 memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C000000) dynamically overwritten in module_start
 
 int isInMemBounds(int valtocheck) {
   return (valtocheck >= memory_low && valtocheck < memory_high);
@@ -1737,8 +1737,8 @@ unsigned char *getSavedataKey() {
 
 /////////////////////////////////////////////////
 
-SceInt64 after_teleport_fix_time;
-SceInt64 after_teleport_fix = 0;
+static SceInt64 after_teleport_fix_time;
+static SceInt64 after_teleport_fix = 0;
 
 /** Will teleport the player (or vehicle player is in) to coordinates 
  *
@@ -2145,7 +2145,7 @@ float getVehicleWheelCamber(int vehicle_base_adr) {
 
 float getVehicleSpeed(int vehicle_base_adr) {
   //return getFloat(vehicle_base_adr + (LCS ? 0x124 : 0x108)); // calculated by game (up/down counts too) (has some weird multiplier?! (probably gamespeed) Which is also different for LCS vs VCS?!?! its ALSO not consistent and is calculated wrong with higher speeds sometimes...)
-  return sqrt((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144))) + (getFloat(pcar+(LCS?0x78:0x148)) * getFloat(pcar+(LCS?0x78:0x148)))); // doing it myself then!! SQRT( x^2 + y^2 + z^2 )
+  return sqrtf((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144))) + (getFloat(pcar+(LCS?0x78:0x148)) * getFloat(pcar+(LCS?0x78:0x148)))); // doing it myself then!! sqrtf( x^2 + y^2 + z^2 )
 }
 
 char getVehicleCurrentGear(int vehicle_base_adr) {
