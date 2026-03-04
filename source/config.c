@@ -102,7 +102,7 @@ VCHT
 
 int saveing = 0; // my mutex flag thing
   
-int save_thread(SceSize args, void *argp) { 
+static int save_thread(SceSize args, void *argp) { 
   #ifdef LOG
   logPrintf("[INFO] %i: save_thread()", getGametime());
   #endif
@@ -249,6 +249,98 @@ int save_config(const Menu_pack *menu_list, int menu_max) {
   return 0; //done
 }
 
+static void setHeader(SceUID file, int entries, int size, int type) { // set block size, number of entries etc
+  //logPrintf("setHeader");
+  sceIoLseek(file, -(size+0xC), SEEK_CUR);
+  sceIoWrite(file, &type, sizeof(int));
+  sceIoWrite(file, &entries, sizeof(int));
+  sceIoWrite(file, &size, sizeof(int));
+  sceIoLseek(file, size, SEEK_CUR); // seek to end to continue
+  //or sceIoLseek(file, 0, SEEK_END); // seek to end to continue
+}
+
+int writeValue(SceUID file, short id, int value) {
+  sceIoWrite(file, &id, sizeof(id)); 
+  sceIoWrite(file, &value, sizeof(value)); 
+  return 0;
+}
+
+int writeBool(SceUID file, short id, char boolean) {
+  sceIoWrite(file, &id, sizeof(id)); 
+  sceIoWrite(file, &boolean, sizeof(boolean)); 
+  return 0;
+}
+
+int writeCategoryHeader(SceUID file, char *magic) {
+  //logPrintf("category %s", magic);
+  char buffer[16];
+  memset(buffer, 0, sizeof(buffer));
+  snprintf(buffer, sizeof(buffer), "%s", magic);
+  return sceIoWrite(file, buffer, sizeof(buffer)); 
+}
+
+int workBlock(SceUID file, const Menu_pack *menu_list, int menu_max, int identifier, int mode) {
+  int i, ret, counter;
+  void *(* func)();
+  
+  for( i = 0, counter = 0; i < menu_max; i++ ) {
+    func = menu_list[i].value;
+    if( (menu_list[i].def_stat != -1) || (menu_list[i].type == MENU_CDR_EDITOR || menu_list[i].type == MENU_CDR_FILES ) ) { // only for cheats and editors
+      if( (menu_list[i].conf_id >> 12) == identifier ) { // eg.: 0x3XXX = Settings
+        //logPrintf("id 0x%04X", menu_list[i].conf_id);
+        
+        if( mode == 1 ) { /// "FUNC_GET_VALUE"
+          ret = (int)func(FUNC_GET_VALUE); 
+          //logPrintf("ret = 0x%08X", ret);
+          if( ret > 0 ) 
+            writeValue(file, menu_list[i].conf_id, ret);  // only positive values will be saved (if 0 its default and doesn't need to be saved in ini) ...
+          else continue;
+        
+        } else { /// "FUNC_GET_STATUS"
+          if( identifier == 2 ) { // Categories
+            writeBool(file, menu_list[i].conf_id, category_index[(short)menu_list[i].cat]); // get category bools directly from array
+          
+          } else // everything else
+            writeBool(file, menu_list[i].conf_id, (int)func(FUNC_GET_STATUS, 42)); // some cheats like "world_gravity" return a different value than the normal status to store (thus 42 as identifier for that)
+        }
+        
+        counter++;
+      }
+    }
+  } //logPrintf("counter = %i", counter);
+  return counter;
+}
+
+static int fillBlock(SceUID file, int size, char placeholder) { // fill up the block to look nice
+  while( (size % 16) != 0 ) {
+    //logPrintf("size = %i, mod = %i", size, (size % 16));
+    sceIoWrite(file, &placeholder, sizeof(char)); 
+    size++;
+  }
+  return size;
+}
+
+/*
+static int writeMemory(SceUID file, int start, int slots, int size) {
+  
+  if( !isInMemBounds(start) ) {
+    //logPrintf("writeMemory error address: 0x%08X", start);
+    return 0;
+  }
+    
+  int i, ret, addr;
+  
+  for( i = 0, addr = start; i < slots; i++, addr += size ) {
+    ret = sceIoWrite(file, (void *)addr, size); 
+    //if( ret <= 0) {
+    //  logPrintf("sceIoWrite error 0x%08X", ret);
+    //}
+  }
+  
+  return i * size; // bytes written
+}
+  */
+
 int create_config(const Menu_pack *menu_list, int menu_max) {
   #ifdef LOG
   logPrintf("[INFO] %i: create_config(%s)", getGametime(), config);
@@ -365,6 +457,64 @@ int create_config(const Menu_pack *menu_list, int menu_max) {
   //logPrintf("[CONFIG] create_config done");
   sceIoClose(file);  
   return 0; // success
+}
+
+static int getValueFromConfigFor(SceUID file, const char *magic, short id) {
+  
+  //logPrintf("looking for id: 0x%04X", id);
+  sceIoLseek(file, 0, SEEK_SET); // seek to start of file
+
+  char magicbuf[8]; 
+  int i, read, entries = 0, type = 0, blocksize = 0;
+  
+  do {
+    sceIoLseek(file, blocksize, SEEK_CUR); // 0 in first run
+    
+    memset(magicbuf, 0, sizeof(magicbuf));
+    read = sceIoRead(file, &magicbuf, sizeof(int));
+    //logPrintf("read %d", read);
+    if( read <= 0 ) 
+      return -1; // category not found or error
+    
+    //logPrintf("magicbuf %s vs magic %s", magicbuf, magic);
+    
+    //sceIoLseek(file, 4, SEEK_CUR);
+    sceIoRead(file, &type, sizeof(int));
+    sceIoRead(file, &entries, sizeof(int));
+    sceIoRead(file, &blocksize, sizeof(int));
+    
+    //logPrintf("blocksize 0x%08X", blocksize);
+
+  } while( strcmp(magicbuf, magic) != 0 );
+    
+  //logPrintf("found magic category block!");
+  
+  short _id = 0;
+  char _bool = 0;
+  short _val = 0; // unused atm
+  int _value = 0;
+  
+  for( i = 0; i < entries; i++ ) {
+    //logPrintf("%i/%i", i+1, entries);
+    sceIoRead(file, &_id, sizeof(_id));
+    
+    if( type == 1) {
+      sceIoRead(file, &_bool, sizeof(_bool));
+      if( _id == id ) return (int)_bool;
+      
+    } else if( type == 2) {
+      sceIoRead(file, &_val, sizeof(_val));
+      if( _id == id ) return (int)_val;
+    
+    } else if( type == 4) {
+      sceIoRead(file, &_value, sizeof(_value));
+      if( _id == id ) return (int)_value;
+    
+    } 
+  }
+  
+  //logPrintf("id 0x%04X not found!", id);
+  return -1; // not found
 }
 
 
@@ -598,48 +748,6 @@ int load_config_block(char *magic, int address) {
 
 /////////////////////////////////////////////////////////////////
 
-void setHeader(SceUID file, int entries, int size, int type) { // set block size, number of entries etc
-  //logPrintf("setHeader");
-  sceIoLseek(file, -(size+0xC), SEEK_CUR);
-  sceIoWrite(file, &type, sizeof(int));
-  sceIoWrite(file, &entries, sizeof(int));
-  sceIoWrite(file, &size, sizeof(int));
-  sceIoLseek(file, size, SEEK_CUR); // seek to end to continue
-  //or sceIoLseek(file, 0, SEEK_END); // seek to end to continue
-}
-
-int workBlock(SceUID file, const Menu_pack *menu_list, int menu_max, int identifier, int mode) {
-  int i, ret, counter;
-  void *(* func)();
-  
-  for( i = 0, counter = 0; i < menu_max; i++ ) {
-    func = menu_list[i].value;
-    if( (menu_list[i].def_stat != -1) || (menu_list[i].type == MENU_CDR_EDITOR || menu_list[i].type == MENU_CDR_FILES ) ) { // only for cheats and editors
-      if( (menu_list[i].conf_id >> 12) == identifier ) { // eg.: 0x3XXX = Settings
-        //logPrintf("id 0x%04X", menu_list[i].conf_id);
-        
-        if( mode == 1 ) { /// "FUNC_GET_VALUE"
-          ret = (int)func(FUNC_GET_VALUE); 
-          //logPrintf("ret = 0x%08X", ret);
-          if( ret > 0 ) 
-            writeValue(file, menu_list[i].conf_id, ret);  // only positive values will be saved (if 0 its default and doesn't need to be saved in ini) ...
-          else continue;
-        
-        } else { /// "FUNC_GET_STATUS"
-          if( identifier == 2 ) { // Categories
-            writeBool(file, menu_list[i].conf_id, category_index[(short)menu_list[i].cat]); // get category bools directly from array
-          
-          } else // everything else
-            writeBool(file, menu_list[i].conf_id, (int)func(FUNC_GET_STATUS, 42)); // some cheats like "world_gravity" return a different value than the normal status to store (thus 42 as identifier for that)
-        }
-        
-        counter++;
-      }
-    }
-  } //logPrintf("counter = %i", counter);
-  return counter;
-}
-
 #ifdef ACHIEVEMENTS
 int workAchievement(SceUID file, achievement_pack *achlist, int menu_max) {
   int i;
@@ -652,116 +760,10 @@ int workAchievement(SceUID file, achievement_pack *achlist, int menu_max) {
 }
 #endif
 
-int fillBlock(SceUID file, int size, char placeholder) { // fill up the block to look nice
-  while( (size % 16) != 0 ) {
-    //logPrintf("size = %i, mod = %i", size, (size % 16));
-    sceIoWrite(file, &placeholder, sizeof(char)); 
-    size++;
-  }
-  return size;
-}
-
-int writeValue(SceUID file, short id, int value) {
-  sceIoWrite(file, &id, sizeof(id)); 
-  sceIoWrite(file, &value, sizeof(value)); 
-  return 0;
-}
-
-int writeBool(SceUID file, short id, char boolean) {
-  sceIoWrite(file, &id, sizeof(id)); 
-  sceIoWrite(file, &boolean, sizeof(boolean)); 
-  return 0;
-}
-
-int writeCategoryHeader(SceUID file, char *magic) {
-  //logPrintf("category %s", magic);
-  char buffer[16];
-  memset(buffer, 0, sizeof(buffer));
-  snprintf(buffer, sizeof(buffer), "%s", magic);
-  return sceIoWrite(file, buffer, sizeof(buffer)); 
-}
-
     
 /////////////////////////////////////////////////////////////////
 
-int writeMemory(SceUID file, int start, int slots, int size) {
-  
-  if( !isInMemBounds(start) ) {
-    //logPrintf("writeMemory error address: 0x%08X", start);
-    return 0;
-  }
-    
-  int i, ret, addr;
-  
-  for( i = 0, addr = start; i < slots; i++, addr += size ) {
-    ret = sceIoWrite(file, (void *)addr, size); 
-    //if( ret <= 0) {
-    //  logPrintf("sceIoWrite error 0x%08X", ret);
-    //}
-  }
-  
-  return i * size; // bytes written
-}
-
 /////////////////////////////////////////////////////////////////
-
-int getValueFromConfigFor(SceUID file, char * magic, short id) {
-  
-  //logPrintf("looking for id: 0x%04X", id);
-  sceIoLseek(file, 0, SEEK_SET); // seek to start of file
-
-  char magicbuf[8]; 
-  int i, read, entries = 0, type = 0, blocksize = 0;
-  
-  do {
-    sceIoLseek(file, blocksize, SEEK_CUR); // 0 in first run
-    
-    memset(magicbuf, 0, sizeof(magicbuf));
-    read = sceIoRead(file, &magicbuf, sizeof(int));
-    //logPrintf("read %d", read);
-    if( read <= 0 ) 
-      return -1; // category not found or error
-    
-    //logPrintf("magicbuf %s vs magic %s", magicbuf, magic);
-    
-    //sceIoLseek(file, 4, SEEK_CUR);
-    sceIoRead(file, &type, sizeof(int));
-    sceIoRead(file, &entries, sizeof(int));
-    sceIoRead(file, &blocksize, sizeof(int));
-    
-    //logPrintf("blocksize 0x%08X", blocksize);
-
-  } while( strcmp(magicbuf, magic) != 0 );
-    
-  //logPrintf("found magic category block!");
-  
-  short _id = 0;
-  char _bool = 0;
-  short _val = 0; // unused atm
-  int _value = 0;
-  
-  for( i = 0; i < entries; i++ ) {
-    //logPrintf("%i/%i", i+1, entries);
-    sceIoRead(file, &_id, sizeof(_id));
-    
-    if( type == 1) {
-      sceIoRead(file, &_bool, sizeof(_bool));
-      if( _id == id ) return (int)_bool;
-      
-    } else if( type == 2) {
-      sceIoRead(file, &_val, sizeof(_val));
-      if( _id == id ) return (int)_val;
-    
-    } else if( type == 4) {
-      sceIoRead(file, &_value, sizeof(_value));
-      if( _id == id ) return (int)_value;
-    
-    } 
-  }
-  
-  //logPrintf("id 0x%04X not found!", id);
-  return -1; // not found
-}
 
 int setValueInConfigFor(short id, int value) {
   

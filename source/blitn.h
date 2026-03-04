@@ -69,6 +69,24 @@
   ptr = (void *)patch_buffer; \
 }
 
+typedef struct menu_blit_text
+{
+  wchar_t text[MSGLENGTH];
+  u32 color;
+  short style;
+  short shadow;
+  int origin;
+  ScePspFVector2 scale;
+  ScePspFVector2 pos;
+} menu_blit_text;
+
+typedef struct menu_blit_box
+{
+  short id;
+  u32 color;
+  ScePspFVector2 pos;
+  ScePspFVector2 size;
+} menu_blit_box;
 
 /// box
 char *(*SetBoxColor)(char *param_1,char alpha,char red,char green,char blue);
@@ -154,9 +172,6 @@ void drawStringVCS(const char *string, int origin, short style, float scale, sho
 
 void cWorldStream_Render_LCS_Patched(void *this, int mode);
 void cWorldStream_Render_VCS_Patched(void *this, int mode);
-
-int FindPatchLCS(u32 addr, u32 text_addr);
-int FindPatchVCS(u32 addr, u32 text_addr);
 
 int initTextBlit(u32 text_addr, u32 text_size);
 

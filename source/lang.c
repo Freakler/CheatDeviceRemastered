@@ -35,7 +35,7 @@ extern const char *basefolder;
 
 static int translated_strings_left = TRANSLATED_STRINGS_LIMIT;
 
-LangHashTable *langTableCreate()
+static LangHashTable *langTableCreate()
 {
   LangHashTable *ht = (LangHashTable *)malloc(sizeof(LangHashTable));
 
@@ -46,7 +46,7 @@ LangHashTable *langTableCreate()
   return ht;
 }
 
-void langTableInsert(LangHashTable *ht, const char *original_string, const char *trans_string)
+static void langTableInsert(LangHashTable *ht, const char *original_string, const char *trans_string)
 {
   if ( !ht || !main_file_table || !original_string || !trans_string ) return;
 
@@ -62,7 +62,7 @@ void langTableInsert(LangHashTable *ht, const char *original_string, const char 
   ht->table[index] = new_kv; // Insert new_kv at the beginning
 }
 
-char *langTableSearch(LangHashTable *ht, const char *original_string)
+static char *langTableSearch(LangHashTable *ht, const char *original_string)
 {
   if ( !ht || !original_string ) return (char *)original_string;
 
@@ -109,7 +109,7 @@ LangHashTable *main_lang_table = NULL;
 LangFileTable *main_file_table = NULL;
 
 // Initialize the LangFileTable
-LangFileTable *langFileTableInit()
+static LangFileTable *langFileTableInit()
 {
   LangFileTable *table = (LangFileTable *)malloc(sizeof(LangFileTable));
   if (!table) return NULL;
@@ -121,7 +121,7 @@ LangFileTable *langFileTableInit()
 int currLanguageID = 0;
 
 // Append a LanguageFile to the LangFileTable
-void langFileTableAppend(LangFileTable *table, const char *version, const char *author, const char *language, const char *filename)
+static void langFileTableAppend(LangFileTable *table, const char *version, const char *author, const char *language, const char *filename)
 {
   if ( !table || !filename || table->size >= LANG_FILES_LIMIT ) return;
 
@@ -163,7 +163,7 @@ void langFileTableFree(LangFileTable *table)
   #endif
 }
 
-void langFileTableSearch()
+static void langFileTableSearch()
 {
   main_file_table = langFileTableInit();
   if ( !main_file_table ) return;
