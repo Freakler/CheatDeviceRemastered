@@ -118,7 +118,11 @@ static const u32 COLOR_TEXT         = WHITE;
 static const u32 COLOR_CURSOR       = CHDVC_MAGENTA - 0x77000000; // add alpha
 static const u32 COLOR_TITLE        = WHITE;
 static const u32 COLOR_CATEGORY     = WHITE;
-static const u32 COLOR_DEBUG        = RED; 
+
+#ifdef DEBUG
+static const u32 COLOR_DEBUG        = RED;
+#endif
+
 static const u32 COLOR_VALUE        = CHDVC_GREEN;
 static const u32 COLOR_CHEAT_ON     = CHDVC_YELLOW;
 static u32 COLOR_CHEAT_OFF          = 0; // set later because different for LCS/VCS
@@ -126,9 +130,17 @@ static const u32 COLOR_BACKGROUND   = ALPHABLACK;
 static const u32 COLOR_SCROLLBAR    = CHDVC_MAGENTA - 0x33000000; // add alpha
 static const u32 COLOR_FREECAM      = ORANGERED;
 static const u32 COLOR_USERCHEATS   = DARKGREEN;
+
+#ifdef SAVEDITOR
 static const u32 COLOR_SAVEDITOR    = VIOLET;
+#endif
+
 static const u32 COLOR_HEX          = CHDVC_AZURE;
+
+#ifdef HEXMARKERS
 static const u32 COLOR_HEX_MARKER   = CHDVC_MAGENTA - 0x77000000; // add alpha
+#endif
+
 static const u32 COLOR_EDITOR       = GREEN;
 static const u32 COLOR_FILES        = LIGHTBLUE;
 static const u32 COLOR_UIBORDER     = BLACK;
@@ -2067,7 +2079,7 @@ static int userscripts_ctrl() {
                             
                             /// save string as ushort in array
                             int ctr = 0;
-                            memset(custom_gxts[customtextcounter], 0, CSTGXTLGT);
+                            memset(custom_gxts[customtextcounter], 0, CSTGXTLGT * sizeof(ushort));
                             while(identifier[ctr] != 0x00) {
                               custom_gxts[customtextcounter][ctr] = identifier[ctr];
                               ctr++;
@@ -4957,38 +4969,38 @@ static int hexeditor_draw() {
       if( hexeditor_memory[counter][scounter] != current ) 
         hexeditor_memtime[counter][scounter] = sceKernelGetSystemTimeLow();
             
-        /// color for currently selected hex
-        if( counter == hexeditor_browse_y && scounter == hexeditor_browse_x ) {
-          SOMECOLOR = RED; // its the selected value #color_adjust
-        } else {
+      /// color for currently selected hex
+      if( counter == hexeditor_browse_y && scounter == hexeditor_browse_x ) {
+        SOMECOLOR = RED; // its the selected value #color_adjust
+      } else {
+        
+        /// check if the value has changed (for color adjustment)
+        if( (sceKernelGetSystemTimeLow() <= hexeditor_memtime[counter][scounter] + hexeditor_colordelay) ) {
+          SOMECOLOR = WHITE;
+        
+        /// check if matches pplayer address
+        } else if( current2 == pplayer ) {
+          SOMECOLOR = CYAN;
+        
+        /// check if matches pcar address
+        } else if( pcar && current2 == pcar ) {
+          SOMECOLOR = BLUE;
+        
+        } else if( pcar && current2 == pcar ) {
+          SOMECOLOR = BLUE;
           
-          /// check if the value has changed (for color adjustment)
-          if( (sceKernelGetSystemTimeLow() <= hexeditor_memtime[counter][scounter] + hexeditor_colordelay) ) {
-            SOMECOLOR = WHITE;
+        /// check if pointer (for different color)
+        } else if( current2 > memory_low && current2 < memory_high) {
           
-          /// check if matches pplayer address
-          } else if( current2 == pplayer ) {
-            SOMECOLOR = CYAN;
-          
-          /// check if matches pcar address
-          } else if( pcar && current2 == pcar ) {
-            SOMECOLOR = BLUE;
-          
-          } else if( pcar && current2 == pcar ) {
-            SOMECOLOR = BLUE;
-            
-          /// check if pointer (for different color)
-          } else if( current2 > memory_low && current2 < memory_high) {
-            
-            if( current2 >= mod_text_addr && current2 <= mod_text_addr + mod_text_size ) //pointer to TEXT area
-              SOMECOLOR = ORANGE;
-            else
-              SOMECOLOR = YELLOW;
-          
-          /// normal
-          } else 
-            SOMECOLOR = COLOR_VALUE;
-        }  
+          if( current2 >= mod_text_addr && current2 <= mod_text_addr + mod_text_size ) //pointer to TEXT area
+            SOMECOLOR = ORANGE;
+          else
+            SOMECOLOR = YELLOW;
+        
+        /// normal
+        } else 
+          SOMECOLOR = COLOR_VALUE;
+      }  
 
 
       #ifdef HEXMARKERS
@@ -5898,7 +5910,6 @@ static int toption = 0; // the option on top when there are more options than sh
 static int hidden = 0;  // skipping menu draw with disabled entries
 
 int menu_draw(const Menu_pack *menu_list, int menu_max) {
-  static int status;
   const char *val;
   static u32 color;
   static int i;
@@ -6002,11 +6013,9 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
 
         case MENU_SWITCH: // ON/OFF
           if( surrent_get(FUNC_GET_STATUS) ) { // if cheat "ON"
-            status = 1;
             color = COLOR_CHEAT_ON;
             drawString("ON", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-25, y, color);
           } else {
-            status = 0;
             color = COLOR_CHEAT_OFF;
             drawString("OFF", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-30, y, color);
           } 
@@ -6014,11 +6023,9 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
           
         case MENU_VALSWITCH: // ON/OFF + values
           if( surrent_get(FUNC_GET_STATUS) ) {
-            status = 1;
             color = COLOR_CHEAT_ON;
             drawString("ON", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-25, y, color);
           } else {
-            status = 0;
             color = COLOR_CHEAT_OFF;
             drawString("OFF", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-30, y, color);
           }

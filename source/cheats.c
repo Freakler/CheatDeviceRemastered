@@ -2139,10 +2139,11 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     #endif
 
     /// TODO ?
-  if( mod_text_size == 0x0031F854 )
-    global_LargestMissionScriptSize = global_MainScriptSize - 0x4;  // ULUX
-  else
-    global_LargestMissionScriptSize = global_MainScriptSize - 0x18; 
+    if( mod_text_size == 0x0031F854 )
+      global_LargestMissionScriptSize = global_MainScriptSize - 0x4;  // ULUX
+    else
+      global_LargestMissionScriptSize = global_MainScriptSize - 0x18; 
+      
     #ifdef PATCHLOG
     logPrintf("0x%08X (0x%08X) -> global_LargestMissionScriptSize", global_LargestMissionScriptSize-text_addr, global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
     #endif
@@ -4482,10 +4483,12 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
   #endif
   
   if( mode == 0 )
+  {
     if( gametimer >= menuopendelay) // delay after new game
       draw();
+
     #ifdef LANG
-    if ( gametimer >= 1000 ) { // 
+    if ( gametimer >= 1000 ) {
       static int lang_ran = 0;
       if (!lang_ran) {
         langTableSetup(currLanguageID);
@@ -4493,6 +4496,7 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
       }
     }
     #endif
+  }
   
   cWorldStream_Render(this, mode); // continue
 }

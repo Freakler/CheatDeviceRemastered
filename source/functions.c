@@ -3249,14 +3249,18 @@ void TaskDuck(int ped) {
 int removeIPLObjectsCollision(short id) { 
   int i, counter = 0, adr;
   for( i = 0, adr = buildingsIPL_base; i < buildingsIPL_max; adr += var_buildingsIPLslotsize, i++ ) { // Buildings.ipl
-    if(getShort(adr+0x58) == id) 
+    if(getShort(adr+0x58) == id)
+    {
       setFloat(adr+0x38, -200.0f); // move below map
       counter++;
+    }
   }
   for( i = 0, adr = treadablesIPL_base; i < treadablesIPL_max; adr += var_treadablesIPLslotsize, i++ ) { // Treadables.ipl
-    if(getShort(adr+0x58) == id) 
+    if(getShort(adr+0x58) == id)
+    {
       setFloat(adr+0x38, -200.0f); // move below map
       counter++;
+    }
   }
   return counter;
 }

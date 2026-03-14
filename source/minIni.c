@@ -421,14 +421,17 @@ int ini_gets(const TCHAR *Section, const TCHAR *Key, const TCHAR *DefValue,
 int ini_getsfromstring(const TCHAR *Section, const TCHAR *Key, const TCHAR *DefValue,
              TCHAR *Buffer, int BufferSize, const TCHAR *string)
 {
-  int ok = 0;
-
+  
   if (Buffer == NULL || BufferSize <= 0 || Key == NULL || string == NULL)
     return 0;
-    ok = getkeystringfromstring(string, Section, Key, -1, -1, Buffer, BufferSize);
-  if (!ok){
+
+  int ok = 0;
+
+  ok = getkeystringfromstring(string, Section, Key, -1, -1, Buffer, BufferSize);
+  
+  if (!ok)
     save_strncpy(Buffer, DefValue, BufferSize, QUOTE_NONE);
-  }
+
   return _tcslen(Buffer);
 }
 
