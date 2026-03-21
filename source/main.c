@@ -5894,7 +5894,7 @@ void *category_toggle(int type, int cat, int set) {
 }
 
 static int checkMenuEntryAllowedToBeDisplayed(const Menu_pack *menu_list, int entry) {
-  if( (menu_list[entry].type != MENU_CATEGORY && !category_index[menu_list[entry].cat]) || 
+  if( (menu_list[entry].type != MENU_CATEGORY && !category_index[(int)menu_list[entry].cat]) || 
     (LCS && menu_list[entry].LC == FALSE) || 
     (VCS && menu_list[entry].VC == FALSE) || 
     (!multiplayer && menu_list[entry].SP == FALSE) || 

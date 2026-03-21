@@ -1,7 +1,7 @@
 TARGET = ../cheatdevice_remastered
 OBJS = exports.o main.o cheats.o utils.o editor.o functions.o config.o blitn.o minIni.o lang.o
 
-WARNFLAGS = -Wall
+WARNFLAGS = -Wall -Wno-format-overflow -Wno-format-truncation
 OPTMFLAGS = -Os -frename-registers -mtune=mips32r2 -ffunction-sections -fdata-sections
 
 CFLAGS = -G0 -fshort-wchar -fno-pic -mno-check-zero-division $(OPTMFLAGS) $(WARNFLAGS)

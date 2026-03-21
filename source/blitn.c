@@ -310,7 +310,6 @@ static void mymenurender_VCS_patched() {
   float coordinates[4];
   float *ptr_coords;
   float posfix = 2.0f; // a fix to better match position compared to LCS version
-  float scalefix = 0.0f;
   float coords[4];
 
   /// BOXes
