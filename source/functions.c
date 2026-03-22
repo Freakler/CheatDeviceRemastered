@@ -248,7 +248,7 @@ const teleports_pack vcs_teleports[] = { // z value + 0.20
   {"Inside Mendez's Mansion",              17,   1153,   -193 }, // +
   {"Interglobal Films",                   -31,    953,     11 },
   {"Vice Point Mall",                     492,   1121,     17 },
-  {"Gonzalez's Apartment",                 276,    756,     12 },
+  {"Gonzalez's Apartment",                276,    756,     12 },
   {"Vice Point Hospital",                 430,    706,     12 },
   {"Vice Point Pay 'n' Spray",            334,    428,     12 },
   {"Leaf Links Golf Course",              109,    247,     22 },
@@ -1181,7 +1181,7 @@ const pickups_pack lcs_pickups[] = {
   {"Butcher Knife",       0x107, 0x02,  0x00 },
   {"Baseball Bat",        0x108, 0x0F,  0x00 },
   {"Fire Axe",            0x109, 0x0F,  0x00 },
-  {"Meat Cleaver",         0x10A, 0x0F,  0x00 },
+  {"Meat Cleaver",        0x10A, 0x0F,  0x00 },
   {"Machete",             0x10B, 0x0F,  0x00 },
   {"Katana",              0x10C, 0x0F,  0x00 },
   {"Chainsaw",            0x10D, 0x0F,  0x00 },
@@ -1193,16 +1193,16 @@ const pickups_pack lcs_pickups[] = {
   {"Colt",                0x113, 0x0F,  0x12 },
   {"AK-47",               0x114, 0x0F,  0x64 },
   {"Shotgun",             0x115, 0x0F,  0x1C },
-  {"Spaz 12",              0x116, 0x0F,  0x1C },
-  {"Combat Shotgun",       0x117, 0x0F,  0x1C },
+  {"Spaz 12",             0x116, 0x0F,  0x1C },
+  {"Combat Shotgun",      0x117, 0x0F,  0x1C },
   {"M4",                  0x118, 0x0F,  0x64 }, 
-  {"TEC-9",                0x119, 0x0F,  0x64 }, 
+  {"TEC-9",               0x119, 0x0F,  0x64 }, 
   {"Micro SMG",           0x11A, 0x0F,  0x64 }, 
-  {"MAC-10",               0x11B, 0x0F,  0x64 }, 
+  {"MAC-10",              0x11B, 0x0F,  0x64 }, 
   {"MP5",                 0x11C, 0x0F,  0x64 },
   {"Sniper",              0x11D, 0x0F,  0x0C },
   {"PSG Sniper",          0x11E, 0x0F,  0x32 },
-  {"Rocket Launcher",      0x11F, 0x0F,  0x64 },
+  {"Rocket Launcher",     0x11F, 0x0F,  0x64 },
   {"Flamethrower",        0x120, 0x0F,  0x64 },
   {"M60",                 0x121, 0x0F,  0x64 },
   {"Minigun",             0x122, 0x0F,  0x64 },
@@ -3249,14 +3249,18 @@ void TaskDuck(int ped) {
 int removeIPLObjectsCollision(short id) { 
   int i, counter = 0, adr;
   for( i = 0, adr = buildingsIPL_base; i < buildingsIPL_max; adr += var_buildingsIPLslotsize, i++ ) { // Buildings.ipl
-    if(getShort(adr+0x58) == id) 
+    if(getShort(adr+0x58) == id)
+    {
       setFloat(adr+0x38, -200.0f); // move below map
       counter++;
+    }
   }
   for( i = 0, adr = treadablesIPL_base; i < treadablesIPL_max; adr += var_treadablesIPLslotsize, i++ ) { // Treadables.ipl
-    if(getShort(adr+0x58) == id) 
+    if(getShort(adr+0x58) == id)
+    {
       setFloat(adr+0x38, -200.0f); // move below map
       counter++;
+    }
   }
   return counter;
 }

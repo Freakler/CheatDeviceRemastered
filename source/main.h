@@ -77,7 +77,7 @@ enum {
 
 typedef struct {
   const char *path;
-  const short cat;
+  const char cat;
   const char type;
   const char LC; // for Liberty City Stories
   const char VC; // for Vice City Stories

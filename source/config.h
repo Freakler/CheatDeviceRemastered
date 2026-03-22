@@ -32,17 +32,10 @@ int writeBool(SceUID file, short id, char boolean);
 int writeValue(SceUID file, short id, int value);
 int writeCategoryHeader(SceUID file, char *magic);
 
-int workBlock(SceUID file, const Menu_pack *menu_list, int menu_max, int identifier, int mode);
-int fillBlock(SceUID file, int size, char placeholder);
-void setHeader(SceUID file, int items, int size, int type);
-
 int workAchievement(SceUID file, achievement_pack *achlist, int menu_max);
 
-int getValueFromConfigFor(SceUID file, char * magic, short id);
 int getAchievementFromConfigFor(SceUID file, char * magic, char id, int mode);
   
 int setValueInConfigFor(short id, int value);
-
-int writeMemory(SceUID file, int start, int slots, int size);
 
 #endif

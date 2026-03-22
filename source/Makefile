@@ -1,11 +1,13 @@
 TARGET = ../cheatdevice_remastered
 OBJS = exports.o main.o cheats.o utils.o editor.o functions.o config.o blitn.o minIni.o lang.o
-  
-CFLAGS = -Os -G0 -Wall -fshort-wchar -fno-pic -mno-check-zero-division -frename-registers
+
+WARNFLAGS = -Wall
+OPTMFLAGS = -Os -frename-registers -mtune=mips32r2 -ffunction-sections -fdata-sections 
+
+CFLAGS = -G0 -fshort-wchar -fno-pic -mno-check-zero-division $(OPTMFLAGS) $(WARNFLAGS) -mpreferred-stack-boundary=4
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 
-PSP_LARGE_MEMORY = 1
 BUILD_PRX = 1
 PRX_EXPORTS = exports.exp
 
