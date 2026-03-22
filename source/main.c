@@ -412,7 +412,7 @@ const Menu_pack main_menu[] = {
   {"Swap X with R for acceleration"   , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x7F92 , OFF , cdr_swapacceleration , "CROSS: Enable/Disable"            , ""                                   , "Activate this if you use gta_remastered's X and R swapped controls." },
   
   #ifdef LANG
-  {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Translation made by someone"}, // Description will be automatically generated
+  {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Translate CDR to your native language!"}, // Description will be automatically generated when LANG is enabled
   #endif
 
   {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
@@ -6070,6 +6070,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
           if (strlen(menu_list[i].desc) > 0) {
             char desc_formatted[128];
 
+			#ifdef LANG
             if (menu_list[i].conf_id == 0x1FB9) // Replace with author name
             {
               void *(* func)() = (void *)(menu_list[i].value);
@@ -6077,6 +6078,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
               snprintf(desc_formatted, sizeof(desc_formatted), "> %s %s", _t("Translation made by"), main_file_table->lang_files[currSelectedLangID]->author_name);
             }
             else
+			#endif
               snprintf(desc_formatted, sizeof(desc_formatted), "> %s", _t(menu_list[i].desc));
 
             drawLegendMessage(desc_formatted, 0, 0, COLOR_TEXT); // left side, third row
