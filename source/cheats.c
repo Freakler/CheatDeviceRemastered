@@ -4648,7 +4648,7 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
     #endif
     
     //logPrintf("%c%c", string[5], string[6]);
-    int x = (((int)string[5] - 48) * 10) + ((int)string[6] - 48); // sigh..
+    int x = ((string[5] - '0') * 10) + (string[6] - '0'); // sigh..
     //logPrintf("%i", x);
     
     #if defined(LOG) || defined(USERSCRIPTLOG)
