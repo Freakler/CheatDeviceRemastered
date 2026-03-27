@@ -1,10 +1,7 @@
 TARGET = cdr_compat_loader
 OBJS = main.o
 
-WARNFLAGS = -Wall -Wextra
-OPTMFLAGS = -Os -mtune=mips32r2
-
-CFLAGS = -Os -G0 -fno-pic -mtune=mips32r2 $(WARNFLAGS)
+CFLAGS = -Os -G0 -fno-pic -mtune=mips32r2 -Wall -Wextra
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 
