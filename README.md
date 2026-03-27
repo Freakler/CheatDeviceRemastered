@@ -27,6 +27,10 @@ Copy the whole ```cheatdevice_remastered``` folder into the ```/PSP/PLUGINS/``` 
 
 :warning: **If you are using a PSP 1000 (Fat) model**<br>
 Please use ```cheatdevice_remastered_lite.prx``` instead.
+
+:info: **For older CFWs there now is a loader as well!**<br>
+It will not only dynamically decide on its own wheter version to load depending on available memory, it also should enhance compatibility with other games while CheatDevice is activated.<br>
+See [/loader](https://github.com/Freakler/CheatDeviceRemastered/blob/main/loader/main.c#L20) for more info.
 <br /><br />
 
 
