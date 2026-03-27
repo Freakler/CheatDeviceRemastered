@@ -6593,7 +6593,7 @@ static void CheckModules() { // PPSSPP only
   if( sceKernelGetModuleIdList(modules, sizeof(modules), &count) >= 0 ) {
     int i;
     SceKernelModuleInfo info;
-    for( i = 0; i < count; ++i ) {
+    for( i = 0; i < count; i++ ) {
       info.size = sizeof(SceKernelModuleInfo);
       if (sceKernelQueryModuleInfo(modules[i], &info) < 0) {
         continue;
@@ -6637,7 +6637,7 @@ static void CheckModules() { // PPSSPP only
 
 
 int OnModuleStart(SceModule2 *mod) {
-  char *modname = mod->modname;
+  const char *modname = mod->modname;
   
   if( strcmp(modname, "GTA3") == 0 ) {
     mod_text_addr = mod->text_addr;
@@ -6659,7 +6659,6 @@ int OnModuleStart(SceModule2 *mod) {
 
 
 int module_start(SceSize argc, void* argp) {
-  int i;
   sceCtrlPeekBufferPositive(&pad, 1);
 
   /// remove old log file (if there is one)
@@ -6685,6 +6684,7 @@ int module_start(SceSize argc, void* argp) {
   #endif
   #endif
   
+  int i;
   
   /// init categories array
   for(i = 0; i < CAT_COUNTER; i++) 
@@ -6692,12 +6692,12 @@ int module_start(SceSize argc, void* argp) {
 
 
  /// check PPSSPP
-  if( sceIoDevctl("kemulator:", 0x00000003, NULL, 0, NULL, 0) == 0 ) {
+  if( sceIoDevctl("kemulator:", EMULATOR_DEVCTL__IS_EMULATOR, NULL, 0, NULL, 0) == 0 ) {
     PPSSPP = 1;
     #ifdef LOG
     logPrintf("[INFO] PPSSPP detected!");
     #endif
-	sceKernelDelayThread(10*1000); // 10ms (bad fix for invalid memory crash with lite version?!)
+	  sceKernelDelayThread(10*1000); // 10ms (bad fix for invalid memory crash with lite version?!)
   } 
 
 

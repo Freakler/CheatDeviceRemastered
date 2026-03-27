@@ -110,8 +110,7 @@ void drawString(const char *string, int origin, short style, float scale, short 
       curr_text->pos.y = y;
       curr_text->style = style;
       curr_text->shadow = shadow;
-      curr_text->scale.x = scale / 2.0f; // Only for LCS, VCS will always use scale.y as arg for SetScale
-      curr_text->scale.y = scale;
+      curr_text->scale = scale;
       curr_text->color = color;
       curr_text->origin = origin;
       break;
@@ -236,10 +235,7 @@ static void mymenurender_LCS_patched() {
     if( curr_text->text[0] != '\0' )
     {
       SetFontStyle(curr_text->style);
-
-      // Setting width to just curr_text->scale / 2.0f crashes game, that's why i made scale a vector2
-      // Don't ask me why, must be a bug with this function
-      SetScale_LCS(curr_text->scale.x, curr_text->scale.y);
+      SetScale_LCS(curr_text->scale / 2.0f, curr_text->scale);
 
       SetColor(&curr_text->color);
       SetSlant(0.0f);
@@ -275,14 +271,13 @@ static void mymenurender_LCS_patched() {
           SetRightJustifyWrap(0.0f);
           break;
 
-        // TODO
-        // case ALIGN_SCREENCENTER:
-        //   SetRightJustifyOff();
-        //   SetJustifyOff();
-        //   SetCentreOn();
-        //   SetCentreSize(SCREEN_WIDTH);
-        //   xpos[i] = SCREEN_WIDTH / 2.0f; // this crashes LCS Pause Menu
-        //   break;
+        case ALIGN_SCREENCENTER:
+          SetRightJustifyOff();
+          SetJustifyOff();
+          SetCentreOn();
+          SetCentreSize(SCREEN_WIDTH);
+          curr_text->pos.x = SCREEN_WIDTH / 2.0f;
+          break;
         
         default:
           break;
@@ -392,7 +387,7 @@ static void mymenurender_VCS_patched() {
       33 =
       * * * * * *  */
 
-      SetScale_VCS(curr_text->scale.y);
+      SetScale_VCS(curr_text->scale);
 
       if( curr_text->shadow == SHADOW_ON && curr_text->style != FONT_NAMES ) { // fake shadow (black shifted text) + disable on FONT_NAMES because those have shadow by default
         u32 rgba[] = { 0xBB000000 };
@@ -458,7 +453,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
     #endif
     SetScale_LCS = (void*)(addr);
     SetSlant = (void*)(addr+0x14); // FUN_00250e0c_SetSlant
-    SetSlantRefPoint = (void*)(addr+0x14); // FUN_00250e1c_SetSlantRefPoint
+    SetSlantRefPoint = (void*)(addr+0x24); // FUN_00250e1c_SetSlantRefPoint
     return 1;
   }
 

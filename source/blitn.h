@@ -76,7 +76,7 @@ typedef struct menu_blit_text
   short style;
   short shadow;
   int origin;
-  ScePspFVector2 scale;
+  float scale;
   ScePspFVector2 pos;
 } menu_blit_text;
 
