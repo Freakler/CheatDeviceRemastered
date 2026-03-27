@@ -29,7 +29,7 @@ Copy the whole ```cheatdevice_remastered``` folder into the ```/PSP/PLUGINS/``` 
 Because of memory limitation please use ```cheatdevice_remastered_lite.prx``` instead.
 
 :information_source: **For older CFWs there now is a standalone loader prx as well!**<br>
-It will not only dynamically decide on its own wheter version to load depending on available memory, it also should enhance compatibility with other games while CheatDevice is activated.See [/loader](https://github.com/Freakler/CheatDeviceRemastered/blob/main/loader/main.c#L20) for more info.<br>
+It will not only dynamically decide on its own whether version to load depending on available memory, it also should enhance compatibility with other games while CheatDevice is activated. See [/loader](https://github.com/Freakler/CheatDeviceRemastered/blob/main/loader/main.c#L20) for more info.<br>
 Add and enable ```cdr_compat_loader.prx``` instead.
 <br /><br />
 
