@@ -28,10 +28,9 @@ Copy the whole ```cheatdevice_remastered``` folder into the ```/PSP/PLUGINS/``` 
 :warning: **If you are using a PSP 1000 (Fat) model**<br>
 Because of memory limitation please use ```cheatdevice_remastered_lite.prx``` instead.
 
-:information_source: **For older CFWs there now is a loader as well!**<br>
-It will not only dynamically decide on its own wheter version to load depending on available memory, it also should enhance compatibility with other games while CheatDevice is activated.<br>
-See [/loader](https://github.com/Freakler/CheatDeviceRemastered/blob/main/loader/main.c#L20) for more info.
-
+:information_source: **For older CFWs there now is a standalone loader prx as well!**<br>
+It will not only dynamically decide on its own wheter version to load depending on available memory, it also should enhance compatibility with other games while CheatDevice is activated.See [/loader](https://github.com/Freakler/CheatDeviceRemastered/blob/main/loader/main.c#L20) for more info.<br>
+Add and enable ```cdr_compat_loader.prx``` instead.
 <br /><br />
 
 
@@ -54,6 +53,16 @@ A guide to get started in UserScripting here: https://github.com/Freakler/CheatD
 
 
 ## Changelog
+<details><summary>v1.0h3  (27th Mar. 2026)</summary><ul>
+<li>added Empire Editor (VCS) (thx @NABN00B)
+<li>added ULUS11826 ("Seen in Liberty City" Mod) to .ini
+<li>added Spanish translation (thx @vdarg / @exvaae)
+<li>added an optional loader prx for older CFWs (via @danssmnt)
+<li>fixed UserScript Menu lag for PPSSPP on devices with slow storage (via @danssmnt)
+<li>code improvements, optimizations and LOTS of fixes (via @danssmnt)
+<li>compatibility with newer SDK (via @danssmnt & thx to @Parik27)
+</ul></details>
+
 <details><summary>v1.0h2  (6th Jan. 2025)</summary><ul>
 <li>made TOPFUN spawnable in VCS (thx @Parik)
 <li>fixed GXT-less Vehicles names in Garage Editor
