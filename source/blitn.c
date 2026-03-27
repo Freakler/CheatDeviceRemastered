@@ -61,8 +61,8 @@ Draw Rectangles via:
 ~VEWEP~   // ~w~To perform a ~h~drive-by~w~, hold~h~ ~k~ ~VELL~ ~w~or~h~ ~k~ ~VELR~ ~w~and fire using~h~ ~k~ ~VEWEP~.
 ************/
 
-static menu_blit_text main_blit_texts[MAX_TEXTS] = {0};
-static menu_blit_box main_blit_boxes[MAX_BOXES] = {0};
+static menu_blit_text main_blit_texts[MAX_TEXTS] = { };
+static menu_blit_box main_blit_boxes[MAX_BOXES] = { };
 
 static void AsciiToUnicode(const char* in, wchar_t* out) {
   while( *in != '\0' ) {

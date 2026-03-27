@@ -1,4 +1,4 @@
-TARGET = cdr_loader
+TARGET = cdr_compat_loader
 OBJS = main.o
 
 WARNFLAGS = -Wall -Wextra
