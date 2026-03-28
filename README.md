@@ -25,7 +25,7 @@ Move `cheatdevice_remastered` folder to `ms0:/PSP/PLUGINS/` *(create directories
 
 #### Using *PRO*, *(L)ME 2.3* or *Adrenaline*
 
-For these CFWs, it's recommended you use **CDR Loader**. (_[Why?](https://github.com/Freakler/CheatDeviceRemastered/blob/main/loader/main.c#L20)_)
+For these CFWs, it's recommended you use **CDR Loader**. (_[Why?](loader/README.md#why)_)
 
 
  - Append the following line to `ms0:/seplugins/GAME.TXT`
