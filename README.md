@@ -37,7 +37,7 @@ ms0:PSP/PLUGINS/cheatdevice_remastered/cdr_compat_loader.prx 1
 
 #### Using ARK
 > [!IMPORTANT]
-> *If you're on a **PSP-1000** ("Fat"), due to hardware constraints, you'll have to use the Lite version of CheatDevice Remastered. Replace `cheatdevice_remastered.prx` with `cheatdevice_remastered_lite.prx`.*
+> If you're on a **PSP-1000** ("Fat"), due to hardware constraints, you'll have to use the Lite version of CheatDevice Remastered. Replace `cheatdevice_remastered.prx` with `cheatdevice_remastered_lite.prx`.
 
  - Append the following line to your `PLUGINS.TXT`
 ```
