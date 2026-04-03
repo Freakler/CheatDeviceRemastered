@@ -194,7 +194,7 @@ static void PutReplacementChar(wchar_t **out)
   *(*out)++ = REPLACEMENT_CHAR;
 }
 
-static void Utf8ToGameEncoding(const char *in, wchar_t *out)
+void Utf8ToGameEncoding(const char *in, wchar_t *out)
 {
   if (gta_version != 0 && gta_version != 1) {
     *out = '\0';
