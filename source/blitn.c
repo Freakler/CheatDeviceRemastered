@@ -240,7 +240,7 @@ static void Utf8ToGameEncoding(const char *in, wchar_t *out)
         continue;
       }
       u8 c2 = (u8)*in++;
-          u8 c3 = (u8)*in++;
+      u8 c3 = (u8)*in++;
 
       unicode = ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) |
           (c3 & 0x3F);
