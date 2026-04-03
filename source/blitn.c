@@ -64,10 +64,227 @@ Draw Rectangles via:
 static menu_blit_text main_blit_texts[MAX_TEXTS] = { };
 static menu_blit_box main_blit_boxes[MAX_BOXES] = { };
 
-static void AsciiToUnicode(const char* in, wchar_t* out) {
-  while( *in != '\0' ) {
-    *out++ = *in++;
-  } *out = '\0';
+static int gta_version = -1;
+
+// Source: https://github.com/Sergeanur/GXT-compiler/blob/49ed88b3/tables/lcs_table.txt
+// The unicode arrays must be sorted.
+static const u16 LCS_UNICODES[] = {
+  0x00A1, 0x00A2, 0x00A3, 0x00A4, 0x00A5, 0x00A6, 0x00A7, 0x00A8, 0x00A9,
+  0x00AA, 0x00AB, 0x00AE, 0x00B0, 0x00B9, 0x00BB, 0x00BF, 0x00C0, 0x00C1,
+  0x00C2, 0x00C3, 0x00C4, 0x00C5, 0x00C6, 0x00C7, 0x00C8, 0x00C9, 0x00CA,
+  0x00CB, 0x00CC, 0x00CD, 0x00CE, 0x00CF, 0x00D0, 0x00D1, 0x00D2, 0x00D3,
+  0x00D4, 0x00D5, 0x00D6, 0x00D7, 0x00D8, 0x00D9, 0x00DA, 0x00DB, 0x00DC,
+  0x00DD, 0x00DE, 0x00DF, 0x00E0, 0x00E1, 0x00E2, 0x00E3, 0x00E4, 0x00E5,
+  0x00E6, 0x00E7, 0x00E8, 0x00E9, 0x00EA, 0x00EB, 0x00EC, 0x00ED, 0x00EE,
+  0x00EF, 0x00F0, 0x00F1, 0x00F2, 0x00F3, 0x00F4, 0x00F5, 0x00F6, 0x00F7,
+  0x00F8, 0x00F9, 0x00FA, 0x00FB, 0x00FC, 0x00FD, 0x00FE, 0x00FF, 0x0152,
+  0x0153, 0x0178, 0x02C6, 0x02DC, 0x2018, 0x2019, 0x201A, 0x201C, 0x201D,
+  0x201E, 0x2039, 0x203A, 0x20AC, 0x2122, 0xFFFD
+};
+static const u8 LCS_GAMECODES[] = {
+  0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, // ¡ ¢ £ ¤ ¥ ¦ § ¨ © ª,
+  0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, 0x80, 0x81, 0x82, 0x83, // « ® ° ¹ » ¿ À Á Â Ã,
+  0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, // Ä Å Æ Ç È É Ê Ë Ì Í,
+  0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, // Î Ï Ð Ñ Ò Ó Ô Õ Ö ×,
+  0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F, 0xA0, 0xA1, // Ø Ù Ú Û Ü Ý Þ ß à á,
+  0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, // â ã ä å æ ç è é ê ë,
+  0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, // ì í î ï ð ñ ò ó ô õ,
+  0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF, // ö ÷ ø ù ú û ü ý þ ÿ,
+  0xC5, 0xCD, 0xCE, 0xC3, 0xCA, 0xC6, 0xC7, 0xC1, 0xC8, 0xC9, // Œ œ Ÿ ˆ ˜ ‘ ’ ‚ “ ”,
+  0xC2, 0xC4, 0xCC, 0xC0, 0xCB, 0xDF                          // „ ‹ › € ™ �
+};
+
+static const u16 VCS_UNICODES[] = {
+  0x00A1, 0x00A2, 0x00A3, 0x00A4, 0x00A5, 0x00A6, 0x00A7, 0x00A9, 0x00AA,
+  0x00AB, 0x00AE, 0x00B0, 0x00B1, 0x00B2, 0x00B3, 0x00B9, 0x00BA, 0x00BB,
+  0x00BF, 0x00C0, 0x00C1, 0x00C2, 0x00C3, 0x00C4, 0x00C5, 0x00C6, 0x00C7,
+  0x00C8, 0x00C9, 0x00CA, 0x00CB, 0x00CC, 0x00CD, 0x00CE, 0x00CF, 0x00D0,
+  0x00D1, 0x00D2, 0x00D3, 0x00D4, 0x00D5, 0x00D6, 0x00D7, 0x00D8, 0x00D9,
+  0x00DA, 0x00DB, 0x00DC, 0x00DD, 0x00DE, 0x00DF, 0x00E0, 0x00E1, 0x00E2,
+  0x00E3, 0x00E4, 0x00E5, 0x00E6, 0x00E7, 0x00E8, 0x00E9, 0x00EA, 0x00EB,
+  0x00EC, 0x00ED, 0x00EE, 0x00EF, 0x00F0, 0x00F1, 0x00F2, 0x00F3, 0x00F4,
+  0x00F5, 0x00F6, 0x00F7, 0x00F8, 0x00F9, 0x00FA, 0x00FB, 0x00FC, 0x00FD,
+  0x00FE, 0x00FF, 0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017D, 0x017E,
+  0x0192, 0x02C6, 0x02DC, 0x0384, 0x03BC, 0x2022, 0x208D, 0x208E, 0x2122,
+  0xFFFD
+};
+static const u8 VCS_GAMECODES[] = {
+  0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA9, 0xAA, 0xAB, // ¡ ¢ £ ¤ ¥ ¦ § © ª «,
+  0xAE, 0xB0, 0xB1, 0xB2, 0xB3, 0xB9, 0xBA, 0xBB, 0xBF, 0xC0, // ® ° ± ² ³ ¹ º » ¿ À,
+  0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, // Á Â Ã Ä Å Æ Ç È É Ê,
+  0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, // Ë Ì Í Î Ï Ð Ñ Ò Ó Ô,
+  0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, // Õ Ö × Ø Ù Ú Û Ü Ý Þ,
+  0xDF, 0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, // ß à á â ã ä å æ ç è,
+  0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF, 0xF0, 0xF1, 0xF2, // é ê ë ì í î ï ð ñ ò,
+  0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, // ó ô õ ö ÷ ø ù ú û ü,
+  0xFD, 0xFE, 0xFF, 0x8C, 0x9C, 0x8A, 0x9A, 0x9F, 0x8E, 0x9E, // ý þ ÿ Œ œ Š š Ÿ Ž ž,
+  0x83, 0x88, 0x98, 0xB4, 0xB5, 0x95, 0x8B, 0x9B, 0x99, 0x80  // ƒ ˆ ˜ ΄ μ • ₍ ₎ ™ �
+};
+
+static const u16 *UNICODES[] = { VCS_UNICODES, LCS_UNICODES };
+static const u8 *GAMECODES[] = { VCS_GAMECODES, LCS_GAMECODES };
+static const size_t CHARMAP_LENS[] = {
+  sizeof(VCS_UNICODES) / sizeof(VCS_UNICODES[0]),
+  sizeof(LCS_UNICODES) / sizeof(LCS_UNICODES[0])
+};
+
+// Using question mark because replacement character is missing in FONT_HEADING.
+#define REPLACEMENT_CHAR 0x3F
+
+// Binary search version
+static wchar_t UnicodeToGameChar(uint32_t unicode, const u16 *unicodes,
+         const u8 *gamecodes, const size_t charmap_len)
+{
+  if (unicode > 0xFFFF)
+    return REPLACEMENT_CHAR;
+  size_t low = 0;
+  size_t high = charmap_len - 1;
+  while (low <= high) {
+    size_t mid = low + (high - low) / 2;
+
+    if (unicodes[mid] == unicode)
+      return gamecodes[mid];
+
+    if (unicodes[mid] < unicode)
+      low = mid + 1;
+
+    else
+      high = mid - 1;
+  }
+
+  return REPLACEMENT_CHAR;
+}
+
+// Linear version
+/*
+static inline wchar_t UnicodeToGameChar(uint32_t unicode, const u16 *unicodes, const u8 *gamecodes, const size_t charmap_len) {
+  if (unicode > 0xFFFF)
+    return REPLACEMENT_CHAR;
+
+  for (size_t i = 0; i < charmap_len; i++) {
+    if (unicodes[i] == unicode)
+      return gamecodes[i];
+    if (unicodes[i] > unicode)
+      break;
+  }
+  return REPLACEMENT_CHAR;
+}*/
+
+static int GetUtf8CharLen(u8 byte)
+{
+  if ((byte & 0x80) == 0x00)
+    return 1;
+  if ((byte & 0xE0) == 0xC0)
+    return 2;
+  if ((byte & 0xF0) == 0xE0)
+    return 3;
+  if ((byte & 0xF8) == 0xF0)
+    return 4;
+
+  return 0;
+}
+
+static int IsCont(u8 byte)
+{
+  return (byte & 0xC0) == 0x80;
+}
+
+static void PutReplacementChar(wchar_t **out)
+{
+  *(*out)++ = REPLACEMENT_CHAR;
+}
+
+void Utf8ToGameEncoding(const char *in, wchar_t *out)
+{
+  if (gta_version != 0 && gta_version != 1) {
+    *out = '\0';
+    return;
+  }
+
+  const u16 *unicodes = UNICODES[gta_version];
+  const u8 *gamecodes = GAMECODES[gta_version];
+  const size_t charmap_len = CHARMAP_LENS[gta_version];
+
+  while (*in != '\0') {
+    unsigned char c1 = (unsigned char)*in++;
+    uint32_t unicode;
+
+    int len = GetUtf8CharLen(c1);
+
+    switch (len) {
+    case 1: {
+      *out++ = (wchar_t)c1;
+      continue;
+    }
+
+    case 2: {
+      if (*in == '\0' || !IsCont(*in)) {
+        PutReplacementChar(&out);
+        continue;
+      }
+      u8 c2 = (u8)*in++;
+      unicode = ((c1 & 0x1F) << 6) | (c2 & 0x3F);
+
+      if (unicode < 0x80) {
+        PutReplacementChar(&out);
+        continue;
+      }
+
+      break;
+    }
+
+    case 3: {
+      if (*in == '\0' || *(in + 1) == '\0' ||
+          !IsCont(*in) || !IsCont(*(in + 1))) {
+        PutReplacementChar(&out);
+        continue;
+      }
+      u8 c2 = (u8)*in++;
+      u8 c3 = (u8)*in++;
+
+      unicode = ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) |
+          (c3 & 0x3F);
+
+      if (unicode < 0x0800 ||
+          (unicode >= 0xD800 && unicode <= 0xDFFF)) {
+        PutReplacementChar(&out);
+        continue;
+      }
+
+      break;
+    }
+
+    case 4: {
+      if (*in == '\0' || *(in + 1) == '\0' ||  *(in + 2) == '\0' ||
+          !IsCont(*in) || !IsCont(*(in + 1)) || !IsCont(*(in + 2))) {
+        PutReplacementChar(&out);
+        continue;
+      }
+      u8 c2 = (u8)*in++;
+      u8 c3 = (u8)*in++;
+      u8 c4 = (u8)*in++;
+
+      unicode = ((c1 & 0x07) << 18) | ((c2 & 0x3F) << 12) |
+          ((c3 & 0x3F) << 6) | (c4 & 0x3F);
+
+      if (unicode < 0x010000 || unicode > 0x10FFFF) {
+        PutReplacementChar(&out);
+        continue;
+      }
+
+      break;
+    }
+
+    default:
+      PutReplacementChar(&out);
+      continue;
+    }
+
+    *out++ = UnicodeToGameChar(unicode, unicodes, gamecodes,
+             charmap_len);
+  }
+
+  *out = '\0';
 }
 
 void drawBox(float x, float y, float width, float height, u32 color) {
@@ -105,7 +322,7 @@ void drawString(const char *string, int origin, short style, float scale, short 
     menu_blit_text* curr_text = &main_blit_texts[i];
 
     if( curr_text->text[0] == '\0' ) {
-      AsciiToUnicode(string, curr_text->text);
+      Utf8ToGameEncoding(string, curr_text->text);
       curr_text->pos.x = x;
       curr_text->pos.y = y;
       curr_text->style = style;
@@ -121,7 +338,7 @@ void drawString(const char *string, int origin, short style, float scale, short 
 
 void drawStringLCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
   wchar_t str[MSGLENGTH] = L" ";
-  AsciiToUnicode(string, str);
+  Utf8ToGameEncoding(string, str);
 
   SetColor(&color);
   SetPropOn();
@@ -143,7 +360,7 @@ void drawStringVCS(const char *string, int origin, short style, float scale, sho
   float coords[4];
 
   wchar_t str[MSGLENGTH] = L" ";
-  AsciiToUnicode(string, str);
+  Utf8ToGameEncoding(string, str);
 
   SetFontStyle(style);
   ResetFontStyling();
@@ -255,7 +472,7 @@ static void mymenurender_LCS_patched() {
           SetCentreOn();
           SetCentreSize(SCREEN_WIDTH); // todo I guess
           break;
-        
+
         case ALIGN_FREE:
         case ALIGN_LEFT:
           SetCentreOff();
@@ -278,7 +495,7 @@ static void mymenurender_LCS_patched() {
           SetCentreSize(SCREEN_WIDTH);
           curr_text->pos.x = SCREEN_WIDTH / 2.0f;
           break;
-        
+
         default:
           break;
       }
@@ -354,7 +571,7 @@ static void mymenurender_VCS_patched() {
       SetTextSpaceing(1); // set 0 to put whitespace between each char
       SetTextBounds(coords); // in combination with "SetTextOriginPoint" text can be centered! I did this to match LCS
       SetTextOriginPoint(curr_text->origin);
-      
+
       /* * * * * * *
       //free
       0 = free positioning,
@@ -816,7 +1033,7 @@ int initTextBlit(u32 text_addr, u32 text_size) {
   logPrintf("\nblitn: start..");
   #endif
 
-  int gta_version = -1;
+  gta_version = -1;
 
   u32 i;
   for( i = 0; i < text_size; i += 4 ) {

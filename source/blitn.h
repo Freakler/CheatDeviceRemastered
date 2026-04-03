@@ -170,6 +170,8 @@ void drawString(const char *string, int origin, short style, float scale, short 
 void drawStringLCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
 void drawStringVCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color);
 
+void Utf8ToGameEncoding(const char *in, wchar_t *out);
+
 void cWorldStream_Render_LCS_Patched(void *this, int mode);
 void cWorldStream_Render_VCS_Patched(void *this, int mode);
 
