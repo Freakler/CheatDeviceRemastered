@@ -30,6 +30,7 @@
 #include "utils.h" // for LOG
 #include "cheats.h" // for using hooked functions
 #include "functions.h"
+#include "blitn.h"
 
 
 register int gp asm("gp"); 
@@ -2784,9 +2785,8 @@ void setTimedTextbox(const char *sentence, float duration) {
 
   if( LCS ) base = global_helpbox_string; // DAT_00649dc0_string (0x8E4DDC0)
   if( VCS ) base = getInt(global_helpbox+gp) + 0x243C; // iGp000016d8 + 0x243C
-    
-  for( i = 0; sentence[i] != '\0'; i++, base += 0x2 ) setByte(base, sentence[i]);
-  for ( ; i < length; i++, base += 0x2 ) setByte(base,0); //clear the rest
+  
+  Utf8ToGameEncoding(sentence, (wchar_t*)(base));
     
   if( LCS ) {
     setInt(global_helpbox_timedisplayed, 0);     // reset displaying time                  DAT_0035a808 (0x08B5E808)
