@@ -6070,15 +6070,22 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
           if (strlen(menu_list[i].desc) > 0) {
             char desc_formatted[128];
 
-			#ifdef LANG
-            if (menu_list[i].conf_id == 0x1FB9) // Replace with author name
+            /* Write translation author in description          */
+            /* [TODO] There really isn't a better way to this?  */
+            #ifdef LANG
+            if ( menu_list[i].conf_id == 0x1FB9 && main_file_table && main_file_table->lang_files )
             {
-              void *(* func)() = (void *)(menu_list[i].value);
-              int currSelectedLangID = (int)func(FUNC_GET_VALUE, 0, 0, 0);
-              snprintf(desc_formatted, sizeof(desc_formatted), "> %s %s", _t("Translation made by"), main_file_table->lang_files[currSelectedLangID]->author_name);
+              void *(* func)(int, int, int, int) = (void *)(menu_list[i].value);
+              int currSelectedLangID = *(int*)func(FUNC_GET_VALUE, 0, 0, 0);
+              
+              /* Check if it's valid to do it, this looks excessive I know... */
+              if ( currSelectedLangID > 0 && main_file_table->lang_files[currSelectedLangID] && main_file_table->lang_files[currSelectedLangID]->author_name )
+                snprintf(desc_formatted, sizeof(desc_formatted), "> %s %s", _t("Translation made by"), main_file_table->lang_files[currSelectedLangID]->author_name);
+              else
+                snprintf(desc_formatted, sizeof(desc_formatted), "> %s", _t(menu_list[i].desc));
             }
             else
-			#endif
+            #endif
               snprintf(desc_formatted, sizeof(desc_formatted), "> %s", _t(menu_list[i].desc));
 
             drawLegendMessage(desc_formatted, 0, 0, COLOR_TEXT); // left side, third row
