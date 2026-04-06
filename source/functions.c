@@ -2779,9 +2779,7 @@ int getMapLegendToggle() {
  * Calling the game function crashes so i made it this way..  
  */    
 void setTimedTextbox(const char *sentence, float duration) { 
-  short i;
   int base = -1;
-  short length = 0x200;
 
   if( LCS ) base = global_helpbox_string; // DAT_00649dc0_string (0x8E4DDC0)
   if( VCS ) base = getInt(global_helpbox+gp) + 0x243C; // iGp000016d8 + 0x243C
