@@ -6076,11 +6076,11 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
             if ( menu_list[i].conf_id == 0x1FB9 && main_file_table && main_file_table->lang_files )
             {
               void *(* func)(int, int, int, int) = (void *)(menu_list[i].value);
-              int currSelectedLangID = *(int*)func(FUNC_GET_VALUE, 0, 0, 0);
+              int currSelectedLangID = (int)func(FUNC_GET_VALUE, 0, 0, 0);
               
               /* Check if it's valid to do it, this looks excessive I know... */
               if ( currSelectedLangID > 0 && main_file_table->lang_files[currSelectedLangID] && main_file_table->lang_files[currSelectedLangID]->author_name )
-                snprintf(desc_formatted, sizeof(desc_formatted), "> %s %s", _t("Translation made by"), main_file_table->lang_files[currSelectedLangID]->author_name);
+                snprintf(desc_formatted, sizeof(desc_formatted), "> %s %s", _t("Translation done by"), main_file_table->lang_files[currSelectedLangID]->author_name);
               else
                 snprintf(desc_formatted, sizeof(desc_formatted), "> %s", _t(menu_list[i].desc));
             }
