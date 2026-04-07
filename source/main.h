@@ -24,7 +24,7 @@
 
 #include "editor.h"
 
-#define VERSION "v1.0h3" // displayed in title
+#define VERSION "v1.0h4" // displayed in title
 
 /** FEATURE-FLAGS *****************************************************************************************************/
 
