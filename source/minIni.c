@@ -111,7 +111,7 @@ char *_gets(char *s, int size, SceUID stream) {
 static TCHAR *skipleading(const TCHAR *str)
 {
   assert(str != NULL);
-  while (*str != '\0' && isspace(*str))
+  while (*str != '\0' && isspace((unsigned char)*str))
     str++;
   return (TCHAR *)str;
 }
@@ -120,7 +120,7 @@ static TCHAR *skiptrailing(const TCHAR *str, const TCHAR *base)
 {
   assert(str != NULL);
   assert(base != NULL);
-  while (str > base && isspace(*(str-1)))
+  while (str > base && isspace((unsigned char)*(str-1)))
     str--;
   return (TCHAR *)str;
 }
