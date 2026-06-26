@@ -1,0 +1,5 @@
+build
+.vscode
+*.o
+*.prx
+*.elf

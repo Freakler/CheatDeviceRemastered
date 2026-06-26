@@ -1,8 +1,8 @@
 <a name="readme-top"></a>
-![ref0](pictures/logo.png)<br />
+![ref0](.github/pictures/logo.png)<br />
 for Grand Theft Auto Liberty &amp; Vice City Stories for PlayStation Portable
 
-![ref0](pictures/capture_000.png)
+![ref0](.github/pictures/capture_000.png)
 <br />
 
 ## About The Project
