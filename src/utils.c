@@ -449,28 +449,6 @@ double atof(const char * arr) {
   else return val;
 }
 
-void *malloc(size_t size)
-{
-  SceUID uid = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "", PSP_SMEM_Low, size + 8, NULL);
-  if( uid >= 0 )
-  {
-    unsigned int *p = (unsigned int *)sceKernelGetBlockHeadAddr(uid);
-    *p = uid;
-    *(p + 4) = size;
-    return (void *)(p + 8);
-  }
-
-  return NULL;
-}
-
-void free(void *ptr)
-{
-  if(ptr)
-  {
-    sceKernelFreePartitionMemory(*((SceUID *)ptr - 8));
-  }
-}
-
 unsigned long
 strtoul(const char *nptr, char **endptr, register int base)
 {

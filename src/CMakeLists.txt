@@ -18,6 +18,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   m
   gcc
   ansic
+  pspmalloc
   pspctrl
   pspsystemctrl_user
 )
