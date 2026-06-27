@@ -34,10 +34,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -mpreferred-stack-boundary=4
   -fshort-wchar
   -mno-check-zero-division
-  # -frename-registers
-  # -mtune=mips32r2
-  # -ffunction-sections
-  # -fdata-sections
+  -frename-registers
+  -mtune=mips32r2
+  -ffunction-sections
+  -fdata-sections
 
   -Wall
 )
