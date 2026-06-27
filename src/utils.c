@@ -29,6 +29,7 @@
 
 #include "utils.h"
 #include "main.h" // for LOG
+#include "nanoprintf/nanoprintf.h"
 
 extern char file_log[];
 extern const char *basefolder;
@@ -39,22 +40,10 @@ int logPrintf(const char *text, ...) {
   char string[256];
 
   va_start(list, text);
-  vsprintf(string, text, list);
+  vsnprintf(string, 256, text, list);
   va_end(list);
 
-  if (PPSSPP) {
-    sceKernelPrintf(string);
-  }
-
-  char buffer[128];
-  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, file_log);
-
-  SceUID fd = sceIoOpen(buffer, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
-  if( fd >= 0 ) {
-    sceIoWrite(fd, string, strlen(string));
-    sceIoWrite(fd, "\n", 1);
-    sceIoClose(fd);
-  }
+  sceIoWrite(sceKernelStdout(), string, strlen(string));
    
   return 0;
 }
@@ -180,7 +169,7 @@ char *getFolderModificationDate(const char* folder) {
   logPrintf("sceIoGetstat() returned %i", ret);
   #endif 
   if( ret >= 0 )
-    sprintf(res, "%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
+    snprintf(res, sizeof(res), "%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
     
   return res;
 }
@@ -338,8 +327,8 @@ void getSizeString(char string[16], uint64_t size) {
 
   int i = 0;
   static char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-  while( double_size >= 1024.0 ) {
-    double_size /= 1024.0;
+  while( double_size >= 1024.0f ) {
+    double_size /= 1024.0f;
     i++;
   }
   snprintf(string, 16, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
@@ -418,4 +407,216 @@ uint32_t hash(const char *key, uint32_t len, uint32_t seed)
   h ^= (h >> 16);
 
   return h;
+}
+
+static unsigned long int next = 1;
+
+int rand(void) // RAND_MAX assumed to be 32767
+{
+  next = next * 1103515245 + 12345;
+  return (unsigned int)(next/65536) % 32768;
+}
+
+void srand(unsigned int seed)
+{
+  next = seed;
+}
+
+double atof(const char * arr) {
+  float val = 0;
+  int afterdot = 0;
+  float scale = 1;
+  int neg = 0;
+
+  if (*arr == '-') {
+    arr++;
+    neg = 1;
+  }
+  while (*arr) {
+    if (afterdot) {
+      scale = scale / 10;
+      val = val + (*arr - '0') * scale;
+    } else {
+      if (*arr == '.')
+        afterdot++;
+      else
+        val = val * 10.0 + (*arr - '0');
+    }
+    arr++;
+  }
+
+  if (neg) return -val;
+  else return val;
+}
+
+void *malloc(size_t size)
+{
+  SceUID uid = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "", PSP_SMEM_Low, size + 8, NULL);
+  if( uid >= 0 )
+  {
+    unsigned int *p = (unsigned int *)sceKernelGetBlockHeadAddr(uid);
+    *p = uid;
+    *(p + 4) = size;
+    return (void *)(p + 8);
+  }
+
+  return NULL;
+}
+
+void free(void *ptr)
+{
+  if(ptr)
+  {
+    sceKernelFreePartitionMemory(*((SceUID *)ptr - 8));
+  }
+}
+
+unsigned long
+strtoul(const char *nptr, char **endptr, register int base)
+{
+	register const char *s = nptr;
+	register unsigned long acc;
+	register int c;
+	register unsigned long cutoff;
+	register int neg = 0, any, cutlim;
+
+	/*
+	 * See strtol for comments as to the logic used.
+	 */
+	do {
+		c = *s++;
+	} while (isspace(c));
+	if (c == '-') {
+		neg = 1;
+		c = *s++;
+	} else if (c == '+')
+		c = *s++;
+	if ((base == 0 || base == 16) &&
+	    c == '0' && (*s == 'x' || *s == 'X')) {
+		c = s[1];
+		s += 2;
+		base = 16;
+	}
+	if (base == 0)
+		base = c == '0' ? 8 : 10;
+	cutoff = (unsigned long)ULONG_MAX / (unsigned long)base;
+	cutlim = (unsigned long)ULONG_MAX % (unsigned long)base;
+	for (acc = 0, any = 0;; c = *s++) {
+		if (isdigit(c))
+			c -= '0';
+		else if (isalpha(c))
+			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+		else
+			break;
+		if (c >= base)
+			break;
+		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+			any = -1;
+		else {
+			any = 1;
+			acc *= base;
+			acc += c;
+		}
+	}
+	if (any < 0) {
+		acc = ULONG_MAX;
+		errno = ERANGE;
+	} else if (neg)
+		acc = -acc;
+	if (endptr != 0)
+		*endptr = (char *) (any ? s - 1 : nptr);
+	return (acc);
+}
+
+long strtol (const char *__restrict __n, char **__restrict __end_PTR, int __base)
+{
+  register const char *p;
+  int result;
+
+  /*
+   * Skip any leading blanks.
+   */
+  p = __n;
+  while (isspace((unsigned char)*p)) {
+    p += 1;
+  }
+
+  /*
+   * Check for a sign.
+   */
+  if (*p == '-') {
+    p += 1;
+    result = -1*(strtoul(p, __end_PTR, __base));
+  } else {
+    if (*p == '+') {
+      p += 1;
+    }
+    result = strtoul(p, __end_PTR, __base);
+  }
+
+  if ((result == 0) && (__end_PTR != 0) && (*__end_PTR == p)) {
+    *__end_PTR = (char *)__n;
+  }
+
+  return result;
+}
+
+int	snprintf(char *__restrict buf, size_t size, const char *__restrict format, ...)
+{
+  return npf_snprintf(buf, size, format);
+}
+
+int	vsnprintf(char *__restrict buf, size_t size, const char *__restrict format, va_list va)
+{
+  return npf_vsnprintf(buf, size, format, va);
+}
+
+#define _CTYPE_DATA_0_127 \
+	_C,	_C,	_C,	_C,	_C,	_C,	_C,	_C, \
+	_C,	_C|_S, _C|_S, _C|_S,	_C|_S,	_C|_S,	_C,	_C, \
+	_C,	_C,	_C,	_C,	_C,	_C,	_C,	_C, \
+	_C,	_C,	_C,	_C,	_C,	_C,	_C,	_C, \
+	_S|_B,	_P,	_P,	_P,	_P,	_P,	_P,	_P, \
+	_P,	_P,	_P,	_P,	_P,	_P,	_P,	_P, \
+	_N,	_N,	_N,	_N,	_N,	_N,	_N,	_N, \
+	_N,	_N,	_P,	_P,	_P,	_P,	_P,	_P, \
+	_P,	_U|_X,	_U|_X,	_U|_X,	_U|_X,	_U|_X,	_U|_X,	_U, \
+	_U,	_U,	_U,	_U,	_U,	_U,	_U,	_U, \
+	_U,	_U,	_U,	_U,	_U,	_U,	_U,	_U, \
+	_U,	_U,	_U,	_P,	_P,	_P,	_P,	_P, \
+	_P,	_L|_X,	_L|_X,	_L|_X,	_L|_X,	_L|_X,	_L|_X,	_L, \
+	_L,	_L,	_L,	_L,	_L,	_L,	_L,	_L, \
+	_L,	_L,	_L,	_L,	_L,	_L,	_L,	_L, \
+	_L,	_L,	_L,	_P,	_P,	_P,	_P,	_C
+
+#define _CTYPE_DATA_128_255 \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0, \
+	0,	0,	0,	0,	0,	0,	0,	0
+
+const char _ctype_[1 + 256] = {
+	0,
+	_CTYPE_DATA_0_127,
+	_CTYPE_DATA_128_255
+};
+
+int errno;
+
+int *
+__errno ()
+{
+  return &errno;
 }

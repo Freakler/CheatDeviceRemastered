@@ -254,7 +254,7 @@ void *garage_vehicle(int calltype, int keypress, int base_address, int address) 
   
   switch( calltype ) {
     case FUNC_GET_STRING:
-      sprintf(buffer, "%s", getRealVehicleNameViaID(getShort(address))); // on error print hex
+      snprintf(buffer, sizeof(buffer), "%s", getRealVehicleNameViaID(getShort(address))); // on error print hex
       if( buffer[0] == '\0' ) // some vehicles don't have translations..
         snprintf(buffer, sizeof(buffer), "%s", getGxtIdentifierForVehicleViaID(getShort(address))); // on error print hex  
       // snprintf(buffer, sizeof(buffer), "%s - %i", getShort(address), buffer); //on error print hex
@@ -1034,16 +1034,16 @@ void *model_flag(int calltype, int keypress, int base_address, int address, int 
       snprintf(buffer, sizeof(buffer), "NONE");
     }
     if( 0x1 & nibble ) { // 0001
-      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0]);
     }      
     if( 0x2 & nibble ) { // 0010
-      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1]);
     }      
     if( 0x4 & nibble ) { // 0100
-      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2]);
     }      
     if( 0x8 & nibble ) { // 1000
-      sprintf(buffer, "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3]);
     }      
 
     return (void *)buffer;  
@@ -1085,16 +1085,16 @@ void *handling_flag(int calltype, int keypress, int base_address, int address, i
       snprintf(buffer, sizeof(buffer), "NONE");
     }
     if( 0x1 & nibble ) { // 0001
-      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 0]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 0]);
     }      
     if( 0x2 & nibble ) { // 0010
-      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 1]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 1]);
     }      
     if( 0x4 & nibble ) { // 0100
-      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 2]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 2]);
     }      
     if( 0x8 & nibble ) { // 1000
-      sprintf(buffer, "%s %s", buffer, vcs_handlingflags[(arg * 4) + 3]);
+      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 3]);
     }      
 
     return (void *)buffer;  
@@ -2055,14 +2055,14 @@ char *empire_owner_name(int val) {
 	if( getScriptGlobalValue(645) == 0 ) { // $645 gang_wars_config 
 	  return getGxtTranslation("PR_GA10"); // "Marty's"
     } else {
-      sprintf(buf, "%s %s", getGxtTranslation("PR_GAN7"), _t("(poor)")); // "Vance"
+      snprintf(buf, sizeof(buf), "%s %s", getGxtTranslation("PR_GAN7"), _t("(poor)")); // "Vance"
 	  return buf;
     }
   } else if( val == 8 ) { // special case
-    sprintf(buf, "%s %s", getGxtTranslation("PR_GAN9"), _t("(rich)")); // "Vance"
+    snprintf(buf, sizeof(buf), "%s %s", getGxtTranslation("PR_GAN9"), _t("(rich)")); // "Vance"
 	return buf;
   } else if( val >= 0 && val <= 8 ) {
-    sprintf(buf, "PR_GAN%i", val+1);
+    snprintf(buf, sizeof(buf), "PR_GAN%i", val+1);
     return getGxtTranslation(buf);
   } else return "Unknown";
 }
@@ -2114,7 +2114,7 @@ char *empire_type_name(int val) {
   if( val == -1 ) { // not selectable in editor though
     return "Random";
   } else if( val >= 0 && val <= 6 ) {
-    sprintf(buf, "PROP_T%i", val+1);
+    snprintf(buf, sizeof(buf), "PROP_T%i", val+1);
     return getGxtTranslation(buf);
   } else return "Unknown";
 }
@@ -2201,7 +2201,7 @@ char *empire_scale_name(int val) {
   }*/
   static char buf[32];
   if( val >= 1 && val <= 3 ) {
-    sprintf(buf, "PROP_S%i", val);
+    snprintf(buf, sizeof(buf), "PROP_S%i", val);
     return getGxtTranslation(buf);
   } else return "Unknown";
 }

@@ -3915,15 +3915,15 @@ void debugprint_patched(const char *text, ...) {
   char string[128];
 
   va_start(list, text);
-  vsprintf(string, text, list);
+  vsnprintf(string, 128, text, list);
   va_end(list);
 
   /// add to log array
   int i = loglines; 
   while( i > 0 ) { 
-    sprintf(logstr[i], "%s", logstr[i-1]); 
+    snprintf(logstr[i], sizeof(logstr[i]), "%s", logstr[i-1]); 
   i--;
-  } sprintf(logstr[0], "%s", string);
+  } snprintf(logstr[0], sizeof(logstr[0]), "%s", string);
   
   /// print to log.txt as well
   logPrintf(string); 
@@ -4982,10 +4982,10 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
     case FUNC_APPLY:
       if( pcar ) { 
         /// speed (Example: "ESPRIT" 1.065 (fMaxVelocity) * 180 * 1.2 = 230 km/h as set in beta handling.cfg)  See: https://github.com/guard3/g3DTZ/blob/e22a1a2295fe136e702153aabb391453be9f6305/source/core/HandlingMgr.cpp#L13
-        sprintf(speed, (i ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed(pcar) * 180.0f * (real ? 1 : 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
+        snprintf(speed, sizeof(speed), (i ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed(pcar) * 180.0f * (real ? 1 : 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
         
         /// gears
-        sprintf(gear, _t("Gear: %X"), getVehicleCurrentGear( pcar ) );
+        snprintf(gear, sizeof(speed), _t("Gear: %X"), getVehicleCurrentGear( pcar ) );
       }
       break;
       
@@ -5726,11 +5726,11 @@ void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus, int de
     
     case FUNC_GET_STRING: 
       if( model == -1 ) {
-        sprintf(retbuf, "Random");
+        snprintf(retbuf, sizeof(retbuf), "Random");
       } else {
-        sprintf(retbuf, "%d", model);
+        snprintf(retbuf, sizeof(retbuf), "%d", model);
         #ifdef NAMERESOLV
-      sprintf(retbuf, "%d (%s)", model, getModelNameViaID(model, -1));
+      snprintf(retbuf, sizeof(retbuf), "%d (%s)", model, getModelNameViaID(model, -1));
       #endif
       } return (void *)retbuf;
             
@@ -5831,7 +5831,7 @@ void *gamespeed(int calltype, int keypress, int defaultstatus, int defaultval) {
       return (int*) (int)(speed*10.0f); 
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%.1f", speed);
+      snprintf(retbuf, sizeof(retbuf), "%.1f", speed);
       return (void *)retbuf;
       
     case FUNC_CHECK:
@@ -5903,7 +5903,7 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
       return (int*)i;
       
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%i", 60 / i); // 60:3 = 20 FPS
+      snprintf(retbuf, sizeof(retbuf), "%i", 60 / i); // 60:3 = 20 FPS
       return retbuf;
       
     case FUNC_CHANGE_VALUE:
@@ -6140,47 +6140,47 @@ char * readMissionNameFromSCM(int mission_number) {
   if( previous == mission_number ) //
     return ret;
   
-  FILE *fp = NULL;
-  if( ( fp = fopen(LCS ? "disc0:/PSP_GAME/USRDIR/DATA/MAIN.SCM" : "disc0:/PSP_GAME/USRDIR/RUNDATA/MAIN.SCM", "rb")) == NULL ) {
-    sprintf(ret, "ERROR");
+  SceUID fd; fd = sceIoOpen(LCS ? "disc0:/PSP_GAME/USRDIR/DATA/MAIN.SCM" : "disc0:/PSP_GAME/USRDIR/RUNDATA/MAIN.SCM", PSP_O_RDONLY, 0777);
+  if( fd < 0  ) {
+    snprintf(ret, sizeof(ret), "ERROR");
     return ret;
   }
 
   offset = 0; // first chunk address
-  fseek(fp, offset, SEEK_SET); // got to chunk
-  fread(&buf, 0x10, 1, fp); // read in header
+  sceIoLseek(fd, offset, SEEK_SET); // got to chunk
+  sceIoRead(fd, &buf, 0x10); // read in header
   if( buf[0x8] != 0x02 || buf[0xA] != 0x06 ) { // confirm syntax
-    sprintf(ret, "ERROR");
+    snprintf(ret, sizeof(ret), "ERROR");
     goto msngetexit;
-  } sprintf(valstr, "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address
+  } snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address
   
   offset = toValue(valstr); 
-  fseek(fp, offset, SEEK_SET); // got to chunk
-  fread(&buf, 0x10, 1, fp); // read in header
+  sceIoLseek(fd, offset, SEEK_SET); // got to chunk
+  sceIoRead(fd, &buf, 0x10); // read in header
   if( buf[0x8] != 0x02 || buf[0xA] != 0x06 ) { //confirm syntax
-    sprintf(ret, "ERROR");
+    snprintf(ret, sizeof(ret), "ERROR");
     goto msngetexit;
-  } sprintf(valstr, "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address 
+  } snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address 
   
   offset = toValue(valstr); 
-  fseek(fp, offset, SEEK_SET); // got to chunk
-  fread(&buf, 0x10, 1, fp); // read in header
+  sceIoLseek(fd, offset, SEEK_SET); // got to chunk
+  sceIoRead(fd, &buf, 0x10); // read in header
   if( buf[0x8] != 0x02 || buf[0xA] != 0x06 ) { // confirm syntax
-    sprintf(ret, "ERROR");
+    snprintf(ret, sizeof(ret), "ERROR");
     goto msngetexit;
   }
   
   /// read in total Missions
   offset = offset + 0x10 + 8; // headersize + two other values
-  fseek(fp, offset, SEEK_SET);
-  fread(&buf, 4, 1, fp); // read in header
-  sprintf(valstr, "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); // next chunk address 
+  sceIoLseek(fd, offset, SEEK_SET);
+  sceIoRead(fd, &buf, 0x4); // read in header
+  snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); // next chunk address 
   missions = toValue(valstr); 
   //logPrintf("total missions: %i", missions);
   
   
   if( mission_number >= missions ) {
-    sprintf(ret, "ERROR");
+    snprintf(ret, sizeof(ret), "ERROR");
     goto msngetexit;
   }
   
@@ -6188,9 +6188,9 @@ char * readMissionNameFromSCM(int mission_number) {
   offset+=0x4; // first offset to mission
   for( i = 0; i < missions; i++, offset+=0x4 ) {
     if( i == mission_number ) {
-      fseek(fp, offset, SEEK_SET);
-      fread(&buf, 4, 1, fp); // read in header
-      sprintf(valstr, "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); //next chunk address 
+      sceIoLseek(fd, offset, SEEK_SET);
+      sceIoRead(fd, &buf, 0x4); // read in header
+      snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); //next chunk address 
       //logPrintf("offset for mission %i: 0x%08X", mission_number, toValue(valstr));
       break;
     }
@@ -6198,19 +6198,19 @@ char * readMissionNameFromSCM(int mission_number) {
   
   /// retrieve thread name if possible
   offset = toValue(valstr) + 8;
-  fseek(fp, offset, SEEK_SET);
-  fread(&buf, 256, 1, fp); // read in some script data (256 should be enough)
-  sprintf(ret, "NONAME");
+  sceIoLseek(fd, offset, SEEK_SET);
+  sceIoRead(fd, &buf, 256); // read in some script data (256 should be enough)
+  snprintf(ret, sizeof(ret), "NONAME");
   for( i = 0; i < 256; i++ ) { // search the first instructions for name_thread
     if( buf[i] == (LCS ? 0xA9 : 0x38) && buf[i+1] == (LCS ? 0x03 : 0x02) ) { // name_thread opcode
-      sprintf(ret, "%s", getString((int)&buf[i+2], 0)); // ugly but I was lazy
-      //sprintf(ret, "%s", "DONE");
+      snprintf(ret, sizeof(ret), "%s", getString((int)&buf[i+2], 0)); // ugly but I was lazy
+      //snprintf(ret, sizeof(ret), "%s", "DONE");
       break;
     }
   }
   
   msngetexit:
-  fclose(fp);
+  sceIoClose(fd);
   return ret;
 }
 
@@ -6224,8 +6224,8 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%d - %s", i, readMissionNameFromSCM(i));
-      //sprintf(retbuf, "%d", i);
+      snprintf(retbuf, sizeof(retbuf), "%d - %s", i, readMissionNameFromSCM(i));
+      //snprintf(retbuf, sizeof(retbuf), "%d", i);
       return (void*)retbuf;  
       
     case FUNC_CHANGE_VALUE:
@@ -6520,7 +6520,7 @@ void mission_selector() {
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%d - %s", lcs_buildings[i].no, lcs_buildings[i].name);
+      snprintf(retbuf, sizeof(retbuf), "%d - %s", lcs_buildings[i].no, lcs_buildings[i].name);
       return (void*)retbuf;  
       
     case FUNC_CHANGE_VALUE:
@@ -7571,7 +7571,7 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
       return (int*)boost;  
   
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%i", boost);
+      snprintf(retbuf, sizeof(retbuf), "%i", boost);
       return (void *)retbuf;
         
     case FUNC_APPLY:    
@@ -7644,7 +7644,7 @@ void *untouchable(int calltype, int keypress, int defaultstatus) {
     case FUNC_APPLY:    
       
    /// Tests 
-   //sprintf(retbuf, "forcemult: %f", forcemult ); 
+   //snprintf(retbuf, sizeof(retbuf), "forcemult: %f", forcemult ); 
      //drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5.0f, 45.0f, WHITE);
     
       /// check if conditions meet
@@ -8270,8 +8270,8 @@ void *aim_of_death(int calltype, int keypress, int defaultstatus) {
  **************************************************************************************************************************************/
 void stepthroughwall() {
   if( pplayer ) {
-    setFloat(pobj+0x30, getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2 ) );
-    setFloat(pobj+0x34, getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2 ) );
+    setFloat(pobj+0x30, getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2f ) );
+    setFloat(pobj+0x34, getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2f ) );
   }
 }
 
@@ -8333,9 +8333,9 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
       break;  
       
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%.1fg", gravity);
+      snprintf(retbuf, sizeof(retbuf), "%.1fg", gravity);
       if( gravity_reverse ) 
-        sprintf(retbuf, "%s   up = reverse", retbuf);
+        snprintf(retbuf, sizeof(retbuf), "%s   up = reverse", retbuf);
       return retbuf;
         
     case FUNC_CHANGE_VALUE:
@@ -8485,9 +8485,9 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING: 
-        if( LCS ) sprintf(retbuf, "%i", lcs_color);
+        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") : 
+          snprintf(retbuf, sizeof(retbuf), pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") : 
                           pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") : 
                           pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
@@ -8564,9 +8564,9 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING: 
-        if( LCS ) sprintf(retbuf, "%i", lcs_color);
+        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%i", lcs_color);
         if( VCS ) {
-          sprintf(retbuf, pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") : 
+          snprintf(retbuf, sizeof(retbuf), pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") : 
                           pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") : 
                           pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
         }
@@ -9196,7 +9196,7 @@ void *max_health(int calltype, int keypress) {
     
     case FUNC_GET_STRING:
       healthval = getMaxHealthMultiplier();
-      sprintf(retbuf, "%i%%", healthval); // "0x%02X %%"
+      snprintf(retbuf, sizeof(retbuf), "%i%%", healthval); // "0x%02X %%"
       return (void*)retbuf;  
       
     case FUNC_CHANGE_VALUE:
@@ -9246,7 +9246,7 @@ void *max_armor(int calltype, int keypress) {
       
     case FUNC_GET_STRING:
       armorval = getMaxArmorMultiplier();
-      sprintf(retbuf, "%i%%", armorval); // "0x%02X %%"
+      snprintf(retbuf, sizeof(retbuf), "%i%%", armorval); // "0x%02X %%"
       return (void*)retbuf;  
       
     case FUNC_CHANGE_VALUE:
@@ -9400,7 +9400,7 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
       return (int*)i;
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, _t("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
+      snprintf(retbuf, sizeof(retbuf), _t("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
       return (void*)retbuf;
       
     case FUNC_APPLY:
@@ -9520,7 +9520,7 @@ void *walking_speed(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*) tval; 
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, "%.02fx", walkspd_mult);
+      snprintf(retbuf, sizeof(retbuf), "%.02fx", walkspd_mult);
       return (void*)retbuf;
       
     case FUNC_CHANGE_VALUE:
@@ -9568,7 +9568,7 @@ void *pedwalking_speed(int calltype, int keypress, int defaultstatus, int defaul
       return (int*) tval; 
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, "%.02fx", pedwalkspd_mult);
+      snprintf(retbuf, sizeof(retbuf), "%.02fx", pedwalkspd_mult);
       return (void*)retbuf;
       
     case FUNC_CHANGE_VALUE:
@@ -9623,7 +9623,7 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval) 
       return (int*)status;
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, "%02i:%02i:%02i", current_hour, current_min, current_sec);
+      snprintf(retbuf, sizeof(retbuf), "%02i:%02i:%02i", current_hour, current_min, current_sec);
       return (void*)retbuf;
     
     case FUNC_APPLY: // because load new game will wipe the high 0xFF -> so continously set AND..
@@ -9716,7 +9716,7 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
       return (int*)status;
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, " %s", _t(state ? "down" : "up"));
+      snprintf(retbuf, sizeof(retbuf), " %s", _t(state ? "down" : "up"));
       return retbuf;
       
     case FUNC_APPLY:
@@ -9853,7 +9853,7 @@ void *no_cheating_warning(int calltype, int keypress, int defaultstatus) {
     
     case FUNC_GET_STRING: 
       if( status ) {
-        sprintf(retbuf, " (%i used)", getInt(global_cheatusedcounter + gp_) / 1000);
+        snprintf(retbuf, sizeof(retbuf), " (%i used)", getInt(global_cheatusedcounter + gp_) / 1000);
         return retbuf;
       } else return "";
       
@@ -9913,7 +9913,7 @@ void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int de
       return (int*)i;
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, "%s", getRadioStationName(i));
+      snprintf(retbuf, sizeof(retbuf), "%s", getRadioStationName(i));
       return (void *)retbuf;
 
     case FUNC_APPLY:
@@ -9977,7 +9977,7 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
       return (int*) (int)((level*10)+1000.00f); // so that its positive and both .XX are saved in int (ugly) but whatever -> 1000 +- value
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%.2f", level);
+      snprintf(retbuf, sizeof(retbuf), "%.2f", level);
       return (void *)retbuf;
 
     case FUNC_APPLY: // this is a special case as waterlevel can't be set via config restore because "menu_setDefaults" is executed before water.data is loaded in memory -> ugly fix: on-time-apply in FUNC_APPLY
@@ -10068,7 +10068,7 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
       return (int*) (int)((level*100)+1000.00f); // so that its positive and both .XX are saved in int (ugly) but whatever -> 1000 +- value
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%.2f", level + (LCS ? 0.50f : 0)); // so that no waves is at 0
+      snprintf(retbuf, sizeof(retbuf), "%.2f", level + (LCS ? 0.50f : 0)); // so that no waves is at 0
       return (void *)retbuf;
 
     case FUNC_APPLY:
@@ -10288,7 +10288,7 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
       return (int*)i;
     
     case FUNC_GET_STRING: 
-      sprintf(buf, "%s", LCS ? lcs_playerModels[i] : vcs_getNameForPedViaID(i));
+      snprintf(buf, sizeof(buf), "%s", LCS ? lcs_playerModels[i] : vcs_getNameForPedViaID(i));
       return (void *)(buf);
 
         
@@ -10376,9 +10376,9 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
       return (int*)(int)id;
     
     case FUNC_GET_STRING:
-      sprintf(retbuf, "%s", getRealVehicleNameViaID(id));
+      snprintf(retbuf, sizeof(retbuf), "%s", getRealVehicleNameViaID(id));
       if( retbuf[0] == '\0' ) // some vehicles don't have translations..
-        sprintf(retbuf, "%s", getGxtIdentifierForVehicleViaID(id)); // ..use the GXT identifier-name then
+        snprintf(retbuf, sizeof(retbuf), "%s", getGxtIdentifierForVehicleViaID(id)); // ..use the GXT identifier-name then
       return (void *)retbuf;
       
     case FUNC_CHANGE_VALUE:
@@ -11500,13 +11500,13 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
         //res = 0; // if apply loop not updating
           
       } else if( j == 2 ) { // stunt jumps
-        //sprintf(retbuf, "Unique Stunt Jumps");
+        //snprintf(retbuf, sizeof(retbuf), "Unique Stunt Jumps");
           
       } else if( j == 3 ) { // baloons
-        //sprintf(retbuf, "Baloons");
+        //snprintf(retbuf, sizeof(retbuf), "Baloons");
           
       } else if( j == 4 ) { // player's vehicles
-        //sprintf(retbuf, "Player's Vehicle(s)");
+        //snprintf(retbuf, sizeof(retbuf), "Player's Vehicle(s)");
       } 
       return (void *)retbuf;
       
@@ -11637,7 +11637,7 @@ void *fieldofview(int calltype, int keypress, int defaultstatus, int defaultval)
       return (int*) (int)fov; 
     
     case FUNC_GET_STRING: 
-      sprintf(retbuf, "%.2f", fov);
+      snprintf(retbuf, sizeof(retbuf), "%.2f", fov);
       return (void *)retbuf;
 
     case FUNC_CHECK:
@@ -11889,8 +11889,8 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*) (int)(mult*10.0f); 
     
     case FUNC_GET_STRING: 
-      //sprintf(retbuf, "%0.1fx (%.02f)", mult, getBmxJumpMultiplier()); 
-      sprintf(retbuf, "%0.1fx", mult);
+      //snprintf(retbuf, sizeof(retbuf), "%0.1fx (%.02f)", mult, getBmxJumpMultiplier()); 
+      snprintf(retbuf, sizeof(retbuf), "%0.1fx", mult);
       return (void *)retbuf;
       
     //case FUNC_CHECK:
@@ -11985,9 +11985,9 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
       break;
     
     case FUNC_GET_STRING: 
-      if( pos == 0 ) sprintf(retbuf, "%s", "Disabled");
-      else sprintf(retbuf, "%s", LCS ? getGxtIdentifierForVehicleViaID(list_value_lcs[pos]) : getRealVehicleNameViaID(list_value_vcs[pos])); // LCS doesn't have translations for all vehicles so we use the GXT name here
-      if( pos == 1 ) sprintf(retbuf, "%s%s", retbuf, " (default)");
+      if( pos == 0 ) snprintf(retbuf, sizeof(retbuf), "%s", "Disabled");
+      else snprintf(retbuf, sizeof(retbuf), "%s", LCS ? getGxtIdentifierForVehicleViaID(list_value_lcs[pos]) : getRealVehicleNameViaID(list_value_vcs[pos])); // LCS doesn't have translations for all vehicles so we use the GXT name here
+      if( pos == 1 ) snprintf(retbuf, sizeof(retbuf), "%s%s", retbuf, " (default)");
       return (void*)retbuf;  
     
     case FUNC_CHANGE_VALUE:
@@ -12220,7 +12220,7 @@ void print_list() {
 
     while(current != NULL) {
         //printf("%d\n", current->val);
-    sprintf(string, "Gametime: %d", current->time); 
+    snprintf(string, sizeof(string), "Gametime: %d", current->time); 
     drawString(string, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 40.0f, WHITE); 
     
         current = current->next;
@@ -12328,7 +12328,7 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
     case FUNC_APPLY:
       drawString("test_switch() is ON", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
       
-      //sprintf(retbuf, "Test: 0x%08X & %d = 0x%08X", global_mp_parameters, 2, global_mp_parameters & 2); // DAT_0037d768 & 2
+      //snprintf(retbuf, sizeof(retbuf), "Test: 0x%08X & %d = 0x%08X", global_mp_parameters, 2, global_mp_parameters & 2); // DAT_0037d768 & 2
       //drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5.0f, 45.0f, WHITE);
       
       //memset(&stack[0], 0, sizeof(stack));
@@ -12338,7 +12338,7 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
       z = getFloat(pplayer+0x38);      
       ret = FUN_000bc6d4_checkForGround(&x,auStack48,&iStack16,'\x01','\0','\0',0,0,0,0,'\0');
       
-      sprintf(retbuf, "ret: %i, 0x%08X -> 0x%08X 0x%08X", ret, auStack48, &iStack16);
+      snprintf(retbuf, sizeof(retbuf), "ret: %i, 0x%08X -> 0x%08X 0x%08X", ret, auStack48, &iStack16);
       
       drawString(retbuf, 0, 1.0f, 1.0f, 0, 18.0f, 15.0f, 0xCCCCCCCC); */
       
@@ -12429,7 +12429,7 @@ void *mp_test(int calltype, int keypress, int defaultstatus) {
       
       x = 5.0f, y = 40.0f;
       
-      sprintf(retbuf, "Game Type: %d", getInt(global_mp_parameters+0x14));
+      snprintf(retbuf, sizeof(retbuf), "Game Type: %d", getInt(global_mp_parameters+0x14));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
       /* 0 = Liberty City Survivor
        * 1 = Street Rage
@@ -12439,35 +12439,35 @@ void *mp_test(int calltype, int keypress, int defaultstatus) {
        */
       
       
-      sprintf(retbuf, "Location: %d", getInt(global_mp_parameters+0x18));
+      snprintf(retbuf, sizeof(retbuf), "Location: %d", getInt(global_mp_parameters+0x18));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
       /* 0 = Portland
        * 1 = Staunton
        * 2 = Shoreside
        */
       
-      sprintf(retbuf, "ScoreLimit: %d", getInt(global_mp_parameters+0x1C));
+      snprintf(retbuf, sizeof(retbuf), "ScoreLimit: %d", getInt(global_mp_parameters+0x1C));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
 
-      sprintf(retbuf, "TimeLimit: %d", getInt(global_mp_parameters+0x20));
+      snprintf(retbuf, sizeof(retbuf), "TimeLimit: %d", getInt(global_mp_parameters+0x20));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
       
       
-      /*sprintf(retbuf, "Team Game: %d", getByte(global_mp_parameters + 2));
+      /*snprintf(retbuf, sizeof(retbuf), "Team Game: %d", getByte(global_mp_parameters + 2));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
       
-      sprintf(retbuf, "Powerup On: %d", getByte(global_mp_parameters + 1));
+      snprintf(retbuf, sizeof(retbuf), "Powerup On: %d", getByte(global_mp_parameters + 1));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
        
        
-      sprintf(retbuf, "RacePowerup: %d", getByte(global_mp_parameters + 4));
+      snprintf(retbuf, sizeof(retbuf), "RacePowerup: %d", getByte(global_mp_parameters + 4));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
       
-      sprintf(retbuf, "Race Revr: %d", getByte(global_mp_parameters + 0x10));
+      snprintf(retbuf, sizeof(retbuf), "Race Revr: %d", getByte(global_mp_parameters + 0x10));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
       */
       
-      sprintf(retbuf, "Skip Cut Scene: %d", getByte(global_mp_parameters + 0x38));
+      snprintf(retbuf, sizeof(retbuf), "Skip Cut Scene: %d", getByte(global_mp_parameters + 0x38));
       drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
             
       break;  

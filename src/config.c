@@ -125,7 +125,7 @@ static int save_thread(SceSize args, void *argp) {
   char tempfig[256];
   
   /// there is a config file! -> rename it to copy from later
-  sprintf(tempfig, "%s_", config);  
+  snprintf(tempfig, sizeof(tempfig), "%s_", config);  
   sceIoRename(config, tempfig);
   sceIoRemove(config); // to be sure?!
   
@@ -524,7 +524,7 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
   #endif
   
   char tempfig[256];
-  sprintf(tempfig, "%s_", config);  
+  snprintf(tempfig, sizeof(tempfig), "%s_", config);  
   if( doesFileExist(tempfig) ) { // if this (sill) exists, user probably exited game before saving was done
     #ifdef LOG
     logPrintf("[ERROR] found bad config");

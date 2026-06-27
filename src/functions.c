@@ -1703,7 +1703,7 @@ char *getString(int adr, int mode) { // mode = 1 (where every second is a char)
   if( adr >= memory_low && adr+256 < memory_high ) {
   #endif  
     for( pos = 0; pos < 256 && *(char*)(adr+pos) != 0x00; ((mode) ? pos+=2 : pos++) ) {
-      sprintf(str, "%s%c", str, *(char*)(adr+pos));
+      snprintf(str, sizeof(str), "%s%c", str, *(char*)(adr+pos));
     }
   #ifdef MEMCHECK  
   } else { 
@@ -2433,8 +2433,8 @@ char *getMapiconNameByID(short id) {
   if( VCS ) offset = getInt(getInt(global_radarblips+gp) + ptr_radarIconList + (id*0x4));
 
   if( isInMemBounds(offset) ) {
-    sprintf(ret, "%s", getString(offset + 0x10, 0));
-  } else sprintf(ret, "%i", ++id); // print id instead - no pointer in table here
+    snprintf(ret, sizeof(ret), "%s", getString(offset + 0x10, 0));
+  } else snprintf(ret, sizeof(ret), "%i", ++id); // print id instead - no pointer in table here
   
   return ret;
 }
@@ -2472,7 +2472,7 @@ char *getMapiconColorName(int mapicon_base_adr) {
     case 7: return "Brown";
     case 8: return "Black"; // from here rgba ?``? todo  
   }
-  // sprintf(buf, "0x%08X", getMapiconColor(mapicon_base_adr)); // R G B A string?
+  // snprintf(buf, sizeof(buf), "0x%08X", getMapiconColor(mapicon_base_adr)); // R G B A string?
   return "unknown";
 }
 
@@ -3138,7 +3138,7 @@ char *getModelNameViaHash(int hash, int time) {
   #endif
   
   static char buf[16];
-  sprintf(buf, "0x%08X", hash);
+  snprintf(buf, sizeof(buf), "0x%08X", hash);
   return buf;
   
   //or
@@ -3183,10 +3183,10 @@ char *getRadioStationName(int no) { // for LCS: 0 = Head Radio, 1 = Double Clef,
   if( no == var_radios ) // highest possible is "radio off"
     return removeColor(getGxtTranslation("FEA_NON"));
   else if ( no < var_radios && no >= 0 ){
-    sprintf(buf, "FEA_FM%i", no);
+    snprintf(buf, sizeof(buf), "FEA_FM%i", no);
     return removeColor(getGxtTranslation(buf));
   } else { // error
-    sprintf(buf, "#%i", no);
+    snprintf(buf, sizeof(buf), "#%i", no);
     return buf;
   }
 }

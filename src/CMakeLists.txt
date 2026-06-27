@@ -14,13 +14,17 @@ add_custom_command(
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  psprtc
+  -nodefaultlibs
+  m
+  gcc
+  ansic
   pspctrl
   pspsystemctrl_user
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 23)
 set_property(SOURCE imports.S PROPERTY LANGUAGE C)
+set_property(SOURCE modinfo.S PROPERTY LANGUAGE C)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
   -Os
@@ -30,10 +34,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -mpreferred-stack-boundary=4
   -fshort-wchar
   -mno-check-zero-division
-  -frename-registers
-  -mtune=mips32r2
-  -ffunction-sections
-  -fdata-sections
+  # -frename-registers
+  # -mtune=mips32r2
+  # -ffunction-sections
+  # -fdata-sections
 
   -Wall
 )
