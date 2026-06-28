@@ -2719,7 +2719,8 @@ static int editor_draw() {
       editor_block_current = editor_pedobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPedObjectIsActive(editor_base_adr) ) {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPedID(editor_base_adr), _t("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPedID(editor_base_adr)); // block menu(getPedModelByID was replaced)
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime));
         editor_draw_lower = 1; // there is a PED here 
       } else { 
         snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks); // block menu  
@@ -2732,12 +2733,13 @@ static int editor_draw() {
       editor_block_current = editor_vehicleobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: "), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr), _t("Name")); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr)); // block menu
         
         snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
         if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
           snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s%s", buffer_top0, buffer_top1);
+
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s    %s: %s", buffer_top0, _t("Name"), buffer_top1);
         
         editor_draw_lower = 1; // there is a Vehicle here 
       } else { 
@@ -2751,7 +2753,8 @@ static int editor_draw() {
       editor_block_current = editor_worldobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){ 
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58)); // block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu  
         editor_draw_lower = 1; // there is a obj here 
       } else { 
         snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
@@ -2777,7 +2780,8 @@ static int editor_draw() {
       editor_block_current = editor_pickup_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPickupIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPickupID(editor_base_adr), _t("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPickupID(editor_base_adr)); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
         editor_draw_lower = 1; 
       } else { 
         snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu  
@@ -2791,7 +2795,10 @@ static int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getMapiconIsActive(editor_base_adr) ){
         if( getMapiconID(editor_base_adr) == 0 ) // objective (destination, enemy, etc)
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %s   %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)), _t("Type"), getMapiconTypeName(editor_base_adr) ); //block menu  
+        {
+          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); //block menu  
+          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Type"), getMapiconTypeName(editor_base_adr) ); //block menu  
+        }
         else
           snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu  
         editor_draw_lower = 1; 
@@ -2868,7 +2875,8 @@ static int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       
       if( getInt(editor_base_adr) ){ // there is a pointer here
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: '%s'   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %i/%i      %s: '%s'", _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10))); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s   %s: %s", buffer_top0, _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu  
         editor_draw_lower = 1; 
     
         editor_base_adr = getInt(editor_base_adr);
@@ -2929,7 +2937,8 @@ static int editor_draw() {
       editor_block_current = editor_buildingsIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
         snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu  
@@ -2942,7 +2951,8 @@ static int editor_draw() {
       editor_block_current = editor_treadablesIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
         snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu  
@@ -2955,7 +2965,8 @@ static int editor_draw() {
       editor_block_current = editor_dummysIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58)); //block menu  
+        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu  
         editor_draw_lower = 1; 
       } else { 
         snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu  
@@ -3012,7 +3023,8 @@ static int editor_draw() {
     case EDITOR_WEAPONDAT:
       editor_block_current = editor_weaponDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i   %s: %s"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x60), _t("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x60)); //block menu  
+      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu  
       editor_draw_lower = 1; 
       break;
      
