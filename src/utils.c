@@ -410,6 +410,8 @@ uint32_t hash(const char *key, uint32_t len, uint32_t seed)
   return h;
 }
 
+/* FUNCTIONS HERE BELOW NEED TO BE ADDED TO LIBANSIC!!! vvvvvvvvv */
+
 double atof(const char * arr) {
   float val = 0;
   int afterdot = 0;
