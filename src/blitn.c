@@ -167,7 +167,7 @@ static const size_t CHARMAP_LENS[] = {
 };
 
 // Using question mark because replacement character is missing in FONT_HEADING.
-#define REPLACEMENT_CHAR 0x3F
+#define REPLACEMENT_CHAR '?'
 
 // Binary search version
 static wchar_t UnicodeToGameChar(uint32_t unicode, const u16 *unicodes,

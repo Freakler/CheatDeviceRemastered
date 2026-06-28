@@ -54,7 +54,7 @@ int getHighMemBound();
 int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius);
 float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2);
 
-void getSizeString(char string[16], uint64_t size);
+void getSizeString(char *string, uint64_t size);
 
 int fileEndsWithExtension(const char *path, const char* extension);
 int getExtensionLength(const char* path);

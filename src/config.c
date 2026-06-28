@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pspkernel.h>
+#include <sys/unistd.h>
 
 #include "main.h"
 #include "cheats.h"

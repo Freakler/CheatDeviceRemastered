@@ -192,8 +192,7 @@ void clearICacheFor(u32 address) {
   // logPrintf("[INFO] clearICacheFor(0x%08X)", address);
   #endif 
   
-  asm volatile // volatile so compiler won't mess with this
-  (
+  asm volatile ( // volatile so compiler won't mess with this
     "cache 8, 0(%0)\n"
     :
     : "r"(address)
@@ -322,7 +321,9 @@ float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float
   return sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2) + powf(z2 - z1, 2));
 }
 
-void getSizeString(char string[16], uint64_t size) { 
+/* O2 and Os break snprintf in this function for some fucking reason???? */
+__attribute__((optimize("O1")))
+void getSizeString(char *string, uint64_t size) { 
   double double_size = (double)size;
 
   int i = 0;
@@ -407,19 +408,6 @@ uint32_t hash(const char *key, uint32_t len, uint32_t seed)
   h ^= (h >> 16);
 
   return h;
-}
-
-static unsigned long int next = 1;
-
-int rand(void) // RAND_MAX assumed to be 32767
-{
-  next = next * 1103515245 + 12345;
-  return (unsigned int)(next/65536) % 32768;
-}
-
-void srand(unsigned int seed)
-{
-  next = seed;
 }
 
 double atof(const char * arr) {
@@ -594,7 +582,7 @@ const char _ctype_[1 + 256] = {
 int errno;
 
 int *
-__errno ()
+__errno (void)
 {
   return &errno;
 }
