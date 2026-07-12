@@ -34,20 +34,6 @@
 extern char file_log[];
 extern const char *basefolder;
 
-int logPrintf(const char *text, ...) { 
-
-  va_list list;
-  char string[256];
-
-  va_start(list, text);
-  vsnprintf(string, 256, text, list);
-  va_end(list);
-
-  sceIoWrite(sceKernelStdout(), string, strlen(string));
-   
-  return 0;
-}
-
 // Check if file exists
 int doesFileExist(const char* path) {
   SceIoStat stat;
@@ -55,13 +41,13 @@ int doesFileExist(const char* path) {
   
   if ( sceIoGetstat(path, &stat) < 0 ) {
     #ifdef LOG
-      logPrintf("[INFO] doesFileExist('%s') -> no", path);
+      DEBUG_LOG("[INFO] doesFileExist('%s') -> no", path);
     #endif
     return 0;
   }
 
   #ifdef LOG
-    logPrintf("[INFO] doesFileExist('%s') -> %s", path, FIO_SO_ISREG(stat.st_attr) ? "yes" : "no");
+    DEBUG_LOG("[INFO] doesFileExist('%s') -> %s", path, FIO_SO_ISREG(stat.st_attr) ? "yes" : "no");
   #endif
 
   return FIO_SO_ISREG(stat.st_attr);
@@ -74,13 +60,13 @@ int doesDirExist(const char* path) {
   
   if ( sceIoGetstat(path, &stat) < 0 ) {
     #ifdef LOG
-      logPrintf("[INFO] doesDirExist('%s') -> no", path);
+      DEBUG_LOG("[INFO] doesDirExist('%s') -> no", path);
     #endif
     return 0;
   }
 
   #ifdef LOG
-    logPrintf("[INFO] doesDirExist('%s') -> %s", path, FIO_SO_ISDIR(stat.st_attr) ? "yes" : "no");
+    DEBUG_LOG("[INFO] doesDirExist('%s') -> %s", path, FIO_SO_ISDIR(stat.st_attr) ? "yes" : "no");
   #endif
 
   return FIO_SO_ISDIR(stat.st_attr);
@@ -123,7 +109,7 @@ int countFoldersInFolder(const char *path) {
 #ifdef SAVEDITOR
 int setFolderModificationDateNow(const char* folder) {
   #ifdef LOG
-  logPrintf("setFolderModificationDateNow('%s')", folder);
+  DEBUG_LOG("setFolderModificationDateNow('%s')", folder);
   #endif 
   
   int ret;
@@ -131,8 +117,8 @@ int setFolderModificationDateNow(const char* folder) {
   
   ret = sceIoGetstat(folder, &d_stat);
   #ifdef LOG
-  logPrintf("sceIoGetstat() returned %i", ret);
-  logPrintf("%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
+  DEBUG_LOG("sceIoGetstat() returned %i", ret);
+  DEBUG_LOG("%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
   #endif     
   
   pspTime timetest;
@@ -146,12 +132,12 @@ int setFolderModificationDateNow(const char* folder) {
   d_stat.st_mtime.second = timetest.seconds;
   
   #ifdef LOG
-  logPrintf("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
+  DEBUG_LOG("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
   #endif 
   
   ret = sceIoChstat(folder, &d_stat, 0x0020); // 0x0001 is passed for file mode, 0x0008 for creation time, 0x0020 modify time
   #ifdef LOG
-  logPrintf("sceIoChstat() returned %i", ret);
+  DEBUG_LOG("sceIoChstat() returned %i", ret);
   #endif 
   
   return ret;
@@ -159,14 +145,14 @@ int setFolderModificationDateNow(const char* folder) {
 
 char *getFolderModificationDate(const char* folder) {
   #ifdef LOG
-  logPrintf("getFolderModificationDate('%s')", folder);
+  DEBUG_LOG("getFolderModificationDate('%s')", folder);
   #endif 
   
   char *res = "error";
   SceIoStat d_stat;
   int ret = sceIoGetstat(folder, &d_stat);
   #ifdef LOG
-  logPrintf("sceIoGetstat() returned %i", ret);
+  DEBUG_LOG("sceIoGetstat() returned %i", ret);
   #endif 
   if( ret >= 0 )
     snprintf(res, sizeof(res), "%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
@@ -189,7 +175,7 @@ void clearICacheFor(u32 address) {
   //asm("li $t0,0x08A0E898\n"); //this works.. but i want to store "address"
   
   #ifdef LOG
-  // logPrintf("[INFO] clearICacheFor(0x%08X)", address);
+  // DEBUG_LOG("[INFO] clearICacheFor(0x%08X)", address);
   #endif 
   
   asm volatile ( // volatile so compiler won't mess with this
@@ -209,10 +195,10 @@ void writeShort(uint8_t *address, short value) { // because of memory alignment
 }
 
 void writeInteger(uint8_t *address, int value) { // because of memory alignment
-  //logPrintf("value: 0x%08X", value);
+  //DEBUG_LOG("value: 0x%08X", value);
   
   int adr = (int)&value;
-  //logPrintf("adr: '0x%08X'", adr);
+  //DEBUG_LOG("adr: '0x%08X'", adr);
 
   *(unsigned char*)(address + 0) = *(unsigned char*)adr;
   *(unsigned char*)(address + 1) = *(unsigned char*)(adr+1);
@@ -221,10 +207,10 @@ void writeInteger(uint8_t *address, int value) { // because of memory alignment
 }
 
 void writeFloat(uint8_t *address, float value) { // because of memory alignment
-  //logPrintf("value: %f", value);
+  //DEBUG_LOG("value: %f", value);
   
   int adr = (int)&value;
-  //logPrintf("adr: '0x%08X'", adr);
+  //DEBUG_LOG("adr: '0x%08X'", adr);
 
   *(unsigned char*)(address + 0) = *(unsigned char*)adr;
   *(unsigned char*)(address + 1) = *(unsigned char*)(adr+1);
@@ -256,7 +242,7 @@ void makedirs(const char *path) { // recursively create path
   }
   if( sceIoMkdir(path, 0777) && errno != EEXIST ) {
     //#ifdef LOG // path of logfile might not exist yet
-    //logPrintf("error while trying to create '%s'\n%m\n", path); 
+    //DEBUG_LOG("error while trying to create '%s'\n%m\n", path); 
     //#endif
   }
 }

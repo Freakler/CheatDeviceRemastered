@@ -101,7 +101,7 @@ void langTableFree(LangHashTable *ht)
   ht = NULL;
 
   #if defined(LOG) && defined(LANG_DEBUG)
-    logPrintf("Language table has been freed!");
+    DEBUG_LOG("Language table has been freed!");
   #endif
 }
 
@@ -159,7 +159,7 @@ void langFileTableFree(LangFileTable *table)
   table = NULL;
 
   #if defined(LOG) && defined(LANG_DEBUG)
-    logPrintf("Language file table has been freed!");
+    DEBUG_LOG("Language file table has been freed!");
   #endif
 }
 
@@ -219,7 +219,7 @@ void GetLangINIInfo(LangFileTable *table, const char *filename)
   ini_gets("INFO", "Translate Language", "unknown", lang, sizeof(lang), path);
 
   #if defined(LOG) && defined(LANG_DEBUG)
-    logPrintf("Info from file '%s': Version '%s', Author '%s', Language '%s'", filename, version, author, lang);
+    DEBUG_LOG("Info from file '%s': Version '%s', Author '%s', Language '%s'", filename, version, author, lang);
   #endif
 
   langFileTableAppend(table, version, author, lang, filename);
@@ -247,7 +247,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->path);
 
   #if defined(LOG) && defined(LANG_DEBUG)
-    logPrintf("Reading Section '%s' from INI file '%s'", INISection, lang_path);
+    DEBUG_LOG("Reading Section '%s' from INI file '%s'", INISection, lang_path);
   #endif
 
   // Get file size (to allocate)
@@ -261,7 +261,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   if ( !fileread ) return; // Couldn't allocate
 
   #if defined(LOG) && defined(LANG_DEBUG)
-    logPrintf("Allocated %u bytes for file", alloc_size);
+    DEBUG_LOG("Allocated %u bytes for file", alloc_size);
   #endif
 
   if ( !ini_openread(lang_path, &fp) ) goto END_READING_TRANSLATIONS;
@@ -294,15 +294,15 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   free(fileread); // Free allocated memory
 
   #if defined(LOG) && defined(LANG_DEBUG)
-    logPrintf("Freed %u bytes", alloc_size);
+    DEBUG_LOG("Freed %u bytes", alloc_size);
   #endif
 
   ini_close(&fp);
 
   #if defined(LOG) && defined(LANG_DEBUG)
     after_time = sceKernelGetSystemTimeWide();
-    logPrintf("Translated Strings Left -> %d", translated_strings_left);
-    logPrintf("Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
+    DEBUG_LOG("Translated Strings Left -> %d", translated_strings_left);
+    DEBUG_LOG("Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
   #endif
 }
 

@@ -27,8 +27,6 @@
 #define MURMURMASH_3_SEED             0x947473
 #define EMULATOR_DEVCTL__IS_EMULATOR  0x00000003
 
-int logPrintf(const char *text, ...);
-
 int doesFileExist(const char* path);
 int doesDirExist(const char* path);
 

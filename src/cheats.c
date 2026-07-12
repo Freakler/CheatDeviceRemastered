@@ -31,6 +31,7 @@
 #include "utils.h"
 #include "blitn.h"
 #include "lang.h"
+#include "logs.h"
 
 register int gp asm("gp"); // for VCS
 int gp_ = 0; // helper (also used in configs extern)
@@ -356,7 +357,7 @@ u32 saveprefix   = -1;
   
   int (*FUN_001621e8)(char *file); 
   int FUN_001621e8_patched(char *file) {
-    logPrintf("FUN_002c302c_load: '%s'", file);
+    DEBUG_LOG("FUN_002c302c_load: '%s'", file);
     return FUN_001621e8(file);
   }
   
@@ -364,7 +365,7 @@ u32 saveprefix   = -1;
   int redirectFile_patched(char* a) {
     
     int ret;
-    logPrintf("loaded: '%s'", a);
+    DEBUG_LOG("loaded: '%s'", a);
     
     ///if( doesFileExist(
     
@@ -374,7 +375,7 @@ u32 saveprefix   = -1;
 
     
     if( strcmp("DISC0:/PSP_GAME/USRDIR/DATA/MAIN.SCM", a) == 0 ) {
-      logPrintf("found scm!");  
+      DEBUG_LOG("found scm!");  
       //ret = FUN_001621e8("ms0:LCS/DATA\\main.scm", "r", 1);
       return redirectFile("MS0:/LCS/DATA/MAIN.SCM");
       //ret = sceIoOpen("ms0:/LCS/DATA\\main.scm", 1, 0xFF); 
@@ -397,7 +398,7 @@ u32 saveprefix   = -1;
   unsigned int (*testfunc2)(int param_1, unsigned int param_2); 
   unsigned int testfunc2_patched(int param_1, unsigned int param_2) { //FUN_0016fcd0_CElementGroupModelInfo_GetNodeFromId
     int ret = testfunc2( param_1, param_2);
-    logPrintf("ret = 0x%08X, param_1: 0x%08X, param_2: 0x%08X", ret, param_1, param_2);
+    DEBUG_LOG("ret = 0x%08X, param_1: 0x%08X, param_2: 0x%08X", ret, param_1, param_2);
     static int last = -1;
     if( ret == 0 ) {
       return last;
@@ -413,12 +414,12 @@ u32 saveprefix   = -1;
     //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
     //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
       
-    logPrintf("ide: 0x%08X, wheel: %d, vectors: 0x%08X", ide, wheel_no, vectors);
+    DEBUG_LOG("ide: 0x%08X, wheel: %d, vectors: 0x%08X", ide, wheel_no, vectors);
   
     //static int last = -1;
     
     if( ide == getAddressOfIdeSlotForID(0xC8) ) { // Aeroplane!
-      logPrintf("airtrain!!"); 
+      DEBUG_LOG("airtrain!!"); 
       *vectors = 0x3F800000;
       vectors[1] = 0x3F800000;
       vectors[2] = 0x3F800000;
@@ -428,7 +429,7 @@ u32 saveprefix   = -1;
     } else {
       testfunc(ide, wheel_no, vectors);
     }
-    //logPrintf("ret: 0x%08X", last);
+    //DEBUG_LOG("ret: 0x%08X", last);
   }
     
   void (*FUN_123)(int vehicle);
@@ -616,7 +617,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   // // // // // // // // // // // // // // // // // // // // // // // // // // //  
     
     #ifdef PATCHLOG
-    logPrintf("[INFO] patchonce() LCS ran!");
+    DEBUG_LOG("[INFO] patchonce() LCS ran!");
     #endif
     patchonce = 0;
   } 
@@ -699,7 +700,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     HIJACK_FUNCTION(text_addr + 0x2786c, debugprint_patched, debugprint); // adhoc
   
     #ifdef PATCHLOG
-    logPrintf("[INFO] patchlogonce() LCS ran!");
+    DEBUG_LOG("[INFO] patchlogonce() LCS ran!");
     #endif
     patchlogonce = 0;
   } 
@@ -719,7 +720,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   * Note:  */
   if( _lw(addr + 0x50) == 0x0080A025 && _lw(addr + 0x5C) == 0x02002025 && _lw(addr + 0x88) == 0x2C840001 ) { // LCS US 3.00 -> 0x00150344
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, cWorldStream_Render_Patched, cWorldStream_Render);
     return 1;
@@ -728,7 +729,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// for stopMenu(); [in pause menu]
   if( (_lw(addr + 0xC) == 0x00808025  && _lw(addr + 0x10) == 0x341101DD && _lw(addr + 0x28) == 0xAFB20018) || (_lw(addr + 0x8) == 0x00808025  && _lw(addr + 0xC) == 0x340401DD && _lw(addr + 0x28) == 0xAFBF0018) ) { //0x002DB0C0 || 0x002433D0 for ulux
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> FUN_002db0c0()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> FUN_002db0c0()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, FUN_002db0c0_patched, FUN_002db0c0); //
     return 1;
@@ -737,7 +738,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// disable Button Input --> same as VCS
   if( _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {  //not save
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, buttonsToActionPatched, buttonsToAction); // 0x00294E88
     return 1;
@@ -749,7 +750,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x002AF378: 0x2C840002 '...,' - sltiu      $a0, $a0, 2
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
     #endif
     addr_fpsCap = addr-0x20; // 0x002AF378
     
@@ -757,7 +758,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x002AF398: 0x0C0C1EF1 '....' - jal        ThreadManForUser_82BC5777
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
     #endif
     MAKE_CALL(addr, sceKernelGetSystemTimeWidePatched); //LCS US 3.00 -> 0x002AF398
     
@@ -771,7 +772,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// get pplayer function
   if( _lw(addr + 0x8) == 0x000429C0 && _lw(addr + 0xC) == 0x00A53021 && _lw(addr + 0x18) == 0x00A42023 && _lw(addr + 0x2C) == 0x8C820000 ) {  //0x1d18b0
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
     #endif
     GetPPLAYER = (void*)(addr); //get pplayer 
     return 1;
@@ -780,7 +781,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// get pobj function 
   if( _lw(addr - 0x18) == 0x00000000 && _lw(addr + 0x8) == 0x000429C0 && _lw(addr + 0x24) == 0x00852021 && _lw(addr + 0x2C) == 0x10800006  ) {  //0x1d17b4
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
     #endif
     GetPCAR = (void*)(addr); // get pcar 
     return 1;
@@ -794,7 +795,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_gametimer = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> global_gametimer 0x%08X", global_gametimer-text_addr, global_gametimer, addr-text_addr); // 0x35A144
+    DEBUG_LOG("0x%08X (0x%08X) --> global_gametimer 0x%08X", global_gametimer-text_addr, global_gametimer, addr-text_addr); // 0x35A144
     #endif  
     
     return 1;
@@ -808,7 +809,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_timescale = (_lh(addr+0xC) * 0x10000) + (int16_t)_lh(addr+0x10); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> global_timescale 0x%08X", global_timescale-text_addr, global_timescale, addr-text_addr); // DAT_0035a158_TimeScale
+    DEBUG_LOG("0x%08X (0x%08X) --> global_timescale 0x%08X", global_timescale-text_addr, global_timescale, addr-text_addr); // DAT_0035a158_TimeScale
     #endif  
     
     return 1;
@@ -822,7 +823,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_currentisland = (_lh(addr+0x14) * 0x10000) + (int16_t)_lh(addr+0x18); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> global_currentisland", global_currentisland-text_addr, global_currentisland); // DAT_0035A46C
+    DEBUG_LOG("0x%08X (0x%08X) --> global_currentisland", global_currentisland-text_addr, global_currentisland); // DAT_0035A46C
     #endif
     
     /*******************************************************************
@@ -831,7 +832,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_systemlanguage = (_lh(addr+0x28) * 0x10000) + (int16_t)_lh(addr+0x30); //actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> global_systemlanguage", global_systemlanguage-text_addr, global_systemlanguage); // DAT_00355c9c
+    DEBUG_LOG("0x%08X (0x%08X) --> global_systemlanguage", global_systemlanguage-text_addr, global_systemlanguage); // DAT_00355c9c
     #endif
     return 1;
   }
@@ -847,8 +848,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     ptr_pedestriansobj = (_lh(addr+0x4) * 0x10000) + (int16_t)_lh(addr+0xC); // actual address!
     var_pedobjsize = (int16_t)_lh(addr+0x30); // 0xCB0
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> ptr_pedestriansobj", ptr_pedestriansobj-text_addr, ptr_pedestriansobj); // DAT_0034853c
-    logPrintf("var_pedobjsize = 0x%X", var_pedobjsize); //
+    DEBUG_LOG("0x%08X (0x%08X) --> ptr_pedestriansobj", ptr_pedestriansobj-text_addr, ptr_pedestriansobj); // DAT_0034853c
+    DEBUG_LOG("var_pedobjsize = 0x%X", var_pedobjsize); //
     #endif
     
     /*******************************************************************
@@ -860,8 +861,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     ptr_vehiclesobj = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0x88); // actual address!
     var_vehobjsize = 0x10000 - _lh(addr+0x100); // 0x6E0
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> ptr_vehiclesobj", ptr_vehiclesobj-text_addr, ptr_vehiclesobj); // DAT_00348540
-    logPrintf("var_vehobjsize = 0x%X", var_vehobjsize); //
+    DEBUG_LOG("0x%08X (0x%08X) --> ptr_vehiclesobj", ptr_vehiclesobj-text_addr, ptr_vehiclesobj); // DAT_00348540
+    DEBUG_LOG("var_vehobjsize = 0x%X", var_vehobjsize); //
     #endif
     
     /*******************************************************************
@@ -873,8 +874,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     ptr_worldobj = (_lh(addr+0x104) * 0x10000) + (int16_t)_lh(addr+0x108); // actual address!
     var_wldobjsize = 0x10000 - _lh(addr+0x170); // 0x220
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> ptr_worldobj", ptr_worldobj-text_addr, ptr_worldobj); // DAT_0034854c
-    logPrintf("var_wldobjsize = 0x%X", var_wldobjsize); //
+    DEBUG_LOG("0x%08X (0x%08X) --> ptr_worldobj", ptr_worldobj-text_addr, ptr_worldobj); // DAT_0034854c
+    DEBUG_LOG("var_wldobjsize = 0x%X", var_wldobjsize); //
     #endif
     
     return 1;
@@ -887,7 +888,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// skip intro movies
   if( _lw(addr + 0x8) == 0x3C05005A && _lw(addr + 0x24) == 0x00002825  ) { 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
     #endif
     addr_skipIntroMovie = addr; // 0x001BCFD0
     //MAKE_DUMMY_FUNCTION(0x89C0FD0, 0); //for test
@@ -897,7 +898,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// never fall off bike.. when rolling backwards
   if( _lw(addr-0x18) == 0x45000012 && _lw(addr-0xC) == 0x3405002C && _lw(addr - 0x4) == 0x02403825 && _lw(addr + 0x8) == 0x8E0401FC ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
     #endif
     addr_neverFallOffBike_rollback = addr; // 0x000DEF44
     return 1;
@@ -906,7 +907,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// never fall off bike.. when hitting object
   if( _lw(addr - 0x4) == 0x34050027 && _lw(addr + 0x4) == 0x00004025 && _lw(addr + 0xB8) == 0x00000000 ) { // last one is #hacky
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
     #endif
     addr_neverFallOffBike_hitobj = addr; // 0x0023DBFC | ULUX -> 0x0020B2D8
     return 1;
@@ -915,7 +916,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// world gravity
   if( _lw(addr - 0x18) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
     #endif
     addr_worldgravity = addr; // 0x0020A898
     return 1;
@@ -924,7 +925,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// set weather function(s)
   if( _lw(addr + 0x1C) == 0x2404FFFF  && _lw(addr - 0x14) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x14) == 0x03E00008 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetNextWeather(), SetWeatherNow(), ReleaseWeather()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetNextWeather(), SetWeatherNow(), ReleaseWeather()", addr-text_addr, addr);
     #endif
     SetNextWeather = (void*)(addr-0xC);  // 0x12EDB0
     SetWeatherNow  = (void*)(addr);      // 0x12edbc
@@ -935,7 +936,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_weather = (_lh(addr+0x8) * 0x10000) + (int16_t)_lh(addr + 0xC); // actual address!  (only to READ current weather)
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_weather", global_weather-text_addr, global_weather); // 0x0035A484
+    DEBUG_LOG("0x%08X (0x%08X) -> global_weather", global_weather-text_addr, global_weather); // 0x0035A484
     #endif
     return 1;
   }
@@ -949,7 +950,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_trafficdensity = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_trafficdensity", global_trafficdensity-text_addr, global_trafficdensity); // 0x00347CDC
+    DEBUG_LOG("0x%08X (0x%08X) -> global_trafficdensity", global_trafficdensity-text_addr, global_trafficdensity); // 0x00347CDC
     #endif
     return 1;
   }
@@ -962,7 +963,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_peddensity = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_peddensity", global_peddensity-text_addr, global_peddensity); // 0x00352610
+    DEBUG_LOG("0x%08X (0x%08X) -> global_peddensity", global_peddensity-text_addr, global_peddensity); // 0x00352610
     #endif
     return 1;
   }
@@ -972,17 +973,17 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( _lw(addr - 0x10) == 0x34040120 && _lw(addr - 0x3C) == 0x34040001 ){
     global_hudbool = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_hudbool", global_hudbool-text_addr, global_hudbool); // 0x00355C4A
+    DEBUG_LOG("0x%08X (0x%08X) -> global_hudbool", global_hudbool-text_addr, global_hudbool); // 0x00355C4A
     #endif
     
     global_radarbool = global_hudbool + 0x2; // hehe-hacky (actual address!)
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_radarbool", global_radarbool-text_addr, global_radarbool); // DAT_00355c4c_ui_radar
+    DEBUG_LOG("0x%08X (0x%08X) -> global_radarbool", global_radarbool-text_addr, global_radarbool); // DAT_00355c4c_ui_radar
     #endif
     
     global_maplegendbool = global_hudbool + 0x23; // hehe-hacky (actual address!)
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_maplegendbool", global_maplegendbool-text_addr, global_maplegendbool); // DAT_00355c6d_mapLegendBool
+    DEBUG_LOG("0x%08X (0x%08X) -> global_maplegendbool", global_maplegendbool-text_addr, global_maplegendbool); // DAT_00355c6d_mapLegendBool
     #endif
     return 1;
   }
@@ -996,7 +997,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_maxhealthmult = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x18) + _lh(addr+0x20); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x00385c77
+    DEBUG_LOG("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x00385c77
     #endif
   
     /*******************************************************************
@@ -1012,7 +1013,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     
     global_maxarmormult = (_lh(addr+0x78) * 0x10000) + (int16_t)_lh(addr+0x90) + _lh(addr+0x98); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x00385c78
+    DEBUG_LOG("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x00385c78
     #endif
     return 1;
   }
@@ -1027,7 +1028,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_ismultiplayer = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_ismultiplayer", global_ismultiplayer-text_addr, global_ismultiplayer); // DAT_00352c7c_isMultiplayerActive
+    DEBUG_LOG("0x%08X (0x%08X) -> global_ismultiplayer", global_ismultiplayer-text_addr, global_ismultiplayer); // DAT_00352c7c_isMultiplayerActive
     #endif
   
     /*******************************************************************
@@ -1038,7 +1039,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_unlimtedsprint = (_lh(addr+0x5C) * 0x10000) + (int16_t)_lh(addr+0x60) + _lh(addr+0x68); //actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_00385c74_playerNeverGetsTired
+    DEBUG_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_00385c74_playerNeverGetsTired
     #endif
     return 1;
   }
@@ -1047,7 +1048,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// SetWantedLevel function
   if( _lw(addr + 0x64) == 0x00409025 && _lw(addr - 0xE0) == 0x340400CA ) { // 0x00140DF4
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
     #endif
     SetWantedLevel = (void*)(addr);
     return 1;
@@ -1056,7 +1057,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// SetMaxWantedLevel function + global
   if( _lw(addr + 0x10) == 0x2C850007 && _lw(addr + 0x90) == 0x34060005 ) { // 0x002C9570
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetMaxWantedLevel()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetMaxWantedLevel()", addr-text_addr, addr);
     #endif
     SetMaxWantedLevel = (void*)(addr);
     /*******************************************************************
@@ -1065,7 +1066,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_maxwantedlevel = (_lh(addr+0x1C) * 0x10000) + (int16_t)_lh(addr+0x44); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_maxwantedlevel", global_maxwantedlevel-text_addr, global_maxwantedlevel); // DAT_00354b9c
+    DEBUG_LOG("0x%08X (0x%08X) -> global_maxwantedlevel", global_maxwantedlevel-text_addr, global_maxwantedlevel); // DAT_00354b9c
     #endif
     return 1;
   } 
@@ -1079,7 +1080,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_clockmultiplier = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_clockmultiplier", global_clockmultiplier-text_addr, global_clockmultiplier); // DAT_0035A1A4
+    DEBUG_LOG("0x%08X (0x%08X) -> global_clockmultiplier", global_clockmultiplier-text_addr, global_clockmultiplier); // DAT_0035A1A4
     #endif
     return 1;
   }
@@ -1096,8 +1097,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     global_cheatusedboolean = (_lh(addr+0x4) * 0x10000) + (int16_t)_lh(addr+0xC); // actual address!
     global_cheatusedcounter = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_cheatusedboolean", global_cheatusedboolean-text_addr, global_cheatusedboolean); // DAT_00352432
-    logPrintf("0x%08X (0x%08X) -> global_cheatusedcounter", global_cheatusedcounter-text_addr, global_cheatusedcounter); // DAT_0035A38C
+    DEBUG_LOG("0x%08X (0x%08X) -> global_cheatusedboolean", global_cheatusedboolean-text_addr, global_cheatusedboolean); // DAT_00352432
+    DEBUG_LOG("0x%08X (0x%08X) -> global_cheatusedcounter", global_cheatusedcounter-text_addr, global_cheatusedcounter); // DAT_0035A38C
     #endif
     return 1;
   }
@@ -1111,7 +1112,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_freezegame = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> global_freezegame", global_freezegame-text_addr, global_freezegame); // DAT_0035A4F8
+      DEBUG_LOG("0x%08X (0x%08X) -> global_freezegame", global_freezegame-text_addr, global_freezegame); // DAT_0035A4F8
     #endif
     return 1;
   }
@@ -1125,7 +1126,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_helpbox_string = (_lh(addr+0x20) * 0x10000) + (int16_t)_lh(addr+0x34); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_helpbox_string", global_helpbox_string-text_addr, global_helpbox_string); // DAT_00649dc0
+    DEBUG_LOG("0x%08X (0x%08X) -> global_helpbox_string", global_helpbox_string-text_addr, global_helpbox_string); // DAT_00649dc0
     #endif
     /*******************************************************************
      *  0x00182EFC: 0x3C050036 '6..<' - lui        $a1, 0x36
@@ -1133,7 +1134,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_helpbox_timedisplayed = (_lh(addr+0x68) * 0x10000) + (int16_t)_lh(addr+0x6C); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_helpbox_timedisplayed", global_helpbox_timedisplayed-text_addr, global_helpbox_timedisplayed); // DAT_0035a808
+    DEBUG_LOG("0x%08X (0x%08X) -> global_helpbox_timedisplayed", global_helpbox_timedisplayed-text_addr, global_helpbox_timedisplayed); // DAT_0035a808
     #endif
     /*******************************************************************
      *  0x00182F0C: 0x3C050036 '6..<' - lui        $a1, 0x36
@@ -1141,7 +1142,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_helpbox_displaybool = (_lh(addr+0x78) * 0x10000) + (int16_t)_lh(addr+0x7C); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_helpbox_displaybool", global_helpbox_displaybool-text_addr, global_helpbox_displaybool); // DAT_0035a810
+    DEBUG_LOG("0x%08X (0x%08X) -> global_helpbox_displaybool", global_helpbox_displaybool-text_addr, global_helpbox_displaybool); // DAT_0035a810
     #endif
     /*******************************************************************
      *  0x00182F1C: 0x3C050036 '6..<' - lui        $a1, 0x36
@@ -1149,7 +1150,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_helpbox_permboxbool = (_lh(addr+0x88) * 0x10000) + (int16_t)_lh(addr+0x8C); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_helpbox_permboxbool", global_helpbox_permboxbool-text_addr, global_helpbox_permboxbool); // DAT_0035a815
+    DEBUG_LOG("0x%08X (0x%08X) -> global_helpbox_permboxbool", global_helpbox_permboxbool-text_addr, global_helpbox_permboxbool); // DAT_0035a815
     #endif
     /*******************************************************************
      *  0x00182F5C: 0x3C060036 '6..<' - lui        $a2, 0x36
@@ -1157,7 +1158,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_helpbox_duration = (_lh(addr+0xC8) * 0x10000) + (int16_t)_lh(addr+0xD0); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_helpbox_duration", global_helpbox_duration-text_addr, global_helpbox_duration); // DAT_0035a818
+    DEBUG_LOG("0x%08X (0x%08X) -> global_helpbox_duration", global_helpbox_duration-text_addr, global_helpbox_duration); // DAT_0035a818
     #endif
     
     
@@ -1167,7 +1168,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_dialog_string = (_lh(addr+0x2C) * 0x10000) + (int16_t)_lh(addr+0x40); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_dialog_string", global_dialog_string-text_addr, global_dialog_string); // DAT_00649bc0
+    DEBUG_LOG("0x%08X (0x%08X) -> global_dialog_string", global_dialog_string-text_addr, global_dialog_string); // DAT_00649bc0
     #endif
     return 1;
   }
@@ -1181,7 +1182,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_camera = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); //actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_0037F3A0
+    DEBUG_LOG("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_0037F3A0
     #endif
     return 1;
   }
@@ -1202,7 +1203,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   ****************************************************************************************************************************/
   if( _lw(addr+0x4) == 0xA4440082 && _lw(addr) == 0x34040002 && _lw(addr+0x8) == 0x34150002 ) { // 0x001BCE54 (in FUN_001BCDE8 called once at game startup)
     #ifdef PATCHLOG
-    logPrintf("UNCENSOR GERMAN VERSION 1/2! (0x%08X)", addr-text_addr);
+    DEBUG_LOG("UNCENSOR GERMAN VERSION 1/2! (0x%08X)", addr-text_addr);
     #endif
     
     /// set "isUncut" flag to 0x1
@@ -1228,7 +1229,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   } 
   if( _lw(addr) == 0x34040994 && _lw(addr-0xDC) == 0x34150001 && (_lw(addr+0x40) == _lw(addr+0x90)) ) {  //0x002D695C (in FUN_002D6838 called when ???)
     #ifdef PATCHLOG
-    logPrintf("UNCENSOR GERMAN VERSION 2/2! (0x%08X)", addr-text_addr);
+    DEBUG_LOG("UNCENSOR GERMAN VERSION 2/2! (0x%08X)", addr-text_addr);
     #endif
     
     /*******************************************************************
@@ -1262,7 +1263,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_hudincutscene = (_lh(addr+0x3C) * 0x10000) + (int16_t)_lh(addr+0x40); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_0035a214
+    DEBUG_LOG("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_0035a214
     #endif
     return 1;
   } 
@@ -1276,7 +1277,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_ptr_water = (_lh(addr+0x4) * 0x10000) + (int16_t)_lh(addr+0x10); // actual address!
     #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> global_ptr_water", global_ptr_water-text_addr, global_ptr_water); // DAT_00331fe0_toWater
+      DEBUG_LOG("0x%08X (0x%08X) -> global_ptr_water", global_ptr_water-text_addr, global_ptr_water); // DAT_00331fe0_toWater
     #endif
     return 1;
   } 
@@ -1290,7 +1291,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_buttoninput = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x00385DA0
+    DEBUG_LOG("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x00385DA0
     #endif
     return 1;
   } 
@@ -1301,7 +1302,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x00292B20: 0x10800004 '....' - beqz       $a0, loc_00292B34
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
     #endif
     addr_buttoncheat = addr; // 0x00292B20
     return 1;
@@ -1330,7 +1331,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_garagedata = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0xC); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X: 0x%08X -> global_garagedata", addr-text_addr, global_garagedata-text_addr); // 0x634A88
+    DEBUG_LOG("0x%08X: 0x%08X -> global_garagedata", addr-text_addr, global_garagedata-text_addr); // 0x634A88
     #endif
     
     /*******************************************************************
@@ -1340,8 +1341,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_garageslots = *(char*)(addr+0x20); // 0xC = 12 slots (4 in each garage)
     var_garageslotsize = *(char*)(addr+0x38); // 0x2C
     #ifdef PATCHLOG
-    logPrintf("var_garageslots = 0x%08X", var_garageslots); //
-    logPrintf("var_garageslotsize = 0x%08X", var_garageslotsize); //
+    DEBUG_LOG("var_garageslots = 0x%08X", var_garageslots); //
+    DEBUG_LOG("var_garageslotsize = 0x%08X", var_garageslotsize); //
     #endif
     
     return 1;
@@ -1369,7 +1370,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_pickups = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00624980
+    DEBUG_LOG("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00624980
     #endif
     
     /*******************************************************************
@@ -1379,8 +1380,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_pickupslots = (int16_t)_lh(addr+0x34); // *(short*)(addr+0x34);
     var_pickupslotsize = (int16_t)_lh(addr+0x3C); // *(char*)(addr+0x3C); 
     #ifdef PATCHLOG
-    logPrintf("var_pickupslots = 0x%08X", var_pickupslots); // 0x14F ? 0x150
-    logPrintf("var_pickupslotsize = 0x%08X", var_pickupslotsize); // 0x60
+    DEBUG_LOG("var_pickupslots = 0x%08X", var_pickupslots); // 0x14F ? 0x150
+    DEBUG_LOG("var_pickupslotsize = 0x%08X", var_pickupslotsize); // 0x60
     #endif
     return 1;
   }
@@ -1403,7 +1404,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    **************************************/ 
   if( _lw(addr + 0x2C) == 0x8C84000C && _lw(addr + 0x38) == 0x01094021 && _lw(addr + 0x64) == 0x00000000 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, _checkCustomTracksReady_patched, _checkCustomTracksReady); // sub_00034A28
     return 1;
@@ -1415,7 +1416,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_radioarea = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x0038B4F8
+    DEBUG_LOG("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x0038B4F8
     #endif
     return 1;
   } 
@@ -1441,7 +1442,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_custrackarea = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_custrackarea", global_custrackarea-text_addr, global_custrackarea); // DAT_00356f70_CustomTracksArea
+    DEBUG_LOG("0x%08X (0x%08X) -> global_custrackarea", global_custrackarea-text_addr, global_custrackarea); // DAT_00356f70_CustomTracksArea
     #endif
     return 1;
   } 
@@ -1469,7 +1470,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_radarblips = (_lh(addr+0x18) * 0x10000) + (int16_t)_lh(addr+0x1C); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_radarblips", global_radarblips-text_addr, global_radarblips); // DAT_00646A20
+    DEBUG_LOG("0x%08X (0x%08X) -> global_radarblips", global_radarblips-text_addr, global_radarblips); // DAT_00646A20
     #endif
     
     /*******************************************************************
@@ -1477,7 +1478,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     var_radarblipslots = (int16_t)_lh(addr+0x2C);
     #ifdef PATCHLOG
-    logPrintf("var_radarblipslots = 0x%08X", var_radarblipslots); //0x4B
+    DEBUG_LOG("var_radarblipslots = 0x%08X", var_radarblipslots); //0x4B
     #endif
     
     /*******************************************************************
@@ -1488,7 +1489,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *******************************************************************/
     var_radarblipslotsize = 0x50; // TODO
     #ifdef PATCHLOG
-    logPrintf("var_radarblipslotsize = 0x%08X", var_radarblipslotsize); //0x50
+    DEBUG_LOG("var_radarblipslotsize = 0x%08X", var_radarblipslotsize); //0x50
     #endif
     return 1;
   }
@@ -1516,7 +1517,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_memory_main = (_lh(addr+0x28) * 0x10000) + (int16_t)_lh(addr+0x34);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_0037d640
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_0037d640
     #endif
 
     
@@ -1526,7 +1527,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_handlingCFG = (_lh(addr+0x1FC) * 0x10000) + (int16_t)_lh(addr+0x200);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_handlingCFG", ptr_handlingCFG-text_addr, ptr_handlingCFG); // DAT_00351f14_PTR_handling.cfg
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_handlingCFG", ptr_handlingCFG-text_addr, ptr_handlingCFG); // DAT_00351f14_PTR_handling.cfg
     #endif
     var_handlingcfgslots     = 80; // where to find? TODO
     var_handlingcfgslotsize   = 0xF0; // where to find?
@@ -1539,7 +1540,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     ptr_buildingsIPL = (_lh(addr+0xE0) * 0x10000) + (int16_t)_lh(addr+0xE4);
     var_buildingsIPLslotsize = 0x60; //todo?!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_buildingsIPL", ptr_buildingsIPL-text_addr, ptr_buildingsIPL); // DAT_00348544_PTR_toPTRtoMapParts1
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_buildingsIPL", ptr_buildingsIPL-text_addr, ptr_buildingsIPL); // DAT_00348544_PTR_toPTRtoMapParts1
     #endif
     
     
@@ -1550,7 +1551,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     ptr_treadablesIPL = (_lh(addr+0xEC) * 0x10000) + (int16_t)_lh(addr+0xF0);
     var_treadablesIPLslotsize = 0x60; //todo?
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_treadablesIPL", ptr_treadablesIPL-text_addr, ptr_treadablesIPL); // DAT_00348548_PTR_toPTRtoMapParts2
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_treadablesIPL", ptr_treadablesIPL-text_addr, ptr_treadablesIPL); // DAT_00348548_PTR_toPTRtoMapParts2
     #endif
     
     
@@ -1561,7 +1562,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     ptr_dummysIPL = (_lh(addr+0xF8) * 0x10000) + (int16_t)_lh(addr+0xFC);
     var_dummysIPLslotsize = 0x60; //todo?
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_dummysIPL", ptr_dummysIPL-text_addr, ptr_dummysIPL); // DAT_00348550_PTR_toPTRtoMapParts3
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_dummysIPL", ptr_dummysIPL-text_addr, ptr_dummysIPL); // DAT_00348550_PTR_toPTRtoMapParts3
     #endif
     
     
@@ -1573,7 +1574,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_particleCFGslots   = 82; //where to find?
     var_particleCFGslotsize = 0x94; //where to find?
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_particleCFG", ptr_particleCFG-text_addr, ptr_particleCFG); // DAT_0035a42c_particle.cfg
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_particleCFG", ptr_particleCFG-text_addr, ptr_particleCFG); // DAT_0035a42c_particle.cfg
     #endif
   
   
@@ -1583,7 +1584,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_timecycDAT = (_lh(addr+0x214) * 0x10000) + (int16_t)_lh(addr+0x218);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_timecycDAT", ptr_timecycDAT-text_addr, ptr_timecycDAT); // PTR_DAT_00351980_timecyc.dat
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_timecycDAT", ptr_timecycDAT-text_addr, ptr_timecycDAT); // PTR_DAT_00351980_timecyc.dat
     #endif
     
     // get more file locations here TODO
@@ -1592,7 +1593,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
   if( _lw(addr + 0x94) == 0x3C044754 && _lw(addr + 0xC4) == 0x30A500FF ) { // 0x00011E84 - ULUX ONLY VERSION (because DTZ func too different)
     #ifdef PATCHLOG
-    logPrintf("ptr_buildingsIPL, ptr_treadablesIPL, ptr_dummysIPL, ptr_handlingCFG, ptr_particleCFG, ptr_timecycDAT, ptr_memory_main");
+    DEBUG_LOG("ptr_buildingsIPL, ptr_treadablesIPL, ptr_dummysIPL, ptr_handlingCFG, ptr_particleCFG, ptr_timecycDAT, ptr_memory_main");
     #endif
     
     ptr_memory_main = (_lh(addr+0x24) * 0x10000) + (int16_t)_lh(addr+0x30);
@@ -1641,7 +1642,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_carcolsDAT = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_carcolsDAT", ptr_carcolsDAT-text_addr, ptr_carcolsDAT); // DAT_0032fc50_PTR_carcols.dat
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_carcolsDAT", ptr_carcolsDAT-text_addr, ptr_carcolsDAT); // DAT_0032fc50_PTR_carcols.dat
     #endif
     var_carcolsdatslots   = 128; //where to find? TODO
     var_carcolsdatslotsize   = 0x4; //where to find?
@@ -1671,7 +1672,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_pedstatTable = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_pedstatTable", ptr_pedstatTable-text_addr, ptr_pedstatTable); // DAT_0035a14c_pedstats.dat
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_pedstatTable", ptr_pedstatTable-text_addr, ptr_pedstatTable); // DAT_0035a14c_pedstats.dat
     #endif
     
     var_pedstatDATslots   = 42; // where to find? TODO
@@ -1702,7 +1703,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_IDEs = (_lh(addr+0xC) * 0x10000) + (int16_t)_lh(addr+0x24); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_IDEs", ptr_IDEs-text_addr, ptr_IDEs); // DAT_0035a140_VAR_IDEoffsets
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_IDEs", ptr_IDEs-text_addr, ptr_IDEs); // DAT_0035a140_VAR_IDEoffsets
     #endif
     
     
@@ -1712,7 +1713,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_IDETable = (_lh(addr+0x10) * 0x10000) + (int16_t)_lh(addr+0x34);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_IDETable", ptr_IDETable-text_addr, ptr_IDETable); //DAT_003493bc_PTR_IDETable
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_IDETable", ptr_IDETable-text_addr, ptr_IDETable); //DAT_003493bc_PTR_IDETable
     #endif
     
     return 1;
@@ -1755,9 +1756,9 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_vehiclesworldspawnslotsize = 0x2C; //get from code is complicated here TODO
     
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x64aac0
-    logPrintf("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
-    logPrintf("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize); 
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x64aac0
+    DEBUG_LOG("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
+    DEBUG_LOG("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize); 
     #endif
     
     return 1;
@@ -1781,7 +1782,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    **************************************/ 
    /* if( _lw(addr + 0x9C) == 0x26A5FFE0 && _lw(addr + 0xFC) == 0x00000000 ) { // FUN_001bd8dc_loadSplashScreen
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, loadSplashScreen_patched, loadSplashScreen);
     return 1;
@@ -1790,7 +1791,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// loadStringFromGXT
   if(  _lw(addr + 0x44) == 0x92240022 && _lw(addr + 0x70) == 0x03E00008 ) { // FUN_0010fad4_loadStringFromGXT aka CTextGet
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
     #endif
     LoadStringFromGXT = (void*)(addr); // FUN_0010fad4_loadStringFromGXT
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
@@ -1803,7 +1804,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_gxtloadadr = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_gxtloadadr", ptr_gxtloadadr-text_addr, ptr_gxtloadadr); //DAT_0033207c_gxtLoadAdr
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_gxtloadadr", ptr_gxtloadadr-text_addr, ptr_gxtloadadr); //DAT_0033207c_gxtLoadAdr
     #endif
     return 1;
   }
@@ -1816,7 +1817,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_radarIconList = (_lh(addr+0x24) * 0x10000) + (int16_t)_lh(addr+0x2C); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_radarIconList", ptr_radarIconList-text_addr, ptr_radarIconList); // DAT_0035a6c0_radarIcon_0
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_radarIconList", ptr_radarIconList-text_addr, ptr_radarIconList); // DAT_0035a6c0_radarIcon_0
     #endif
     return 1;
   }
@@ -1843,7 +1844,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     var_radios = (int16_t)_lh(addr);
     var_radios -= 1;
     #ifdef PATCHLOG
-    logPrintf("var_radios = 0x%08X", var_radios);
+    DEBUG_LOG("var_radios = 0x%08X", var_radios);
     #endif
     return 1;
   }
@@ -1856,7 +1857,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     render = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> render", render-text_addr, render); //DAT_00357144_render
+    DEBUG_LOG("0x%08X (0x%08X) -> render", render-text_addr, render); //DAT_00357144_render
     #endif
     return 1;
   }
@@ -1886,7 +1887,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       *******************************************************************
       savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16_t)_lh(addr+0xA0); 
       #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> savedatakey (later)", savedatakey-text_addr, savedatakey); // DAT_0033017c_SAVEKEY
+      DEBUG_LOG("0x%08X (0x%08X) -> savedatakey (later)", savedatakey-text_addr, savedatakey); // DAT_0033017c_SAVEKEY
       #endif
     }
     if( _lh(addr + 0x9C) == 0x0010 ) { // decryption key for initial versions (like US v1.05)
@@ -1896,7 +1897,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       *******************************************************************
       savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16_t)_lh(addr+0xA4); 
       #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> savedatakey (initial)", savedatakey-text_addr, savedatakey); 
+      DEBUG_LOG("0x%08X (0x%08X) -> savedatakey (initial)", savedatakey-text_addr, savedatakey); 
       #endif
     }
     
@@ -1906,7 +1907,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************
     titleid = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> titleid", titleid-text_addr, titleid); //s_ULUS10041_0030db7c
+    DEBUG_LOG("0x%08X (0x%08X) -> titleid", titleid-text_addr, titleid); //s_ULUS10041_0030db7c
     #endif
     
     saveprefix = titleid + 0xC;
@@ -1922,7 +1923,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       *******************************************************************
       savedatakey = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0xAC); // 0x0033003C
       #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> savedatakey (GERMAN v1.00)", savedatakey-text_addr, savedatakey); 
+      DEBUG_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v1.00)", savedatakey-text_addr, savedatakey); 
       #endif
     }
     if( _lh(addr + 0xA0) == 0x0010 ) { //decryption key for GER v2.00
@@ -1932,7 +1933,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       *******************************************************************
       savedatakey = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0xA8); // 0x0033003C
       #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> savedatakey (GERMAN v2.00)", savedatakey-text_addr, savedatakey); 
+      DEBUG_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v2.00)", savedatakey-text_addr, savedatakey); 
       #endif
     }
     
@@ -1943,7 +1944,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     titleid = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // 0x0030DBBC "ULES00182" v1.00 (0x30DAFC v2.00)
     
     #ifdef PATCHLOG 
-    logPrintf("0x%08X (0x%08X) -> titleid (GERMAN)", titleid-text_addr, titleid); 
+    DEBUG_LOG("0x%08X (0x%08X) -> titleid (GERMAN)", titleid-text_addr, titleid); 
     #endif
     
     saveprefix = titleid + 0xC; //"S"
@@ -1960,7 +1961,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_developerflag = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_developerflag", global_developerflag-text_addr, global_developerflag); // DAT_0033010e_developerFlag
+    DEBUG_LOG("0x%08X (0x%08X) -> global_developerflag", global_developerflag-text_addr, global_developerflag); // DAT_0033010e_developerFlag
     #endif
 
     return 1;
@@ -1975,7 +1976,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_freezetimers = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4) + (int16_t)_lh(addr+0x8); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_0038e4d5_freezeOnScreenTimer
+    DEBUG_LOG("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_0038e4d5_freezeOnScreenTimer
     #endif
     return 1;
   }
@@ -1984,7 +1985,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// ped task function
   if( _lw(addr + 0x30) == 0x34050037  && _lw(addr + 0x4C) == 0x8E040254 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
     #endif
     
     /******************************
@@ -2020,7 +2021,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// warp ped to vehicle
   if( _lw(addr + 0x10) == 0x34120012  && _lw(addr + 0x3C) == 0x34040001 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
     #endif
     WarpPedIntoVehicle = (void*)(addr); // 0x1b90ec
     return 1;
@@ -2028,7 +2029,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// warp ped to vehicle as passenger
   if( _lw(addr + 0x14) == 0x34080012  && _lw(addr + 0x3C) == 0x34040001 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
     #endif
     WarpPedIntoVehicleAsPassenger = (void*)(addr); // 0x1b9470
     return 1;
@@ -2037,7 +2038,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// request model
   if( _lw(addr + 0x14) == 0x28941324  && _lw(addr + 0x34) == 0x00102100 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
     #endif
     RequestModel = (void*)(addr); // 0x1c6c28
     return 1;
@@ -2045,7 +2046,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// GiveWeaponAndAmmo
   if( _lw(addr + 0x6C) == 0x269205A0  && _lw(addr + 0x38) == 0x00132140 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
     #endif
     GiveWeaponAndAmmo = (void*)(addr); // 0x19b2f4
     return 1;
@@ -2054,7 +2055,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// SetActorSkinTo (needs name to be lower case!)
   if( _lw(addr + 0x28) == 0x340500A1  && _lw(addr + 0x44) == 0x24840040 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
     #endif
     SetActorSkinTo = (void*)(addr);  // 0x001a1174
     return 1;
@@ -2062,7 +2063,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// LoadAllModelsNow
   if( (_lw(addr + 0x4) == 0x308400FF  && _lw(addr + 0x50) == 0x3C100002) /* || ULUX (func params diff) --> (_lw(addr + 0x4) == 0x308500FF  && _lw(addr + 0x44) == 0x0016B080) */ ) { // FUN_001c6f64_LoadAllRequestedModels
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
     #endif
     LoadAllModelsNow = (void*)(addr); // 0x001c6f64
     return 1;
@@ -2070,7 +2071,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// RefreshActorSkin
   if( _lw(addr + 0x38) == 0xAE04034C  && _lw(addr + 0x10) == 0x2404FFFF ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
     #endif
     RefreshActorSkin = (void*)(addr); // 0x001a1210
     return 1;
@@ -2079,7 +2080,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// TaskDuckLCS
   if( _lw(addr + 0x18) == 0x34050099  && _lw(addr + 0x70) == 0x34840010 ) { // FUN_000835fc_taskDuck
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TaskDuckLCS()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TaskDuckLCS()", addr-text_addr, addr);
     #endif
     TaskDuckLCS = (void*)(addr); // 0x000835fc
     return 1;
@@ -2087,7 +2088,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// TaskUnDuck
   if( _lw(addr + 0x20) == 0x34050099  && _lw(addr + 0x64) == 0x3C06C080 ) { // FUN_000837d0_unduck
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
     #endif
     TaskUnDuck = (void*)(addr); // 0x000837d0
     return 1;
@@ -2111,14 +2112,14 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    **************************************/ 
    if( _lw(addr + 0x34) == 0x3C053E80 && _lw(addr + 0x18) == 0x3C044040 ) { // FUN_001bdbf8_DrawLoadingBar 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar); // ULUX OK!
     return 1;
   } 
   if( _lh(addr + 0x18) == 0x00FF && _lw(addr + 0x14) == 0x00C09825 ) { // FUN_001bde98_DrawLoadscreen 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, Loadscreen_patched, Loadscreen);
     return 1;
@@ -2132,7 +2133,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x0009F778: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0 (default 80.0f)
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x0009F778
     if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
@@ -2143,7 +2144,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// StartNewScript
   if( _lw(addr - 0xC) == 0x2402FFFF  && _lw(addr + 0x30) == 0x24C70001 && _lw(addr + 0x58) == 0x34040001 ) { // FUN_015415c
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
     #endif
     StartNewScript = (void*)(addr); // 0x15415c
     return 1;
@@ -2156,7 +2157,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_ScriptSpace = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_ScriptSpace", global_ScriptSpace-text_addr, global_ScriptSpace); // DAT_00334d7c_ScriptSpace
+    DEBUG_LOG("0x%08X (0x%08X) -> global_ScriptSpace", global_ScriptSpace-text_addr, global_ScriptSpace); // DAT_00334d7c_ScriptSpace
     #endif
     
     /*******************************************************************
@@ -2165,7 +2166,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_MainScriptSize = (_lh(addr+0x8) * 0x10000) + (int16_t)_lh(addr+0xC); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_MainScriptSize", global_MainScriptSize-text_addr, global_MainScriptSize); // DAT_0035a4bc_MainScriptSize
+    DEBUG_LOG("0x%08X (0x%08X) -> global_MainScriptSize", global_MainScriptSize-text_addr, global_MainScriptSize); // DAT_0035a4bc_MainScriptSize
     #endif
 
     /// TODO ?
@@ -2175,7 +2176,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       global_LargestMissionScriptSize = global_MainScriptSize - 0x18; 
       
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_LargestMissionScriptSize", global_LargestMissionScriptSize-text_addr, global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
+    DEBUG_LOG("0x%08X (0x%08X) -> global_LargestMissionScriptSize", global_LargestMissionScriptSize-text_addr, global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
     #endif
 
     return 1;
@@ -2185,7 +2186,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// TankControl
   if( _lw(addr + 0x50) == 0x3C04BFB2  && _lw(addr + 0x78) == 0x3C04403C ) { // FUN_0001c7f8
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
     #endif
     TankControl = (void*)(addr); //
     return 1;
@@ -2193,7 +2194,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// BlowupVehiclesInPath
   if( _lw(addr + 0x38) == 0x3C053DCC  && _lw(addr + 0x58) == 0x30840004 ) { // FUN_00008900
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
     #endif
     BlowupVehiclesInPath = (void*)(addr); //
     return 1;
@@ -2208,7 +2209,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_mp_parameters = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_0037d768
+    DEBUG_LOG("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_0037d768
     #endif
 
     /*******************************************************************
@@ -2217,7 +2218,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_mp_1 = (_lh(addr+0x34) * 0x10000) + (int16_t)_lh(addr+0x38); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_mp_1", global_mp_1-text_addr, global_mp_1); // DAT_00356df8
+    DEBUG_LOG("0x%08X (0x%08X) -> global_mp_1", global_mp_1-text_addr, global_mp_1); // DAT_00356df8
     #endif
     
     
@@ -2229,7 +2230,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// IsPlayerOnAMission
   if( _lw(addr + 0x20) == 0x14860003 && _lw(addr + 0x2C) == 0x34020001  ) { // FUN_001541f0 _CTheScripts_IsPlayerOnAMission
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> IsPlayerOnAMission()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> IsPlayerOnAMission()", addr-text_addr, addr);
     #endif
     IsPlayerOnAMission = (void*)(addr); //
   
@@ -2239,7 +2240,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_OnAMissionFlag = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_OnAMissionFlag", global_OnAMissionFlag-text_addr, global_OnAMissionFlag); // DAT_0035a48c_OnAMissionFlag
+    DEBUG_LOG("0x%08X (0x%08X) -> global_OnAMissionFlag", global_OnAMissionFlag-text_addr, global_OnAMissionFlag); // DAT_0035a48c_OnAMissionFlag
     #endif
     
     return 1;
@@ -2248,7 +2249,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// SetBridgeState
   if( _lw(addr + 0x3C) == 0x3C06C3A5 && _lw(addr + 0x4) == 0x308400FF ) { // FUN_001615e4_SetBridgeState
     #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> SetBridgeState()", addr-text_addr, addr);
+      DEBUG_LOG("0x%08X (0x%08X) -> SetBridgeState()", addr-text_addr, addr);
     #endif
     SetBridgeState = (void*)(addr); //
   
@@ -2258,7 +2259,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_bridgeState = (_lh(addr+0x8) * 0x10000) + (int16_t)_lh(addr+0x14); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_bridgeState", global_bridgeState-text_addr, global_bridgeState); // DAT_0035a69c_bridgeState
+    DEBUG_LOG("0x%08X (0x%08X) -> global_bridgeState", global_bridgeState-text_addr, global_bridgeState); // DAT_0035a69c_bridgeState
     #endif
     
     return 1;
@@ -2274,12 +2275,12 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_m_pVehicleName = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_m_pVehicleName", global_m_pVehicleName-text_addr, global_m_pVehicleName); // DAT_0035a81c_m_pVehicleName
+    DEBUG_LOG("0x%08X (0x%08X) -> global_m_pVehicleName", global_m_pVehicleName-text_addr, global_m_pVehicleName); // DAT_0035a81c_m_pVehicleName
     #endif
 
     global_m_pVehicleNameToPrint = global_m_pVehicleName + 0x10; 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_m_pVehicleNameToPrint", global_m_pVehicleNameToPrint-text_addr, global_m_pVehicleNameToPrint); // DAT_0035a82c_m_pVehicleNameToPrint
+    DEBUG_LOG("0x%08X (0x%08X) -> global_m_pVehicleNameToPrint", global_m_pVehicleNameToPrint-text_addr, global_m_pVehicleNameToPrint); // DAT_0035a82c_m_pVehicleNameToPrint
     #endif
     
     return 1;
@@ -2289,7 +2290,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( _lw(addr + 0x4) == 0x8C850194  && _lw(addr + 0x10) == 0x30A40001 ) { // FUN_001a88c4_UpdatePosition
   //if( _lw(addr + 0x60) == 0x3C044334  && _lw(addr + 0x2C) == 0x00808025 ) { // FUN_001a8368_CalculateNewVelocity
     #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
+      DEBUG_LOG("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, UpdatePosition_patched, UpdatePosition); //
     return 1;
@@ -2318,7 +2319,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_weaponTable = (_lh(addr+0x10) * 0x10000) + (int16_t)_lh(addr+0x14);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // DAT_0035a660_weapon.dat
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // DAT_0035a660_weapon.dat
     #endif
     
     var_weaponDATslots   = 37; // where to find? TODO
@@ -2331,7 +2332,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// DoHoverSuspensionRatios
   if( _lw(addr + 0x60) == 0x84A40058  && _lw(addr + 0xB8) == 0x34160000 ) { // FUN_00009138
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
     #endif
     DoHoverSuspensionRatios = (void*)(addr); //
     return 1;
@@ -2346,7 +2347,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_Wind = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x20); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_Wind", global_Wind-text_addr, global_Wind); // DAT_0035a1f8_Wind
+    DEBUG_LOG("0x%08X (0x%08X) -> global_Wind", global_Wind-text_addr, global_Wind); // DAT_0035a1f8_Wind
     #endif
   
     /*******************************************************************
@@ -2355,7 +2356,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     *******************************************************************/
     global_WindClipped = (_lh(addr+0x2C) * 0x10000) + (int16_t)_lh(addr+0x30); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_WindClipped", global_WindClipped-text_addr, global_WindClipped); // DAT_0035a570_WindClipped
+    DEBUG_LOG("0x%08X (0x%08X) -> global_WindClipped", global_WindClipped-text_addr, global_WindClipped); // DAT_0035a570_WindClipped
     #endif
     /// nop out to stop game from setting it on its own (we take care of it in the cheat function)
   _sw(0x00000000, addr + 0x2c);
@@ -2371,7 +2372,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x00290928: 0x1211FFDF '....' - beq        $s0, $s1, loc_002908A8
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_randompedcheat", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_randompedcheat", addr-text_addr, addr);
     #endif
     addr_randompedcheat = addr; // 0
     return 1;
@@ -2382,21 +2383,21 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( _lw(addr + 0x18) == 0x3C04C5BB && _lw(addr + 0x5C) == 0x3C04C5BB ) { // FUN_000e7d70_CCam_IsTargetInWater 
     HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> CCam_IsTargetInWater", addr-text_addr, addr); // 
+    DEBUG_LOG("0x%08X (0x%08X) -> CCam_IsTargetInWater", addr-text_addr, addr); // 
     #endif
     return 1;
   }
   if( _lw(addr + 0x0) == 0x3C064500 && _lw(addr + 0x2C) == 0x340A0080 ) { // FUN_00109dac_CWaterLevel_GetWaterLevel
     FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(addr); // needs to be called in "ProcessBuoyancy"
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> CWaterLevel_GetWaterLevel", addr-text_addr, addr); // 
+    DEBUG_LOG("0x%08X (0x%08X) -> CWaterLevel_GetWaterLevel", addr-text_addr, addr); // 
     #endif
     return 1;
   }
   if( _lw(addr + 0x4) == 0x3C063F8C && _lw(addr + 0x44) == 0x34050037 ) { // FUN_001a8d9c_CPed_ProcessBuoyancy
     HIJACK_FUNCTION(addr, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> CPed_ProcessBuoyancy", addr-text_addr, addr); // 
+    DEBUG_LOG("0x%08X (0x%08X) -> CPed_ProcessBuoyancy", addr-text_addr, addr); // 
     #endif
     return 1;
   }
@@ -2455,7 +2456,7 @@ void testfuncv_patched(int a, int b) {
   //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
   //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
       
-  logPrintf("a: 0x%08X, b: 0x%08X", a, b);
+  DEBUG_LOG("a: 0x%08X, b: 0x%08X", a, b);
 }
 
 int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
@@ -2505,7 +2506,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   // // // // // // // // // // // // // // // // // // // // // // // // // // //  
     
     #ifdef PATCHLOG
-    logPrintf("[INFO] patchonce() VCS ran!");
+    DEBUG_LOG("[INFO] patchonce() VCS ran!");
     #endif
     patchonce = 0;
   }
@@ -2527,7 +2528,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    **************************************/ 
   if( _lw(addr + 0x84) == 0x3C043F80 && _lw(addr + 0x70) == 0x3C043D4C  ) { 
     #ifdef PATCHLOG
-    logPrintf("[0] 0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
+    DEBUG_LOG("[0] 0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, cWorldStream_Render_Patched, cWorldStream_Render); // 0x00154D28
     return 1;
@@ -2543,7 +2544,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    **************************************/ 
   if( _lw(addr + 0x8) == 0x00808025  && _lw(addr + 0x1C) == 0x00000000 && _lw(addr + 0x3C) == 0x308400FF ) {
     #ifdef PATCHLOG
-    logPrintf("[0] 0x%08X (0x%08X) --> FUN_002c22a0()", addr-text_addr, addr);
+    DEBUG_LOG("[0] 0x%08X (0x%08X) --> FUN_002c22a0()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, FUN_002c22a0_patched, FUN_002c22a0); //
     return 1;
@@ -2559,7 +2560,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    **************************************/ 
   if( _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {
     #ifdef PATCHLOG
-    logPrintf("[0] 0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
+    DEBUG_LOG("[0] 0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, buttonsToActionPatched, buttonsToAction); // 0x0018A288
     return 1;
@@ -2576,12 +2577,12 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 //if( _lw(addr - 0xC) == 0x1000FFF7 && _lw(addr + 0x4) == 0x00000000 && _lw(addr + 0x8) == 0x27A60010 && _lw(addr + 0x10) == 0x00602825 && _lw(addr + 0x1C) == 0x8FA40014 ) { // 0x002030D4
   if( _lw(addr + 0x6C) == 0x34040006 && _lw(addr - 0x20) == 0x2C840002 ) { // 0x002030D4
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
     #endif
     addr_fpsCap = addr-0x20; // 0x002030B4
     
     #ifdef PATCHLOG
-    logPrintf("[0] 0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
+    DEBUG_LOG("[0] 0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
     #endif
     MAKE_CALL(addr, sceKernelGetSystemTimeWidePatched); // 0x002030D4
     
@@ -2602,7 +2603,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    **************************************/ 
   if( _lw(addr + 0x8) == 0x00043200 && _lw(addr + 0x18) == 0x00C42021 && _lw(addr + 0x28) == 0x8C820000 ) {  // 0x0015c424
     #ifdef PATCHLOG
-    logPrintf("[1] 0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
+    DEBUG_LOG("[1] 0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
     #endif
     GetPPLAYER = (void*)(addr); // get pplayer 
     return 1;
@@ -2620,7 +2621,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( (_lw(addr + 0x1C) == 0x00042140 && _lw(addr + 0x8) == 0x00842821 && _lw(addr + 0x38) == 0x00000000) ||  // 0x0015C2C8
       (_lw(addr + 0x10) == 0x00042140 && _lw(addr + 0x4) == 0x00842821 && _lw(addr - 0xC) == 0x24820140) ) {  // ULUS v1.01
     #ifdef PATCHLOG
-    logPrintf("[1] 0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
+    DEBUG_LOG("[1] 0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
     #endif
     GetPCAR = (void*)(addr); // get pcar 
     return 1;
@@ -2640,7 +2641,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_gametimer = (int16_t) _lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("[1] 0x%08X --> global_gametimer", global_gametimer); // 0x1DEC
+    DEBUG_LOG("[1] 0x%08X --> global_gametimer", global_gametimer); // 0x1DEC
     #endif
     
     global_timescale = global_gametimer + 0xC;  
@@ -2661,7 +2662,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_currentisland = (int16_t) _lh(addr+0xC); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("[1] 0x%08X --> global_currentisland", global_currentisland); // uGp00001de4
+    DEBUG_LOG("[1] 0x%08X --> global_currentisland", global_currentisland); // uGp00001de4
     #endif
     
     /*******************************************************************
@@ -2669,7 +2670,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_systemlanguage = (int16_t) _lh(addr+0x40); // WITHOUT GP!!
     #ifdef PATCHLOG
-      logPrintf("[1] 0x%08X --> global_systemlanguage", global_systemlanguage); // uGp00001EBC
+      DEBUG_LOG("[1] 0x%08X --> global_systemlanguage", global_systemlanguage); // uGp00001EBC
     #endif
     
     return 1;
@@ -2682,7 +2683,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_pedestriansobj = (int16_t)_lh(addr+0x38); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X --> ptr_pedestriansobj", ptr_pedestriansobj); // puGpffffc198
+    DEBUG_LOG("0x%08X --> ptr_pedestriansobj", ptr_pedestriansobj); // puGpffffc198
     #endif
     
     /*******************************************************************
@@ -2690,7 +2691,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_vehiclesobj = (int16_t)_lh(addr+0x64); //WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X --> ptr_vehiclesobj", ptr_vehiclesobj); // puGpffffc19c
+    DEBUG_LOG("0x%08X --> ptr_vehiclesobj", ptr_vehiclesobj); // puGpffffc19c
     #endif
     
     /*******************************************************************
@@ -2698,7 +2699,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_worldobj =  (int16_t)_lh(addr+0x90); // WITHOUT GP!!
     #ifdef PATCHLOG
-      logPrintf("0x%08X --> ptr_worldobj", ptr_worldobj); // puGpffffc1a8
+      DEBUG_LOG("0x%08X --> ptr_worldobj", ptr_worldobj); // puGpffffc1a8
     #endif
     
     /*******************************************************************
@@ -2706,7 +2707,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_businessobj =  (int16_t)_lh(addr+0xBC); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X --> ptr_businessobj", ptr_businessobj); // puGpffffc1ac
+    DEBUG_LOG("0x%08X --> ptr_businessobj", ptr_businessobj); // puGpffffc1ac
     #endif
     
     /*******************************************************************
@@ -2714,7 +2715,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_audioscriptobj = (int16_t)_lh(addr+0xE8); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X --> ptr_audioscriptobj", ptr_audioscriptobj); // puGpffffc1b4
+    DEBUG_LOG("0x%08X --> ptr_audioscriptobj", ptr_audioscriptobj); // puGpffffc1b4
     #endif
     
     var_bsnobjsize = 0x160; // from where? TODO
@@ -2728,7 +2729,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     var_pedobjsize = (int16_t)_lh(addr+0x3C); // 0xD10
     #ifdef PATCHLOG
-    logPrintf("var_pedobjsize = 0x%X", var_pedobjsize); //
+    DEBUG_LOG("var_pedobjsize = 0x%X", var_pedobjsize); //
     #endif
     
     /*******************************************************************
@@ -2736,7 +2737,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     var_vehobjsize = 0x10000 - _lh(addr+0x17C); // 0x820
     #ifdef PATCHLOG
-    logPrintf("var_vehobjsize = 0x%X", var_vehobjsize); //
+    DEBUG_LOG("var_vehobjsize = 0x%X", var_vehobjsize); //
     #endif
     
     /*******************************************************************
@@ -2744,7 +2745,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     var_wldobjsize = 0x10000 - _lh(addr+0x214); // 0x220
     #ifdef PATCHLOG
-    logPrintf("var_wldobjsize = 0x%X", var_wldobjsize); //
+    DEBUG_LOG("var_wldobjsize = 0x%X", var_wldobjsize); //
     #endif
     
     return 1;
@@ -2757,7 +2758,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// skip intro movies --> (JP version black screen after patch)
   if( _lw(addr - 0x30) == 0x34050003 && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0x8) == 0xAFBF0000 ) { // JP version black screen after patch (0x08804000 + 0x001C7DD4)
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
     #endif
     addr_skipIntroMovie = addr; // 0x001309A8
     return 1;
@@ -2766,7 +2767,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// never fall off bike.. when rolling backwards
   if( _lw(addr-0xC) == 0x3405002F && _lw(addr + 0x4) == 0x00004025 && _lw(addr - 0x28) == 0x3C04BF00 && _lw(addr - 0x68) == 0x00000000 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
     #endif
     addr_neverFallOffBike_rollback = addr; // 0x000EBE8C - nop out function call
     return 1;
@@ -2778,7 +2779,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x002614D4: 0x0C0C0345 'E...' - jal        sub_00300D14
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
     #endif
     addr_neverFallOffBike_hitobj = addr; // 0x002614D4 - nop out function call
     return 1;
@@ -2788,7 +2789,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// world gravity
   if( _lw(addr - 0x10) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
     #endif
     addr_worldgravity = addr; // 0x00263690
     return 1;
@@ -2797,7 +2798,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// set weather function
   if( _lw(addr - 0x10) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x8) == 0x03E00008 && _lw(addr+0x10) == 0x2404FFFF && _lw(addr+0x14) == 0x03E00008 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetNextWeather(), SetWeatherNow(), ReleaseWeather()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetNextWeather(), SetWeatherNow(), ReleaseWeather()", addr-text_addr, addr);
     #endif
     SetNextWeather = (void*)(addr-0x8);  // 0x2F74E0
     SetWeatherNow  = (void*)(addr);      // 0x2F74E8
@@ -2807,7 +2808,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_weather = (int16_t)_lh(addr + 0x4); // WITHOUT GP!! (only to READ current weather)
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_weather", global_weather); //0x2098
+    DEBUG_LOG("0x%08X -> global_weather", global_weather); //0x2098
     #endif
     return 1;
   }
@@ -2822,7 +2823,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_displaysettings = (int16_t)_lh(addr); //WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_displaysettings", global_displaysettings); //16F4
+    DEBUG_LOG("0x%08X -> global_displaysettings", global_displaysettings); //16F4
     #endif
     return 1;
   }
@@ -2835,7 +2836,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_trafficdensity = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_trafficdensity", global_trafficdensity); // 0x1538
+    DEBUG_LOG("0x%08X -> global_trafficdensity", global_trafficdensity); // 0x1538
     #endif
     
     /*******************************************************************
@@ -2843,7 +2844,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_peddensity = (int16_t)_lh(addr-0xC); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_peddensity", global_peddensity); // 0xFFFFD1C4
+    DEBUG_LOG("0x%08X -> global_peddensity", global_peddensity); // 0xFFFFD1C4
     #endif
     
     return 1;
@@ -2861,7 +2862,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_maxarmormult = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4) + _lh(addr+0x8); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x3DA601
+    DEBUG_LOG("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x3DA601
     #endif
 
     /*******************************************************************
@@ -2871,7 +2872,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_maxhealthmult = (_lh(addr-0x58) * 0x10000) + (int16_t)_lh(addr-0x54) + _lh(addr-0x50); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x3DA600
+    DEBUG_LOG("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x3DA600
     #endif
     
     return 1;
@@ -2892,7 +2893,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_ismultiplayer = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("[1] 0x%08X -> global_ismultiplayer", global_ismultiplayer); // cGpffffe458
+    DEBUG_LOG("[1] 0x%08X -> global_ismultiplayer", global_ismultiplayer); // cGpffffe458
     #endif
     
     /*******************************************************************
@@ -2905,7 +2906,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     global_unlimtedsprint = (_lh(addr+0x50) * 0x10000) + (int16_t)_lh(addr+0x58) + _lh(addr+0x60); // actual address!
     global_unlimtedswim = global_unlimtedsprint-1; // Yes, it is always 1 byte behind unlimited_sprinting bool
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_003da5fd_playerNeverGetsTired
+    DEBUG_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_003da5fd_playerNeverGetsTired
     #endif
     
     return 1;
@@ -2915,7 +2916,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( _lw(addr + 0x84) == 0x3405000C && _lw(addr - 0x6C) == 0x34020001 ) { // 0x00143470
     SetWantedLevel = (void*)(addr);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
     #endif
     
     return 1;
@@ -2925,7 +2926,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     
     SetMaxWantedLevel = (void*)(addr);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetMaxWantedLevel()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetMaxWantedLevel()", addr-text_addr, addr);
     #endif
     
     /*******************************************************************
@@ -2933,7 +2934,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_maxwantedlevel = (int16_t)_lh(addr+0x3C); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_maxwantedlevel", global_maxwantedlevel); // uGpfffff6e8
+    DEBUG_LOG("0x%08X -> global_maxwantedlevel", global_maxwantedlevel); // uGpfffff6e8
     #endif
     
     return 1;
@@ -2963,7 +2964,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_clockmultiplier = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_clockmultiplier", global_clockmultiplier); // uGp00001ddc
+    DEBUG_LOG("0x%08X -> global_clockmultiplier", global_clockmultiplier); // uGp00001ddc
     #endif
     return 1;
   } 
@@ -2975,7 +2976,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_cheatusedcounter = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_cheatusedcounter", global_cheatusedcounter); // iGp00002448
+    DEBUG_LOG("0x%08X -> global_cheatusedcounter", global_cheatusedcounter); // iGp00002448
     #endif
     
     /*******************************************************************
@@ -2983,7 +2984,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_cheatusedboolean = (int16_t)_lh(addr+0x4); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_cheatusedboolean", global_cheatusedboolean); // uGpffffc0fe
+    DEBUG_LOG("0x%08X -> global_cheatusedboolean", global_cheatusedboolean); // uGpffffc0fe
     #endif
     
     return 1;
@@ -2997,7 +2998,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_freezegame = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_freezegame", global_freezegame); // 0x20A8
+    DEBUG_LOG("0x%08X -> global_freezegame", global_freezegame); // 0x20A8
     #endif
     
     /*******************************************************************
@@ -3007,7 +3008,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_hudincutscene = (_lh(addr+0x10) * 0x10000) + (int16_t)_lh(addr+0x14) + (int16_t)_lh(addr+0x18); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_003c4634
+    DEBUG_LOG("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_003c4634
     #endif
     
     return 1;
@@ -3022,7 +3023,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_helpbox = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_helpbox", global_helpbox); // iGp000016d8
+    DEBUG_LOG("0x%08X -> global_helpbox", global_helpbox); // iGp000016d8
     #endif
     
     return 1;
@@ -3036,7 +3037,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_camera = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_003C3E30
+    DEBUG_LOG("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_003C3E30
     #endif
     
     return 1;
@@ -3057,7 +3058,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   ****************************************************************************************************************************/
   if( _lw(addr+0x54) == 0x34120002 && _lw(addr+0xA0) == 0x34040008 && _lw(addr+0x180) == 0x28850004 ) { // FUN_00132e84
     #ifdef PATCHLOG
-    logPrintf("UNCENSOR GERMAN VERSION! (0x%08X)", addr-text_addr);
+    DEBUG_LOG("UNCENSOR GERMAN VERSION! (0x%08X)", addr-text_addr);
     #endif
   
     /// set "isUncut" flag to 0x1    [$s0 holds 0x1]
@@ -3076,7 +3077,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_ptr_water =  (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_ptr_water", global_ptr_water); // uGp0000052c
+    DEBUG_LOG("0x%08X -> global_ptr_water", global_ptr_water); // uGp0000052c
     #endif
     
     return 1;
@@ -3097,7 +3098,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_buttoninput = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x3da610
+    DEBUG_LOG("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x3da610
     #endif
     
     return 1;
@@ -3109,7 +3110,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x00187A10: 0x10800004 '....' - beqz       $a0, loc_00187A24
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
     #endif
     
     addr_buttoncheat = addr; // 0x00187A10
@@ -3124,14 +3125,14 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_garagedata = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x10); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_garagedata", global_garagedata-text_addr, global_garagedata); //
+    DEBUG_LOG("0x%08X (0x%08X) -> global_garagedata", global_garagedata-text_addr, global_garagedata); //
     #endif
     
     var_garageslots = *(char*)(addr+0x24); // 0xC = 12 slots (4 in each garage)
     var_garageslotsize = *(char*)(addr+0x3C); // 0x30
     #ifdef PATCHLOG
-    logPrintf("var_garageslots = 0x%08X", var_garageslots); //
-    logPrintf("var_garageslotsize = 0x%08X", var_garageslotsize); //
+    DEBUG_LOG("var_garageslots = 0x%08X", var_garageslots); //
+    DEBUG_LOG("var_garageslotsize = 0x%08X", var_garageslotsize); //
     #endif
     
     return 1;
@@ -3145,14 +3146,14 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_pickups = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00463930
+    DEBUG_LOG("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00463930
     #endif
     
     var_pickupslots = (int16_t)_lh(addr+0x34);
     var_pickupslotsize = (int16_t)_lh(addr+0x3C);
     #ifdef PATCHLOG
-    logPrintf("var_pickupslots = 0x%08X", var_pickupslots); // 0x14F ? 0x150
-    logPrintf("var_pickupslotsize = 0x%08X", var_pickupslotsize); // 0x40
+    DEBUG_LOG("var_pickupslots = 0x%08X", var_pickupslots); // 0x14F ? 0x150
+    DEBUG_LOG("var_pickupslotsize = 0x%08X", var_pickupslotsize); // 0x40
     #endif
     
     return 1;
@@ -3169,7 +3170,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( _lw(addr + 0x2C) == 0x8C84000C && _lw(addr + 0x38) == 0x01094821 && _lw(addr + 0x64) == 0x00000000 ) {
     HIJACK_FUNCTION(addr, _checkCustomTracksReady_patched, _checkCustomTracksReady); // sub_000B2860
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
     #endif
     
     return 1;
@@ -3181,7 +3182,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_radioarea = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x003CBC10
+    DEBUG_LOG("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x003CBC10
     #endif
     
     return 1;
@@ -3200,7 +3201,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_custrackarea = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_custrackarea", global_custrackarea); // iGp00001708
+    DEBUG_LOG("0x%08X -> global_custrackarea", global_custrackarea); // iGp00001708
     #endif
     
     return 1;
@@ -3215,7 +3216,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     var_radarblipspadding = (int16_t)_lh(addr+0x64);
     #ifdef PATCHLOG
-    logPrintf("var_radarblipspadding = 0x%08X", var_radarblipspadding); // 0x270
+    DEBUG_LOG("var_radarblipspadding = 0x%08X", var_radarblipspadding); // 0x270
     #endif
     
     
@@ -3224,7 +3225,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     var_radarblipslots = (int16_t)_lh(addr+0x54);
     #ifdef PATCHLOG
-    logPrintf("var_radarblipslots = 0x%08X", var_radarblipslots); // 0x4B
+    DEBUG_LOG("var_radarblipslots = 0x%08X", var_radarblipslots); // 0x4B
     #endif
     
     
@@ -3233,7 +3234,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *******************************************************************/
     var_radarblipslotsize = (int16_t)_lh(addr+0x4C);
     #ifdef PATCHLOG
-    logPrintf("var_radarblipslotsize = 0x%08X", var_radarblipslotsize); // 0x30
+    DEBUG_LOG("var_radarblipslotsize = 0x%08X", var_radarblipslotsize); // 0x30
     #endif
     
     return 1;
@@ -3252,7 +3253,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_radarblips = _lh(addr+0x38); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_radarblips", global_radarblips); // iGp000016dc
+    DEBUG_LOG("0x%08X -> global_radarblips", global_radarblips); // iGp000016dc
     #endif
     
     return 1;
@@ -3278,9 +3279,9 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     var_vehiclesworldspawnslotsize = 0x30; // get from code is complicated here TODO
     
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x0067CA20
-    logPrintf("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
-    logPrintf("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize); 
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x0067CA20
+    DEBUG_LOG("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
+    DEBUG_LOG("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize); 
     #endif
     
     return 1;
@@ -3296,7 +3297,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    **************************************/ 
   /*if( _lw(addr + 0x9C) == 0x30A50080 && _lw(addr + 0xD8) == 0x00402825 ) { // FUN_0013109c_loadSplashScreen
     #ifdef PATCHLOG
-    logPrintf("[0] 0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
+    DEBUG_LOG("[0] 0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, loadSplashScreen_patched, loadSplashScreen);
     return 1;
@@ -3321,7 +3322,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_memory_main = (_lh(addr+0x30) * 0x10000) + (int16_t)_lh(addr+0x3C);
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_003c2500
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_003c2500
     #endif
   
     /*******************************************************************
@@ -3330,7 +3331,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     //ptr_handlingCFG = _lh(addr+0x250); //WITHOUT GP!!
     //#ifdef PATCHLOG
-      //logPrintf("0x%08X -> ptr_handlingCFG", ptr_handlingCFG); //uGp00002700
+      //DEBUG_LOG("0x%08X -> ptr_handlingCFG", ptr_handlingCFG); //uGp00002700
     //#endif
     //ptr_handlingCFG     = 0x000018;
     //var_handlingcfgslots     = 53; //todo where to find 
@@ -3344,7 +3345,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     ptr_buildingsIPL = (int16_t) _lh(addr+0xF4); // WITHOUT GP!!
     var_buildingsIPLslotsize = 0x60; // todo?!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_buildingsIPL", ptr_buildingsIPL); // uGpffffc1a0
+    DEBUG_LOG("0x%08X -> ptr_buildingsIPL", ptr_buildingsIPL); // uGpffffc1a0
     #endif
     
     /*******************************************************************
@@ -3353,7 +3354,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     ptr_treadablesIPL = (int16_t) _lh(addr+0xFC); // WITHOUT GP!!
     var_treadablesIPLslotsize = 0x60; // todo?
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_treadablesIPL", ptr_treadablesIPL); // uGpffffc1a4
+    DEBUG_LOG("0x%08X -> ptr_treadablesIPL", ptr_treadablesIPL); // uGpffffc1a4
     #endif
   
     /*******************************************************************
@@ -3362,7 +3363,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     ptr_dummysIPL = (int16_t) _lh(addr+0x104); // WITHOUT GP!!
     var_dummysIPLslotsize = 0x60; // todo?
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_dummysIPL", ptr_dummysIPL); // uGpffffc1b0
+    DEBUG_LOG("0x%08X -> ptr_dummysIPL", ptr_dummysIPL); // uGpffffc1b0
     #endif
 
     /*******************************************************************
@@ -3372,7 +3373,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     var_particleCFGslots   = 90; // where to find?
     var_particleCFGslotsize = 0x84; // where to find?
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_particleCFG", ptr_particleCFG); // uGp00002270
+    DEBUG_LOG("0x%08X -> ptr_particleCFG", ptr_particleCFG); // uGp00002270
     #endif
 
     /*******************************************************************
@@ -3380,7 +3381,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_carcolsDAT = (int16_t) _lh(addr+0x1EC); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_carcolsDAT", ptr_carcolsDAT); // ptr at iGp000016d0 + 8 
+    DEBUG_LOG("0x%08X -> ptr_carcolsDAT", ptr_carcolsDAT); // ptr at iGp000016d0 + 8 
     #endif
     var_carcolsdatslots   = 128; // where to find?
     var_carcolsdatslotsize   = 0x3; // where to find?
@@ -3390,7 +3391,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_timecycDAT = (int16_t) _lh(addr+0x24C); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_timecycDAT", ptr_timecycDAT); // ptr at piGpffffa470
+    DEBUG_LOG("0x%08X -> ptr_timecycDAT", ptr_timecycDAT); // ptr at piGpffffa470
     #endif
     
     return 1;
@@ -3414,7 +3415,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_IDEs = (int16_t) _lh(addr+0x14); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_IDEs = 0x%08X", addr+0x14-text_addr, addr+0x14, ptr_IDEs); //uGp00001de8
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_IDEs = 0x%08X", addr+0x14-text_addr, addr+0x14, ptr_IDEs); //uGp00001de8
     #endif
     
     /*******************************************************************
@@ -3422,7 +3423,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_IDETable = (int16_t) _lh(addr+0x24); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_IDETable = 0x%08X", addr+0x24-text_addr, addr+0x24, ptr_IDETable); // iGp00000018
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_IDETable = 0x%08X", addr+0x24-text_addr, addr+0x24, ptr_IDETable); // iGp00000018
     #endif
     
     return 1;
@@ -3435,7 +3436,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_pedstatTable = (int16_t) _lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_pedstatTable", ptr_pedstatTable); // iGp00001da4
+    DEBUG_LOG("0x%08X -> ptr_pedstatTable", ptr_pedstatTable); // iGp00001da4
     #endif
     
     var_pedstatDATslots   = 42; // where to find?
@@ -3447,7 +3448,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// loadStringFromGXT
   if( _lw(addr + 0x3C) == 0x92240022 && _lw(addr + 0x64) == 0x03E00008 ) { // FUN_001f2390_loadStringFromGXT
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
     #endif
     LoadStringFromGXT = (void*)(addr); //FUN_0010fad4_loadStringFromGXT
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
@@ -3459,7 +3460,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_gxtloadadr = (int16_t) _lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_gxtloadadr", ptr_gxtloadadr); // ppiGpffffd9e8
+    DEBUG_LOG("0x%08X -> ptr_gxtloadadr", ptr_gxtloadadr); // ppiGpffffd9e8
     #endif
     
     return 1;
@@ -3472,7 +3473,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_radarIconList = (int16_t) _lh(addr+0x24); // its just an offset in this case to calc with
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> ptr_radarIconList", ptr_radarIconList); // 0x19E0
+    DEBUG_LOG("0x%08X -> ptr_radarIconList", ptr_radarIconList); // 0x19E0
     #endif
     
     return 1;
@@ -3486,7 +3487,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     var_radios = (int16_t)_lh(addr);
     var_radios -= 1;
     #ifdef PATCHLOG
-    logPrintf("var_radios = 0x%08X", var_radios);
+    DEBUG_LOG("var_radios = 0x%08X", var_radios);
     #endif
     return 1;
   }
@@ -3499,7 +3500,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     render = (int16_t) _lh(addr); 
     #ifdef PATCHLOG
-    logPrintf("render -> 0x%08X", render); // iGp000016e8
+    DEBUG_LOG("render -> 0x%08X", render); // iGp000016e8
     #endif
     return 1;
   }
@@ -3519,7 +3520,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************
     savedatakey = (int16_t) _lh(addr); 
     #ifdef PATCHLOG
-    logPrintf("savedatakey -> 0x%08X", savedatakey); // gp0xfffff748
+    DEBUG_LOG("savedatakey -> 0x%08X", savedatakey); // gp0xfffff748
     #endif
     
     
@@ -3532,7 +3533,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
       titleid = (int16_t) _lh(addr-0x74); 
     
     #ifdef PATCHLOG
-    logPrintf("titleid -> 0x%08X", titleid); // gp0xfffff7dc
+    DEBUG_LOG("titleid -> 0x%08X", titleid); // gp0xfffff7dc
     #endif
     
     saveprefix = titleid + 0xC;
@@ -3549,7 +3550,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_freezetimers = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4) + (int16_t)_lh(addr+0x8); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_003f5c2d_freezeOnScreenTimer
+    DEBUG_LOG("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_003f5c2d_freezeOnScreenTimer
     #endif
 
     return 1;
@@ -3558,7 +3559,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// ped task function
   if( _lw(addr + 0x38) == 0x3405003A  && _lw(addr + 0x70) == 0x30840200 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
     #endif
     TaskCharWith = (void*)(addr);  // 0x002c9698
     return 1;
@@ -3567,7 +3568,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// warp ped to vehicle
   if( _lw(addr + 0x10) == 0x34120012 && _lw(addr + 0x14) == 0x00808825 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
     #endif
     WarpPedIntoVehicle = (void*)(addr);  // 0x00127a54  
     return 1;
@@ -3575,7 +3576,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// warp ped to vehicle as passenger
   if( _lw(addr + 0x14) == 0x34080012 && _lw(addr + 0x1C) == 0x00809025 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
     #endif
     WarpPedIntoVehicleAsPassenger = (void*)(addr);  // 0x00127dc4
     return 1;
@@ -3583,7 +3584,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// request model
   if(  _lw(addr + 0x4) == 0x00C03825 && _lw(addr + 0x40) == 0x00003025 && _lw(addr + 0xC) == _lw(addr + 0x30) ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
     #endif
     RequestModel = (void*)(addr); // 0x2cf258
     return 1;
@@ -3591,7 +3592,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// GiveWeaponAndAmmo
   if( _lw(addr + 0x48) == 0x0204A021  && _lw(addr + 0xC) == 0x00A08825 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
     #endif
     GiveWeaponAndAmmo = (void*)(addr); // 0x001177DC
     return 1;
@@ -3600,7 +3601,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// SetActorSkinTo (needs name to be lower case!)
   if( _lw(addr + 0x2C) == 0x340600A0  && _lw(addr + 0x48) == 0x24840048 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
     #endif
     SetActorSkinTo = (void*)(addr); // 0x0010ae04
     return 1;
@@ -3608,7 +3609,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// LoadAllModelsNow
   if( _lw(addr + 0x4) == 0x308600FF  && _lw(addr + 0x14) == 0x34050001  && _lw(addr - 0x10) == 0x00003025 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
     #endif
     LoadAllModelsNow = (void*)(addr); //0x002cf610
     return 1;
@@ -3616,7 +3617,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// RefreshActorSkin
   if( _lw(addr + 0x1C) == 0x24C40030  && _lw(addr + 0x3C) == 0x34050001 ) {
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
     #endif
     RefreshActorSkin = (void*)(addr); // 0x0010af00
     return 1;
@@ -3625,7 +3626,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// TaskDuckVCS
   if( _lw(addr + 0x34) == 0x34060099  && _lw(addr + 0x90) == 0x34842000 ) { // FUN_001a71f0_taskDuck
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TaskDuckVCS()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TaskDuckVCS()", addr-text_addr, addr);
     #endif
     TaskDuckVCS = (void*)(addr); // 0x001a71f0
     return 1;
@@ -3633,7 +3634,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// TaskUnDuck
   if( _lw(addr + 0x20) == 0x34060099  && _lw(addr + 0x6C) == 0x3C06C080 ) { // FUN_001a74fc_unDuck
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
     #endif
     TaskUnDuck = (void*)(addr); // 0x001a74fc
     return 1;
@@ -3649,14 +3650,14 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    **************************************/ 
    if( _lw(addr + 0x2C) == 0x3C043E80 && _lw(addr + 0x10) == 0x3C044040 ) { // FUN_00131490_DrawLoadingBar
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar);
     return 1;
   } 
   if( _lw(addr + 0x18) == 0x30F100FF && _lw(addr + 0x14) == 0x00C09025 ) { // FUN_0013170c_DrawLoadscreen
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, Loadscreen_patched, Loadscreen);
     return 1;
@@ -3665,7 +3666,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// StartNewScript
   if( _lw(addr - 0xC) == 0x2402FFFF  && _lw(addr + 0x28) == 0x24A60001 && _lw(addr + 0x4C) == 0x34040001 ) { // FUN_0005F470
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
     #endif
     StartNewScript = (void*)(addr); // 0x0005F470
     return 1;
@@ -3677,7 +3678,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_ScriptSpace = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_ScriptSpace", global_ScriptSpace); // iGpffff8e24 aka ScriptSpace
+    DEBUG_LOG("0x%08X -> global_ScriptSpace", global_ScriptSpace); // iGpffff8e24 aka ScriptSpace
     #endif
 
     /*******************************************************************
@@ -3685,7 +3686,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_MainScriptSize = (int16_t)_lh(addr+0x4); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_MainScriptSize", global_MainScriptSize); // iGp00001f44 aka MainScriptSize
+    DEBUG_LOG("0x%08X -> global_MainScriptSize", global_MainScriptSize); // iGp00001f44 aka MainScriptSize
     #endif
     
     /*******************************************************************
@@ -3693,7 +3694,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_LargestMissionScriptSize = (int16_t)_lh(addr-0x18); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_LargestMissionScriptSize", global_LargestMissionScriptSize); // iGp00001f50 aka LargestMissionScriptSize
+    DEBUG_LOG("0x%08X -> global_LargestMissionScriptSize", global_LargestMissionScriptSize); // iGp00001f50 aka LargestMissionScriptSize
     #endif
     
     return 1;
@@ -3702,7 +3703,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// TankControl
   if( _lw(addr + 0x50) == 0x3C04BFB2  && _lw(addr + 0x78) == 0x3C04403C ) { // FUN_00043c68_TankControl
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
     #endif
     TankControl = (void*)(addr); //
     return 1;
@@ -3710,7 +3711,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// BlowupVehiclesInPath
   if( _lw(addr + 0x38) == 0x3C053DCC  && _lw(addr + 0x58) == 0x30840080 ) { // FUN_0002eb18_blowupVehiclesInPath
     #ifdef PATCHLOG
-      logPrintf("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
+      DEBUG_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
     #endif
     BlowupVehiclesInPath = (void*)(addr); //
     return 1;
@@ -3725,7 +3726,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_mp_parameters = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); 
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_003c4fc0
+    DEBUG_LOG("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_003c4fc0
     #endif
 
     
@@ -3734,7 +3735,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_mp_1 = (int16_t)_lh(addr+0x34); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_mp_1", global_mp_1); // iGp00001704
+    DEBUG_LOG("0x%08X -> global_mp_1", global_mp_1); // iGp00001704
     #endif
     
     return 1;
@@ -3743,7 +3744,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// IsPlayerOnAMission
   if( _lw(addr + 0x1C) == 0x14860003 && _lw(addr + 0x28) == 0x34020001  ) { // FUN_0005f4f8 _CTheScripts_IsPlayerOnAMission
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> IsPlayerOnAMission()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> IsPlayerOnAMission()", addr-text_addr, addr);
     #endif
     IsPlayerOnAMission = (void*)(addr); //
   
@@ -3752,7 +3753,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_OnAMissionFlag = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_OnAMissionFlag", global_OnAMissionFlag); // iGp00001f20
+    DEBUG_LOG("0x%08X -> global_OnAMissionFlag", global_OnAMissionFlag); // iGp00001f20
     #endif
     
     return 1;
@@ -3762,7 +3763,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( _lw(addr + 0x4) == 0x8C8501C8  && _lw(addr + 0x10) == 0x30A40001 ) { // FUN_00115cd8_UpdatePosition
   //if( _lw(addr + 0x118) == 0x3C044334  && _lw(addr + 0x28) == 0x00808025 ) { // FUN_00115480_CalculateNewVelocity
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
     #endif
     HIJACK_FUNCTION(addr, UpdatePosition_patched, UpdatePosition); //
     return 1;
@@ -3783,7 +3784,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     ptr_weaponTable = (int16_t)_lh(addr+0xC); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // piGp00002950
+    DEBUG_LOG("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // piGp00002950
     #endif
     
     var_weaponDATslots   = 40; // where to find? TODO
@@ -3800,7 +3801,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_bmxjumpmult = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_bmxjumpmult", global_bmxjumpmult); // fGpffffbc34
+    DEBUG_LOG("0x%08X -> global_bmxjumpmult", global_bmxjumpmult); // fGpffffbc34
     #endif
 
     return 1;
@@ -3814,7 +3815,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x002D4100: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_policechaseheli_1", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_policechaseheli_1", addr-text_addr, addr);
     #endif
     addr_policechaseheli_1 = addr;
     return 1;
@@ -3824,7 +3825,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x001ED254: 0x34040105 '...4' - li         $a0, 0x105
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_policechaseheli_2", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_policechaseheli_2", addr-text_addr, addr);
     #endif
     addr_policechaseheli_2 = addr;
     return 1;
@@ -3834,7 +3835,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x001ED68C: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_policechaseheli_3", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_policechaseheli_3", addr-text_addr, addr);
     #endif
     addr_policechaseheli_3 = addr;
     return 1;
@@ -3844,7 +3845,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// DoHoverSuspensionRatios
   if( _lw(addr + 0x60) == 0x84A40056  && _lw(addr + 0x90) == 0x8C950000 ) { // FUN_0002f358
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
     #endif
     DoHoverSuspensionRatios = (void*)(addr); //
     return 1;
@@ -3856,7 +3857,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x002D0EF4: 0x0C05A8CE '....' - jal        sub_0016A338
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> 'garage bug fix'", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> 'garage bug fix'", addr-text_addr, addr);
     #endif
     _sw(0x00000000, addr); // nop function
     return 1;
@@ -3868,7 +3869,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x002FDDA0: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0
     *******************************************************************/
     #ifdef PATCHLOG
-    logPrintf("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     #endif
     addr_heliheight = addr; // 0x002FDDA0
     if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
@@ -3883,7 +3884,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_Wind = (int16_t)_lh(addr); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_Wind", global_Wind); // fGp0000209c
+    DEBUG_LOG("0x%08X -> global_Wind", global_Wind); // fGp0000209c
     #endif
   
     /*******************************************************************
@@ -3891,7 +3892,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     global_WindClipped = (int16_t)_lh(addr+0x20); // WITHOUT GP!!
     #ifdef PATCHLOG
-    logPrintf("0x%08X -> global_WindClipped", global_WindClipped); // fGp00001e50 
+    DEBUG_LOG("0x%08X -> global_WindClipped", global_WindClipped); // fGp00001e50 
     #endif
     
     /// nop out to stop game from setting it on its own (we take care of it in the cheat function)
@@ -3926,7 +3927,7 @@ void debugprint_patched(const char *text, ...) {
   } snprintf(logstr[0], sizeof(logstr[0]), "%s", string);
   
   /// print to log.txt as well
-  logPrintf(string); 
+  DEBUG_LOG(string); 
   
   //sceKernelPrintf(string);  
 }
@@ -4033,11 +4034,11 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   static int debug_skgstwp = 1;
   static int debug_skgstwp2 = 1;
   if( debug_skgstwp2 && debug_skgstwp == 0 ) {
-    logPrintf("[INFO] %i: sceKernelGetSystemTimeWidePatched() ran the SECOND time", getGametime());
+    DEBUG_LOG("[INFO] %i: sceKernelGetSystemTimeWidePatched() ran the SECOND time", getGametime());
     debug_skgstwp2 = 0;
   }  
   if( debug_skgstwp ) {
-    logPrintf("[INFO] %i: sceKernelGetSystemTimeWidePatched() ran the FIRST time", getGametime());
+    DEBUG_LOG("[INFO] %i: sceKernelGetSystemTimeWidePatched() ran the FIRST time", getGametime());
     debug_skgstwp = 0;
   }
   #endif
@@ -4182,9 +4183,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
   /// trigger Stock Button Cheats
   if( key_to_pad ) { // by ugly gamecode patching to make this work (easier than calling func)
-    #ifdef LOG
-    logPrintf("[INFO] %i: key_to_pad = 0x%X", getGametime(), key_to_pad );
-    #endif
+    DEBUG_LOG("[INFO] %i: key_to_pad = 0x%X", getGametime(), key_to_pad );
     setByte(addr_buttoncheat + 0x3, 0x14); //bne
     
     if( key_to_pad != 0x32 ) { // no need to set if R Trigger
@@ -4458,7 +4457,7 @@ int buttonsToActionPatched(void *a1) { // LCS & VCS
   #ifdef LOG
   static int debug_btap = 1;
   if( debug_btap ) {
-    logPrintf("[INFO] %i: buttonsToActionPatched() ran the first time", getGametime() );
+    DEBUG_LOG("[INFO] %i: buttonsToActionPatched() ran the first time", getGametime() );
     debug_btap = 0;
   }
   #endif
@@ -4500,7 +4499,7 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
   #ifdef LOG
   static int debug_cwsrp = 1;
   if( debug_cwsrp ) {
-    logPrintf("[INFO] %i: cWorldStream_Render_Patched() ran the first time", getGametime() );
+    DEBUG_LOG("[INFO] %i: cWorldStream_Render_Patched() ran the first time", getGametime() );
     debug_cwsrp = 0;
   }
   #endif
@@ -4560,7 +4559,7 @@ char *msg2 = NULL;
 void (*Loadscreen)(char * string1, char * string2, char *txdname, unsigned int param_4);
 void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned int param_4) {
   //if( txdname != NULL )
-    //logPrintf("[INFO] %i: Loadscreen_patched(%s)", getGametime(), txdname);
+    //DEBUG_LOG("[INFO] %i: Loadscreen_patched(%s)", getGametime(), txdname);
   
   /// backup debug messages for use in "DrawLoadingBar_patched"
   msg1 = string1;
@@ -4625,7 +4624,7 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned 
                     
     if( txdname != NULL ) { // load new splash (if 0 then the game uses the previously loaded)
       #ifdef LOG
-      logPrintf("[INFO] %i: Loadscreen_patched() original: '%s'", getGametime(), txdname);
+      DEBUG_LOG("[INFO] %i: Loadscreen_patched() original: '%s'", getGametime(), txdname);
       #endif  
       int i;
       for( i = 0; i < whitelist_size; i++ ) {
@@ -4633,12 +4632,12 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned 
           do {
             new = rand() % (LCS ? lcs_replacers_size : vcs_replacers_size); // decide which to use
             #ifdef LOG
-            logPrintf("[INFO] %i: Loadscreen_patched() ..random new: %i aka '%s'", getGametime(), new, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
+            DEBUG_LOG("[INFO] %i: Loadscreen_patched() ..random new: %i aka '%s'", getGametime(), new, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
             #endif  
           } while( new == prev ); // don't use the same twice (generate new if it happoens to be the same)
           prev = new;
           #ifdef LOG
-          logPrintf("[INFO] %i: Loadscreen_patched() ..replacing '%s' with '%s'!", getGametime(), txdname, (LCS ? lcs_replacers[new] : vcs_replacers[new]));  
+          DEBUG_LOG("[INFO] %i: Loadscreen_patched() ..replacing '%s' with '%s'!", getGametime(), txdname, (LCS ? lcs_replacers[new] : vcs_replacers[new]));  
           #endif
           txdname = (char *)(LCS ? lcs_replacers[new] : vcs_replacers[new]); // replace!!
         }
@@ -4669,8 +4668,8 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   //ushort *text = testfunc(param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8);
   int ret = LoadStringFromGXT(gxt_adr, string, param_3, param_4, param_5, param_6, param_7, param_8);
   
-  //logPrintf("CTextGet 0x%08X: 0x%08X %s", ret, gxt_adr, string);
-  //logPrintf("0x%08X", &string);
+  //DEBUG_LOG("CTextGet 0x%08X: 0x%08X %s", ret, gxt_adr, string);
+  //DEBUG_LOG("0x%08X", &string);
   
   #ifdef USERSCRIPTS
   #define CSTGXTS 32 // defined in main
@@ -4678,15 +4677,15 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   extern ushort custom_gxts[CSTGXTS][CSTGXTLGT];
   if( strncmp(string, "CUST_", 5) == 0 ) { // CUST_00, CUST_01, ...
     #if defined(LOG) || defined(USERSCRIPTLOG)
-    logPrintf("%s", string);
+    DEBUG_LOG("%s", string);
     #endif
     
-    //logPrintf("%c%c", string[5], string[6]);
+    //DEBUG_LOG("%c%c", string[5], string[6]);
     int x = ((string[5] - '0') * 10) + (string[6] - '0'); // sigh..
-    //logPrintf("%i", x);
+    //DEBUG_LOG("%i", x);
     
     #if defined(LOG) || defined(USERSCRIPTLOG)
-    logPrintf("0x%08X", &custom_gxts[x]);
+    DEBUG_LOG("0x%08X", &custom_gxts[x]);
     #endif
     return (int)&custom_gxts[x];
   }
@@ -4707,7 +4706,7 @@ int (*FUN_00109dac_CWaterLevel_GetWaterLevel)(float param_1,float param_2,float 
 void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {     
   FUN_001a8d9c_CPed_ProcessBuoyancy(param_1); // do buoyancy stuff first so that checkPedIsInWater() works
 
-  //logPrintf("> %.2f %.2f 0%.2f Car: 0x%08X -> 0x%08X 0x%08X 0x%08X 0x%08X 0x%02X", param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8, param_9);
+  //DEBUG_LOG("> %.2f %.2f 0%.2f Car: 0x%08X -> 0x%08X 0x%08X 0x%08X 0x%08X 0x%02X", param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8, param_9);
   
   if( fake_swimming(FUNC_GET_STATUS, -1, -1, -1) && checkPedIsInWater(pplayer) ) {
     float test[4];
@@ -5605,7 +5604,7 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
 
 void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats to default value (values from main_menu_sp)
   #ifdef LOG
-  logPrintf("[INFO] %i: load_defaults()", getGametime());
+  DEBUG_LOG("[INFO] %i: load_defaults()", getGametime());
   #endif  
   
   static int i;
@@ -5614,7 +5613,7 @@ void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats
     func = (void (*)(int calltype, int keypress, int defaultstatus, int defaultval))(menu_list[i].value);
     if( menu_list[i].conf_id != 0 && menu_list[i].def_stat != -1 ) {
       #ifdef LOG
-      logPrintf("[DEFAULT] %i: for: '0x%04X'", getGametime(), menu_list[i].conf_id);
+      DEBUG_LOG("[DEFAULT] %i: for: '0x%04X'", getGametime(), menu_list[i].conf_id);
       #endif  
       func( FUNC_SET, menu_list[i].cat, menu_list[i].def_stat, 0xDEADBEEF); // set def_stat from Menu_pack  -> the cheats have to reset themself to default value
       ///arg2: is keypress but not used by FUNC_SET -> we use it for categories)
@@ -5627,7 +5626,7 @@ void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats
 
 void exit_game() {
   #ifdef LOG
-  logPrintf("[INFO] %i: exit_game()", getGametime());
+  DEBUG_LOG("[INFO] %i: exit_game()", getGametime());
   #endif
   
   /// TODO - needs a save_thread still running check probably
@@ -6176,7 +6175,7 @@ char * readMissionNameFromSCM(int mission_number) {
   sceIoRead(fd, &buf, 0x4); // read in header
   snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); // next chunk address 
   missions = toValue(valstr); 
-  //logPrintf("total missions: %i", missions);
+  //DEBUG_LOG("total missions: %i", missions);
   
   
   if( mission_number >= missions ) {
@@ -6191,7 +6190,7 @@ char * readMissionNameFromSCM(int mission_number) {
       sceIoLseek(fd, offset, SEEK_SET);
       sceIoRead(fd, &buf, 0x4); // read in header
       snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); //next chunk address 
-      //logPrintf("offset for mission %i: 0x%08X", mission_number, toValue(valstr));
+      //DEBUG_LOG("offset for mission %i: 0x%08X", mission_number, toValue(valstr));
       break;
     }
   }
@@ -6316,7 +6315,7 @@ void mission_selector() {
     if( *(u8*)address == 'L' && *(u8*)(address+1) == 'E' ) { // first because faster
       if( strcmp("LEVSKIP", getString(address, 0)) == 0 ) {
         #ifdef LOG
-        logPrintf("LEVSKIP found @ 0x%08X in mainscript", address - script_space);
+        DEBUG_LOG("LEVSKIP found @ 0x%08X in mainscript", address - script_space);
         #endif
 
         temp = address - script_space - 2; // 2 is opcode length
@@ -8390,8 +8389,8 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
       if( defaultval > 200 ) { // 200 can be set back to 0 at some point (fix for old configs)
         val = ((float)defaultval - 1000.0f) / 10.0f; // gravity value from config eg: 1.2f for 1.2g
         #ifdef LOG
-        //logPrintf("defaultval: '0x%X'", defaultval);
-        //logPrintf("val: '%f'", val);
+        //DEBUG_LOG("defaultval: '0x%X'", defaultval);
+        //DEBUG_LOG("val: '%f'", val);
         #endif
       } else val = 1.0f;
       
@@ -9486,7 +9485,7 @@ void (*UpdatePosition)(int handle);
 void UpdatePosition_patched(int handle) {
 
   if( walking_speed(FUNC_GET_STATUS,-1,-1,-1) != 0 ) { // only if CHEAT status is ON
-    //logPrintf("walking_speed is enabled");
+    //DEBUG_LOG("walking_speed is enabled");
     if( handle == pplayer && walkspd_mult != 1.00f ) { // only for Player
       setFloat(handle+(LCS?0x4d8:0x794), getFloat(handle+(LCS?0x4d8:0x794)) * walkspd_mult);
       setFloat(handle+(LCS?0x4dc:0x798), getFloat(handle+(LCS?0x4dc:0x798)) * walkspd_mult);
@@ -9494,7 +9493,7 @@ void UpdatePosition_patched(int handle) {
   }
   
   if( pedwalking_speed(FUNC_GET_STATUS,-1,-1,-1) ) { // only if CHEAT status is ON
-    //logPrintf("pedwalking_speed is enabled");
+    //DEBUG_LOG("pedwalking_speed is enabled");
     if( handle != pplayer && pedwalkspd_mult != 1.00f ) { // only for non Player
       setFloat(handle+(LCS?0x4d8:0x794), getFloat(handle+(LCS?0x4d8:0x794)) * pedwalkspd_mult);
       setFloat(handle+(LCS?0x4dc:0x798), getFloat(handle+(LCS?0x4dc:0x798)) * pedwalkspd_mult);
@@ -9514,7 +9513,7 @@ void *walking_speed(int calltype, int keypress, int defaultstatus, int defaultva
       return (int*)status;
       
     case FUNC_GET_VALUE: // for config
-      //logPrintf("walkspd_mult: %.2f, Ergebnis = %.4f, int = %i", walkspd_mult, walkspd_mult * 100.0f, (int)(walkspd_mult * 100.0f)); //rounding tests
+      //DEBUG_LOG("walkspd_mult: %.2f, Ergebnis = %.4f, int = %i", walkspd_mult, walkspd_mult * 100.0f, (int)(walkspd_mult * 100.0f)); //rounding tests
       tval = (int)(walkspd_mult*100.0f);
       if( (tval % 5) != 0 ) tval++; // fix floats rounding error
       return (int*) tval; 
@@ -12116,11 +12115,11 @@ void test_func() { //for testing only
     //FUN_00008bd0( pcar ); //open trunk
   
   ///  VCS: Backup water level areas
-  /*logPrintf("Water: ");
+  /*DEBUG_LOG("Water: ");
   int i, j, startofwater = getInt(LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
   for( i = startofwater, j = 0; i < startofwater+0x5000; i += 0x01, j++ ) //set water everywhere  
     if( *(unsigned char*)i == 0x80 ) 
-      logPrintf("0x%X, ", j);
+      DEBUG_LOG("0x%X, ", j);
   setTimedTextbox("done", 5);*/
 
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///   

@@ -36,10 +36,7 @@ Draw Rectangles via:
 #include <stdarg.h>
 
 #include "blitn.h"
-
-#ifdef LOG
- #include "utils.h"
-#endif
+#include "logs.h"
 
 /***********
 ~w~ = white
@@ -681,9 +678,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x00077AA0 | OK!
    **************************************/
   if( _lw(addr + 0x34) == 0x24C5FEE0 && _lw(addr + 0x24) == 0x00C02025 ) { // 0x001BEE84
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> mymenurender_LCS_patched", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_LCS_patched", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, mymenurender_LCS_patched, mymenurender_LCS);
     return 1;
   }
@@ -703,9 +698,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C3F10 | OK!
    **************************************/
   if( _lw(addr - 0x4) == 0xA080001F && _lw(addr + 0x8) == 0xE48C0004 && _lw(addr + 0x10) == 0xE48D0008 && _lw(addr + 0x20) == 0xE48C000C ) { // 0x00250DF8
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetScale_LCS", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetScale_LCS", addr-text_addr, addr);
     SetScale_LCS = (void*)(addr);
     SetSlant = (void*)(addr+0x14); // FUN_00250e0c_SetSlant
     SetSlantRefPoint = (void*)(addr+0x24); // FUN_00250e1c_SetSlantRefPoint
@@ -727,9 +720,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C3F48 | OK!
    **************************************/
   if( _lw(addr - 0x4) == 0xE48D0014 && _lw(addr) == 0x00802825 && _lw(addr + 0x4) == 0x90A40000 && _lw(addr + 0x10) == 0x90A70001 ) { // 0x00250E30
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetColor", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetColor", addr-text_addr, addr);
     SetColor = (void*)(addr);
     return 1;
   }
@@ -749,9 +740,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C402C | OK!
    **************************************/
   if( _lw(addr + 0xC) == 0xA0800018 && _lw(addr + 0x10) == 0x03E00008 && _lw(addr + 0x14) == 0xA0800019 && _lw(addr + 0x18) == 0x44807000 && _lw(addr + 0x1C) == 0x3C0443F0 ) { // 0x00250F14
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetJustify(s)", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetJustify(s)", addr-text_addr, addr);
     SetRightJustifyOff = (void*)(addr);
     SetRightJustifyOn  = (void*)(addr - 0x1C); //FUN_00250ef8_
     SetCentreOff       = (void*)(addr - 0x2C); //FUN_00250ee8_
@@ -776,9 +765,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C40E8 | OK!
    **************************************/
   if( _lw(addr - 0x4) == 0xA0A4001B && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0xC) == 0xA080001B && _lw(addr + 0x10) == 0x90850000 && _lw(addr + 0x1C) == 0xA0C50028 ) { // 0x00250FD0
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetBackgroundOff", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetBackgroundOff", addr-text_addr, addr);
     SetBackgroundOff = (void*)(addr);
     return 1;
   }
@@ -798,9 +785,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C4148 | OK!
    **************************************/
   if( _lw(addr - 0x4) == 0xA080001C && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0xC) == 0x03E00008 && _lw(addr + 0x10) == 0xA0A4001D ) { // 0x00251030
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetPropOn", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetPropOn", addr-text_addr, addr);
     SetPropOn = (void*)(addr);
     SetPropOff = (void*)(addr+14);
     return 1;
@@ -821,9 +806,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C416C | OK!
    **************************************/
   if( _lw(addr) == 0x00042C00 && _lw(addr + 0xc) == 0x34060002 && _lw(addr + 0x10) == 0x14A60005 && _lw(addr + 0x18) == 0xA4850038 ) { // 0x00251054
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetFontStyle", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetFontStyle", addr-text_addr, addr);
     SetFontStyle = (void*)(addr);
     return 1;
   }
@@ -843,9 +826,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C41B4 | OK!
    **************************************/
   if( _lw(addr - 0x3C) == 0x34060002 && _lw(addr + 0x10) == 0x00802825 &&  _lw(addr + 0xB4) == 0x00000000 ) { // 0x0025109c
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetDropShadowPosition & SetDropColor", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetDropShadowPosition & SetDropColor", addr-text_addr, addr);
     SetDropShadowPosition = (void*)(addr);
     SetDropColor = (void*)(addr + 0x10);
     return 1;
@@ -866,9 +847,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x001C54B8 | OK!
    **************************************/
   if( _lw(addr - 0x6C) == 0x0211A02B && _lw(addr - 0xD8) == 0x0211A02B ) { // 0x00252AD4
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> PrintString_LCS", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> PrintString_LCS", addr-text_addr, addr);
     PrintString_LCS = (void*)(addr);
     return 1;
   }
@@ -891,9 +870,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    **************************************/
   if( (_lw(addr - 0x20) == 0x3C05C974 &&_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025) &&  // 0x001F9378
       (_lw(addr + 0x4C) == 0x27A50010 || _lw(addr + 0x34) == 0x00003825) ) {  // rest || ULUS v1.02
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
     SetBoxCoords = (void*)(addr);
     return 1;
   }
@@ -913,9 +890,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 | 0x0017C10C | OK!
    **************************************/
   if( _lw(addr+0x20) == 0x02004025 && _lw(addr + 0x8) == 0x30C900FF && _lw(addr + 0x64) == 0x3404000C /*0x3404000A for VCS*/ ) {  // 0x002CFDD0
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
     DrawRect = (void*)(addr);
     return 1;
   }
@@ -936,8 +911,8 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    **************************************/
   if( _lw(addr+0x4) == 0x3C0443F0 && _lw(addr + 0x44) == 0x3C0443F0 && _lw(addr + 0x68) == 0x00000000 ) {
     #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetRightJustifyWrap", addr-text_addr, addr);
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetWrapx", addr+0x40-text_addr, addr+0x40);
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetRightJustifyWrap", addr-text_addr, addr);
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetWrapx", addr+0x40-text_addr, addr+0x40);
     #endif
     SetRightJustifyWrap = (void*)(addr); // 0x00250F2C
     SetWrapx = (void*)(addr+0x40); // 0x00250f6c
@@ -963,9 +938,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x0012A07C | OK!
    **************************************/
   if( _lw(addr - 0xB0) == 0x34060001 && _lw(addr + 0x98) == 0x28A60000  && _lw(addr + 0xD0) == 0x00003825 ) {
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> mymenurender_VCS_patched", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_VCS_patched", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, mymenurender_VCS_patched, mymenurender_VCS); // 0x01325bc
     return 1;
   }
@@ -978,9 +951,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002FF87C | OK!
    **************************************/
   if( _lw(addr - 0x4) == 0x27BD0010 && _lw(addr) == 0x27BDFFE0 && _lw(addr + 0x4) == 0xAFB00014 && _lw(addr + 0x8) == 0x341000FF ) {
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> ResetFontStyling", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> ResetFontStyling", addr-text_addr, addr);
     ResetFontStyling = (void*)(addr); // 0x0030805C
     return 1;
   }
@@ -993,9 +964,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002FF958 | OK!
    **************************************/
   if( _lw(addr + 0x30) == 0x00409825 && _lw(addr + 0x54) == 0x00404825 ) {
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> PrintString_VCS", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> PrintString_VCS", addr-text_addr, addr);
     PrintString_VCS = (void*)(addr); // 0x00308138
     return 1;
   }
@@ -1008,9 +977,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002FFCB8 | OK!
    **************************************/
   if( _lw(addr) == 0x03E00008 && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0x20) == 0x90840003 ) {
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetFontStyle, SetColor, SetScale_VCS, ...", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetFontStyle, SetColor, SetScale_VCS, ...", addr-text_addr, addr);
     SetFontStyle = (void*)(addr); // 0x308498
     SetColor = (void*)(addr+0x10); // 0x3084A8
     SetTextBounds = (void*)(addr+0x3C); // 0x3084d4
@@ -1020,9 +987,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
     return 1;
   }
   if( _lw(addr+0x20) == 0x00052880 && _lw(addr + 0x68) == 0x00052880 && _lw(addr + 0x6C) == 0x00852021 ) { // JP only: 0x000FCE10
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetTextSpaceing, SetTextOriginPoint (JP only)", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetTextSpaceing, SetTextOriginPoint (JP only)", addr-text_addr, addr);
      SetTextSpaceing = (void*)(addr); // sub_000FCE10
      SetTextOriginPoint = (void*)(addr+0x48); // sub_000FCE58
     return 1;
@@ -1040,9 +1005,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    **************************************/
   if( (_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 && _lw(addr - 0x24 ) == 0x00801025) && // also LCS !!
     (_lw(addr + 0x34 ) == 0x00003825 || _lw(addr + 0x4C ) == 0x00402025) ) { // rest || JP
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
     SetBoxCoords = (void*)(addr);
     return 1;
   }
@@ -1055,9 +1018,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002EBC20 | OK!
    **************************************/
   if( _lw(addr+0x20) == 0x02004025 && _lw(addr+0x8) == 0x30C900FF && _lw(addr+0x64) == 0x3404000A /* 0x3404000C for LCS*/ ) {
-    #ifdef LOG
-    logPrintf("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
-    #endif
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
     DrawRect = (void*)(addr);
     return 1;
   }
@@ -1068,7 +1029,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
 
 int initTextBlit(u32 text_addr, u32 text_size) {
   #ifdef LOG
-  logPrintf("\nblitn: start..");
+  DEBUG_LOG("\nblitn: start..");
   #endif
 
   gta_version = -1;
@@ -1087,14 +1048,12 @@ int initTextBlit(u32 text_addr, u32 text_size) {
   }
 
   if( gta_version == -1 ) {
-    #ifdef LOG
-    logPrintf("blitn: ..error!\n");
-    #endif
+    DEBUG_LOG("blitn: ..error!\n");
     return -1; // error
   }
 
   #ifdef LOG
-  logPrintf("blitn: ..success! (%s)\n", gta_version ? "LCS" : "VCS");
+  DEBUG_LOG("blitn: ..success! (%s)\n", gta_version ? "LCS" : "VCS");
   #endif
   return 0;
 }

@@ -1462,7 +1462,7 @@ void setBit(int adr, char bit, char boolean) { // 1bit
   } else {
     setTimedTextbox("~r~Error: setBit()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setBit(0x%X, 0x%X, 0x%X)", getGametime(), adr, bit, boolean);
+    DEBUG_LOG("[ERROR] %i: setBit(0x%X, 0x%X, 0x%X)", getGametime(), adr, bit, boolean);
     #endif  
   }
   #endif
@@ -1477,7 +1477,7 @@ int getBit(int adr, int bit) {
   } else { 
     setTimedTextbox("~r~Error: getBit()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getBit(0x%X, %i)", getGametime(), adr, bit);
+    DEBUG_LOG("[ERROR] %i: getBit(0x%X, %i)", getGametime(), adr, bit);
     #endif
   }
   return 0;
@@ -1493,7 +1493,7 @@ void setByte(int adr, unsigned char value) { // 8bit (unsigned 0-255)
   } else {
     setTimedTextbox("~r~Error: setByte()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setByte(0x%X, 0x%X)", getGametime(), adr, value);
+    DEBUG_LOG("[ERROR] %i: setByte(0x%X, 0x%X)", getGametime(), adr, value);
     #endif  
   }
   #endif
@@ -1508,7 +1508,7 @@ unsigned char getByte(int adr) { // 8bit (unsigned 0-255)
   } else { 
     setTimedTextbox("~r~Error: getByte()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getByte(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: getByte(0x%X)", getGametime(), adr);
     #endif
   }
   return 0;
@@ -1524,7 +1524,7 @@ void setNibbleLow(int adr, unsigned char value) { // set 4bit
   } else {
     setTimedTextbox("~r~Error: setNibbleLow()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setNibbleLow(0x%X, 0x%X)", getGametime(), adr, value);
+    DEBUG_LOG("[ERROR] %i: setNibbleLow(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
   #endif
@@ -1539,7 +1539,7 @@ unsigned char getNibbleLow(int adr) { //get lower 4bit converted to char
   } else { 
     setTimedTextbox("~r~Error: getNibbleLow()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getNibbleLow(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: getNibbleLow(0x%X)", getGametime(), adr);
     #endif
   }
   return 0;
@@ -1555,7 +1555,7 @@ void setNibbleHigh(int adr, unsigned char value) { //set 4bit
   } else {
     setTimedTextbox("~r~Error: setNibbleHigh()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setNibbleHigh(0x%X, 0x%X)", getGametime(), adr, value);
+    DEBUG_LOG("[ERROR] %i: setNibbleHigh(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
   #endif
@@ -1570,7 +1570,7 @@ unsigned char getNibbleHigh(int adr) {
   } else { 
     setTimedTextbox("~r~Error: getNibbleHigh()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getNibbleHigh(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: getNibbleHigh(0x%X)", getGametime(), adr);
     #endif
   }
   return 0;
@@ -1586,7 +1586,7 @@ void setShort(int adr, short value) { // 16bit
   } else {
     setTimedTextbox("~r~Error: setShort()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setShort(0x%X, 0x%X)", getGametime(), adr, value);
+    DEBUG_LOG("[ERROR] %i: setShort(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
   #endif
@@ -1601,7 +1601,7 @@ short getShort(int adr) { // 16bit
   } else { 
     setTimedTextbox("~r~Error: getShort()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getShort(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: getShort(0x%X)", getGametime(), adr);
     #endif
   }
   return 0;
@@ -1617,7 +1617,7 @@ void setInt(int adr, int value) { // 32bit
   } else {
     setTimedTextbox("~r~Error: setInt()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setInt(0x%X, 0x%X)", getGametime(), adr, value);
+    DEBUG_LOG("[ERROR] %i: setInt(0x%X, 0x%X)", getGametime(), adr, value);
     #endif
   }
   #endif
@@ -1632,7 +1632,7 @@ int getInt(int adr) { // 32bit
   } else {
     setTimedTextbox("~r~Error: getInt()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getInt(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: getInt(0x%X)", getGametime(), adr);
     #endif
   }
   return 0;
@@ -1648,7 +1648,7 @@ void setFloat(int adr, float value) { // 32bit
   } else {
     setTimedTextbox("~r~Error: setFloat()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setFloat(0x%X, %f)", getGametime(), adr, value);
+    DEBUG_LOG("[ERROR] %i: setFloat(0x%X, %f)", getGametime(), adr, value);
     #endif
   }
   #endif
@@ -1663,7 +1663,7 @@ float getFloat(int adr) { // 32bit
   } else {
     setTimedTextbox("~r~Error: getFloat()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getFloat(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: getFloat(0x%X)", getGametime(), adr);
     #endif
   }
   return 0.0f;
@@ -1687,7 +1687,7 @@ void setString(int adr, char* string, int mode) { // mode = 1 (where every secon
   } else { 
     setTimedTextbox("~r~Error: setString()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: setString(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: setString(0x%X)", getGametime(), adr);
     #endif
   }
   #endif  
@@ -1709,7 +1709,7 @@ char *getString(int adr, int mode) { // mode = 1 (where every second is a char)
   } else { 
     setTimedTextbox("~r~Error: getString()", 5.00f);
     #ifdef MEMLOG
-    logPrintf("[ERROR] %i: getString(0x%X)", getGametime(), adr);
+    DEBUG_LOG("[ERROR] %i: getString(0x%X)", getGametime(), adr);
     #endif
   }
   #endif  
@@ -1729,7 +1729,7 @@ unsigned char *getSavedataKey() {
   }
   
   #ifdef LOG
-  logPrintf("[SAVEDITOR] gamekey: '%s'", key);
+  DEBUG_LOG("[SAVEDITOR] gamekey: '%s'", key);
   #endif
     
   return key;
@@ -2267,7 +2267,7 @@ void setHeliHeightLimit(float height) {
   int local = 0;
   memcpy(&local, &height, sizeof(int));
   short upper = local >> 16;
-  //logPrintf("local = 0x%08X, upper = 0x%04X", local, upper);
+  //DEBUG_LOG("local = 0x%08X, upper = 0x%04X", local, upper);
   setShort(addr_heliheight, upper); // 80.0f is default
   
   /// In ARK-4 when high memory is enabled the height value was out of the calculated bounds (and thus getInt fails) -> this should work now but I reworked it anyways
@@ -2490,7 +2490,7 @@ void removeMapIcon(int mapicon_base_adr) {
   setByte(i+(LCS ? 0x30 : 0x2A), 0x01); // set default empty 
   setByte(i+(LCS ? 0x35 : 0x2C), 0xFF); // set default empty 
   
-  // logPrintf("removeMapIcon() 0x%08X", mapicon_base_adr);
+  // DEBUG_LOG("removeMapIcon() 0x%08X", mapicon_base_adr);
 }
 
 void removeAllMapIcons() {
@@ -2503,9 +2503,9 @@ void removeAllMapIcons() {
 void removeAllCustomMapIcons() { // zeroes only the custom created ones!!!
   int i, j;
   for( i = 0, j = (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
-    // logPrintf("removeAllCustomMapIcons() loop %i 0x%08X", i, j);
+    // DEBUG_LOG("removeAllCustomMapIcons() loop %i 0x%08X", i, j);
     if( getByte(j+(LCS ? 0x4F : 0x2F)) == 0x01 ) { // my watermark to be a custom
-      // logPrintf("its a custom %X", getByte(j+(LCS ? 0x4F : 0x2F)));
+      // DEBUG_LOG("its a custom %X", getByte(j+(LCS ? 0x4F : 0x2F)));
       removeMapIcon(j);
     }
   }
@@ -2896,7 +2896,7 @@ void setLastButtonPressedInHistory(char button) {
  
 void activateCheatCode(char a, char b, char c, char d, char e, char f, char g, char h) {
   #ifdef LOG
-  logPrintf("activateCheatCode(%X %X %X %X %X %X %X %X )", a, b, c, d, e, f, g, h);
+  DEBUG_LOG("activateCheatCode(%X %X %X %X %X %X %X %X )", a, b, c, d, e, f, g, h);
   #endif  
   setLastButtonPressedInHistory(a);
   setLastButtonPressedInHistory(b);
@@ -3325,7 +3325,7 @@ void CustomScriptExecute(int address) {
   ****************************************/
 
   int loadadr = address - getInt(global_ScriptSpace + (LCS ? 0 : gp)); // address of script relative to script space (negative not intended but works! as long as no jumps!!!)
-  //logPrintf("StartNewScript @ 0x%08X (0x%08X)", loadadr, address);
+  //DEBUG_LOG("StartNewScript @ 0x%08X (0x%08X)", loadadr, address);
   StartNewScript(loadadr);
 }
 
