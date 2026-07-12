@@ -41,13 +41,22 @@
 #include "config.h"
 #include "functions.h"
 #include "lang.h"
+#include "versioning.h"
 
 #ifdef NAMERESOLV
   #include "minIni.h"
 #endif
 
 #ifndef __INTELLISENSE__
-PSP_MODULE_INFO("CheatDeviceRemastered", PSP_MODULE_USER, 1, 0); // user
+PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
+
+// Stop linker from linking "Kernel_library" which seems to cause issues ("library not found" error)
+int sceKernelLockLwMutex( SceLwMutexWorkarea *workarea __attribute__((unused)), 
+                          int lockCount __attribute__((unused)), 
+                          unsigned int *pTimeout __attribute__((unused))) { return 0; }
+
+int sceKernelUnlockLwMutex( SceLwMutexWorkarea *workarea __attribute__((unused)),
+                            int lockCount __attribute__((unused))) { return 0; }
 #endif
 
 
@@ -5931,7 +5940,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   void *(* surrent_get)(int, int);
   
   /// title
-  snprintf(buffer, sizeof(buffer), _t("CheatDevice Remastered %s by Freakler"), VERSION);
+  snprintf(buffer, sizeof(buffer), _t("%s %s by %s"), PLUGIN_NAME, VERSION, PLUGIN_AUTHOR);
   drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE);
   
   /// GameID & version
