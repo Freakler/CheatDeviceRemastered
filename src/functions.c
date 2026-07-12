@@ -26,11 +26,12 @@
 #include "minIni.h"
 #endif
 
-#include "main.h" // for LOG, MEMCHECK, NAMERESOLV etc
-#include "utils.h" // for LOG
+#include "main.h" // MEMCHECK, NAMERESOLV etc
+#include "utils.h"
 #include "cheats.h" // for using hooked functions
 #include "functions.h"
 #include "blitn.h"
+#include "logs.h"
 
 
 register int gp asm("gp"); 
@@ -1728,9 +1729,7 @@ unsigned char *getSavedataKey() {
     key[0x10] = 0x00;
   }
   
-  #ifdef LOG
   DEBUG_LOG("[SAVEDITOR] gamekey: '%s'", key);
-  #endif
     
   return key;
 }
@@ -2895,9 +2894,7 @@ void setLastButtonPressedInHistory(char button) {
 }
  
 void activateCheatCode(char a, char b, char c, char d, char e, char f, char g, char h) {
-  #ifdef LOG
-  DEBUG_LOG("activateCheatCode(%X %X %X %X %X %X %X %X )", a, b, c, d, e, f, g, h);
-  #endif  
+  DEBUG_LOG("activateCheatCode(%X %X %X %X %X %X %X %X )", a, b, c, d, e, f, g, h);  
   setLastButtonPressedInHistory(a);
   setLastButtonPressedInHistory(b);
   setLastButtonPressedInHistory(c);

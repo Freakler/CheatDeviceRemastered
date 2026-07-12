@@ -910,10 +910,8 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
    * ULUX-80146 v0.02 |
    **************************************/
   if( _lw(addr+0x4) == 0x3C0443F0 && _lw(addr + 0x44) == 0x3C0443F0 && _lw(addr + 0x68) == 0x00000000 ) {
-    #ifdef LOG
     DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetRightJustifyWrap", addr-text_addr, addr);
     DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetWrapx", addr+0x40-text_addr, addr+0x40);
-    #endif
     SetRightJustifyWrap = (void*)(addr); // 0x00250F2C
     SetWrapx = (void*)(addr+0x40); // 0x00250f6c
     SetCentreSize = (void*)(addr+0x80); // FUN_00250fac_SetCentreSize
@@ -1028,9 +1026,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
 
 
 int initTextBlit(u32 text_addr, u32 text_size) {
-  #ifdef LOG
   DEBUG_LOG("\nblitn: start..");
-  #endif
 
   gta_version = -1;
 
@@ -1052,8 +1048,6 @@ int initTextBlit(u32 text_addr, u32 text_size) {
     return -1; // error
   }
 
-  #ifdef LOG
   DEBUG_LOG("blitn: ..success! (%s)\n", gta_version ? "LCS" : "VCS");
-  #endif
   return 0;
 }

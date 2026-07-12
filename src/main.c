@@ -75,8 +75,6 @@ static const char memwarning[] = "~r~Warning! ~w~The Game is running low on memo
 
 const char *basefolder  = "ms0:/PSP/PLUGINS/cheatdevice_remastered/";
 
-const char file_log[] = "log.txt";
-
 #ifdef CONFIG
 static const char file_config[] = "cheatdevice_remastered.cfg";
 #endif
@@ -572,9 +570,7 @@ char cheatnames[CHEATSPERTXT][CHEATNAMELGT]; // cheat names in current txt
 
 
 int usercheats_create() {
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: usercheats_create()", getGametime());
-  #endif
   
   resetMeta(); // because used for other scripts too
   
@@ -1213,9 +1209,7 @@ static int userscripts_update_array()
   
 
 int userscripts_create() {
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: userscript_create()", getGametime());
-  #endif
 
   resetMeta(); // because used for other cheats too
   
@@ -1661,7 +1655,7 @@ static int userscripts_ctrl() {
       if( is_file_userscript(currentfile) ) {
         closeMenu();  
         
-        #if defined(LOG) || defined(USERSCRIPTLOG)
+        #if defined(USERSCRIPTLOG)
         DEBUG_LOG("UserScript: %s\n", currentfile);
         #endif
         
@@ -1788,7 +1782,7 @@ static int userscripts_ctrl() {
                   snprintf(tempbuf, sizeof(tempbuf), "0x%s", token);
                   opcode = strtol(tempbuf, NULL, 0);
                   
-                  #if defined(LOG) || defined(USERSCRIPTLOG)
+                  #if defined(USERSCRIPTLOG)
                   DEBUG_LOG("opcode: 0x%04X", opcode);
                   #endif  
                   
@@ -1807,7 +1801,7 @@ static int userscripts_ctrl() {
                   
                   if( token[0] != '\0' ) {
                     
-                    #if defined(LOG) || defined(USERSCRIPTLOG)
+                    #if defined(USERSCRIPTLOG)
                     DEBUG_LOG("arg_%i: '%s'", counter, token);
                     #endif  
                     
@@ -1974,7 +1968,7 @@ static int userscripts_ctrl() {
                           if( *(u8*)address == token[0] && *(u8*)(address+1) == token[1] ) { // first because faster
                             //DEBUG_LOG("'%s' vs '%s'", token, getString(address, 0));
                             if( strcmp(token, getString(address, 0)) == 0 ) {
-                              #if defined(LOG) || defined(USERSCRIPTLOG)
+                              #if defined(USERSCRIPTLOG)
                               DEBUG_LOG("string '%s' found @ 0x%08X in mainscript", token, address - script_space);
                               #endif
                               
@@ -2045,14 +2039,14 @@ static int userscripts_ctrl() {
                       } else 
                         strncpy(identifier, token, strlen(token)-1);
                       
-                      #if defined(LOG) || defined(USERSCRIPTLOG)
+                      #if defined(USERSCRIPTLOG)
                       DEBUG_LOG("String found: '%s'", identifier);
                       #endif
                       
                       extern u32 ptr_gxtloadadr;
                       if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) ) { // not found in GXT
 
-                        #if defined(LOG) || defined(USERSCRIPTLOG)
+                        #if defined(USERSCRIPTLOG)
                         DEBUG_LOG("not found in GXT.."); // could be custom string or special string at this point
                         #endif
                       
@@ -2081,7 +2075,7 @@ static int userscripts_ctrl() {
                           //opcode == 0x0006
                           
                           ) { 
-                          #if defined(LOG) || defined(USERSCRIPTLOG)
+                          #if defined(USERSCRIPTLOG)
                           DEBUG_LOG("-> special game string! don't touch");
                           #endif
                           // do nothing
@@ -2096,7 +2090,7 @@ static int userscripts_ctrl() {
                               custom_gxts[customtextcounter][ctr] = identifier[ctr];
                               ctr++;
                             }
-                            #if defined(LOG) || defined(USERSCRIPTLOG)
+                            #if defined(USERSCRIPTLOG)
                             DEBUG_LOG("-> custom string! %d (location 0x%08X)", customtextcounter, &custom_gxts[customtextcounter]);
                             #endif
                             
@@ -2113,7 +2107,7 @@ static int userscripts_ctrl() {
                         }
                       }
                       
-                      #if defined(LOG) || defined(USERSCRIPTLOG)
+                      #if defined(USERSCRIPTLOG)
                       DEBUG_LOG("");
                       #endif
                       
@@ -2275,13 +2269,13 @@ static int userscripts_ctrl() {
                         if( strcmp(token, "and") == 0 ) {
                           script[pos++] = 0x07; // int  -128 to 127
                           script[pos++] = 0x00; // 0x00 + number of and conditions (eg 0x4 = 4)
-                          #if defined(LOG) || defined(USERSCRIPTLOG)
+                          #if defined(USERSCRIPTLOG)
                           DEBUG_LOG("Number of conditions will be adjusted later!");
                           #endif
                         } else if( strcmp(token, "or") == 0 ) {
                           script[pos++] = 0x07; // int  -128 to 127
                           script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
-                          #if defined(LOG) || defined(USERSCRIPTLOG)
+                          #if defined(USERSCRIPTLOG)
                           DEBUG_LOG("Number of conditions will be adjusted later!");
                           #endif
                         }
@@ -2290,7 +2284,7 @@ static int userscripts_ctrl() {
                       if( lastif != -1 ) { // if "lastif" is not -1 then previously there was an "if and" or "if or" opcode which still needs its conditions parameter set!
                         if( opcode == 0x004C || opcode == 0x004D || opcode == 0x0021 || opcode == 0x0022 ) { // set it once we reached "goto_if_false" or "goto_if_true"
                           script[lastif] = script[lastif] + opcodessinceif; // add
-                          #if defined(LOG) || defined(USERSCRIPTLOG)
+                          #if defined(USERSCRIPTLOG)
                           DEBUG_LOG("Last 'if' has %d conditions and is now set!", opcodessinceif);
                           #endif
                           lastif = -1; // reset
@@ -2353,7 +2347,7 @@ static int userscripts_ctrl() {
                 
               **************/
               
-              #if defined(LOG) || defined(USERSCRIPTLOG)
+              #if defined(USERSCRIPTLOG)
               DEBUG_LOG("--------------------------------------");
               #endif  
               
@@ -2373,7 +2367,7 @@ static int userscripts_ctrl() {
               
               /// error check: label-name already in array
               for( k = 0; k < label_pos_cur; k++ ) { // loop found labels array
-                #if defined(LOG) || defined(USERSCRIPTLOG)
+                #if defined(USERSCRIPTLOG)
                 DEBUG_LOG("comparing for doubles: '%s' with '%s'", token, label_ch_arr[k]);
                 #endif  
                 if( strcmp(token, label_ch_arr[k]) == 0 ) { // label matches
@@ -2479,7 +2473,7 @@ static int userscripts_ctrl() {
           sceIoClose(file);
 
 
-          #if defined(LOG) || defined(USERSCRIPTLOG)
+          #if defined(USERSCRIPTLOG)
           DEBUG_LOG("\nLABELs: %i/%i", label_pos_cur, SUPPORT_LABEL);
           for( i = 0; i < SUPPORT_LABEL; i++ ) {
             if( strlen(label_ch_arr[i]) == 0 ) break;
@@ -2509,18 +2503,18 @@ static int userscripts_ctrl() {
                   (script[i+3] == *(unsigned char*)(adr+2)) &&
                   (script[i+4] == *(unsigned char*)(adr+3)) ) {
                   
-                  #if defined(LOG) || defined(USERSCRIPTLOG)
+                  #if defined(USERSCRIPTLOG)
                   DEBUG_LOG("\nfound placeholder at script position %i", i);
                   #endif  
                   
                   /// replace placeholder
                   for(k = 0; k < label_pos_cur; k++ ) { // loop found labels array
-                    #if defined(LOG) || defined(USERSCRIPTLOG)
+                    #if defined(USERSCRIPTLOG)
                     DEBUG_LOG("comparing: '%s' with '%s'", unk_label[j], label_ch_arr[k]);
                     #endif  
                     
                     if( strcmp(unk_label[j], label_ch_arr[k]) == 0 ) { // label matches
-                      #if defined(LOG) || defined(USERSCRIPTLOG)
+                      #if defined(USERSCRIPTLOG)
                       //DEBUG_LOG("labels match: '%s' (to be replaced with; 0x%08X)", unk_label[j], 0 - label_pos_arr[k]);
                       DEBUG_LOG("labels match: '%s' (to be replaced with; 0x%08X)", unk_label[j], roff + label_pos_arr[k]);
                       #endif  
@@ -2550,13 +2544,13 @@ static int userscripts_ctrl() {
             }
           }
           
-          #if defined(LOG) || defined(USERSCRIPTLOG)
+          #if defined(USERSCRIPTLOG)
           DEBUG_LOG("\nscript size: %i/%i", pos, SCRIPT_SIZE);
           #endif  
           
           CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
           
-          #if defined(LOG) || defined(USERSCRIPTLOG)
+          #if defined(USERSCRIPTLOG)
           char tempbuffffff[256]; // quick temp printout (which also crashes for bigger scripts)
           memset(&tempbuffffff, 0, sizeof(tempbuffffff)); 
           for( i = 0; i < (pos < 256 ? pos : 256); i++ ) // otherwise crash of emulator
@@ -2662,9 +2656,7 @@ static void optionAdjust() {
 }
 
 int editor_create(int mode, int toptions, const char *editortitle, const Editor_pack *editor_menu, int first_obj, int block_size, int blocks) {
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: editor_create() ..'%s'", getGametime(), editortitle);
-  #endif
   
   snprintf(editor_titlebuffer, sizeof(editor_titlebuffer), "Editor - %s", _t(editortitle));
     
@@ -4213,9 +4205,7 @@ static int protofix = 0, protofix2 = 0; // todo make dynamic?!
 extern u32 global_camera;
 
 int freecam_create() {
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: freecam_create()", getGametime());
-  #endif
   
   if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) // ULUX v0.02 & ULUS v1.02
     protofix = -0x10;
@@ -4498,9 +4488,7 @@ static void add_adr_to_history(int address) { // new addresses added to beginnin
 }
 
 int address_create() {
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: address_create()", getGametime());
-  #endif
   
   flag_address = 1; // only set here!
   addresspos = 0;
@@ -4823,9 +4811,7 @@ void hex_marker_clear() {
   
   
 int hexeditor_create(int address, int mode, int low, int high, const char *infostring) { // init HexEditor
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: hexeditor_create(%s)", getGametime(), infostring);
-  #endif
   
   if( address >= memory_low && address <= memory_high ) 
     hex_adr = address;
@@ -5554,9 +5540,7 @@ void draw() { // called by hijacked game function
 }
 
 void closeMenu() { // can be called by cheat (see teleport)
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: closeMenu() called", getGametime());
-  #endif
   flag_menu_running = 0; // trigger closing cheat device menu
   flag_keys_disable = 0; // free keys to work in-game again
   
@@ -5684,9 +5668,7 @@ void buttonInput() { // called by hijacked game function
 
     
     if( ((current_buttons & open_key ) == open_key) && current_buttons != old_buttons ) {
-      #ifdef LOG
       DEBUG_LOG("[INFO] %i: closing menu via L + UP", getGametime());
-      #endif  
       flag_menu_running = 0; // stop menu
       flag_keys_disable = 0; // set keys work in-game & for menu
       
@@ -5699,9 +5681,7 @@ void buttonInput() { // called by hijacked game function
     }
   
     if( ((current_buttons & open_key_alt ) == open_key_alt) && current_buttons != old_buttons ) {
-      #ifdef LOG
       DEBUG_LOG("[INFO] %i: closing menu via L + DOWN", getGametime());
-      #endif    
       flag_menu_running = 0; // stop menu
       flag_keys_disable = 0; // set keys work in-game & for menu
       
@@ -5719,9 +5699,7 @@ void buttonInput() { // called by hijacked game function
                 
       /// Normal Mode ( L + UP )
       if( flag_menu_start == 1 || (((current_buttons & open_key ) == open_key) && current_buttons != old_buttons )) { //) && (pressed_buttons &
-        #ifdef LOG
         DEBUG_LOG("[INFO] %i: starting menu", getGametime());
-        #endif
         flag_menu_start = 0;   // reset
         flag_keys_disable = 1; // set keys exlusive for menu
         flag_menu_running = 1; // start menu
@@ -5729,9 +5707,7 @@ void buttonInput() { // called by hijacked game function
           
       /// Don't Eat Keys Mode ( L + DOWN )
       if( flag_menu_start == 2 || (((current_buttons & open_key_alt ) == open_key_alt) && current_buttons != old_buttons )) {
-        #ifdef LOG
         DEBUG_LOG("[INFO] %i: starting menu (without key eating)", getGametime());
-        #endif
         flag_menu_start = 0;   // reset
         flag_keys_disable = 0; // set keys work in-game & for menu
         flag_menu_running = 1; // start menu
@@ -5773,9 +5749,7 @@ void applyCheats() { // called by hijacked game function
 }
 
 void applyOnce() { //called by hijacked game function
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: applyOnce()", getGametime());
-  #endif
   
   #ifdef PREVIEW
   if( LCS ) {
@@ -5884,9 +5858,7 @@ void applyOnce() { //called by hijacked game function
   //if( LCS )
     //spawnPickup(0x10F, 0x3, 0xA, float x, float y, float z); // teargas in ssv pool like in alpha
 
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: applyOnce() done!", getGametime());
-  #endif
 }
 
 
@@ -6353,9 +6325,7 @@ char hashbuffer[32];
 int name_resolver_status = -1;
 
 int name_resolver(SceSize args, void *argp) {
-  #ifdef LOG
   DEBUG_LOG("[INFO] name_resolver Thread started");
-  #endif
   
   char hashstr[16];  
   name_resolver_status = 1;
@@ -6367,9 +6337,7 @@ int name_resolver(SceSize args, void *argp) {
       
       ini_gets( LCS ? "NAMES_LCS" : "NAMES_VCS", hashstr, "unknown", hashbuffer, 32, buffer); //
       
-      #ifdef LOG
       DEBUG_LOG("[INFO] %i: name_resolver(0x%08X) loaded '%s'", getGametime(), hash_to_check, hashbuffer);
-      #endif
       
       last_hash = hash_to_check;
     }
@@ -6382,9 +6350,7 @@ int name_resolver(SceSize args, void *argp) {
 #endif
 
 static int patch() {
-  #ifdef LOG
   DEBUG_LOG("[INFO] found 'GTA3' module! mod_text_addr = 0x%08X, text_size = 0x%08X, data_size = 0x%08X", mod_text_addr, mod_text_size, mod_data_size);
-  #endif
 
   /// blacklist
   if( mod_text_size == 0x00386750 && mod_data_size == 0x0001F7E0) { // ULJM-05297_v1.01
@@ -6443,9 +6409,7 @@ static int patch() {
   * ULET-00417_v0.07  text_size = 0x003868BC, data_size = 0x0001F85C
   *****************************************************************/
   
-  #ifdef LOG
   DEBUG_LOG("\n> searching & patching EBOOT..");
-  #endif
   u32 i;
   int lcs_counter = 0, vcs_counter = 0;
   for( i = 0; i < mod_text_size; i += 4 ) {
@@ -6465,9 +6429,7 @@ static int patch() {
   }
   
   /// error check
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i LCS & %i VCS locations found", lcs_counter, vcs_counter);
-  #endif
   if( lcs_counter > 0 && vcs_counter > 0 ) { // error check
     DEBUG_LOG("[ERROR] both counters found something");
     return -1;
@@ -6479,26 +6441,20 @@ static int patch() {
   
   
   /// set default cheat text color
-  #ifdef LOG
-  DEBUG_LOG("\n> setting default color..");
-  #endif  
+  DEBUG_LOG("\n> setting default color..");  
   COLOR_CHEAT_OFF = LCS ? CHDVC_ORANGE : CHDVC_AZURE;
 
   
   /// set default start address for HexEditor
   #ifdef HEXEDITOR  
-  #ifdef LOG
-  DEBUG_LOG("\n> setting default hexeditor address..");
-  #endif  
+  DEBUG_LOG("\n> setting default hexeditor address..");  
   hex_adr = mod_text_addr + mod_text_size + mod_data_size;
   add_adr_to_history(mod_text_addr); //
   #endif
   
   
   /// config read/create & default values
-  #ifdef LOG
-  DEBUG_LOG("\n> setting menu and cheat defaults.. (plus config)");
-  #endif  
+  DEBUG_LOG("\n> setting menu and cheat defaults.. (plus config)");  
   load_defaults(main_menu, menu_size); // to be save
   #ifdef CONFIG
   if( doesFileExist(config) ) 
@@ -6562,9 +6518,7 @@ static int patch() {
     
     SceUID thid = sceKernelCreateThread("name_resolver", name_resolver, 0x18, 0x1000, PSP_THREAD_ATTR_USER, NULL);
     if( thid < 0 ) {
-      #ifdef LOG
       DEBUG_LOG("[INFO] Error, could not create thread\n");
-      #endif  
       sceKernelSleepThread();
     }
     sceKernelStartThread(thid, 0, NULL);
@@ -6577,9 +6531,7 @@ static int patch() {
   
   
   /// read TitleID & version from PARAM.SFO - todo
-  /*#ifdef LOG
-    DEBUG_LOG("[INFO] Reading PARAM.SFO\n");
-  #endif  
+  /*  DEBUG_LOG("[INFO] Reading PARAM.SFO\n");  
   if( doesFileExist("disc0:/PSP_GAME/PARAM.SFO") ) {
     //https://github.com/PSP-Archive/TNmenu/blob/main/utils.c#L200
     //https://github.com/DaveeFTW/Chronoswitch/blob/master/src/main.c#L53
@@ -6594,9 +6546,7 @@ static int patch() {
   #endif
   
 
-  #ifdef LOG
-  DEBUG_LOG("\n> Setup all done! Starting game..\n");
-  #endif  
+  DEBUG_LOG("\n> Setup all done! Starting game..\n");  
   
   return 0; //success
 }
@@ -6675,28 +6625,20 @@ int OnModuleStart(SceModule *mod) {
 
 int module_start(SceSize argc, void* argp) {
   sceCtrlPeekBufferPositive(&pad, 1);
-
-  /// remove old log file (if there is one)
-  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, file_log);
-  sceIoRemove(buffer); // delete old logfile
   
   /// create basefolder to be save (for logfile this early)
   makedirs((char*)basefolder); // recursively create "ms0:/PSP/PLUGINS/cheatdevice_remastered/"
 
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
   
-  #ifdef LOG
   DEBUG_LOG("[INFO] Starting CheatDeviceRemastered %s", VERSION);
   DEBUG_LOG("[INFO] argc: %i, argp: %s", argc, argp);
-  #endif
 
   /// config init
   #ifdef CONFIG
   snprintf(config, sizeof(config), "%s%s", basefolder, file_config); // always use the basefolder path
-  #ifdef LOG
   if( doesFileExist(config)) 
     DEBUG_LOG("[INFO] Config .ini found! (%s)", config);
-  #endif
   #endif
   
   int i;
@@ -6718,10 +6660,8 @@ int module_start(SceSize argc, void* argp) {
   memory_high = getHighMemBound();
   if ( memory_high < 0 ) memory_high = 0x0A000000; // if it alloc mem fails, set default ~32 MB
 
-  #ifdef LOG
   DEBUG_LOG("[INFO] sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   DEBUG_LOG("[INFO] sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
-  #endif 
  
 
   /// check Adrenaline eCFW

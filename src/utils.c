@@ -28,8 +28,9 @@
 #include <stdarg.h>
 
 #include "utils.h"
-#include "main.h" // for LOG
+#include "main.h"
 #include "nanoprintf/nanoprintf.h"
+#include "logs.h"
 
 extern char file_log[];
 extern const char *basefolder;
@@ -40,15 +41,11 @@ int doesFileExist(const char* path) {
   memset(&stat, 0, sizeof(SceIoStat));
   
   if ( sceIoGetstat(path, &stat) < 0 ) {
-    #ifdef LOG
-      DEBUG_LOG("[INFO] doesFileExist('%s') -> no", path);
-    #endif
+    DEBUG_LOG("[INFO] doesFileExist('%s') -> no", path);
     return 0;
   }
 
-  #ifdef LOG
     DEBUG_LOG("[INFO] doesFileExist('%s') -> %s", path, FIO_SO_ISREG(stat.st_attr) ? "yes" : "no");
-  #endif
 
   return FIO_SO_ISREG(stat.st_attr);
 }
@@ -59,15 +56,11 @@ int doesDirExist(const char* path) {
   memset(&stat, 0, sizeof(SceIoStat));
   
   if ( sceIoGetstat(path, &stat) < 0 ) {
-    #ifdef LOG
-      DEBUG_LOG("[INFO] doesDirExist('%s') -> no", path);
-    #endif
+    DEBUG_LOG("[INFO] doesDirExist('%s') -> no", path);
     return 0;
   }
 
-  #ifdef LOG
     DEBUG_LOG("[INFO] doesDirExist('%s') -> %s", path, FIO_SO_ISDIR(stat.st_attr) ? "yes" : "no");
-  #endif
 
   return FIO_SO_ISDIR(stat.st_attr);
 }
@@ -108,18 +101,14 @@ int countFoldersInFolder(const char *path) {
     
 #ifdef SAVEDITOR
 int setFolderModificationDateNow(const char* folder) {
-  #ifdef LOG
-  DEBUG_LOG("setFolderModificationDateNow('%s')", folder);
-  #endif 
+  DEBUG_LOG("setFolderModificationDateNow('%s')", folder); 
   
   int ret;
   SceIoStat d_stat;
   
   ret = sceIoGetstat(folder, &d_stat);
-  #ifdef LOG
   DEBUG_LOG("sceIoGetstat() returned %i", ret);
   DEBUG_LOG("%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
-  #endif     
   
   pspTime timetest;
   sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
@@ -131,29 +120,21 @@ int setFolderModificationDateNow(const char* folder) {
   d_stat.st_mtime.minute = timetest.minutes;
   d_stat.st_mtime.second = timetest.seconds;
   
-  #ifdef LOG
-  DEBUG_LOG("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
-  #endif 
+  DEBUG_LOG("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second ); 
   
   ret = sceIoChstat(folder, &d_stat, 0x0020); // 0x0001 is passed for file mode, 0x0008 for creation time, 0x0020 modify time
-  #ifdef LOG
-  DEBUG_LOG("sceIoChstat() returned %i", ret);
-  #endif 
+  DEBUG_LOG("sceIoChstat() returned %i", ret); 
   
   return ret;
 }
 
 char *getFolderModificationDate(const char* folder) {
-  #ifdef LOG
-  DEBUG_LOG("getFolderModificationDate('%s')", folder);
-  #endif 
+  DEBUG_LOG("getFolderModificationDate('%s')", folder); 
   
   char *res = "error";
   SceIoStat d_stat;
   int ret = sceIoGetstat(folder, &d_stat);
-  #ifdef LOG
-  DEBUG_LOG("sceIoGetstat() returned %i", ret);
-  #endif 
+  DEBUG_LOG("sceIoGetstat() returned %i", ret); 
   if( ret >= 0 )
     snprintf(res, sizeof(res), "%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
     
@@ -174,9 +155,7 @@ void clearICacheFor(u32 address) {
   
   //asm("li $t0,0x08A0E898\n"); //this works.. but i want to store "address"
   
-  #ifdef LOG
-  // DEBUG_LOG("[INFO] clearICacheFor(0x%08X)", address);
-  #endif 
+  // DEBUG_LOG("[INFO] clearICacheFor(0x%08X)", address); 
   
   asm volatile ( // volatile so compiler won't mess with this
     "cache 8, 0(%0)\n"
@@ -241,9 +220,7 @@ void makedirs(const char *path) { // recursively create path
     *sep = '/';
   }
   if( sceIoMkdir(path, 0777) && errno != EEXIST ) {
-    //#ifdef LOG // path of logfile might not exist yet
     //DEBUG_LOG("error while trying to create '%s'\n%m\n", path); 
-    //#endif
   }
 }
 

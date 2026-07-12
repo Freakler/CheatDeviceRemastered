@@ -4030,7 +4030,6 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   
   memory_main_free = getInt(ptr_memory_main + 0x10) - getInt(ptr_memory_main + 0xC) - getInt(ptr_memory_main + 0x14); // basically what FUN_0029febc does
 
-  #ifdef LOG
   static int debug_skgstwp = 1;
   static int debug_skgstwp2 = 1;
   if( debug_skgstwp2 && debug_skgstwp == 0 ) {
@@ -4041,7 +4040,6 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
     DEBUG_LOG("[INFO] %i: sceKernelGetSystemTimeWidePatched() ran the FIRST time", getGametime());
     debug_skgstwp = 0;
   }
-  #endif
   
 
   /// Value Getter / Checker //////////////////
@@ -4454,13 +4452,11 @@ int buttonsToActionPatched(void *a1) { // LCS & VCS
   //((short *)a1)[7] = 0xFF;   // Simulate R trigger
   //((short *)a1)[32] = 0xFF; // Simulate R trigger (second pad thingy)
     
-  #ifdef LOG
   static int debug_btap = 1;
   if( debug_btap ) {
     DEBUG_LOG("[INFO] %i: buttonsToActionPatched() ran the first time", getGametime() );
     debug_btap = 0;
   }
-  #endif
   
   /// process button inputs
   buttonInput();  
@@ -4495,14 +4491,11 @@ mode 2 - everything with transparency like trees, windows etc
 void (* cWorldStream_Render)(void *this, int mode);
 void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered -> allow cheat menu
 
-
-  #ifdef LOG
   static int debug_cwsrp = 1;
   if( debug_cwsrp ) {
     DEBUG_LOG("[INFO] %i: cWorldStream_Render_Patched() ran the first time", getGametime() );
     debug_cwsrp = 0;
   }
-  #endif
   
   #ifdef GAMELOG
   if( mode == 0 )
@@ -4623,22 +4616,16 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned 
                     
                     
     if( txdname != NULL ) { // load new splash (if 0 then the game uses the previously loaded)
-      #ifdef LOG
       DEBUG_LOG("[INFO] %i: Loadscreen_patched() original: '%s'", getGametime(), txdname);
-      #endif  
       int i;
       for( i = 0; i < whitelist_size; i++ ) {
         if( strcmp(whitelist[i], txdname) == 0 ) {
           do {
             new = rand() % (LCS ? lcs_replacers_size : vcs_replacers_size); // decide which to use
-            #ifdef LOG
             DEBUG_LOG("[INFO] %i: Loadscreen_patched() ..random new: %i aka '%s'", getGametime(), new, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
-            #endif  
           } while( new == prev ); // don't use the same twice (generate new if it happoens to be the same)
           prev = new;
-          #ifdef LOG
           DEBUG_LOG("[INFO] %i: Loadscreen_patched() ..replacing '%s' with '%s'!", getGametime(), txdname, (LCS ? lcs_replacers[new] : vcs_replacers[new]));  
-          #endif
           txdname = (char *)(LCS ? lcs_replacers[new] : vcs_replacers[new]); // replace!!
         }
       }
@@ -4676,7 +4663,7 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   #define CSTGXTLGT 256 // ...
   extern ushort custom_gxts[CSTGXTS][CSTGXTLGT];
   if( strncmp(string, "CUST_", 5) == 0 ) { // CUST_00, CUST_01, ...
-    #if defined(LOG) || defined(USERSCRIPTLOG)
+    #if defined(USERSCRIPTLOG)
     DEBUG_LOG("%s", string);
     #endif
     
@@ -4684,7 +4671,7 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
     int x = ((string[5] - '0') * 10) + (string[6] - '0'); // sigh..
     //DEBUG_LOG("%i", x);
     
-    #if defined(LOG) || defined(USERSCRIPTLOG)
+    #if defined(USERSCRIPTLOG)
     DEBUG_LOG("0x%08X", &custom_gxts[x]);
     #endif
     return (int)&custom_gxts[x];
@@ -5603,18 +5590,14 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
 #endif
 
 void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats to default value (values from main_menu_sp)
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: load_defaults()", getGametime());
-  #endif  
   
   static int i;
   void (* func)(int calltype, int keypress, int defaultstatus, int defaultval);
   for( i=0; i < menu_max; i++ ) {
     func = (void (*)(int calltype, int keypress, int defaultstatus, int defaultval))(menu_list[i].value);
     if( menu_list[i].conf_id != 0 && menu_list[i].def_stat != -1 ) {
-      #ifdef LOG
       DEBUG_LOG("[DEFAULT] %i: for: '0x%04X'", getGametime(), menu_list[i].conf_id);
-      #endif  
       func( FUNC_SET, menu_list[i].cat, menu_list[i].def_stat, 0xDEADBEEF); // set def_stat from Menu_pack  -> the cheats have to reset themself to default value
       ///arg2: is keypress but not used by FUNC_SET -> we use it for categories)
       ///arg4: is default_value of cheat but is set inside FUNC_SET if necessary
@@ -5625,9 +5608,7 @@ void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats
 
 
 void exit_game() {
-  #ifdef LOG
   DEBUG_LOG("[INFO] %i: exit_game()", getGametime());
-  #endif
   
   /// TODO - needs a save_thread still running check probably
   flag_use_liveconfig = 0; // in case its true
@@ -6314,9 +6295,7 @@ void mission_selector() {
   for(address = script_space; address < script_space + main_size; address++) {
     if( *(u8*)address == 'L' && *(u8*)(address+1) == 'E' ) { // first because faster
       if( strcmp("LEVSKIP", getString(address, 0)) == 0 ) {
-        #ifdef LOG
         DEBUG_LOG("LEVSKIP found @ 0x%08X in mainscript", address - script_space);
-        #endif
 
         temp = address - script_space - 2; // 2 is opcode length
         if( VCS ) temp--; // vcs has additional 0xA as string identifier
@@ -8388,10 +8367,8 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
       /// set Gravity value
       if( defaultval > 200 ) { // 200 can be set back to 0 at some point (fix for old configs)
         val = ((float)defaultval - 1000.0f) / 10.0f; // gravity value from config eg: 1.2f for 1.2g
-        #ifdef LOG
         //DEBUG_LOG("defaultval: '0x%X'", defaultval);
         //DEBUG_LOG("val: '%f'", val);
-        #endif
       } else val = 1.0f;
       
       if( val == 1.0f && !gravity_reverse ) {
