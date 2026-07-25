@@ -27,11 +27,14 @@
 #define FILE_SIZE_LIMIT 0xFFFF
 #define MURMURMASH_3_SEED 0x947473
 
+
+#define LOC_STRING_MAX_SIZE 124
+
 typedef struct string_lang
 {
-  char *original_string;
-  char *trans_string;
   struct string_lang *next; // Pointer to the next node (for chaining)
+  char original_string[LOC_STRING_MAX_SIZE];
+  char trans_string[LOC_STRING_MAX_SIZE];
 } string_lang;
 
 typedef struct LangHashTable
@@ -43,10 +46,10 @@ void langTableFree(LangHashTable* ht);
 
 typedef struct
 {
-  char *lang_name;
-  char *author_name;
-  char *version;
-  char *path;
+  char lang_name[32];
+  char author_name[16];
+  char version[16];
+  char path[128];
 } LanguageFile;
 
 typedef struct

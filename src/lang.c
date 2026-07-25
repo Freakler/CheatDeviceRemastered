@@ -57,8 +57,12 @@ static void langTableInsert(LangHashTable *ht, const char *original_string, cons
 
   if ( !new_kv ) return;
 
-  new_kv->original_string = strdup(original_string);
-  new_kv->trans_string = strdup(trans_string);
+  strncpy(new_kv->original_string, original_string, sizeof(new_kv->original_string) - 1);
+  new_kv->original_string[strlen(new_kv->original_string)] = '\0';
+
+  strncpy(new_kv->trans_string, trans_string, sizeof(new_kv->trans_string) - 1);
+  new_kv->trans_string[strlen(new_kv->trans_string)] = '\0';
+
   new_kv->next = ht->table[index]; // Point to the current list at index
   ht->table[index] = new_kv; // Insert new_kv at the beginning
 }
@@ -93,8 +97,6 @@ void langTableFree(LangHashTable *ht)
     {
       string_lang *tmp = current;
       current = current->next;
-      free(tmp->original_string);
-      free(tmp->trans_string);
       free(tmp);
     }
   }
@@ -130,11 +132,17 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
   LanguageFile *new_lf = (LanguageFile *)malloc(sizeof(LanguageFile));
   if (!new_lf) return;
 
-  // Duplicate strings and assign to new LanguageFile
-  new_lf->lang_name = strdup(language);
-  new_lf->author_name = strdup(author);
-  new_lf->version = strdup(version);
-  new_lf->path = strdup(filename);
+  strncpy(new_lf->lang_name, language, sizeof(new_lf->lang_name) - 1);
+  new_lf->lang_name[strlen(new_lf->lang_name)] = '\0';
+
+  strncpy(new_lf->author_name, author, sizeof(new_lf->author_name) - 1);
+  new_lf->author_name[strlen(new_lf->author_name)] = '\0';
+
+  strncpy(new_lf->version, version, sizeof(new_lf->version) - 1);
+  new_lf->version[strlen(new_lf->version)] = '\0';
+
+  strncpy(new_lf->path, filename, sizeof(new_lf->path) - 1);
+  new_lf->path[strlen(new_lf->path)] = '\0';
 
   // Append new LanguageFile to table
   table->lang_files[table->size] = new_lf;
@@ -149,10 +157,6 @@ void langFileTableFree(LangFileTable *table)
   int i;
   for (i = 0; i < table->size; i++)
   {
-    free(table->lang_files[i]->lang_name);
-    free(table->lang_files[i]->author_name);
-    free(table->lang_files[i]->version);
-    free(table->lang_files[i]->path);
     free(table->lang_files[i]);
   }
 
