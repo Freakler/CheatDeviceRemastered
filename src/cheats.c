@@ -25,6 +25,7 @@
 #include <malloc.h>
 #include <psprtc.h>
 
+#include "config.h"
 #include "cheats.h"
 #include "functions.h"
 #include "main.h"
@@ -4038,6 +4039,18 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   }  
   if( debug_skgstwp ) {
     DEBUG_LOG("[INFO] %i: sceKernelGetSystemTimeWidePatched() ran the FIRST time", getGametime());
+
+    /// config read/create & default values
+    DEBUG_LOG("\n> setting menu and cheat defaults.. (plus config)"); 
+    load_defaults(main_menu, menu_size); // to be save
+
+    extern char config[128];
+
+    #ifdef CONFIG
+    if( doesFileExist(config) ) 
+      load_config(main_menu, menu_size); // load config
+    #endif
+
     debug_skgstwp = 0;
   }
   
@@ -4515,7 +4528,8 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
     #ifdef LANG
     if ( gametimer >= 1000 ) {
       static int lang_ran = 0;
-      if (!lang_ran) {
+      if (!lang_ran)
+      {
         langTableSetup(currLanguageID);
         lang_ran = 1;
       }
@@ -5590,15 +5604,14 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
 #endif
 
 void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats to default value (values from main_menu_sp)
-  DEBUG_LOG("[INFO] %i: load_defaults()", getGametime());
-  
-  static int i;
+  // DEBUG_LOG("[INFO] %i: load_defaults()", getGametime());
+
   void (* func)(int calltype, int keypress, int defaultstatus, int defaultval);
-  for( i=0; i < menu_max; i++ ) {
+  for( int i = 0; i < menu_max; i++ ) {
     func = (void (*)(int calltype, int keypress, int defaultstatus, int defaultval))(menu_list[i].value);
     if( menu_list[i].conf_id != 0 && menu_list[i].def_stat != -1 ) {
       DEBUG_LOG("[DEFAULT] %i: for: '0x%04X'", getGametime(), menu_list[i].conf_id);
-      func( FUNC_SET, menu_list[i].cat, menu_list[i].def_stat, 0xDEADBEEF); // set def_stat from Menu_pack  -> the cheats have to reset themself to default value
+      if (func) func( FUNC_SET, menu_list[i].cat, menu_list[i].def_stat, 0xDEADBEEF); // set def_stat from Menu_pack  -> the cheats have to reset themself to default value
       ///arg2: is keypress but not used by FUNC_SET -> we use it for categories)
       ///arg4: is default_value of cheat but is set inside FUNC_SET if necessary
     }

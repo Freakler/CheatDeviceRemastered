@@ -32,7 +32,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_compile_options(${PROJECT_NAME} PRIVATE
   -Os
-  -fno-builtin
   -fno-pic
   -G0
   -ffast-math

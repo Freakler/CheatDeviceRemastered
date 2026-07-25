@@ -21,7 +21,6 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <malloc.h>
 #include <math.h>
 #include <ctype.h>
@@ -213,14 +212,15 @@ char *_fgets(char *s, int size, SceUID stream) {
 }
 
 void makedirs(const char *path) { // recursively create path
+  DEBUG_LOG("makedirs(%s)", path);
   char *sep = strrchr(path, '/');
   if( sep != NULL ) {
     *sep = 0;
     makedirs(path);
     *sep = '/';
   }
-  if( sceIoMkdir(path, 0777) && errno != EEXIST ) {
-    //DEBUG_LOG("error while trying to create '%s'\n%m\n", path); 
+  if( sceIoMkdir(path, 0777) < 0 ) {
+    DEBUG_LOG("Error while trying to create '%s'", path); 
   }
 }
 
@@ -451,7 +451,6 @@ strtoul(const char *nptr, char **endptr, register int base)
 	}
 	if (any < 0) {
 		acc = ULONG_MAX;
-		errno = ERANGE;
 	} else if (neg)
 		acc = -acc;
 	if (endptr != 0)
@@ -500,54 +499,4 @@ int	snprintf(char *__restrict buf, size_t size, const char *__restrict format, .
 int	vsnprintf(char *__restrict buf, size_t size, const char *__restrict format, va_list va)
 {
   return npf_vsnprintf(buf, size, format, va);
-}
-
-#define _CTYPE_DATA_0_127 \
-	_C,	_C,	_C,	_C,	_C,	_C,	_C,	_C, \
-	_C,	_C|_S, _C|_S, _C|_S,	_C|_S,	_C|_S,	_C,	_C, \
-	_C,	_C,	_C,	_C,	_C,	_C,	_C,	_C, \
-	_C,	_C,	_C,	_C,	_C,	_C,	_C,	_C, \
-	_S|_B,	_P,	_P,	_P,	_P,	_P,	_P,	_P, \
-	_P,	_P,	_P,	_P,	_P,	_P,	_P,	_P, \
-	_N,	_N,	_N,	_N,	_N,	_N,	_N,	_N, \
-	_N,	_N,	_P,	_P,	_P,	_P,	_P,	_P, \
-	_P,	_U|_X,	_U|_X,	_U|_X,	_U|_X,	_U|_X,	_U|_X,	_U, \
-	_U,	_U,	_U,	_U,	_U,	_U,	_U,	_U, \
-	_U,	_U,	_U,	_U,	_U,	_U,	_U,	_U, \
-	_U,	_U,	_U,	_P,	_P,	_P,	_P,	_P, \
-	_P,	_L|_X,	_L|_X,	_L|_X,	_L|_X,	_L|_X,	_L|_X,	_L, \
-	_L,	_L,	_L,	_L,	_L,	_L,	_L,	_L, \
-	_L,	_L,	_L,	_L,	_L,	_L,	_L,	_L, \
-	_L,	_L,	_L,	_P,	_P,	_P,	_P,	_C
-
-#define _CTYPE_DATA_128_255 \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0, \
-	0,	0,	0,	0,	0,	0,	0,	0
-
-const char _ctype_[1 + 256] = {
-	0,
-	_CTYPE_DATA_0_127,
-	_CTYPE_DATA_128_255
-};
-
-int errno;
-
-int *
-__errno (void)
-{
-  return &errno;
 }

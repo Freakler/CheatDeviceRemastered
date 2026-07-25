@@ -6452,16 +6452,6 @@ static int patch() {
   add_adr_to_history(mod_text_addr); //
   #endif
   
-  
-  /// config read/create & default values
-  DEBUG_LOG("\n> setting menu and cheat defaults.. (plus config)");  
-  load_defaults(main_menu, menu_size); // to be save
-  #ifdef CONFIG
-  if( doesFileExist(config) ) 
-    load_config(main_menu, menu_size); // load config
-  #endif
-  
-  
   /// decide draw "welcome helpbox"
   if( flag_menu_start == 0 ) 
     flag_draw_welcomsg = 1;
@@ -6544,7 +6534,6 @@ static int patch() {
   skip_intros(FUNC_SET, -1, ON); //skip intro movies
   cdr_autostartmenu(FUNC_SET, -1, ON); //autostart on
   #endif
-  
 
   DEBUG_LOG("\n> Setup all done! Starting game..\n");  
   
@@ -6625,6 +6614,8 @@ int OnModuleStart(SceModule *mod) {
 
 int module_start(SceSize argc, void* argp) {
   sceCtrlPeekBufferPositive(&pad, 1);
+
+  DEBUG_LOG("makedirs()");
   
   /// create basefolder to be save (for logfile this early)
   makedirs((char*)basefolder); // recursively create "ms0:/PSP/PLUGINS/cheatdevice_remastered/"

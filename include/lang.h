@@ -25,6 +25,7 @@
 #define LANG_FILES_LIMIT 8
 #define TRANSLATED_STRINGS_LIMIT TABLE_SIZE
 #define FILE_SIZE_LIMIT 0xFFFF
+#define MURMURMASH_3_SEED 0x947473
 
 typedef struct string_lang
 {
