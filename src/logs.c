@@ -8,7 +8,6 @@
 
 #include "logs.h"
 #include "main.h"
-#include "nanoprintf/nanoprintf.h"
 #include "versioning.h"
 
 #if LOGGING
