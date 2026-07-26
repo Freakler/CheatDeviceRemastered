@@ -46,7 +46,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  ansic1
+  ansic
   pspmalloc
   pspsystemctrl_user
   pspctrl
