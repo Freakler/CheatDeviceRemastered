@@ -263,7 +263,11 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   SceSize alloc_size = stat.st_size + 1;
 
   char *fileread = (char *)malloc(alloc_size); // Allocate needed bytes
-  if ( !fileread ) return; // Couldn't allocate
+  if ( !fileread ) 
+  {
+    DEBUG_LOG("Allocation of %u bytes failed!", alloc_size);
+    return;
+  }
 
   #if defined(LANG_DEBUG)
     DEBUG_LOG("Allocated %u bytes for file", alloc_size);

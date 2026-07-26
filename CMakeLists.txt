@@ -15,7 +15,7 @@ add_subdirectory(src)
 
 include("$ENV{PSPDEV}/psp/share/pspdev.cmake")
 
-add_prx_module(${PROJECT_NAME} ${MAIN_SOURCES} ${LIB_SOURCES})
+add_prx_module(${PROJECT_NAME} ${MAIN_SOURCES})
 
 # Get version info from cmake to project
 configure_file(
@@ -46,7 +46,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  ansic
+  ansic1
   pspmalloc
   pspsystemctrl_user
   pspctrl
