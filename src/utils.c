@@ -21,7 +21,6 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <math.h>
 #include <ctype.h>
 #include <stdarg.h>
@@ -283,15 +282,13 @@ float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float
   return sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2) + powf(z2 - z1, 2));
 }
 
-/* O2 and Os break snprintf in this function for some fucking reason???? */
-__attribute__((optimize("O1")))
 void getSizeString(char *string, uint64_t size) { 
+  static const char *units[] = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+  
   double double_size = (double)size;
-
   int i = 0;
-  static char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-  while( double_size >= 1024.0f ) {
-    double_size /= 1024.0f;
+  while( double_size >= 1024.0 ) {
+    double_size /= 1024.0;
     i++;
   }
   snprintf(string, 16, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);

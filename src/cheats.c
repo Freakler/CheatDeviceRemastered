@@ -22,7 +22,6 @@
 #include <pspctrl.h>
 #include <systemctrl.h>
 #include <math.h>
-#include <malloc.h>
 #include <psprtc.h>
 
 #include "config.h"
@@ -438,6 +437,22 @@ u32 saveprefix   = -1;
 
 /*********************************************************************************************************/
 #endif
+
+/**
+ * @note GTA is a greedy bastard and eats all memory for itself, giving CDR no memory to allocate (e.g.: for languages).
+ * So, the fix is lying to game saying that the system has less memory than it actually has.
+ * You could also try patching the sizes of the `MainMemoryManager` and `StreamingHeap` manually.
+ * We only do this when Extra Memory / High Memory Layout is active, as otherwise the game wouldn't have enough memory to run.
+*/
+SceSize sceKernelMaxFreeMemSize_patched(void)
+{
+  const SceSize memory_free = 512 * 1024; /* 512 KB */
+  const SceSize memory_available = sceKernelMaxFreeMemSize();
+  
+  /* Check for Extra Memory */
+  if ( memory_high > 0x0A800000 ) return memory_available - memory_free;
+  else return memory_available; /* 32 MB? -> well, bad luck then */
+}
 
 int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       
@@ -2403,6 +2418,58 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   }
   #endif
+
+  /*************************************
+   * jal sceKernelMaxFreeMemSize
+   *************************************
+   * ULUS-10041 v1.05 | 0x002A0BF4 | OK!
+   * ULUS-10041 v3.00 | 0x002A0B44 | OK!
+   * ULES-00182 v1.00 | Unknown    | Not Tested
+   * ULES-00182 v2.00 | 0x002A0A90 | OK!
+   * ULES-00151 v1.05 | Unknown    | Not Tested
+   * ULES-00151 v2.00 | Unknown    | Not Tested
+   * ULES-00151 v3.00 | 0x002A0B44 | OK!
+   * ULES-00151 v4.00 | Unknown    | Not Tested
+   * ULJM-05255 v1.01 | Unknown    | Not Tested
+   * ULET-00361 v0.02 | Unknown    | Not Tested
+   * ULET-00362 v0.01 | Unknown    | Not Tested
+   * ULUX-80142 v0.02 | Unknown    | Not Tested
+   * ULUX-80146 v0.02 | 0x0027F7E8 | OK!
+   **************************************/
+  if ( _lw(addr + 0x18) == 0x3C0400C0 && _lw(addr + 0x08) == 0x3C040160 && _lw(addr - 0xC) == 0x00022A82 )
+  {
+    /* Get jal instruction */
+    const u32 jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
+
+    /* Get sceKernelMaxFreeMemSize address by reversing the jal call */
+    uintptr_t sceKernelMaxFreeMemSizeAddr = REV_JAL(addr);
+
+    #ifdef PATCHLOG
+    DEBUG_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr, text_addr + addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", sceKernelMaxFreeMemSizeAddr, text_addr + sceKernelMaxFreeMemSizeAddr);
+    #endif
+
+    /* Allow me (@daniemun) to explain what I'm doing here:
+     *  We're basically re-running a search through memory again and looking for 'jal sceKernelMaxFreeMemSize' instructions and patching those.
+     *  Why not simply patch sceKernelMaxFreeMemSize then?
+     *  Because Adrenaline / Epinephrine actually hooks sceKernelMaxFreeMemSize later on and overwrites our patch:
+     *  https://github.com/isage/Adrenaline/blob/55f202ac1830c960ac789c4a08422e50fb47d0f8/cef/core/systemctrl/src/game_patch.c#L318
+     *  So, this is the most reliable way I could thought of doing this.
+     * There's another way we could implement this:
+     *  Grab the first sceKernelMaxFreeMemSize on the binary, and for later ones patch them (so no need to re-run a whole search through memory).
+     *  Problem is ULUX-80146, where that first sceKernelMaxFreeMemSize call is done in a different "zone" of text. (as the function where it's inserted has more logs)
+     *  So it's harder to reliably find it by checking address offsets (you would need another if statement most likely)
+     * 
+     * Anyways, I'm not a big fan of this implementation, if anyone has suggestions to improve this, lemme know ;)
+     */
+    for( u32 i = 0; i < mod_text_size; i += 4 )
+    {
+      u32 addr_i = i + text_addr;
+      if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
+    }
+
+    return 1;
+  }
   
   return 0;
 }
@@ -3902,8 +3969,40 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     return 1;
   }
   #endif
+
+  /*************************************
+   * jal sceKernelMaxFreeMemSize
+   *************************************
+   * ULUS-10160 v1.03 | 0x002BBEAC | OK!
+   * ULES-00502 v1.02 | 0x002BC240 | OK!
+   * ULES-00503 v1.02 | 0x002BC0B8 | OK!
+   * ULJM-05297 v1.01 | Unknown    | Not Tested
+   * ULET-00417 v0.06 | 0x002B00E4 | OK!
+   **************************************/
+  if ( _lw(addr - 0x4) == 0x24847800 && _lw(addr - 0xc) == 0x3C0400C1 && _lw(addr + 0x8) == 0x3C040053 )
+  {
+    /* Get jal instruction */
+    const u32 jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
+
+    /* Get sceKernelMaxFreeMemSize address by reversing the jal call */
+    uintptr_t sceKernelMaxFreeMemSizeAddr = REV_JAL(addr);
+
+    #ifdef PATCHLOG
+    DEBUG_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr, text_addr + addr);
+    DEBUG_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", sceKernelMaxFreeMemSizeAddr, text_addr + sceKernelMaxFreeMemSizeAddr);
+    #endif
+
+    /* Read this same code in PatchLCS for more info / context. */
+    for( u32 i = 0; i < mod_text_size; i += 4 )
+    {
+      u32 addr_i = i + text_addr;
+      if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
+    }
+
+    return 1;
+  }
   
-  return 0;  
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4050,6 +4149,15 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
     if( doesFileExist(config) ) 
       load_config(main_menu, menu_size); // load config
     #endif
+
+    extern SceUID usVpl;
+    const SceSize userScriptsPoolSize = 3 * 1024; /* 3 KB should be enough */
+    usVpl = sceKernelCreateVpl("UserScripts VPL", PSP_MEMORY_PARTITION_USER, 0, userScriptsPoolSize, NULL);
+    if ( usVpl < 0 )
+    {
+      ERROR_LOG("sceKernelCreateVpl(%u) failed with error 0x%08X", userScriptsPoolSize, usVpl);
+      usVpl = -1;
+    }
 
     debug_skgstwp = 0;
   }
@@ -4526,10 +4634,21 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
       draw();
 
     #ifdef LANG
-    if ( gametimer >= 1000 ) {
+    if ( gametimer >= 1000 )
+    {
       static int lang_ran = 0;
       if (!lang_ran)
       {
+        extern SceUID langVpl;
+        
+        langVpl = sceKernelCreateVpl("CDR Language VPL", PSP_MEMORY_PARTITION_USER, 0, LANGUAGE_POOL_SIZE, NULL);
+        if ( langVpl < 0 )
+        {
+          ERROR_LOG("sceKernelCreateVpl(%u) failed with error 0x%08X", LANGUAGE_POOL_SIZE, langVpl);
+          langVpl = -1;
+          return;
+        }
+
         langTableSetup(currLanguageID);
         lang_ran = 1;
       }

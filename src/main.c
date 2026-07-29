@@ -26,7 +26,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
-#include <malloc.h>
 #include <pspsysmem.h>
 #include <ctype.h>
 
@@ -1103,6 +1102,7 @@ ushort custom_gxts[CSTGXTS][CSTGXTLGT];
 #define SUPPORT_LABEL 256   // maximum supported Labels
 #define MAX_LABEL_LENGTH 32 // max length of a Label
 
+SceUID usVpl = -1;
 static userscript_entry* userscript_currentdir_scripts = NULL; // Array where scripts / folders file info is stored
 static int userscript_cd_scripts_count = 0;     // Number of scripts / folder in array
 static int currentdir_files_folders_count = 0;  // Files & Folders count on current dir
@@ -1132,15 +1132,18 @@ int free_userscripts_array()
 
   for (i = 0; i < userscript_cd_scripts_count; i++)
   {
+    userscript_entry* uscript = &userscript_currentdir_scripts[i];
+    if ( !uscript ) continue;
+
     // If name was allocated, free it
-    if ( userscript_currentdir_scripts[i].path )
+    if ( uscript->path )
     {
-      free(userscript_currentdir_scripts[i].path);
+      sceKernelFreeVpl(usVpl, uscript->path);
     }
   }
 
   // Free allocated array
-  free(userscript_currentdir_scripts);
+  sceKernelFreeVpl(usVpl, userscript_currentdir_scripts);
   userscript_currentdir_scripts = NULL;
 
   return 0;
@@ -1148,6 +1151,9 @@ int free_userscripts_array()
 
 static int userscripts_update_array()
 {
+  // If there's mem allocated, free it before allocating again
+  if (userscript_currentdir_scripts) free_userscripts_array();
+
   userscript_cd_scripts_count = countFilesInFolder(script_workfldr) + countFoldersInFolder(script_workfldr);
 
   // Check if there are files & folders to store
@@ -1156,18 +1162,18 @@ static int userscripts_update_array()
     return 0;
   }
 
-  // If there's mem allocated, free it before allocating again
-  if (userscript_currentdir_scripts) free_userscripts_array();
+  int vplRet = sceKernelTryAllocateVpl(usVpl, sizeof(userscript_entry) * userscript_cd_scripts_count, (void**)&userscript_currentdir_scripts);
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", sizeof(userscript_entry) * userscript_cd_scripts_count, vplRet);
+    return -1;
+  }
 
-  // Alloc needed mem for scripts array
-  userscript_currentdir_scripts = (userscript_entry*)malloc(sizeof(userscript_entry) * userscript_cd_scripts_count);
-  if ( !userscript_currentdir_scripts ) return -1;
-  
   // Open current dir
   SceUID dir = sceIoDopen(script_workfldr);
   if (dir < 0)
   {
-    free(userscript_currentdir_scripts);
+    sceKernelFreeVpl(usVpl, userscript_currentdir_scripts);
     userscript_currentdir_scripts = NULL;
     return -1;
   }
@@ -1184,9 +1190,17 @@ static int userscripts_update_array()
 
     userscript_entry* uscript = &userscript_currentdir_scripts[i];
 
-    // Copy filename
-    uscript->path = strdup(dirent.d_name);
-    if ( !uscript->path ) break; // If couldn't copy / allocate, stop
+    SceSize dname_len = strlen(dirent.d_name);
+
+    vplRet = sceKernelTryAllocateVpl(usVpl, dname_len + 1, (void**)&uscript->path);
+    if ( vplRet < 0 )
+    {
+      ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", dname_len + 1, vplRet);
+      break;
+    }
+
+    strncpy(uscript->path, dirent.d_name, dname_len);
+    uscript->path[dname_len] = '\0';
 
     // Copy attr
     uscript->attr = dirent.d_stat.st_attr;
@@ -2136,7 +2150,7 @@ static int userscripts_ctrl() {
                       }
                       
             
-                    } else if( isdigit(token[0]) || isdigit(token[1]) ) { /// "number"
+                    } else if( isdigit((unsigned char)token[0]) || isdigit((unsigned char)token[1]) ) { /// "number"
                       int adr = 0;                
                       
                       /****************************************
@@ -2155,7 +2169,7 @@ static int userscripts_ctrl() {
                       
                       /// contains "." then FLOAT
                       if(strstr(token, ".") != NULL) {
-                        tempflt = atof(token); // convert 
+                        tempflt = (float)atof(token); // convert 
                         adr = (int)&tempflt; // fugly more
                         if( *(unsigned char*)(adr) != 0 ) { // 4 Bytes needed
                           script[pos++] = 0x09; //
@@ -4933,7 +4947,7 @@ static int hexeditor_draw() {
     /// draw current address
     COLOR_TEMP = RED;
     if( hex_addressmode == 1 ) {
-      snprintf(buffer, sizeof(buffer), "%X", hex_adr - mod_text_addr);
+      snprintf(buffer, sizeof(buffer), "%lX", hex_adr - mod_text_addr);
       COLOR_TEMP = YELLOW;
     } else if( hex_addressmode == 2 ) {
       snprintf(buffer, sizeof(buffer), "%X", hex_adr - gp);
@@ -4959,7 +4973,7 @@ static int hexeditor_draw() {
   
      } else {
         if( hex_addressmode == 1 ) 
-          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
+          snprintf(buffer, sizeof(buffer), "0x%08lX", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
         else if( hex_addressmode == 2 ) 
           snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
         else 
@@ -6063,7 +6077,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
             /* Write translation author in description          */
             /* [TODO] There really isn't a better way to this?  */
             #ifdef LANG
-            if ( menu_list[i].conf_id == 0x1FB9 && main_file_table && main_file_table->lang_files )
+            if ( menu_list[i].conf_id == 0x1FB9 && main_file_table && main_file_table->size > 1 )
             {
               void *(* func)(int, int, int, int) = (void *)(menu_list[i].value);
               int currSelectedLangID = (int)func(FUNC_GET_VALUE, 0, 0, 0);
@@ -6695,6 +6709,11 @@ void free_alloc_mem_cdr()
   #ifdef LANG
   langTableFree(main_lang_table);
   langFileTableFree(main_file_table);
+
+  extern SceUID langVpl;
+  extern SceUID usVpl;
+  sceKernelDeleteVpl(langVpl);
+  sceKernelDeleteVpl(usVpl);
   #endif
 }
 

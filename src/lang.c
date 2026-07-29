@@ -21,11 +21,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include "minIni.h"
 #include "main.h"
 #include "lang.h"
 #include <pspiofilemgr.h>
+#include <pspsysmem.h>
 #include "utils.h"
 #include "logs.h"
 
@@ -36,11 +36,18 @@ extern const char *basefolder;
 
 static int translated_strings_left = TRANSLATED_STRINGS_LIMIT;
 
+SceUID langVpl = -1;
+
 static LangHashTable *langTableCreate()
 {
-  LangHashTable *ht = (LangHashTable *)malloc(sizeof(LangHashTable));
+  LangHashTable *ht;
+  int vplRet = sceKernelTryAllocateVpl(langVpl, sizeof(LangHashTable), (void**)&ht);
 
-  if ( !ht ) return NULL;
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", sizeof(LangHashTable), vplRet);
+    return NULL;
+  }
 
   // Initialize table to NULL
   memset(ht->table, 0, sizeof(ht->table));
@@ -53,15 +60,42 @@ static void langTableInsert(LangHashTable *ht, const char *original_string, cons
 
   uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED) & TABLE_SIZE;
 
-  string_lang *new_kv = (string_lang *)malloc(sizeof(string_lang));
+  string_lang *new_kv = NULL;
+  int vplRet = sceKernelTryAllocateVpl(langVpl, sizeof(string_lang), (void**)&new_kv);
 
-  if ( !new_kv ) return;
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", sizeof(string_lang), vplRet);
+    return;
+  }
 
-  strncpy(new_kv->original_string, original_string, sizeof(new_kv->original_string) - 1);
-  new_kv->original_string[strlen(new_kv->original_string)] = '\0';
+  SceSize ostring_len = strlen(original_string);
+  SceSize tstring_len = strlen(trans_string);
 
-  strncpy(new_kv->trans_string, trans_string, sizeof(new_kv->trans_string) - 1);
-  new_kv->trans_string[strlen(new_kv->trans_string)] = '\0';
+  vplRet = sceKernelTryAllocateVpl(langVpl, ostring_len + 1, (void**)&new_kv->original_string);
+
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("v(%u) failed with error 0x%08X", ostring_len + 1, vplRet);
+    sceKernelFreeVpl(langVpl, new_kv);
+    return;
+  }
+
+  vplRet = sceKernelTryAllocateVpl(langVpl, tstring_len + 1, (void**)&new_kv->trans_string);
+
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", tstring_len + 1, vplRet);
+    sceKernelFreeVpl(langVpl, new_kv->original_string);
+    sceKernelFreeVpl(langVpl, new_kv);
+    return;
+  }
+
+  strncpy(new_kv->original_string, original_string, ostring_len);
+  new_kv->original_string[ostring_len] = '\0';
+
+  strncpy(new_kv->trans_string, trans_string, tstring_len);
+  new_kv->trans_string[tstring_len] = '\0';
 
   new_kv->next = ht->table[index]; // Point to the current list at index
   ht->table[index] = new_kv; // Insert new_kv at the beginning
@@ -97,10 +131,12 @@ void langTableFree(LangHashTable *ht)
     {
       string_lang *tmp = current;
       current = current->next;
-      free(tmp);
+      sceKernelFreeVpl(langVpl, tmp->original_string);
+      sceKernelFreeVpl(langVpl, tmp->trans_string);
+      sceKernelFreeVpl(langVpl, tmp);
     }
   }
-  free(ht);
+  sceKernelFreeVpl(langVpl, ht);
   ht = NULL;
 
   #if defined(LANG_DEBUG)
@@ -114,8 +150,14 @@ LangFileTable *main_file_table = NULL;
 // Initialize the LangFileTable
 static LangFileTable *langFileTableInit()
 {
-  LangFileTable *table = (LangFileTable *)malloc(sizeof(LangFileTable));
-  if (!table) return NULL;
+  LangFileTable *table = NULL;
+  int vplRet = sceKernelTryAllocateVpl(langVpl, sizeof(LangFileTable), (void**)&table);
+
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", sizeof(LangFileTable), vplRet);
+    return NULL;
+  }
 
   memset(table, 0, sizeof(LangFileTable));
   return table;
@@ -128,21 +170,69 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
 {
   if ( !table || !filename || table->size >= LANG_FILES_LIMIT ) return;
 
-  // Allocate memory for new LanguageFile
-  LanguageFile *new_lf = (LanguageFile *)malloc(sizeof(LanguageFile));
-  if (!new_lf) return;
+  SceSize version_len = strlen(version);
+  SceSize author_len = strlen(author);
+  SceSize language_len = strlen(language);
+  SceSize filename_len = strlen(filename);
 
-  strncpy(new_lf->lang_name, language, sizeof(new_lf->lang_name) - 1);
-  new_lf->lang_name[strlen(new_lf->lang_name)] = '\0';
+  LanguageFile *new_lf = NULL;
 
-  strncpy(new_lf->author_name, author, sizeof(new_lf->author_name) - 1);
-  new_lf->author_name[strlen(new_lf->author_name)] = '\0';
+  int vplRet = sceKernelTryAllocateVpl(langVpl, sizeof(LanguageFile), (void**)&new_lf);
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", sizeof(LanguageFile), vplRet);
+    return;
+  }
 
-  strncpy(new_lf->version, version, sizeof(new_lf->version) - 1);
-  new_lf->version[strlen(new_lf->version)] = '\0';
+  vplRet = sceKernelTryAllocateVpl(langVpl, version_len + 1, (void**)&new_lf->version);
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", version_len + 1, vplRet);
+    sceKernelFreeVpl(langVpl, new_lf);
+    return;
+  }
 
-  strncpy(new_lf->path, filename, sizeof(new_lf->path) - 1);
-  new_lf->path[strlen(new_lf->path)] = '\0';
+  vplRet = sceKernelTryAllocateVpl(langVpl, author_len + 1, (void**)&new_lf->author_name);
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", author_len + 1, vplRet);
+    sceKernelFreeVpl(langVpl, new_lf);
+    sceKernelFreeVpl(langVpl, new_lf->version);
+    return;
+  }
+
+  vplRet = sceKernelTryAllocateVpl(langVpl, language_len + 1, (void**)&new_lf->lang_name);
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", language_len + 1, vplRet);
+    sceKernelFreeVpl(langVpl, new_lf);
+    sceKernelFreeVpl(langVpl, new_lf->version);
+    sceKernelFreeVpl(langVpl, new_lf->author_name);
+    return;
+  }
+
+  vplRet = sceKernelTryAllocateVpl(langVpl, filename_len + 1, (void**)&new_lf->path);
+  if ( vplRet < 0 )
+  {
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", filename_len + 1, vplRet);
+    sceKernelFreeVpl(langVpl, new_lf);
+    sceKernelFreeVpl(langVpl, new_lf->version);
+    sceKernelFreeVpl(langVpl, new_lf->author_name);
+    sceKernelFreeVpl(langVpl, new_lf->lang_name);
+    return;
+  }
+
+  strncpy(new_lf->lang_name, language, language_len);
+  new_lf->lang_name[language_len] = '\0';
+
+  strncpy(new_lf->author_name, author, author_len);
+  new_lf->author_name[author_len] = '\0';
+
+  strncpy(new_lf->version, version, version_len);
+  new_lf->version[version_len] = '\0';
+
+  strncpy(new_lf->path, filename, filename_len);
+  new_lf->path[filename_len] = '\0';
 
   // Append new LanguageFile to table
   table->lang_files[table->size] = new_lf;
@@ -157,10 +247,17 @@ void langFileTableFree(LangFileTable *table)
   int i;
   for (i = 0; i < table->size; i++)
   {
-    free(table->lang_files[i]);
+    LanguageFile *currLangFile = table->lang_files[i];
+    if ( !currLangFile ) continue;
+
+    sceKernelFreeVpl(langVpl, currLangFile->author_name);
+    sceKernelFreeVpl(langVpl, currLangFile->lang_name);
+    sceKernelFreeVpl(langVpl, currLangFile->path);
+    sceKernelFreeVpl(langVpl, currLangFile->version);
+    sceKernelFreeVpl(langVpl, currLangFile);
   }
 
-  free(table);
+  sceKernelFreeVpl(langVpl, table);
   table = NULL;
 
   #if defined(LANG_DEBUG)
@@ -258,14 +355,15 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   // Get file size (to allocate)
   memset(&stat, 0, sizeof(SceIoStat));
   if ( sceIoGetstat(lang_path, &stat) < 0 ) return;
-  if (stat.st_size <= 0) return; // Invalid file size
+  if ( stat.st_size <= 0 ) return; // Invalid file size
 
   SceSize alloc_size = stat.st_size + 1;
 
-  char *fileread = (char *)malloc(alloc_size); // Allocate needed bytes
-  if ( !fileread ) 
+  char *fileread = NULL;
+  int vplRet = sceKernelTryAllocateVpl(langVpl, alloc_size, (void**)&fileread);
+  if ( vplRet < 0 ) 
   {
-    DEBUG_LOG("Allocation of %u bytes failed!", alloc_size);
+    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", alloc_size, vplRet);
     return;
   }
 
@@ -300,7 +398,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   }
 
   END_READING_TRANSLATIONS:
-  free(fileread); // Free allocated memory
+  sceKernelFreeVpl(langVpl, fileread); // Free allocated memory
 
   #if defined(LANG_DEBUG)
     DEBUG_LOG("Freed %u bytes", alloc_size);

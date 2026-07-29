@@ -24,17 +24,15 @@
 #define TABLE_SIZE 823 // Prime number for hash table size
 #define LANG_FILES_LIMIT 8
 #define TRANSLATED_STRINGS_LIMIT TABLE_SIZE
-#define FILE_SIZE_LIMIT 0xFFFF
 #define MURMURMASH_3_SEED 0x947473
 
-
-#define LOC_STRING_MAX_SIZE 124
+#define LANGUAGE_POOL_SIZE 192 * 1024 /* 192 KB */
 
 typedef struct string_lang
 {
   struct string_lang *next; // Pointer to the next node (for chaining)
-  char original_string[LOC_STRING_MAX_SIZE];
-  char trans_string[LOC_STRING_MAX_SIZE];
+  char *original_string;
+  char *trans_string;
 } string_lang;
 
 typedef struct LangHashTable
@@ -46,10 +44,10 @@ void langTableFree(LangHashTable* ht);
 
 typedef struct
 {
-  char lang_name[32];
-  char author_name[16];
-  char version[16];
-  char path[128];
+  char *lang_name;
+  char *author_name;
+  char *version;
+  char *path;
 } LanguageFile;
 
 typedef struct
