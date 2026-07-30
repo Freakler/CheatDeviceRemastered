@@ -70,7 +70,7 @@
 }
 
 /* Reverse a JAL call and extract the address it's jumping to */
-#define REV_JAL(a) ((a + 4) & 0xF0000000) | ((_lw(a) & 0x3FFFFFF) << 2)
+#define REV_JAL(a) ( ((a + 4) & 0xF0000000) | ((_lw(a) & 0x3FFFFFF) << 2) )
 
 typedef struct menu_blit_text
 {

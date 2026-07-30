@@ -14,7 +14,7 @@
 
 static const char *LogTypeToString[] =
 {
-  "DEBUG", "INFO ", "WARNG", "ERROR", "PATCH", "MEMRY", "USRSC", "GAME "
+  "DEBUG", "INFO ", "WARNG", "ERROR", "PATCH", "MEMRY", "USRSC", "GAME ", "CONFG"
 };
 
 void Log(LogLevel level, const char *funcName, const char *message, ...)

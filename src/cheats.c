@@ -28,7 +28,7 @@
 #include "cheats.h"
 #include "functions.h"
 #include "main.h"
-#include "utils.h"
+#include "putils.h"
 #include "blitn.h"
 #include "lang.h"
 #include "logs.h"
@@ -1720,6 +1720,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   }
 
+  #ifdef SAVEDITOR
 
   /// savedata stuff (scraped since not working on emu and save space)
   /*************************************
@@ -1736,29 +1737,29 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | OK! (doesn't use a key)
    **************************************/
-  /* if( _lh(addr + 0x2C) == 0x004C  && _lh(addr - 0x8) == 0x0007  && _lh(addr - 0x1C) == 0x0005) { // 0xAEDD8
+  if( _lh(addr + 0x2C) == 0x004C  && _lh(addr - 0x8) == 0x0007  && _lh(addr - 0x1C) == 0x0005) { // 0xAEDD8
 
     if( _lh(addr + 0x98) == 0x0010 ) { // decryption key for later / patched Versions
-      *******************************************************************
+      /*******************************************************************
        *  0x000AEE54: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEE78: 0x24A5017C '|..$' - addiu      $a1, $a1, 380
-      *******************************************************************
+      *******************************************************************/
       savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16_t)_lh(addr+0xA0);
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (later)", savedatakey-text_addr, savedatakey); // DAT_0033017c_SAVEKEY
     }
     if( _lh(addr + 0x9C) == 0x0010 ) { // decryption key for initial versions (like US v1.05)
-      *******************************************************************
+      /*******************************************************************
        *  0x000AEEE8: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEF10: 0x24A5007C '|..$' - addiu      $a1, $a1, 124
-      *******************************************************************
+      *******************************************************************/
       savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16_t)_lh(addr+0xA4);
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (initial)", savedatakey-text_addr, savedatakey);
     }
 
-    *******************************************************************
+    /*******************************************************************
      *  0x000AEDD8: 0x3C040031 '1..<' - lui        $a0, 0x31
      *  0x000AEDDC: 0x2493DB7C '|..$' - addiu      $s3, $a0, -9348
-    *******************************************************************
+    *******************************************************************/
     titleid = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> titleid", titleid-text_addr, titleid); //s_ULUS10041_0030db7c
 
@@ -1769,26 +1770,26 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( _lh(addr + 0x34) == 0x004C  && _lh(addr + 0x4) == 0x0007  && _lh(addr - 0x14) == 0x0005 ) { // German Version is too different  0x000AEE14
 
     if( _lh(addr + 0xA4) == 0x0010 ) { //decryption key for GER v1.00
-      *******************************************************************
+      /*******************************************************************
        *  0x000AEE98: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEEC0: 0x24A5003C '<..$' - addiu      $a1, $a1, 60
-      *******************************************************************
+      *******************************************************************/
       savedatakey = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0xAC); // 0x0033003C
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v1.00)", savedatakey-text_addr, savedatakey);
     }
     if( _lh(addr + 0xA0) == 0x0010 ) { //decryption key for GER v2.00
-      *******************************************************************
+      /*******************************************************************
        *  0x000AEE98: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEEC0: 0x24A5003C '<..$' - addiu      $a1, $a1, 60
-      *******************************************************************
+      *******************************************************************/
       savedatakey = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0xA8); // 0x0033003C
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v2.00)", savedatakey-text_addr, savedatakey);
     }
 
-    *******************************************************************
+    /*******************************************************************
      *  0x000AEE14: 0x3C040031 '1..<' - lui        $a0, 0x31
      *  0x000AEE1C: 0x2494DBBC '...$' - addiu      $s4, $a0, -9284
-    *******************************************************************
+    *******************************************************************/
     titleid = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // 0x0030DBBC "ULES00182" v1.00 (0x30DAFC v2.00)
 
     PATCH_LOG("0x%08X (0x%08X) -> titleid (GERMAN)", titleid-text_addr, titleid);
@@ -1796,7 +1797,9 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     saveprefix = titleid + 0xC; //"S"
 
     return 1;
-  } */
+  }
+
+  #endif
 
 
   /// global_developerflag (read from multiplayer menu function)
@@ -2196,11 +2199,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
 
-    /* Get sceKernelMaxFreeMemSize address by reversing the jal call */
-    uintptr_t sceKernelMaxFreeMemSizeAddr = REV_JAL(addr);
-
-    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr, text_addr + addr);
-    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", sceKernelMaxFreeMemSizeAddr, text_addr + sceKernelMaxFreeMemSizeAddr);
+    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", REV_JAL(addr)-text_addr, REV_JAL(addr));
 
     /* Allow me (@daniemun) to explain what I'm doing here:
      *  We're basically re-running a search through memory again and looking for 'jal sceKernelMaxFreeMemSize' instructions and patching those.
@@ -3516,11 +3516,8 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
 
-    /* Get sceKernelMaxFreeMemSize address by reversing the jal call */
-    uintptr_t sceKernelMaxFreeMemSizeAddr = REV_JAL(addr);
-
-    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr, text_addr + addr);
-    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", sceKernelMaxFreeMemSizeAddr, text_addr + sceKernelMaxFreeMemSizeAddr);
+    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", REV_JAL(addr)-text_addr, REV_JAL(addr));
 
     /* Read this same code in PatchLCS for more info / context. */
     for( u32 i = 0; i < mod_text_size; i += 4 )
@@ -4158,7 +4155,7 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
   #endif
 
   #ifdef MEMORY
-  if( mode == 0 )
+  if( LCS && mode == 0 )
     drawMemoryUsage(); // todo - move to different hooked func
   #endif
 
@@ -4717,19 +4714,19 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
           drawString("General", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
 
             /// mod_text_addr
-            snprintf(buffer, sizeof(buffer), "mod_text_addr = 0x%08X", mod_text_addr);
+            snprintf(buffer, sizeof(buffer), "mod_text_addr = 0x%08lX", mod_text_addr);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE);
 
             /// mod_text_size
-            snprintf(buffer, sizeof(buffer), "mod_text_size = 0x%08X", mod_text_size);
+            snprintf(buffer, sizeof(buffer), "mod_text_size = 0x%08lX", mod_text_size);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, WHITE);
 
             /// mod_data_size
-            snprintf(buffer, sizeof(buffer), "mod_data_size = 0x%08X", mod_data_size);
+            snprintf(buffer, sizeof(buffer), "mod_data_size = 0x%08lX", mod_data_size);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, WHITE);
 
             /// Global Pointer Register
-            snprintf(buffer, sizeof(buffer), "$gp = 0x%08X (0x%08X)", gp, gp-mod_text_addr);
+            snprintf(buffer, sizeof(buffer), "$gp = 0x%08X (0x%08lX)", gp, gp-mod_text_addr);
             drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE);
 
 
@@ -7613,7 +7610,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
   static float wheels; // for backup
   static int hovermation = 2;
   static int hovermation_time = 0;
-  const static wchar_t delo[] = L"Delorean";
+  const static wchar_t *delo = L"Delorean";
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -9846,7 +9843,7 @@ char *lcs_playerModels[] = {  // 8 chars max
 /// only special chars for LCS and very experimental
 void *player_model(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int i = 0;
-  static int list_size = ARRAY_SIZE(lcs_playerModels);
+  static int list_size = ARRAY_SIZE(lcs_playerModels) - 1;
   static char buf[16] = "";
 
   switch( calltype ) {
@@ -10664,7 +10661,7 @@ void buttonApplyOnce(int i) { // apply once on button press
 
 void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status, i = 10; // default position
-  static int list_size = ARRAY_SIZE(buttonCheatNames);
+  static int list_size = ARRAY_SIZE(buttonCheatNames) - 1;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -10711,7 +10708,7 @@ void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
 
 void *down_button(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status, i = 9; // default position
-  static int list_size = ARRAY_SIZE(buttonCheatNames);
+  static int list_size = ARRAY_SIZE(buttonCheatNames) - 1;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -10771,7 +10768,7 @@ void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaul
                                #endif
                              };
 
-  static int list_size = ARRAY_SIZE(list_names);
+  static int list_size = ARRAY_SIZE(list_names) - 1;
   static int addr;
 
   switch( calltype ) {
@@ -10864,7 +10861,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
                                "open in HexEditor",      // 12
                                #endif
                              };
-  static int list_size = ARRAY_SIZE(list_names);
+  static int list_size = ARRAY_SIZE(list_names) - 1;
   static int addr;
 
   switch( calltype ) {

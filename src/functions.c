@@ -27,7 +27,7 @@
 #endif
 
 #include "main.h" // MEMCHECK, NAMERESOLV etc
-#include "utils.h"
+#include "putils.h"
 #include "cheats.h" // for using hooked functions
 #include "functions.h"
 #include "blitn.h"
@@ -205,7 +205,7 @@ const teleports_pack lcs_teleports[] = { // z value + 0.20
   {"SSV Wing Surfing Location",         -1343,   -852,  18.70 },
   {"SSV Airport Runway",                -1422,  -1012,  11.00 }, // original: -1585,   -936,   11.30
 
-}; const int lcs_teleportersize = ARRAY_SIZE(lcs_teleports);
+}; const int lcs_teleportersize = ARRAY_SIZE(lcs_teleports) - 1;
 
 
 const teleports_pack vcs_teleports[] = { // z value + 0.20
@@ -264,7 +264,7 @@ const teleports_pack vcs_teleports[] = { // z value + 0.20
   {"Ocean Beach Ammunation",              -53,  -1480,     11 },
   {"Lance's House",                       -84,  -1571,     11 },
 
-}; const int vcs_teleportersize = ARRAY_SIZE(vcs_teleports);
+}; const int vcs_teleportersize = ARRAY_SIZE(vcs_teleports) - 1;
 
 /* const radio_pack lcs_radiostations[] = {
   {"Head Radio",      0x00}, // FEA_FM0
@@ -1246,7 +1246,7 @@ const pickups_pack lcs_pickups[] = {
 
 
   // {"Cooking Pod",      0xFA2, 0x03,   0x00 },
-}; const int lcs_pickupsize = ARRAY_SIZE(lcs_pickups);
+}; const int lcs_pickupsize = ARRAY_SIZE(lcs_pickups) - 1;
 
 const pickups_pack vcs_pickups[] = {
   ///name                //id     //type  //amount
@@ -1309,7 +1309,7 @@ const pickups_pack vcs_pickups[] = {
   {"Rampage",           0x1CE9,   0x03,   0x00 },
   {"Buy Vehicle",       0x1D42,   0x03,   0x00 },
 
-}; const int vcs_pickupsize = ARRAY_SIZE(vcs_pickups);
+}; const int vcs_pickupsize = ARRAY_SIZE(vcs_pickups) - 1;
 
 
 /* const mapicons_pack lcs_mapicons[] = {
@@ -1689,7 +1689,9 @@ unsigned char *getSavedataKey() {
   static unsigned char key[0x11];
   memset(&key, 0, sizeof(key));
 
-  if( isInMemBounds(savedatakey+ (LCS ? 0 : gp)) ) {
+  extern u32 savedatakey;
+
+  if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
     int i;
     for( i = 0; i < 0x10; i++ )
       key[i] = *(unsigned char*)(savedatakey + (LCS ? 0 : gp) + i);

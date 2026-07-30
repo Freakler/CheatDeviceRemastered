@@ -33,7 +33,7 @@
 #include "pspiofilemgr.h"
 #include "pspiofilemgr_dirent.h"
 #include "pspiofilemgr_stat.h"
-#include "utils.h"
+#include "putils.h"
 #include "cheats.h"
 #include "blitn.h"
 #include "editor.h"
@@ -42,13 +42,12 @@
 #include "lang.h"
 #include "versioning.h"
 #include "logs.h"
-#include "utils.h"
+#include "putils.h"
 
 #ifdef NAMERESOLV
   #include "minIni.h"
 #endif
 
-#ifndef __INTELLISENSE__
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
 
 // Stop linker from linking "Kernel_library" which seems to cause issues ("library not found" error)
@@ -58,7 +57,6 @@ int sceKernelLockLwMutex( SceLwMutexWorkarea *workarea __attribute__((unused)),
 
 int sceKernelUnlockLwMutex( SceLwMutexWorkarea *workarea __attribute__((unused)),
                             int lockCount __attribute__((unused))) { return 0; }
-#endif
 
 
 /// settings
@@ -90,7 +88,7 @@ static const char folder_scripts[] = "SCRIPTS/"; // inside basefolder
 
 #ifdef PREVIEW
 static const char folder_cheats[] = "CHEATS/"; // inside basefolder
-static const char folder_textures[] = "TEXTURES/"; // inside basefolder
+// static const char folder_textures[] = "TEXTURES/"; // inside basefolder
 #endif
 
 #ifdef LANG
@@ -130,7 +128,7 @@ static const u32 COLOR_TITLE        = WHITE;
 static const u32 COLOR_CATEGORY     = WHITE;
 
 #ifdef DEBUG
-static const u32 COLOR_DEBUG        = RED;
+// static const u32 COLOR_DEBUG        = RED;
 #endif
 
 static const u32 COLOR_VALUE        = CHDVC_GREEN;
@@ -497,7 +495,7 @@ const Menu_pack main_menu[] = {
   {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , exit_game            , "CROSS: Exit game"                 , ""                                   , "Exit the game and return to the main menu." },
 
   {"",0,0,-1,-1,-1,-1,-1,-1,NULL,NULL,NULL,NULL}
-}; const int menu_size = ARRAY_SIZE(main_menu);
+}; const int menu_size = ARRAY_SIZE(main_menu) - 1;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1112,7 +1110,7 @@ static int userscript_cd_scripts_count = 0;     // Number of scripts / folder in
 static int currentdir_files_folders_count = 0;  // Files & Folders count on current dir
 
 static const char* userscript_valid_extensions[] = { ".txt", ".sc" }; // Valid extensions for userscripts
-static const int userscript_valid_extensions_num = ARRAY_SIZE(userscript_valid_extensions);
+static const int userscript_valid_extensions_num = ARRAY_SIZE(userscript_valid_extensions) - 1;
 
 // Checks file extension to see if it is a valid userscript file
 static int is_file_userscript(const char* path)
@@ -1203,7 +1201,7 @@ static int userscripts_update_array()
       break;
     }
 
-    strncpy(uscript->path, dirent.d_name, dname_len);
+    memcpy(uscript->path, dirent.d_name, dname_len);
     uscript->path[dname_len] = '\0';
 
     // Copy attr
@@ -1415,7 +1413,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
             /// check "Author:" comment
             temphandle = strstr(linehandle, "Author:");
             if( temphandle != NULL ) {
-              strncpy(meta_author, temphandle+=7, META_AUTH_SIZE);
+              memcpy(meta_author, temphandle+=7, META_AUTH_SIZE);
               meta_category[META_AUTH_SIZE-1] = '\0';
               continue;
             }
@@ -1423,7 +1421,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
             /// check "Version:" comment
             temphandle = strstr(linehandle, "Version:");
             if( temphandle != NULL ) {
-              strncpy(meta_version, temphandle+=8, META_VERS_SIZE);
+              memcpy(meta_version, temphandle+=8, META_VERS_SIZE);
               meta_category[META_VERS_SIZE-1] = '\0';
               continue;
             }
@@ -1431,7 +1429,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
             /// check "Category:" comment
             temphandle = strstr(linehandle, "Category:");
             if( temphandle != NULL ) {
-              strncpy(meta_category, temphandle+=9, META_CATG_SIZE);
+              memcpy(meta_category, temphandle+=9, META_CATG_SIZE);
               meta_category[META_CATG_SIZE-1] = '\0';
               continue;
             }
@@ -1439,13 +1437,13 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
             /// check "Date:" comment
             temphandle = strstr(linehandle, "Date:");
             if( temphandle != NULL ) {
-              strncpy(meta_date, temphandle+=5, META_DATE_SIZE);
+              memcpy(meta_date, temphandle+=5, META_DATE_SIZE);
               meta_date[META_DATE_SIZE-1] = '\0';
               continue;
             }
             temphandle = strstr(linehandle, "Time:");
             if( temphandle != NULL ) {
-              strncpy(meta_date, temphandle+=5, META_DATE_SIZE);
+              memcpy(meta_date, temphandle+=5, META_DATE_SIZE);
               meta_date[META_DATE_SIZE-1] = '\0';
               continue;
             }
@@ -1453,7 +1451,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
             /// check "Description:" comment
             temphandle = strstr(linehandle, "Description:");
             if( temphandle != NULL ) {
-              strncpy(meta_description, temphandle+=12, META_DESC_SIZE);
+              memcpy(meta_description, temphandle+=12, META_DESC_SIZE);
               meta_description[META_DESC_SIZE-3] = '.';
               meta_description[META_DESC_SIZE-2] = '.';
               meta_description[META_DESC_SIZE-1] = '\0';
@@ -2047,7 +2045,7 @@ static int userscripts_ctrl() {
                         token = strtok_r(saveptr, "\'", &saveptr); // custom text can have whitespaces.
                         snprintf(identifier, sizeof(identifier), "%s %s", identifier, token);
                       } else
-                        strncpy(identifier, token, strlen(token)-1);
+                        memcpy(identifier, token, strlen(token)-1);
 
                       USERSCRIPT_LOG("String found: '%s'", identifier);
 
@@ -4527,7 +4525,7 @@ static int address_draw() {
     snprintf(buffer, sizeof(buffer), "phy: 0x%08X", tempaddress);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, RED);
 
-    snprintf(buffer, sizeof(buffer), "mod: 0x%08X", tempaddress - mod_text_addr);
+    snprintf(buffer, sizeof(buffer), "mod: 0x%08lX", tempaddress - mod_text_addr);
     drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 160.0f, RED);
 
     snprintf(buffer, sizeof(buffer), "$gp: 0x%08X", tempaddress  - gp);
@@ -6069,7 +6067,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
     snprintf(buffer, sizeof(buffer), "menu_size: %i", menu_size);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED);
 
-    snprintf(buffer, sizeof(buffer), "mod_text_addr: 0x%08X", mod_text_addr);
+    snprintf(buffer, sizeof(buffer), "mod_text_addr: 0x%08lX", mod_text_addr);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 252.0f, RED);
   }
   #endif
@@ -6446,6 +6444,9 @@ static int patch() {
   #ifdef PREVIEW
   snprintf(buffer, sizeof(buffer), "%s%s%s", basefolder, folder_cheats, LCS ? "LCS" : "VCS"); // "../CHEATS/xCS"
   sceIoMkdir(buffer, 0777);
+
+  // snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_textures); // "../TEXTURES/"
+  // sceIoMkdir(buffer, 0777);
   #endif
 
   #ifdef USERSCRIPTS
@@ -6457,9 +6458,6 @@ static int patch() {
   snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_translations); // "../TRANSLATIONS/"
   makedirs(buffer);
   #endif
-
-  //snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_textures); // "../TEXTURES/"
-  //sceIoMkdir(buffer, 0777);
 
 
   /// create name resolver thread (if .ini found)
@@ -6574,6 +6572,7 @@ int OnModuleStart(SceModule *mod) {
   return previous(mod);
 }
 
+#define EMULATOR_DEVCTL__IS_EMULATOR  0x00000003
 
 int module_start(SceSize argc, void* argp) {
   sceCtrlPeekBufferPositive(&pad, 1);

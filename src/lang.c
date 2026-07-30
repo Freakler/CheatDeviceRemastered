@@ -26,7 +26,7 @@
 #include "lang.h"
 #include <pspiofilemgr.h>
 #include <pspsysmem.h>
-#include "utils.h"
+#include "putils.h"
 #include "logs.h"
 
 #ifdef LANG
@@ -91,10 +91,10 @@ static void langTableInsert(LangHashTable *ht, const char *original_string, cons
     return;
   }
 
-  strncpy(new_kv->original_string, original_string, ostring_len);
+  memcpy(new_kv->original_string, original_string, ostring_len);
   new_kv->original_string[ostring_len] = '\0';
 
-  strncpy(new_kv->trans_string, trans_string, tstring_len);
+  memcpy(new_kv->trans_string, trans_string, tstring_len);
   new_kv->trans_string[tstring_len] = '\0';
 
   new_kv->next = ht->table[index]; // Point to the current list at index
@@ -222,16 +222,16 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
     return;
   }
 
-  strncpy(new_lf->lang_name, language, language_len);
+  memcpy(new_lf->lang_name, language, language_len);
   new_lf->lang_name[language_len] = '\0';
 
-  strncpy(new_lf->author_name, author, author_len);
+  memcpy(new_lf->author_name, author, author_len);
   new_lf->author_name[author_len] = '\0';
 
-  strncpy(new_lf->version, version, version_len);
+  memcpy(new_lf->version, version, version_len);
   new_lf->version[version_len] = '\0';
 
-  strncpy(new_lf->path, filename, filename_len);
+  memcpy(new_lf->path, filename, filename_len);
   new_lf->path[filename_len] = '\0';
 
   // Append new LanguageFile to table

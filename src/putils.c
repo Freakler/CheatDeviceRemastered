@@ -24,8 +24,9 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <psprtc.h>
 
-#include "utils.h"
+#include "putils.h"
 #include "main.h"
 #include "logs.h"
 
@@ -105,19 +106,19 @@ int setFolderModificationDateNow(const char* folder) {
 
   ret = sceIoGetstat(folder, &d_stat);
   DEBUG_LOG("sceIoGetstat() returned %i", ret);
-  DEBUG_LOG("%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
+  DEBUG_LOG("%04u-%02u-%02u  %02d:%02d:%02d", d_stat.sce_st_mtime.year, d_stat.sce_st_mtime.month, d_stat.sce_st_mtime.day, d_stat.sce_st_mtime.hour, d_stat.sce_st_mtime.minute, d_stat.sce_st_mtime.second );
 
-  pspTime timetest;
+  ScePspDateTime timetest;
   sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
 
-  d_stat.st_mtime.year   = timetest.year;
-  d_stat.st_mtime.month  = timetest.month;
-  d_stat.st_mtime.day    = timetest.day;
-  d_stat.st_mtime.hour   = timetest.hour;
-  d_stat.st_mtime.minute = timetest.minutes;
-  d_stat.st_mtime.second = timetest.seconds;
+  d_stat.sce_st_mtime.year   = timetest.year;
+  d_stat.sce_st_mtime.month  = timetest.month;
+  d_stat.sce_st_mtime.day    = timetest.day;
+  d_stat.sce_st_mtime.hour   = timetest.hour;
+  d_stat.sce_st_mtime.minute = timetest.minute;
+  d_stat.sce_st_mtime.second = timetest.second;
 
-  DEBUG_LOG("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
+  DEBUG_LOG("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.sce_st_mtime.year, d_stat.sce_st_mtime.month, d_stat.sce_st_mtime.day, d_stat.sce_st_mtime.hour, d_stat.sce_st_mtime.minute, d_stat.sce_st_mtime.second );
 
   ret = sceIoChstat(folder, &d_stat, 0x0020); // 0x0001 is passed for file mode, 0x0008 for creation time, 0x0020 modify time
   DEBUG_LOG("sceIoChstat() returned %i", ret);
@@ -125,17 +126,17 @@ int setFolderModificationDateNow(const char* folder) {
   return ret;
 }
 
-char *getFolderModificationDate(const char* folder) {
+char *getFolderModificationDate(const char* folder, char *out, size_t size) {
   DEBUG_LOG("getFolderModificationDate('%s')", folder);
 
-  char *res = "error";
   SceIoStat d_stat;
   int ret = sceIoGetstat(folder, &d_stat);
   DEBUG_LOG("sceIoGetstat() returned %i", ret);
   if( ret >= 0 )
-    snprintf(res, sizeof(res), "%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
-
-  return res;
+    snprintf(out, size, "%04u-%02u-%02u  %02d:%02d:%02d", d_stat.sce_st_mtime.year, d_stat.sce_st_mtime.month, d_stat.sce_st_mtime.day, d_stat.sce_st_mtime.hour, d_stat.sce_st_mtime.minute, d_stat.sce_st_mtime.second );
+  else
+    strncpy(out, "error", size);
+  return out;
 }
 #endif
 

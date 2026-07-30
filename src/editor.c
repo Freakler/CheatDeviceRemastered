@@ -25,7 +25,7 @@
 #include "main.h"
 #include "editor.h"
 #include "functions.h"
-#include "utils.h"
+#include "putils.h"
 #include "lang.h"
 
 #ifdef EDITORS
@@ -1119,7 +1119,7 @@ void *handling_flag(int calltype, int keypress, int base_address, int address, i
 void *vehicle_enginetype(int calltype, int keypress, int base_address, int address) {
   const char *list_name[] = { "Diesel", "Electro", "Petrol"};
   const unsigned char list_val[] = { 0x44, 0x45, 0x50 };
-  static short list_size = ARRAY_SIZE(list_val) + 1;
+  static short list_size = ARRAY_SIZE(list_val);
   static short i = 0;
   static char buffer[16];
   unsigned char current;
@@ -1157,7 +1157,7 @@ void *vehicle_enginetype(int calltype, int keypress, int base_address, int addre
 void *vehicle_lights_front(int calltype, int keypress, int base_address, int address ) {
   const char *list_name[] = { "Long", "Small", "Big", "Tall"};
   const unsigned char list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
-  static short list_size = ARRAY_SIZE(list_val) + 1;
+  static short list_size = ARRAY_SIZE(list_val);
   static short i = 0;
   static char buffer[16];
   unsigned char current;
@@ -1195,7 +1195,7 @@ void *vehicle_lights_front(int calltype, int keypress, int base_address, int add
 void *vehicle_lights_rear(int calltype, int keypress, int base_address, int address ) {
   const char *list_name[] = { "Long", "Small", "Big", "Tall"};
   const unsigned char list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
-  static short list_size = ARRAY_SIZE(list_val) + 1;
+  static short list_size = ARRAY_SIZE(list_val);
   static short i = 0;
   static char buffer[16];
   unsigned char current;
@@ -1233,7 +1233,7 @@ void *vehicle_lights_rear(int calltype, int keypress, int base_address, int addr
 void *vehicle_transtype(int calltype, int keypress, int base_address, int address ) {
   const char *list_name[] = { "Rear", "Front", "4-Wheel"};
   const unsigned char list_val[] = { 0x52, 0x46, 0x34 };
-  static short list_size = ARRAY_SIZE(list_val) + 1;
+  static short list_size = ARRAY_SIZE(list_val);
   static short i = 0;
   static char buffer[16];
   unsigned char current;
@@ -1273,9 +1273,9 @@ const Editor_pack lcs_vehiclespawns_menu[] = {
   //name                        //postfix    //address   //edit_bool  //type      //precision  //*value      //steps    //min    //max
   {"Identifier"                     , ""      , 0x00      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      /*, 0x82      , 0xD8  */   },
 
-  {"World Coord X"             , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
-  {"World Coord Y"             , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
-  {"World Coord Z"             , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
+  {"World Coord X"                  , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
+  {"World Coord Y"                  , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
+  {"World Coord Z"                  , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f   },
 
   {"Rotation"                       , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
 
@@ -1303,9 +1303,9 @@ const Editor_pack lcs_vehiclespawns_menu[] = {
 const Editor_pack vcs_vehiclespawns_menu[] = {
   //name                          //postfix    //address     //edit_bool  //type   //precision  //*value   //steps    //min    //max
   {"Identifier"                     , ""      , 0x00      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
-  {"World Coord X"             , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coord Y"             , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
-  {"World Coord Z"             , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord X"                  , ""      , 0x04      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Y"                  , ""      , 0x08      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
+  {"World Coord Z"                  , ""      , 0x0C      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1    },
 
   {"Rotation"                       , ""      , 0x10      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
 
@@ -1345,11 +1345,11 @@ const Editor_pack vcs_colsdat_menu[] = {
 
 const Editor_pack lcs_ipl_menu[] = { // todo for rotation : https://gtamods.com/wiki/Game.dtz#Generating_IPL_in_text_format
   //name                  //postfix       //address     //edit_bool  //type     //precision  //*value      //steps    //min    //max
-  {"World Coord X"     , ""          , 0x30       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
-  {"World Coord Y"     , ""          , 0x34       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
-  {"World Coord Z"     , ""          , 0x38       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
+  {"World Coord X"          , ""        , 0x30       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
+  {"World Coord Y"          , ""        , 0x34       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
+  {"World Coord Z"          , ""        , 0x38       , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
 
-  {"Identifier"             , ""          , 0x58       , TRUE    , TYPE_SHORT    , DEC    , 0            , 1       },
+  {"Identifier"             , ""        , 0x58       , TRUE    , TYPE_SHORT    , DEC    , 0            , 1       },
 
   // TODO
 
@@ -1448,10 +1448,10 @@ const Editor_pack lcs_ide_cars_menu[] = {  /// 6 - cars
 };
 
 const Editor_pack lcs_ide_ped_menu[] = {  /// 7 - ped
-  {"?"                                   , ""      , 0x2C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
+  {"?"                                    , ""      , 0x2C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"Threat (ped.dat)"                     , ""      , 0x30      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"Behaviour (pedstat.dat)"              , ""      , 0x34      , TRUE    , TYPE_INTEGER  , 0      , pedstatname  , 0      },
-  {"?"                                   , ""      , 0x38      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
+  {"?"                                    , ""      , 0x38      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Offset to ?"                          , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"RadioA"                               , ""      , 0x40      , TRUE    , TYPE_BYTE     , 0      , radiostation , 0      },
   {"RadioB"                               , ""      , 0x41      , TRUE    , TYPE_BYTE     , 0      , radiostation , 0      },
@@ -1565,9 +1565,9 @@ const Editor_pack lcs_particlecfg_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value         //steps    //min    //max
   {"Particle Type Name"                   , ""        , 0x04      , TRUE    , TYPE_STRING    , 20    , 0            , 0      }, // A
 
-  {"Render Colouring R"                   , "/255" , 0x70      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // B
-  {"Render Colouring G"                   , "/255" , 0x71      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // C
-  {"Render Colouring B"                   , "/255" , 0x72      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // D
+  {"Render Colouring R"                   , "/255"    , 0x70      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // B
+  {"Render Colouring G"                   , "/255"    , 0x71      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // C
+  {"Render Colouring B"                   , "/255"    , 0x72      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // D
   {"Initial Color Variation"              , ""        , 0x74      , TRUE    , TYPE_BYTE      , DEC   , 0            , 1      }, // CV (for r,g,b only, in %) (0-100);
 
   {"0x18 ?"                               , ""        , 0x18      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.00f  }, //
@@ -1576,12 +1576,12 @@ const Editor_pack lcs_particlecfg_menu[] = {
   {"Expansion Rate"                       , ""        , 0x20      , TRUE    , TYPE_FLOAT    , 4      , 0            , 0.001f }, // F
 
   ///Color "Fade-to-Black" options:
-  {"Initial Intensity (0-255)"            , "/255" , 0x36      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // G
+  {"Initial Intensity (0-255)"            , "/255"    , 0x36      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // G
   {"Fade Time"                            , ""        , 0x34      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // H
   {"Fade Amount (-255 to 255)"            , ""        , 0x38      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // I
 
   ///"Fade Alpha" options:
-  {"Initial Intensity (alpha)"            , "/255" , 0x3A      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // GA
+  {"Initial Intensity (alpha)"            , "/255"    , 0x3A      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // GA
   {"Fade Time (alpha)"                    , ""        , 0x3C      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // HA
   {"Fade Amount (alpha)"                  , ""        , 0x3E      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      }, // IA
 

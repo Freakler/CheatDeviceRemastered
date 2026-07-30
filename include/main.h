@@ -36,7 +36,7 @@
 // #define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 // #define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
-#define LOGGING ON // General Logging (DEBUG, INFO, WARNING, ERROR)
+#define LOGGING OFF // General Logging (DEBUG, INFO, WARNING, ERROR)
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
@@ -49,10 +49,10 @@
  #define CONFIG       // ( ~8   KB )
  #define LANG         // ( ~6   KB )
  #define SWIM
+ #define SPECIAL_VEHICLES // todo -> LCS: spawn "HELI" (0xC6)  VCS: Plane crashes because of something else
 //  #define ACHIEVEMENTS     // ( ~4 KB ) discontinued
 //  #define SAVEDITOR        // (  ? KB ) removed
 //  #define MEMORY           // display memory usage on screen (LCS US v3.00 only)
-//  #define SPECIAL_VEHICLES // todo -> LCS: spawn "HELI" (0xC6)  VCS: Plane crashes because of something else
 #else
  #undef LOGGING
  #undef DEBUG
