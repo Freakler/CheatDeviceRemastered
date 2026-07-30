@@ -95,9 +95,6 @@ Translating CDR is actually pretty simple:
 
  3. Start translating! Fill every line that has an english string and `=` with the translated string after.
 
-> [!WARNING]
->  You can only use [ASCII printable characters](https://en.wikipedia.org/wiki/ASCII#Printable_character_table), if you try to use accented or other types of characters, they won't show in CDR.
-
 > [!IMPORTANT]
 >  - If you don't want / need to translate a string, just leave everything after the `=` blank (it will default to english in CDR).
 >  - If you don't wanna delete an `.ini` file but don't want it to show on CDR, append `_ignore.ini` to its filename.
