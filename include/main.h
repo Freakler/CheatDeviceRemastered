@@ -36,7 +36,7 @@
 // #define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 // #define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
-#define LOGGING OFF // General Logging (DEBUG, INFO, WARNING, ERROR)
+#define LOGGING ON // General Logging (DEBUG, INFO, WARNING, ERROR)
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
