@@ -61,10 +61,10 @@ You can find them ***[here](https://github.com/Freakler/CheatDeviceRemastered-Us
 <li>added Empire Editor (VCS) (thx <b><a href="https://github.com/NABN00B">@NABN00B</a></b>)
 <li>added <code>ULUS11826</code> (<i>Seen in Liberty City</i> Mod) to <code>plugin.ini</code>
 <li>added Spanish translation (thx <b><a href="https://github.com/vdarg">@vdarg</a></b> / <b>exvaae</b>)
-<li>added an optional loader prx for older CFWs (via <b><a href="https://github.com/danssmnt">@danssmnt</a></b>)
-<li>fixed UserScript Menu lag for PPSSPP on devices with slow storage (via <b><a href="https://github.com/danssmnt">@danssmnt</a></b>)
-<li>code improvements, optimizations and LOTS of fixes (via <b><a href="https://github.com/danssmnt">@danssmnt</a></b>)
-<li>compatibility with newer SDK (via <b><a href="https://github.com/danssmnt">@danssmnt</a></b> &amp; thx to <b><a href="https://github.com/Parik27">@Parik27</a></b>)
+<li>added an optional loader prx for older CFWs (via <b><a href="https://github.com/daniemun">@daniemun</a></b>)
+<li>fixed UserScript Menu lag for PPSSPP on devices with slow storage (via <b><a href="https://github.com/daniemun">@daniemun</a></b>)
+<li>code improvements, optimizations and LOTS of fixes (via <b><a href="https://github.com/daniemun">@daniemun</a></b>)
+<li>compatibility with newer SDK (via <b><a href="https://github.com/daniemun">@daniemun</a></b> &amp; thx to <b><a href="https://github.com/Parik27">@Parik27</a></b>)
 </ul></details>
 
 <details><summary><b>v1.0h2</b> <i>(6th Jan. 2025)</i></summary><ul>
@@ -90,8 +90,8 @@ You can find them ***[here](https://github.com/Freakler/CheatDeviceRemastered-Us
 <li>fixed a problem with heli-height-patch in combination with PPSSPP (thx <b><a href="https://github.com/Parik27">@Parik</a></b>)
 <li>added experimental Swimming Cheat for LCS
 <li>added Option to swap X with R for special cheats (for gta_remastered's swapped controls)
-<li>added unlimited swimming cheat for VCS (by <b><a href="https://github.com/danssmnt">@danssmnt</a></b>)
-<li>the whole menu can now be translated!! (by <b><a href="https://github.com/danssmnt">@danssmnt</a></b>)
+<li>added unlimited swimming cheat for VCS (by <b><a href="https://github.com/daniemun">@daniemun</a></b>)
+<li>the whole menu can now be translated!! (by <b><a href="https://github.com/daniemun">@daniemun</a></b>)
 <li>more optimizations and fixes
 </ul></details>
 
@@ -257,7 +257,7 @@ You can find them ***[here](https://github.com/Freakler/CheatDeviceRemastered-Us
 
 
 ## Thanks &amp; Greetings
-*Edison Carter, vettefan88, Waterbottle, Jeremie Blanc, ADePSP, Joek2100, PSPHacker108, Sousanator, Rasal, Mister Enchilada, Skiller, theY4Kman, Noru, KING_REY-S, thehambone, the NSA, gtaforums.com, gtamods.com, gtamodding.ru, TheFlow, aap, Firehead, Silent, neur0n, Samilop "Cimmerian" Iter, darkdraggy, hrydgard, unknownbrackets, Micsuit / danssmnt, NielsB, metehan989, DenielX, Acid_Snake, NABN00B*
+*Edison Carter, vettefan88, Waterbottle, Jeremie Blanc, ADePSP, Joek2100, PSPHacker108, Sousanator, Rasal, Mister Enchilada, Skiller, theY4Kman, Noru, KING_REY-S, thehambone, the NSA, gtaforums.com, gtamods.com, gtamodding.ru, TheFlow, aap, Firehead, Silent, neur0n, Samilop "Cimmerian" Iter, darkdraggy, hrydgard, unknownbrackets, daniemun, NielsB, metehan989, DenielX, Acid_Snake, NABN00B*
 
 People on the [CheatDeviceRemastered Discord Server](https://discord.gg/7DERFmkgYq) and everyone else contributing and supporting!
 

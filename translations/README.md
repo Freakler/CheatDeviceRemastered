@@ -74,7 +74,7 @@
 
 
 # Translating CheatDevice Remastered
-_Translation add-on made and readme written by **[@danssmnt](https://github.com/danssmnt)**_.
+_Translation add-on made and readme written by **[@daniemun](https://github.com/daniemun)**_.
 
 Translating CDR is actually pretty simple:
 
