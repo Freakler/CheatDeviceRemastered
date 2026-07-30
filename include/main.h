@@ -1,17 +1,17 @@
 /*
  *  CheatDevice Remastered
  *  Copyright (C) 2017-2025, Freakler
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -94,7 +94,7 @@ typedef struct {
 } Menu_pack;
 
 
-enum { 
+enum {
   FUNC_GET_STATUS,
   FUNC_GET_STRING,
   FUNC_APPLY,
@@ -120,20 +120,20 @@ enum {
 };
 
 enum {
-  MENU_DUMMY,    
-  MENU_CATEGORY,    
+  MENU_DUMMY,
+  MENU_CATEGORY,
   MENU_FUNCTION,  // simple function call - no check calls no returns
   MENU_VALUE,     // list with options (left/right)
   MENU_SWITCH,    // simple ON/OFF switch
   MENU_VALSWITCH, // list with options (left/right) with ON/OFF switch
-  
+
   MENU_CDR_FREECAM,
   MENU_CDR_USER,
   MENU_CDR_USCM,
   MENU_CDR_HEX,
   MENU_CDR_EDITOR,
   MENU_CDR_FILES,
-  
+
   MENU_CONFIG     // special args
 };
 
@@ -148,7 +148,7 @@ enum {
   CAT_CHDEV,
   CAT_CATGRY,
   CAT_GAME,
-  
+
   /// actual categories
   CAT_PLAYER,
   CAT_VEHICL,
@@ -165,7 +165,7 @@ enum {
   CAT_COLOR,
   CAT_TRFFIC,
   CAT_PEDS,
-  
+
   CAT_COUNTER // my little counter (must be last)
 };
 

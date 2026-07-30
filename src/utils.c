@@ -1,17 +1,17 @@
 /*
  *  CheatDevice Remastered
  *  Copyright (C) 2017-2025, Freakler
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -36,7 +36,7 @@ extern const char *basefolder;
 int doesFileExist(const char* path) {
   SceIoStat stat;
   memset(&stat, 0, sizeof(SceIoStat));
-  
+
   if ( sceIoGetstat(path, &stat) < 0 ) {
     DEBUG_LOG("doesFileExist('%s') -> no", path);
     return 0;
@@ -51,7 +51,7 @@ int doesFileExist(const char* path) {
 int doesDirExist(const char* path) {
   SceIoStat stat;
   memset(&stat, 0, sizeof(SceIoStat));
-  
+
   if ( sceIoGetstat(path, &stat) < 0 ) {
     DEBUG_LOG("doesDirExist('%s') -> no", path);
     return 0;
@@ -77,7 +77,7 @@ int countFilesInFolder(const char *path) {
     sceIoDclose(fd);
   } else return fd;
   return file_count;
-}  
+}
 
 int countFoldersInFolder(const char *path) {
   int folder_count = 0;
@@ -95,51 +95,51 @@ int countFoldersInFolder(const char *path) {
   } else return fd;
   return folder_count;
 }
-    
+
 #ifdef SAVEDITOR
 int setFolderModificationDateNow(const char* folder) {
-  DEBUG_LOG("setFolderModificationDateNow('%s')", folder); 
-  
+  DEBUG_LOG("setFolderModificationDateNow('%s')", folder);
+
   int ret;
   SceIoStat d_stat;
-  
+
   ret = sceIoGetstat(folder, &d_stat);
   DEBUG_LOG("sceIoGetstat() returned %i", ret);
   DEBUG_LOG("%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
-  
+
   pspTime timetest;
   sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
-      
+
   d_stat.st_mtime.year   = timetest.year;
   d_stat.st_mtime.month  = timetest.month;
   d_stat.st_mtime.day    = timetest.day;
   d_stat.st_mtime.hour   = timetest.hour;
   d_stat.st_mtime.minute = timetest.minutes;
   d_stat.st_mtime.second = timetest.seconds;
-  
-  DEBUG_LOG("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second ); 
-  
+
+  DEBUG_LOG("new: %04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
+
   ret = sceIoChstat(folder, &d_stat, 0x0020); // 0x0001 is passed for file mode, 0x0008 for creation time, 0x0020 modify time
-  DEBUG_LOG("sceIoChstat() returned %i", ret); 
-  
+  DEBUG_LOG("sceIoChstat() returned %i", ret);
+
   return ret;
 }
 
 char *getFolderModificationDate(const char* folder) {
-  DEBUG_LOG("getFolderModificationDate('%s')", folder); 
-  
+  DEBUG_LOG("getFolderModificationDate('%s')", folder);
+
   char *res = "error";
   SceIoStat d_stat;
   int ret = sceIoGetstat(folder, &d_stat);
-  DEBUG_LOG("sceIoGetstat() returned %i", ret); 
+  DEBUG_LOG("sceIoGetstat() returned %i", ret);
   if( ret >= 0 )
     snprintf(res, sizeof(res), "%04u-%02u-%02u  %02d:%02d:%02d", d_stat.st_mtime.year, d_stat.st_mtime.month, d_stat.st_mtime.day, d_stat.st_mtime.hour, d_stat.st_mtime.minute, d_stat.st_mtime.second );
-    
+
   return res;
 }
-#endif 
+#endif
 
-int adrenalineCheck() { 
+int adrenalineCheck() {
   return doesFileExist("flash1:/config.adrenaline");
 }
 
@@ -149,11 +149,11 @@ void clearICacheFor(u32 address) {
   /// http://www.ethernut.de/en/documents/arm-inline-asm.html
   /// https://wiki.osdev.org/Inline_Assembly
   /// asm(code : output operand list : input operand list : clobber list);
-  
+
   //asm("li $t0,0x08A0E898\n"); //this works.. but i want to store "address"
-  
-  // DEBUG_LOG("clearICacheFor(0x%08X)", address); 
-  
+
+  // DEBUG_LOG("clearICacheFor(0x%08X)", address);
+
   asm volatile ( // volatile so compiler won't mess with this
     "cache 8, 0(%0)\n"
     :
@@ -165,14 +165,14 @@ void clearICacheFor(u32 address) {
 
 void writeShort(uint8_t *address, short value) { // because of memory alignment
   int adr = (int)&value;
-  
+
   *(unsigned char*)(address + 0) = *(unsigned char*)adr;
   *(unsigned char*)(address + 1) = *(unsigned char*)(adr+1);
 }
 
 void writeInteger(uint8_t *address, int value) { // because of memory alignment
   //DEBUG_LOG("value: 0x%08X", value);
-  
+
   int adr = (int)&value;
   //DEBUG_LOG("adr: '0x%08X'", adr);
 
@@ -184,7 +184,7 @@ void writeInteger(uint8_t *address, int value) { // because of memory alignment
 
 void writeFloat(uint8_t *address, float value) { // because of memory alignment
   //DEBUG_LOG("value: %f", value);
-  
+
   int adr = (int)&value;
   //DEBUG_LOG("adr: '0x%08X'", adr);
 
@@ -217,7 +217,7 @@ void makedirs(const char *path) { // recursively create path
     *sep = '/';
   }
   if( sceIoMkdir(path, 0777) < 0 ) {
-    ERROR_LOG("Unable to create '%s'", path); 
+    ERROR_LOG("Unable to create '%s'", path);
   }
 }
 
@@ -232,9 +232,9 @@ void makedirs(const char *path) { // recursively create path
 } */
 
 int getHighMemBound() { // thx Acid_Snake :)
-  // PSP Fat -> ~24 MB 
+  // PSP Fat -> ~24 MB
   // PSP Slim/Go/Street (~54 MB with High Memory Layout)
-  
+
   /***************************************************************************************
                 Normal          High Memory
   Adrenaline    0x09FC0000      0x0BBC0000      -> you can always access the higher memory in Adrenaline up to 0x0C000000 without crashing.. (although the games wont use it)
@@ -243,33 +243,33 @@ int getHighMemBound() { // thx Acid_Snake :)
   PRO-C2        0x09FC0000      0x09FC0000      -> feature not working? (access yes, available to game no)
   PPSSPP (64)   0x0C000000
   PPSSPP (93)   0x0DD00000
-  
+
   ***************************************************************************************/
-  
-  // in PRO-C2 CFW basically plugins load first and extra ram is enabled second  
+
+  // in PRO-C2 CFW basically plugins load first and extra ram is enabled second
   // https://github.com/MrColdbird/procfw/blob/d9435ff4af6ba60466b46019393f6bbd1fc72ac0/SystemControl/mediasync_patch.c#L152
-   
+
   // For high memory support there are always two patches:
   //  One to make the memory read/write for user
   //  One to force it into p2 (the user partition)
-  
-  
+
+
   SceUID block = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "test", PSP_SMEM_High, 0x100, NULL);
   if ( block < 0 ) return -1; // Shouldn't fail but we never know...
 
   int address = (int)sceKernelGetBlockHeadAddr(block) + 0x100; // highest address is not calculated precisely this way either but it gives a rough idea
   sceKernelFreePartitionMemory(block);
-  
-  
+
+
   /// manual adjustment for non-highmem
-  if( address == 0x09FC0000 ) 
+  if( address == 0x09FC0000 )
     address = 0x0A000000;
-  
-  /// manual adjustment for high-mem 
-  if( address >= 0x0B000000 && !PPSSPP ) 
+
+  /// manual adjustment for high-mem
+  if( address >= 0x0B000000 && !PPSSPP )
     address = 0x0C000000; // SHOULD be the same for all CFWs
-  
-  
+
+
   return address;
 }
 
@@ -281,9 +281,9 @@ float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float
   return sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2) + powf(z2 - z1, 2));
 }
 
-void getSizeString(char *string, uint64_t size) { 
+void getSizeString(char *string, uint64_t size) {
   static const char *units[] = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
-  
+
   double double_size = (double)size;
   int i = 0;
   while( double_size >= 1024.0 ) {
@@ -294,10 +294,10 @@ void getSizeString(char *string, uint64_t size) {
 }
 
 // Check if filename (or path) ends with extension
-int fileEndsWithExtension(const char* path, const char* extension) 
+int fileEndsWithExtension(const char* path, const char* extension)
 {
   if ( !path || !extension || *path == '\0' || *extension == '\0' ) return 0;
-  
+
   return !strcasecmp(path + strlen(path) - strlen(extension), extension);
 }
 

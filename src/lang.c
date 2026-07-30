@@ -361,7 +361,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
 
   char *fileread = NULL;
   int vplRet = sceKernelTryAllocateVpl(langVpl, alloc_size, (void**)&fileread);
-  if ( vplRet < 0 ) 
+  if ( vplRet < 0 )
   {
     ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", alloc_size, vplRet);
     return;

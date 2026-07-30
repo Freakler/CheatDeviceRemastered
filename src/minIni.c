@@ -129,7 +129,7 @@ static TCHAR *skiptrailing(const TCHAR *str, const TCHAR *base)
 static TCHAR *striptrailing(TCHAR *str)
 {
   TCHAR *ptr = skiptrailing(_tcschr(str, '\0'), str);
-  
+
   *ptr='\0';
   return str;
 }
@@ -138,7 +138,7 @@ static TCHAR *save_strncpy(TCHAR *dest, const TCHAR *source, int maxlen, enum qu
 {
   int d, s;
 
-  
+
   if (option == QUOTE_ENQUOTE && maxlen < 3)
     option = QUOTE_NONE;  /* cannot store two quotes and a terminating zero in less than 3 characters */
 
@@ -170,7 +170,7 @@ static TCHAR *save_strncpy(TCHAR *dest, const TCHAR *source, int maxlen, enum qu
     dest[d] = '\0';
     break;
   default:
-    
+
     break;
   } /* switch */
 
@@ -185,7 +185,7 @@ static int getkeystring(INI_FILETYPE *fp, const TCHAR *Section, const TCHAR *Key
   enum quote_option quotes;
   TCHAR LocalBuffer[INI_BUFFERSIZE];
 
-  
+
   /* Move through file 1 line at a time until a section is matched or EOF. If
    * parameter Section is NULL, only look at keys above the first section. If
    * idxSection is postive, copy the relevant section name.
@@ -201,8 +201,8 @@ static int getkeystring(INI_FILETYPE *fp, const TCHAR *Section, const TCHAR *Key
     } while (*sp != '[' || ep == NULL || (((int)(ep-sp-1) != len || _tcsnicmp(sp+1,Section,len) != 0) && ++idx != idxSection));
     if (idxSection >= 0) {
       if (idx == idxSection) {
-        
-        
+
+
         *ep = '\0';
         save_strncpy(Buffer, sp + 1, BufferSize, QUOTE_NONE);
         return 1;
@@ -214,7 +214,7 @@ static int getkeystring(INI_FILETYPE *fp, const TCHAR *Section, const TCHAR *Key
   /* Now that the section has been found, find the entry.
    * Stop searching upon leaving the section's area.
    */
-  
+
   len = (Key != NULL) ? (int)_tcslen(Key) : 0;
   idx = -1;
   do {
@@ -227,8 +227,8 @@ static int getkeystring(INI_FILETYPE *fp, const TCHAR *Section, const TCHAR *Key
   } while (*sp == ';' || *sp == '#' || ep == NULL || (((int)(skiptrailing(ep,sp)-sp) != len || _tcsnicmp(sp,Key,len) != 0) && ++idx != idxKey));
   if (idxKey >= 0) {
     if (idx == idxKey) {
-      
-      
+
+
       *ep = '\0';
       striptrailing(sp);
       save_strncpy(Buffer, sp, BufferSize, QUOTE_NONE);
@@ -238,8 +238,8 @@ static int getkeystring(INI_FILETYPE *fp, const TCHAR *Section, const TCHAR *Key
   } /* if */
 
   /* Copy up to BufferSize chars to buffer */
-  
-  
+
+
   sp = skipleading(ep + 1);
   /* Remove a trailing comment */
   isstring = 0;
@@ -253,7 +253,7 @@ static int getkeystring(INI_FILETYPE *fp, const TCHAR *Section, const TCHAR *Key
       ep++;                   /* skip \" (both quotes */
     } /* if */
   } /* for */
-  
+
   *ep = '\0';                 /* terminate at a comment */
   striptrailing(sp);
   /* Remove double quotes surrounding a value */
@@ -307,7 +307,7 @@ static int getkeystringfromstring(const TCHAR *iniContent, const TCHAR *Section,
     const TCHAR *currentPosition = iniContent;
     const TCHAR *endOfString = iniContent + _tcslen(iniContent);
 
-    
+
     /* Move through the string 1 line at a time until a section is matched or EOF. If
      * parameter Section is NULL, only look at keys above the first section. If
      * idxSection is positive, copy the relevant section name.
@@ -323,8 +323,8 @@ static int getkeystringfromstring(const TCHAR *iniContent, const TCHAR *Section,
         } while (*sp != '[' || ep == NULL || (((int)(ep - sp - 1) != len || _tcsnicmp(sp + 1, Section, len) != 0) && ++idx != idxSection));
         if (idxSection >= 0) {
             if (idx == idxSection) {
-                
-                
+
+
                 *ep = '\0';
                 save_strncpy(Buffer, sp + 1, BufferSize, QUOTE_NONE);
                 return 1;
@@ -336,7 +336,7 @@ static int getkeystringfromstring(const TCHAR *iniContent, const TCHAR *Section,
     /* Now that the section has been found, find the entry.
      * Stop searching upon leaving the section's area.
      */
-    
+
     len = (Key != NULL) ? (int)_tcslen(Key) : 0;
     idx = -1;
     do {
@@ -349,8 +349,8 @@ static int getkeystringfromstring(const TCHAR *iniContent, const TCHAR *Section,
     } while (*sp == ';' || *sp == '#' || ep == NULL || (((int)(skiptrailing(ep, sp) - sp) != len || _tcsnicmp(sp, Key, len) != 0) && ++idx != idxKey));
     if (idxKey >= 0) {
         if (idx == idxKey) {
-            
-            
+
+
             *ep = '\0';
             striptrailing(sp);
             save_strncpy(Buffer, sp, BufferSize, QUOTE_NONE);
@@ -360,8 +360,8 @@ static int getkeystringfromstring(const TCHAR *iniContent, const TCHAR *Section,
     }             /* if */
 
     /* Copy up to BufferSize chars to buffer */
-    
-    
+
+
     sp = skipleading(ep + 1);
     /* Remove a trailing comment */
     isstring = 0;
@@ -375,7 +375,7 @@ static int getkeystringfromstring(const TCHAR *iniContent, const TCHAR *Section,
             ep++; /* skip \" (both quotes */
         }        /* if */
     }            /* for */
-    
+
     *ep = '\0'; /* terminate at a comment */
     striptrailing(sp);
     /* Remove double quotes surrounding a value */
@@ -428,7 +428,7 @@ int ini_getsfromstring(const TCHAR *Section, const TCHAR *Key, const TCHAR *DefV
   int ok = 0;
 
   ok = getkeystringfromstring(string, Section, Key, -1, -1, Buffer, BufferSize);
-  
+
   if (!ok)
     save_strncpy(Buffer, DefValue, BufferSize, QUOTE_NONE);
 
@@ -568,7 +568,7 @@ int  ini_getkey(const TCHAR *Section, int idx, TCHAR *Buffer, int BufferSize, co
   return _tcslen(Buffer);
 }
 
-int ini_getkeyfromstring(const TCHAR *Section, int idx, TCHAR *Buffer, int BufferSize, const TCHAR *string) 
+int ini_getkeyfromstring(const TCHAR *Section, int idx, TCHAR *Buffer, int BufferSize, const TCHAR *string)
 {
   int ok = 0;
 
@@ -588,7 +588,7 @@ static void ini_tempname(TCHAR *dest, const TCHAR *source, int maxlength)
 
   save_strncpy(dest, source, maxlength, QUOTE_NONE);
   p = _tcsrchr(dest, '\0');
-  
+
   *(p - 1) = '~';
 }
 
@@ -599,7 +599,7 @@ static enum quote_option check_enquote(const TCHAR *Value)
   /* run through the value, if it has trailing spaces, or '"', ';' or '#'
    * characters, enquote it
    */
-  
+
   for (p = Value; *p != '\0' && *p != '"' && *p != ';' && *p != '#'; p++)
     /* nothing */;
   return (*p != '\0' || (p > Value && *(p - 1) == ' ')) ? QUOTE_ENQUOTE : QUOTE_NONE;
@@ -613,7 +613,7 @@ static void writesection(TCHAR *LocalBuffer, const TCHAR *Section, INI_FILETYPE 
     LocalBuffer[0] = '[';
     save_strncpy(LocalBuffer + 1, Section, INI_BUFFERSIZE - 4, QUOTE_NONE);  /* -1 for '[', -1 for ']', -2 for '\r\n' */
     p = _tcsrchr(LocalBuffer, '\0');
-    
+
     *p++ = ']';
     _tcscpy(p, INI_LINETERM); /* copy line terminator (typically "\n") */
     ini_write(LocalBuffer, fp);
@@ -626,11 +626,11 @@ static void writekey(TCHAR *LocalBuffer, const TCHAR *Key, const TCHAR *Value, I
   enum quote_option option = check_enquote(Value);
   save_strncpy(LocalBuffer, Key, INI_BUFFERSIZE - 3, QUOTE_NONE);  /* -1 for '=', -2 for '\r\n' */
   p = _tcsrchr(LocalBuffer, '\0');
-  
+
   *p++ = '=';
   save_strncpy(p, Value, INI_BUFFERSIZE - (p - LocalBuffer) - 2, option); /* -2 for '\r\n' */
   p = _tcsrchr(LocalBuffer, '\0');
-  
+
   _tcscpy(p, INI_LINETERM); /* copy line terminator (typically "\n") */
   ini_write(LocalBuffer, fp);
 }
@@ -674,7 +674,7 @@ int ini_puts(const TCHAR *Section, const TCHAR *Key, const TCHAR *Value, const T
   TCHAR LocalBuffer[INI_BUFFERSIZE];
   int len, match, count;
 
-  
+
   if (!ini_openread(Filename, &rfp)) {
     /* If the .ini file doesn't exist, make a new file */
     if (Key!=NULL && Value!=NULL) {

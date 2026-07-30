@@ -1,17 +1,17 @@
 /*
  *  CheatDevice Remastered
  *  Copyright (C) 2017-2025, Freakler
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,7 +25,7 @@
 #define SCREEN_WIDTH 480.0f
 #define SCREEN_HEIGHT 272.0f
 
-/// my ugly text storeing thingy 
+/// my ugly text storeing thingy
 #define MAX_TEXTS 512  // number of texts that can be displayed at once
 #define MSGLENGTH 128  // length messages can have
 
@@ -52,8 +52,8 @@
 
 #define SIZE_VCS_SMALL 0.46f //0.5f
 #define SIZE_VCS_NORMAL 0.6f
-#define SIZE_VCS_BIG 0.8f 
-#define SIZE_VCS_HUGE 1.0f 
+#define SIZE_VCS_BIG 0.8f
+#define SIZE_VCS_HUGE 1.0f
 
 
 #define MAKE_JUMP(a, f) _sw(0x08000000 | (((u32)(f) & 0x0FFFFFFC) >> 2), a);
@@ -96,7 +96,7 @@ extern char *(*SetBoxColor)(char *param_1,char alpha,char red,char green,char bl
 extern float *(*SetBoxCoords)(float param_1, float param_2, float param_3, float param_4, float *param_5);
 extern void (*DrawRect)(float *param_1,unsigned int *param_2,char param_3);
 
-      
+
 /// string
 extern void (*PrintString_LCS)(float X, float Y, wchar_t* text, int* unknown);
 extern void (*PrintString_VCS)(wchar_t* text, int x, int y);
@@ -147,7 +147,7 @@ extern void (*SetSlantRefPoint)(float param_1, float param_2);
 #define CLEAR   0x00000000
 
 #define ALPHABLACK  0x88000000 // used for help-box, map legend by game
-#define ALPHAWHITE  0x99FFFFFF // 
+#define ALPHAWHITE  0x99FFFFFF //
 
 #define LIGHTBLUE  0xFFFF9900
 
@@ -164,7 +164,7 @@ extern void (*SetSlantRefPoint)(float param_1, float param_2);
 #define LCS_HEALTH   0xFF00008E
 #define VCS_HEALTH   0xFF8056BB // not 100% original
 #define LCS_ARMOR    0xFFBE782A
-#define VCS_ARMOR    0xFFCFD714 // not 100% original 
+#define VCS_ARMOR    0xFFCFD714 // not 100% original
 
 void drawBox(float x, float y, float width, float height, u32 color);
 void drawUiBox(float x, float y, float width, float height, float bordersize, u32 bordercolor, u32 bgcolor);

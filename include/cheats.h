@@ -1,17 +1,17 @@
 /*
  *  CheatDevice Remastered
  *  Copyright (C) 2017-2025, Freakler
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -65,7 +65,7 @@ typedef struct {
   char unlocked;
 } achievement_pack;
 
-/// Calls 
+/// Calls
 SceInt64 sceKernelGetSystemTimeWidePatched(void);
 
 extern int (* GetPPLAYER)();
@@ -148,7 +148,7 @@ extern void (*FUN_001a8d9c_CPed_ProcessBuoyancy)(int param_1);
 extern void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1);
 //#endif
 
-/// Cheat functions 
+/// Cheat functions
 void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultval);
 void *debug_vars(int calltype, int keypress, int defaultstatus, int defaultval);
 
@@ -301,7 +301,7 @@ void test_func();
 void *test_switch(int calltype, int keypress, int defaultstatus);
 
 // GAME_LOGGING
-extern void (*debugprint)(const char *text, ...); 
+extern void (*debugprint)(const char *text, ...);
 void debugprint_patched(const char *text, ...);
 void drawGameLog();
 

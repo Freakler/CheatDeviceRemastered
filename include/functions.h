@@ -1,17 +1,17 @@
 /*
  *  CheatDevice Remastered
  *  Copyright (C) 2017-2025, Freakler
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -103,7 +103,7 @@ enum {
   //VEHICLE_FERRY,   // LCS only
   //VEHICLE_BICYCLE, // VCS only
   //VEHICLE_JETSKI,  // VCS only
-  
+
 };
 
 enum {
@@ -163,7 +163,7 @@ char *getString(int adr, int mode);
 unsigned char *getSavedataKey();
 
 ////////////////////////////////////////////////////////////////////////
- 
+
 void teleport(float x, float y, float z);
 void teleportFixForVehicle();
 
@@ -215,7 +215,7 @@ int checkPedIsInWater(int ped_base_adr);
 int getPedDrowning(int ped_base_adr);
 
 
-/// Vehicle 
+/// Vehicle
 char lcs_getVehicleColorBase(int vehicle_base_adr);
 char lcs_getVehicleColorStripe(int vehicle_base_adr);
 void lcs_setVehicleColorBase(int vehicle_base_adr, char x);

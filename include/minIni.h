@@ -23,7 +23,7 @@
 
 #if INI_PARSING
 
-#define INI_READONLY // 
+#define INI_READONLY //
 
 #include "minGlue.h"
 
