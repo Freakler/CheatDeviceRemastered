@@ -29,6 +29,10 @@
 # endif
 #endif
 
+#include "main.h"
+
+#if INI_PARSING
+
 #define MININI_IMPLEMENTATION
 #include "minIni.h"
 
@@ -906,3 +910,5 @@ int strnicmp(const TCHAR *s1, const TCHAR *s2, size_t n)
   return 0;
 }
 #endif /* PORTABLE_STRNICMP */
+
+#endif /* INI_PARSING */

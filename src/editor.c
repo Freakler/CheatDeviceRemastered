@@ -2273,7 +2273,7 @@ extern int editor_garageslot_current; // not used here
 void *editor_garage(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    snprintf(buffer, sizeof(buffer), " (%i/%i)", garage_cur, var_garageslots );
+    snprintf(buffer, sizeof(buffer), " (%i/%lu)", garage_cur, var_garageslots );
     return (void *)buffer;
 
   } else if( calltype == FUNC_GET_VALUE ) {
@@ -2363,7 +2363,7 @@ extern int editor_pickup_current;
 void *editor_pickups(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    snprintf(buffer, sizeof(buffer), " (%i/%i)", pickups_cur, var_pickupslots);
+    snprintf(buffer, sizeof(buffer), " (%i/%lu)", pickups_cur, var_pickupslots);
     return (void *)buffer;
   } else if( calltype == FUNC_GET_VALUE ) {
     return (int*)editor_pickup_current;
@@ -2380,7 +2380,7 @@ extern int editor_mapicon_current;
 void *editor_mapicons(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    snprintf(buffer, sizeof(buffer), " (%i/%i)", mapicons_cur, var_radarblipslots);
+    snprintf(buffer, sizeof(buffer), " (%i/%lu)", mapicons_cur, var_radarblipslots);
     return (void *)buffer;
     
   } else if(calltype == FUNC_GET_VALUE ) {
@@ -2398,7 +2398,7 @@ extern int editor_vehiclespawn_current;
 void *editor_vehspawns(int calltype, int value) {
   static char buffer[16];
   if( calltype == FUNC_GET_STRING ) { 
-    snprintf(buffer, sizeof(buffer), " (%i/%i)", vehspawns_cur, var_vehiclesworldspawnslots);
+    snprintf(buffer, sizeof(buffer), " (%i/%lu)", vehspawns_cur, var_vehiclesworldspawnslots);
     return (void *)buffer;
 
   } else if( calltype == FUNC_GET_VALUE ) {

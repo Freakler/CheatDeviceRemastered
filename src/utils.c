@@ -38,11 +38,11 @@ int doesFileExist(const char* path) {
   memset(&stat, 0, sizeof(SceIoStat));
   
   if ( sceIoGetstat(path, &stat) < 0 ) {
-    DEBUG_LOG("[INFO] doesFileExist('%s') -> no", path);
+    DEBUG_LOG("doesFileExist('%s') -> no", path);
     return 0;
   }
 
-    DEBUG_LOG("[INFO] doesFileExist('%s') -> %s", path, FIO_SO_ISREG(stat.st_attr) ? "yes" : "no");
+  DEBUG_LOG("doesFileExist('%s') -> %s", path, FIO_SO_ISREG(stat.st_attr) ? "yes" : "no");
 
   return FIO_SO_ISREG(stat.st_attr);
 }
@@ -53,11 +53,11 @@ int doesDirExist(const char* path) {
   memset(&stat, 0, sizeof(SceIoStat));
   
   if ( sceIoGetstat(path, &stat) < 0 ) {
-    DEBUG_LOG("[INFO] doesDirExist('%s') -> no", path);
+    DEBUG_LOG("doesDirExist('%s') -> no", path);
     return 0;
   }
 
-    DEBUG_LOG("[INFO] doesDirExist('%s') -> %s", path, FIO_SO_ISDIR(stat.st_attr) ? "yes" : "no");
+    DEBUG_LOG("doesDirExist('%s') -> %s", path, FIO_SO_ISDIR(stat.st_attr) ? "yes" : "no");
 
   return FIO_SO_ISDIR(stat.st_attr);
 }
@@ -152,7 +152,7 @@ void clearICacheFor(u32 address) {
   
   //asm("li $t0,0x08A0E898\n"); //this works.. but i want to store "address"
   
-  // DEBUG_LOG("[INFO] clearICacheFor(0x%08X)", address); 
+  // DEBUG_LOG("clearICacheFor(0x%08X)", address); 
   
   asm volatile ( // volatile so compiler won't mess with this
     "cache 8, 0(%0)\n"
@@ -210,7 +210,6 @@ char *_fgets(char *s, int size, SceUID stream) {
 }
 
 void makedirs(const char *path) { // recursively create path
-  DEBUG_LOG("makedirs(%s)", path);
   char *sep = strrchr(path, '/');
   if( sep != NULL ) {
     *sep = 0;
@@ -218,7 +217,7 @@ void makedirs(const char *path) { // recursively create path
     *sep = '/';
   }
   if( sceIoMkdir(path, 0777) < 0 ) {
-    DEBUG_LOG("Error while trying to create '%s'", path); 
+    ERROR_LOG("Unable to create '%s'", path); 
   }
 }
 

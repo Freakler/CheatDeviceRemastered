@@ -42,7 +42,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -mtune=mips32r2
   -ffunction-sections
   -fdata-sections
+  
   -Wall
+  -Wno-restrict
+  -Wno-format-truncation
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

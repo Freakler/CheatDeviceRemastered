@@ -26,42 +26,49 @@
 
 #define VERSION "v1.0h4" // displayed in title
 
+#define OFF 0
+#define ON  1
+
 /** FEATURE-FLAGS *****************************************************************************************************/
 
-//#define LITE // 'Lite' version with less features for more memory on PSP-1000
+// #define LITE // 'Lite' version with less features for more memory on PSP-1000
 
 // #define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
 // #define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
-#define LOGGING 1
-// #define MEMLOG // logging bad memory access to logfile
-// #define PATCHLOG // debug logging for detected patch locations only
-// #define USERSCRIPTLOG // debug logging for userscripts only
+#define LOGGING OFF // General Logging (DEBUG, INFO, WARNING, ERROR)
 
 #define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
 #ifndef LITE
-
- #define NAMERESOLV // (~10KB) name resolver system for translating hashes (also remove minIni from makefile if off)
-
- #define FREECAM // (~22KB)
- #define EDITORS // (~105KB)
- #define USERSCRIPTS // (~19KB)
- #define HEXEDITOR // (~30KB)
- #define CONFIG // (~8KB)
- #define HEXMARKERS // (~4KB)
- #define LANG // (~6KB)
- 
+ #define NAMERESOLV   // ( ~10  KB ) name resolver system for translating hashes
+ #define FREECAM      // ( ~22  KB )
+ #define EDITORS      // ( ~105 KB )
+ #define USERSCRIPTS  // ( ~19  KB )
+ #define HEXEDITOR    // ( ~30  KB )
+ #define CONFIG       // ( ~8   KB )
+ #define LANG         // ( ~6   KB )
+ #define SWIM
+//  #define ACHIEVEMENTS     // ( ~4 KB ) discontinued
+//  #define SAVEDITOR        // (  ? KB ) removed
+//  #define MEMORY           // display memory usage on screen (LCS US v3.00 only)
+//  #define SPECIAL_VEHICLES // todo -> LCS: spawn "HELI" (0xC6)  VCS: Plane crashes because of something else
+#else
+ #undef LOGGING
+ #undef DEBUG
+ #undef PREVIEW
 #endif
 
-//#define ACHIEVEMENTS // (~4KB) discontinued
-//#define SAVEDITOR // (?KB) removed
+#if LOGGING
+ #define PATCH_LOGGING       OFF  // debug logging for detected patch locations only
+ #define MEMORY_LOGGING      OFF  // logging bad memory access to console
+ #define USERSCRIPT_LOGGING  OFF  // debug logging for userscripts only
+ #define GAME_LOGGING        OFF  // display developer logs on screen + to file (LCS US v3.00 only)
+ #define CONFIG_LOGGING      OFF
+#endif
 
-//#define MEMORY  // display memory usage on screen (LCS US v3.00 only)
-//#define GAMELOG // display developer logs on screen + to file (LCS US v3.00 only)
-
-#define SWIM
-//#define SPECIAL_VEHICLES // todo -> LCS: spawn "HELI" (0xC6)  VCS: Plane crashes because of something else
+// use minIni?
+#define INI_PARSING defined(LANG) || defined (NAMERESOLV)
 
 /**********************************************************************************************************************/
 
@@ -69,11 +76,6 @@ extern int ADRENALINE;
 extern int PPSSPP;
 extern int LCS;
 extern int VCS;
-
-enum {
-  OFF, // 0
-  ON   // 1
-};
 
 typedef struct {
   const char *path;
@@ -210,7 +212,6 @@ int free_userscripts_array();
 int userscripts_create();
 #endif
 
-/*
 #ifdef SAVEDITOR
 int saveselector_create();
 int saveselector_draw();
@@ -220,7 +221,6 @@ int saveditor_create();
 int saveditor_draw();
 int saveditor_ctrl();
 #endif
-*/
 
 #ifdef FREECAM
 int freecam_create();
@@ -229,11 +229,8 @@ int freecam_create();
 #ifdef HEXEDITOR
 int address_create();
 int hexeditor_create(int hexadr, int hexmode, int lowbound, int highbound, const char *infostring);
-
-#ifdef HEXMARKERS
 void hex_marker_addx(u32 address, int size);
 void hex_marker_clear();
-#endif
 
 #endif
 

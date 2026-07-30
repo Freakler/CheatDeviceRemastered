@@ -19,6 +19,10 @@
 #ifndef MININI_H
 #define MININI_H
 
+#include "main.h"
+
+#if INI_PARSING
+
 #define INI_READONLY // 
 
 #include "minGlue.h"
@@ -151,5 +155,7 @@ int   ini_putf(const TCHAR *Section, const TCHAR *Key, float Value, const TCHAR 
 
 #endif /* __WXWINDOWS__ */
 #endif /* __cplusplus */
+
+#endif /* INI_PARSING */
 
 #endif /* MININI_H */

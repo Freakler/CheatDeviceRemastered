@@ -22,8 +22,6 @@
 #include <psptypes.h>
 #include <pspkerneltypes.h>
 
-#define LOG_SIZE 128
-
 #define EMULATOR_DEVCTL__IS_EMULATOR  0x00000003
 
 int doesFileExist(const char* path);

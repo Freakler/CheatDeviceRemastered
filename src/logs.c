@@ -14,14 +14,14 @@
 
 static const char *LogTypeToString[] =
 {
-  "DEBUG", "INFO ", "WARN ", "ERROR"
+  "DEBUG", "INFO ", "WARNG", "ERROR", "PATCH", "MEMRY", "USRSC", "GAME "
 };
 
 void Log(LogLevel level, const char *funcName, const char *message, ...)
 {
   if ( !message ) return;
 
-  char finalMessage[LOG_MESSAGE_MAX_LENGTH];
+  char finalMessage[LOG_MESSAGE_MAX_LENGTH/2];
   char formattedMessage[LOG_MESSAGE_MAX_LENGTH];
 
   va_list args; va_start(args, message);

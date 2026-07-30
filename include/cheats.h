@@ -300,7 +300,7 @@ void achievements_reset();
 void test_func();
 void *test_switch(int calltype, int keypress, int defaultstatus);
 
-// GAMELOG
+// GAME_LOGGING
 extern void (*debugprint)(const char *text, ...); 
 void debugprint_patched(const char *text, ...);
 void drawGameLog();

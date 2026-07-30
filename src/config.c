@@ -105,7 +105,7 @@ VCHT
 int saveing = 0; // my mutex flag thing
   
 static int save_thread(SceSize args, void *argp) { 
-  DEBUG_LOG("[INFO] %i: save_thread()", getGametime());
+  DEBUG_LOG("%i: save_thread()", getGametime());
 
   /// this is not as its supposed to have worked
   const Menu_pack *menu_list = main_menu;
@@ -114,7 +114,7 @@ static int save_thread(SceSize args, void *argp) {
   /// the easy way
   if( !doesFileExist(config) ) { // no config file yet
     int ret = create_config(menu_list, menu_max); // fully generate it (SETT + Lxxx OR Vxxx parts only this way!)
-    DEBUG_LOG("[INFO] save_thread done easy way");
+    DEBUG_LOG("save_thread done easy way");
     saveing = 0;
     sceKernelExitDeleteThread(0);
     return ret;
@@ -134,11 +134,11 @@ static int save_thread(SceSize args, void *argp) {
   SceUID f1 = sceIoOpen(config, PSP_O_WRONLY | PSP_O_APPEND, 0777);
   SceUID f2 = sceIoOpen(tempfig, PSP_O_RDONLY, 0777);
   if( f1 < 0 ) {
-    DEBUG_LOG("[ERROR] sceIoOpen f1 error (0x%08X)", f1);
+    ERROR_LOG("sceIoOpen f1 error (0x%08X)", f1);
     goto save_error_exit;
   }
   if( f2 < 0 ) {
-    DEBUG_LOG("[ERROR] sceIoOpen f2 error (0x%08X)", f2);
+    ERROR_LOG("sceIoOpen f2 error (0x%08X)", f2);
     goto save_error_exit;
   }
   
@@ -220,13 +220,13 @@ static int save_thread(SceSize args, void *argp) {
 }
 
 int save_config(const Menu_pack *menu_list, int menu_max) {
-  DEBUG_LOG("[INFO] %i: save_config(%s)", getGametime(), config);
+  DEBUG_LOG("%i: save_config(%s)", getGametime(), config);
   
   ///////////////////////
   if( saveing == 0 ) { // only start thread if not running already
     SceUID thid = sceKernelCreateThread("save_thread", save_thread, 0x18, 0x1000, PSP_THREAD_ATTR_USER, NULL);
     if( thid < 0 ) {
-      DEBUG_LOG("[ERROR] Could not create thread 0x%08X\n", thid);
+      ERROR_LOG("Could not create thread 0x%08X\n", thid);
 	  // 0x80020190 = nomemory (for stackSize 0x10000)
       //sceKernelSleepThread(); // TODO ?
       return thid;
@@ -332,13 +332,13 @@ static int writeMemory(SceUID file, int start, int slots, int size) {
   */
 
 int create_config(const Menu_pack *menu_list, int menu_max) {
-  DEBUG_LOG("[INFO] %i: create_config(%s)", getGametime(), config);  
+  DEBUG_LOG("%i: create_config(%s)", getGametime(), config);  
   
   int ret, counter;
     
   SceUID file = sceIoOpen(config, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
   if( file < 0 ) {
-    DEBUG_LOG("[ERROR] sceIoOpen error (0x%08X)", file);  
+    ERROR_LOG("sceIoOpen error (0x%08X)", file);  
     return -1; // error
   }
 
@@ -440,7 +440,7 @@ int create_config(const Menu_pack *menu_list, int menu_max) {
   
   }*/
   
-  //DEBUG_LOG("[CONFIG] create_config done");
+  //DEBUG_LOG("create_config done");
   sceIoClose(file);  
   return 0; // success
 }
@@ -505,12 +505,12 @@ static int getValueFromConfigFor(SceUID file, const char *magic, short id) {
 
 
 int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaults if config value not found (do we want that?)
-  DEBUG_LOG("[CONFIG] load_config()");
+  CONFIG_LOG("load_config()");
   
   char tempfig[256];
   snprintf(tempfig, sizeof(tempfig), "%s_", config);  
   if( doesFileExist(tempfig) ) { // if this (sill) exists, user probably exited game before saving was done
-    DEBUG_LOG("[ERROR] found bad config");
+    ERROR_LOG("found bad config");
     sceIoRemove(tempfig);
     sceIoRemove(config);
     return -1;
@@ -522,7 +522,7 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
   
   SceUID file = sceIoOpen(config, PSP_O_RDONLY, 0777);
   if( file < 0 ) {
-    DEBUG_LOG("[ERROR] sceIoOpen(%s) error 0x%08X", config, file);
+    ERROR_LOG("sceIoOpen(%s) error 0x%08X", config, file);
     return -1; // error
   }
 
@@ -530,7 +530,7 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
     if( (LCS && menu_list[i].LC == TRUE) || (VCS && menu_list[i].VC == TRUE) ) { // only if this is meant for the game version
       func = (void *)(menu_list[i].value);
     
-      DEBUG_LOG("[CONFIG] for: 0x%04X", menu_list[i].conf_id);
+      CONFIG_LOG("for: 0x%04X", menu_list[i].conf_id);
     
       if( menu_list[i].def_stat != -1 ) {
         
@@ -538,7 +538,7 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
         if( (menu_list[i].conf_id >> 12) == 1 ) {
           int status = getValueFromConfigFor(file, LCS ? "LCHT" : "VCHT", menu_list[i].conf_id);
           int valuee = getValueFromConfigFor(file, LCS ? "LVAL" : "VVAL", menu_list[i].conf_id);
-          //DEBUG_LOG("[CONFIG] id 0x%04X -> status %d, valuee %d", menu_list[i].conf_id, status, valuee);
+          //CONFIG_LOG("id 0x%04X -> status %d, valuee %d", menu_list[i].conf_id, status, valuee);
           func(FUNC_SET, keypress, status < 0 ? menu_list[i].def_stat : status, valuee < 0 ? 0xDEADBEEF : valuee); 
         }
         
@@ -571,7 +571,7 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
       }
     }
   } 
-  DEBUG_LOG("[CONFIG] load_config -> menu loop done");
+  CONFIG_LOG("load_config -> menu loop done");
 
   #ifdef ACHIEVEMENTS
   /// Achievements
@@ -580,19 +580,19 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
     if( ret != -1 ) 
       achievement[i].unlocked = ret; 
   }
-    DEBUG_LOG("[CONFIG] achievements done");
+    CONFIG_LOG("achievements done");
   #endif
   
   sceIoClose(file); // "load_config_block" opens config again
 
   /// Hex Editor Address
   load_config_block(LCS ? "LHEX" : "VHEX", (int)&hex_adr); 
-  DEBUG_LOG("[CONFIG] hex_adr done (0x%08X)", hex_adr);
+  CONFIG_LOG("hex_adr done (0x%08X)", hex_adr);
 
   /// Editor stuff --> files get too big to handle on PSP.. scrap all this :(
   /*if( flag_use_advaconfig && gametimer > 0) { // gametime excludes load_config called right after gameboot
    
-    DEBUG_LOG("[CONFIG] load_config -> advanced block");
+    CONFIG_LOG("load_config -> advanced block");
 
     ***********************************************************************************************
      * Some reset on new game (World Vehicles) while others are loaded once on gameboot (Car Colors)
@@ -634,13 +634,13 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
 
   }*/
   
-  DEBUG_LOG("[CONFIG] all done");
+  CONFIG_LOG("all done");
   
   return 0; // success
 }
 
 int load_config_block(char *magic, int address) {
-  DEBUG_LOG("[CONFIG] load_config_block(%s, 0x%08X)", magic, address);  
+  CONFIG_LOG("load_config_block(%s, 0x%08X)", magic, address);  
   
   //if( !flag_use_advaconfig )
   //  return -1;
@@ -650,7 +650,7 @@ int load_config_block(char *magic, int address) {
     
   SceUID file = sceIoOpen(config, PSP_O_RDONLY, 0777);
   if( file < 0 ) {
-    DEBUG_LOG("[ERROR] sceIoOpen error (0x%08X)", file);  
+    ERROR_LOG("sceIoOpen error (0x%08X)", file);  
     return -1; // error
   }
   
@@ -660,7 +660,7 @@ int load_config_block(char *magic, int address) {
   char magicbuf[8]; 
   int read, entries = 0, type = 0, blocksize = 0;
   
-  DEBUG_LOG("[CONFIG] do loop");
+  CONFIG_LOG("do loop");
 
   do { // loop it
     sceIoLseek(file, blocksize, SEEK_CUR); // 0 in first run
@@ -668,7 +668,7 @@ int load_config_block(char *magic, int address) {
     read = sceIoRead(file, &magicbuf, sizeof(int));
 
     if( read <= 0 ) {
-      DEBUG_LOG("[ERROR] sceIoRead (0x%08X)", read);
+      ERROR_LOG("sceIoRead (0x%08X)", read);
       sceIoClose(file);
       return -1; // category not found or error
     }
@@ -679,20 +679,20 @@ int load_config_block(char *magic, int address) {
   
   } while( strcmp(magicbuf, magic) != 0 );
   
-  DEBUG_LOG("[CONFIG] type = 0x%08X, entries = 0x%08X, blocksize = 0x%08X, ", type, entries, blocksize);  
+  CONFIG_LOG("type = 0x%08X, entries = 0x%08X, blocksize = 0x%08X, ", type, entries, blocksize);  
   
   if( type == 0 && entries > 0) {
-    DEBUG_LOG("[CONFIG] all looks good.. read in!");  
+    CONFIG_LOG("all looks good.. read in!");  
     read = sceIoRead(file, (void *)address, entries); // entries holds bytes to write
-    DEBUG_LOG("[CONFIG] sceIoRead returned 0x%08X", read);  
+    CONFIG_LOG("sceIoRead returned 0x%08X", read);  
     sceIoClose(file);
-    DEBUG_LOG("[CONFIG] load_config_block success");  
+    CONFIG_LOG("load_config_block success");  
     return 0; // success
   }
     
   ///////////////////////////////////////////////////////////////////////////
   sceIoClose(file);
-  DEBUG_LOG("[ERROR] load_config_block end");  
+  ERROR_LOG("load_config_block end");  
   return -1; // error
 }
 

@@ -936,7 +936,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x0012A07C | OK!
    **************************************/
   if( _lw(addr - 0xB0) == 0x34060001 && _lw(addr + 0x98) == 0x28A60000  && _lw(addr + 0xD0) == 0x00003825 ) {
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_VCS_patched", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_VCS_patched", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, mymenurender_VCS_patched, mymenurender_VCS); // 0x01325bc
     return 1;
   }
@@ -949,7 +949,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002FF87C | OK!
    **************************************/
   if( _lw(addr - 0x4) == 0x27BD0010 && _lw(addr) == 0x27BDFFE0 && _lw(addr + 0x4) == 0xAFB00014 && _lw(addr + 0x8) == 0x341000FF ) {
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> ResetFontStyling", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> ResetFontStyling", addr-text_addr, addr);
     ResetFontStyling = (void*)(addr); // 0x0030805C
     return 1;
   }
@@ -962,7 +962,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002FF958 | OK!
    **************************************/
   if( _lw(addr + 0x30) == 0x00409825 && _lw(addr + 0x54) == 0x00404825 ) {
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> PrintString_VCS", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> PrintString_VCS", addr-text_addr, addr);
     PrintString_VCS = (void*)(addr); // 0x00308138
     return 1;
   }
@@ -975,7 +975,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002FFCB8 | OK!
    **************************************/
   if( _lw(addr) == 0x03E00008 && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0x20) == 0x90840003 ) {
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetFontStyle, SetColor, SetScale_VCS, ...", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetFontStyle, SetColor, SetScale_VCS, ...", addr-text_addr, addr);
     SetFontStyle = (void*)(addr); // 0x308498
     SetColor = (void*)(addr+0x10); // 0x3084A8
     SetTextBounds = (void*)(addr+0x3C); // 0x3084d4
@@ -985,9 +985,9 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
     return 1;
   }
   if( _lw(addr+0x20) == 0x00052880 && _lw(addr + 0x68) == 0x00052880 && _lw(addr + 0x6C) == 0x00852021 ) { // JP only: 0x000FCE10
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetTextSpaceing, SetTextOriginPoint (JP only)", addr-text_addr, addr);
-     SetTextSpaceing = (void*)(addr); // sub_000FCE10
-     SetTextOriginPoint = (void*)(addr+0x48); // sub_000FCE58
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetTextSpaceing, SetTextOriginPoint (JP only)", addr-text_addr, addr);
+    SetTextSpaceing = (void*)(addr); // sub_000FCE10
+    SetTextOriginPoint = (void*)(addr+0x48); // sub_000FCE58
     return 1;
   }
 
@@ -1003,7 +1003,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    **************************************/
   if( (_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 && _lw(addr - 0x24 ) == 0x00801025) && // also LCS !!
     (_lw(addr + 0x34 ) == 0x00003825 || _lw(addr + 0x4C ) == 0x00402025) ) { // rest || JP
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
     SetBoxCoords = (void*)(addr);
     return 1;
   }
@@ -1016,7 +1016,7 @@ static int FindPatchVCS(u32 addr, u32 text_addr) {
    * ULET-00417 v0.06 | 0x002EBC20 | OK!
    **************************************/
   if( _lw(addr+0x20) == 0x02004025 && _lw(addr+0x8) == 0x30C900FF && _lw(addr+0x64) == 0x3404000A /* 0x3404000C for LCS*/ ) {
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
     DrawRect = (void*)(addr);
     return 1;
   }
@@ -1044,7 +1044,7 @@ int initTextBlit(u32 text_addr, u32 text_size) {
   }
 
   if( gta_version == -1 ) {
-    DEBUG_LOG("blitn: ..error!\n");
+    ERROR_LOG("blitn: ..error!\n");
     return -1; // error
   }
 

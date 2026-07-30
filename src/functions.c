@@ -144,7 +144,6 @@ char key_to_pad; // for custom button trigger (only cheats currently)
 const char *lcs_garagenames[] = { "Portland", "Staunton Island", "Shoreside Vale" };
 const char *vcs_garagenames[] = { "101 Bayshore Avenue", "The Compound", "Clymenus Suite" };
 
-// So, you can set the weather up to 15 through userscripts
 const char *weather_vcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Ultra Sunny", "8", "9", "10", "11", "12", "13", "14", "15"};
 const char *weather_lcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Snow", "8", "9", "10", "11", "12", "13", "14", "15"};
 
@@ -1462,9 +1461,7 @@ void setBit(int adr, char bit, char boolean) { // 1bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setBit()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setBit(0x%X, 0x%X, 0x%X)", getGametime(), adr, bit, boolean);
-    #endif  
+    MEM_LOG("[ERROR] %i: setBit(0x%X, 0x%X, 0x%X)", getGametime(), adr, bit, boolean);
   }
   #endif
 }
@@ -1477,9 +1474,7 @@ int getBit(int adr, int bit) {
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getBit()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getBit(0x%X, %i)", getGametime(), adr, bit);
-    #endif
+    MEM_LOG("[ERROR] %i: getBit(0x%X, %i)", getGametime(), adr, bit);
   }
   return 0;
   #endif  
@@ -1493,9 +1488,7 @@ void setByte(int adr, unsigned char value) { // 8bit (unsigned 0-255)
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setByte()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setByte(0x%X, 0x%X)", getGametime(), adr, value);
-    #endif  
+    MEM_LOG("[ERROR] %i: setByte(0x%X, 0x%X)", getGametime(), adr, value);
   }
   #endif
 }
@@ -1508,9 +1501,7 @@ unsigned char getByte(int adr) { // 8bit (unsigned 0-255)
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getByte()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getByte(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: getByte(0x%X)", getGametime(), adr);
   }
   return 0;
   #endif  
@@ -1524,9 +1515,7 @@ void setNibbleLow(int adr, unsigned char value) { // set 4bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setNibbleLow()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setNibbleLow(0x%X, 0x%X)", getGametime(), adr, value);
-    #endif
+    MEM_LOG("[ERROR] %i: setNibbleLow(0x%X, 0x%X)", getGametime(), adr, value);
   }
   #endif
 }
@@ -1539,9 +1528,7 @@ unsigned char getNibbleLow(int adr) { //get lower 4bit converted to char
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getNibbleLow()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getNibbleLow(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: getNibbleLow(0x%X)", getGametime(), adr);
   }
   return 0;
   #endif
@@ -1555,9 +1542,7 @@ void setNibbleHigh(int adr, unsigned char value) { //set 4bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setNibbleHigh()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setNibbleHigh(0x%X, 0x%X)", getGametime(), adr, value);
-    #endif
+    MEM_LOG("[ERROR] %i: setNibbleHigh(0x%X, 0x%X)", getGametime(), adr, value);
   }
   #endif
 }
@@ -1570,9 +1555,7 @@ unsigned char getNibbleHigh(int adr) {
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getNibbleHigh()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getNibbleHigh(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: getNibbleHigh(0x%X)", getGametime(), adr);
   }
   return 0;
   #endif
@@ -1586,9 +1569,7 @@ void setShort(int adr, short value) { // 16bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setShort()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setShort(0x%X, 0x%X)", getGametime(), adr, value);
-    #endif
+    MEM_LOG("[ERROR] %i: setShort(0x%X, 0x%X)", getGametime(), adr, value);
   }
   #endif
 }
@@ -1601,9 +1582,7 @@ short getShort(int adr) { // 16bit
   #ifdef MEMCHECK
   } else { 
     setTimedTextbox("~r~Error: getShort()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getShort(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: getShort(0x%X)", getGametime(), adr);
   }
   return 0;
   #endif
@@ -1617,9 +1596,7 @@ void setInt(int adr, int value) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setInt()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setInt(0x%X, 0x%X)", getGametime(), adr, value);
-    #endif
+    MEM_LOG("[ERROR] %i: setInt(0x%X, 0x%X)", getGametime(), adr, value);
   }
   #endif
 }
@@ -1632,9 +1609,7 @@ int getInt(int adr) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getInt()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getInt(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: getInt(0x%X)", getGametime(), adr);
   }
   return 0;
   #endif
@@ -1648,9 +1623,7 @@ void setFloat(int adr, float value) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setFloat()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setFloat(0x%X, %f)", getGametime(), adr, value);
-    #endif
+    MEM_LOG("[ERROR] %i: setFloat(0x%X, %f)", getGametime(), adr, value);
   }
   #endif
 }
@@ -1663,9 +1636,7 @@ float getFloat(int adr) { // 32bit
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getFloat()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getFloat(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: getFloat(0x%X)", getGametime(), adr);
   }
   return 0.0f;
   #endif
@@ -1687,9 +1658,7 @@ void setString(int adr, char* string, int mode) { // mode = 1 (where every secon
    #ifdef MEMCHECK  
   } else { 
     setTimedTextbox("~r~Error: setString()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: setString(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: setString(0x%X)", getGametime(), adr);
   }
   #endif  
 }
@@ -1709,9 +1678,7 @@ char *getString(int adr, int mode) { // mode = 1 (where every second is a char)
   #ifdef MEMCHECK  
   } else { 
     setTimedTextbox("~r~Error: getString()", 5.00f);
-    #ifdef MEMLOG
-    DEBUG_LOG("[ERROR] %i: getString(0x%X)", getGametime(), adr);
-    #endif
+    MEM_LOG("[ERROR] %i: getString(0x%X)", getGametime(), adr);
   }
   #endif  
   return str;
@@ -1729,7 +1696,7 @@ unsigned char *getSavedataKey() {
     key[0x10] = 0x00;
   }
   
-  DEBUG_LOG("[SAVEDITOR] gamekey: '%s'", key);
+  DEBUG_LOG("gamekey: '%s'", key);
     
   return key;
 }
