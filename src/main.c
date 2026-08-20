@@ -1187,13 +1187,8 @@ static int userscripts_update_array()
 
     userscript_entry* uscript = &userscript_currentdir_scripts[i];
 
-    SceSize dname_len = strlen(dirent.d_name);
-
-    uscript->path = (char *)malloc(dname_len + 1);
+    uscript->path = strdup(dirent.d_name);
     if ( !uscript->path ) break;
-
-    memcpy(uscript->path, dirent.d_name, dname_len);
-    uscript->path[dname_len] = '\0';
 
     // Copy attr
     uscript->attr = dirent.d_stat.st_attr;

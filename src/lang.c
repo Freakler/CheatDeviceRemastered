@@ -26,6 +26,7 @@
 #include "lang.h"
 #include <pspiofilemgr.h>
 #include <pspsysmem.h>
+#include <malloc.h>
 #include "putils.h"
 #include "logs.h"
 
@@ -55,29 +56,20 @@ static int langTableInsert(LangHashTable *ht, const char *original_string, const
   string_lang *new_kv = (string_lang *)malloc(sizeof(string_lang));
   if ( !new_kv ) return -1;
 
-  SceSize ostring_len = strlen(original_string);
-  SceSize tstring_len = strlen(trans_string);
-
-  new_kv->original_string = (char *)malloc(ostring_len + 1);
+  new_kv->original_string = strdup(original_string);
   if ( !new_kv->original_string )
   {
     free(new_kv);
     return -1;
   }
 
-  new_kv->trans_string = (char *)malloc(tstring_len + 1);
+  new_kv->trans_string = strdup(trans_string);
   if ( !new_kv->trans_string )
   {
     free(new_kv->original_string);
     free(new_kv);
     return -1;
   }
-
-  memcpy(new_kv->original_string, original_string, ostring_len);
-  new_kv->original_string[ostring_len] = '\0';
-
-  memcpy(new_kv->trans_string, trans_string, tstring_len);
-  new_kv->trans_string[tstring_len] = '\0';
 
   new_kv->next = ht->table[index]; // Point to the current list at index
   ht->table[index] = new_kv; // Insert new_kv at the beginning
@@ -149,24 +141,19 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
 {
   if ( !table || !filename || table->size >= LANG_FILES_LIMIT ) return;
 
-  SceSize version_len = strlen(version);
-  SceSize author_len = strlen(author);
-  SceSize language_len = strlen(language);
-  SceSize filename_len = strlen(filename);
-
   LanguageFile *new_lf = NULL;
 
   new_lf = (LanguageFile *)malloc(sizeof(LanguageFile));
   if ( !new_lf ) return;
 
-  new_lf->version = (char *)malloc(version_len + 1);
+  new_lf->version = strdup(version);
   if ( !new_lf->version )
   {
     free(new_lf);
     return;
   }
 
-  new_lf->author_name = (char *)malloc(author_len + 1);
+  new_lf->author_name = strdup(author);
   if ( !new_lf->author_name )
   {
     free(new_lf->version);
@@ -174,7 +161,7 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
     return;
   }
 
-  new_lf->lang_name = (char *)malloc(language_len + 1);
+  new_lf->lang_name = strdup(language);
   if ( !new_lf->lang_name )
   {
     free(new_lf->author_name);
@@ -183,7 +170,7 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
     return;
   }
 
-  new_lf->path = (char *)malloc(filename_len + 1);
+  new_lf->path = strdup(filename);
   if ( !new_lf->path )
   {
     free(new_lf->lang_name);
@@ -192,18 +179,6 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
     free(new_lf);
     return;
   }
-
-  memcpy(new_lf->lang_name, language, language_len);
-  new_lf->lang_name[language_len] = '\0';
-
-  memcpy(new_lf->author_name, author, author_len);
-  new_lf->author_name[author_len] = '\0';
-
-  memcpy(new_lf->version, version, version_len);
-  new_lf->version[version_len] = '\0';
-
-  memcpy(new_lf->path, filename, filename_len);
-  new_lf->path[filename_len] = '\0';
 
   // Append new LanguageFile to table
   table->lang_files[table->size] = new_lf;

@@ -21,12 +21,10 @@
 
 #define LANG_DEBUG
 
-#define TABLE_SIZE 823 // Prime number for hash table size
+#define TABLE_SIZE 823 // Prime number for hash table size (Mersenne primes won't work here unforunately)
 #define LANG_FILES_LIMIT 8
 #define TRANSLATED_STRINGS_LIMIT TABLE_SIZE
 #define MURMURMASH_3_SEED 0x947473
-
-#define LANGUAGE_POOL_SIZE 192 * 1024 /* 192 KB */
 
 typedef struct string_lang
 {
