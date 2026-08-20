@@ -1,0 +1,3 @@
+[submodule "SCRIPTS"]
+	path = SCRIPTS
+	url = https://github.com/Freakler/CheatDeviceRemastered-UserScripts
