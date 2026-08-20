@@ -1104,7 +1104,6 @@ ushort custom_gxts[CSTGXTS][CSTGXTLGT];
 #define SUPPORT_LABEL 256   // maximum supported Labels
 #define MAX_LABEL_LENGTH 32 // max length of a Label
 
-SceUID usVpl = -1;
 static userscript_entry* userscript_currentdir_scripts = NULL; // Array where scripts / folders file info is stored
 static int userscript_cd_scripts_count = 0;     // Number of scripts / folder in array
 static int currentdir_files_folders_count = 0;  // Files & Folders count on current dir
@@ -1140,12 +1139,12 @@ int free_userscripts_array()
     // If name was allocated, free it
     if ( uscript->path )
     {
-      sceKernelFreeVpl(usVpl, uscript->path);
+      free(uscript->path);
     }
   }
 
   // Free allocated array
-  sceKernelFreeVpl(usVpl, userscript_currentdir_scripts);
+  free(userscript_currentdir_scripts);
   userscript_currentdir_scripts = NULL;
 
   return 0;
@@ -1163,19 +1162,15 @@ static int userscripts_update_array()
   {
     return 0;
   }
-
-  int vplRet = sceKernelTryAllocateVpl(usVpl, sizeof(userscript_entry) * userscript_cd_scripts_count, (void**)&userscript_currentdir_scripts);
-  if ( vplRet < 0 )
-  {
-    ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", sizeof(userscript_entry) * userscript_cd_scripts_count, vplRet);
-    return -1;
-  }
+  
+  userscript_currentdir_scripts = (userscript_entry *)malloc(sizeof(userscript_entry) * userscript_cd_scripts_count);
+  if ( !userscript_currentdir_scripts ) return -1;
 
   // Open current dir
   SceUID dir = sceIoDopen(script_workfldr);
   if (dir < 0)
   {
-    sceKernelFreeVpl(usVpl, userscript_currentdir_scripts);
+    free(userscript_currentdir_scripts);
     userscript_currentdir_scripts = NULL;
     return -1;
   }
@@ -1194,12 +1189,8 @@ static int userscripts_update_array()
 
     SceSize dname_len = strlen(dirent.d_name);
 
-    vplRet = sceKernelTryAllocateVpl(usVpl, dname_len + 1, (void**)&uscript->path);
-    if ( vplRet < 0 )
-    {
-      ERROR_LOG("sceKernelTryAllocateVpl(%u) failed with error 0x%08X", dname_len + 1, vplRet);
-      break;
-    }
+    uscript->path = (char *)malloc(dname_len + 1);
+    if ( !uscript->path ) break;
 
     memcpy(uscript->path, dirent.d_name, dname_len);
     uscript->path[dname_len] = '\0';
@@ -6649,18 +6640,15 @@ int module_stop(SceSize argc, void* argp)
 void free_alloc_mem_cdr()
 {
   #ifdef USERSCRIPTS
-  extern SceUID usVpl;
   free_userscripts_array();
-  sceKernelDeleteVpl(usVpl);
   #endif
 
   #ifdef LANG
   langTableFree(main_lang_table);
   langFileTableFree(main_file_table);
-
-  extern SceUID langVpl;
-  sceKernelDeleteVpl(langVpl);
   #endif
+
+  memdestroy();
 }
 
 void _exit(int status)

@@ -3677,19 +3677,6 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
       load_config(main_menu, menu_size); // load config
     #endif
 
-    #ifdef USERSCRIPTS
-
-    extern SceUID usVpl;
-    const SceSize userScriptsPoolSize = 3 * 1024; /* 3 KB should be enough */
-    usVpl = sceKernelCreateVpl("UserScripts VPL", PSP_MEMORY_PARTITION_USER, 0, userScriptsPoolSize, NULL);
-    if ( usVpl < 0 )
-    {
-      ERROR_LOG("sceKernelCreateVpl(%u) failed with error 0x%08X", userScriptsPoolSize, usVpl);
-      usVpl = -1;
-    }
-
-    #endif
-
     debug_skgstwp = 0;
   }
 
@@ -4164,22 +4151,19 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
     if( gametimer >= menuopendelay) // delay after new game
       draw();
 
-    #ifdef LANG
     if ( gametimer >= 1000 )
     {
+      static int memcreate_ran = 0;
+      if ( !memcreate_ran )
+      {
+        memcreate(256 * 1024); /* Should be enough */
+        memcreate_ran = 1;
+      }
+
+      #ifdef LANG
       static int lang_ran = 0;
       if (!lang_ran)
       {
-        extern SceUID langVpl;
-
-        langVpl = sceKernelCreateVpl("CDR Language VPL", PSP_MEMORY_PARTITION_USER, 0, LANGUAGE_POOL_SIZE, NULL);
-        if ( langVpl < 0 )
-        {
-          ERROR_LOG("sceKernelCreateVpl(%u) failed with error 0x%08X", LANGUAGE_POOL_SIZE, langVpl);
-          langVpl = -1;
-          return;
-        }
-
         langTableSetup(currLanguageID);
         lang_ran = 1;
       }

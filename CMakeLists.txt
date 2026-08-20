@@ -42,12 +42,14 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -Wall
   -Wno-restrict
   -Wno-format-truncation
+  -Wno-implicit-function-declaration
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   ansic
   pspsystemctrl_user
   pspctrl
+  pspmalloc
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
