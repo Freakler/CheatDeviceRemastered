@@ -132,7 +132,7 @@ static const u32 COLOR_FREECAM      = ORANGERED;
 static const u32 COLOR_USERCHEATS   = DARKGREEN;
 
 #ifdef SAVEDITOR
-static const u32 COLOR_SAVEDITOR    = VIOLET;
+// static const u32 COLOR_SAVEDITOR    = VIOLET;
 #endif
 
 

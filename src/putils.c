@@ -22,7 +22,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include <ctype.h>
 #include <stdarg.h>
 #include <psprtc.h>
 
@@ -370,7 +369,6 @@ uint32_t hash(const char *key, uint32_t len, uint32_t seed)
 }
 
 int errno;
-
 int *__errno (void)
 {
   return &errno;

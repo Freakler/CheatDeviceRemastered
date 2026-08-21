@@ -4167,8 +4167,8 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
         langTableSetup(currLanguageID);
         lang_ran = 1;
       }
+      #endif
     }
-    #endif
   }
 
   cWorldStream_Render(this, mode); // continue
