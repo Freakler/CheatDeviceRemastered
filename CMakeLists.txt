@@ -15,9 +15,7 @@ add_subdirectory(src)
 
 include("$ENV{PSPDEV}/psp/share/pspdev.cmake")
 
-set_property(SOURCE src/modinfo.S PROPERTY LANGUAGE C)
-
-add_prx_module(${PROJECT_NAME} ${MAIN_SOURCES} src/modinfo.S)
+add_prx_module(${PROJECT_NAME} ${MAIN_SOURCES})
 
 # Get version info from cmake to project
 configure_file(
@@ -52,9 +50,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   pspsystemctrl_user
   pspctrl
   pspmalloc
-  pspuser
-  psprtc
-  m
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -62,7 +57,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_link_options(${PROJECT_NAME} PRIVATE
-  -nolibc
   -specs=${PSPDEV}/psp/sdk/lib/prxspecs
   -Wl,-zmax-page-size=128
   -flto
