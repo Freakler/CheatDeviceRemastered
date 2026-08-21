@@ -368,3 +368,10 @@ uint32_t hash(const char *key, uint32_t len, uint32_t seed)
 
   return h;
 }
+
+int errno;
+
+int *__errno (void)
+{
+  return &errno;
+}

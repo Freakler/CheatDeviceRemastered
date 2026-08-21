@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <pspsysmem.h>
-#include <ctype.h>
 
 #include "main.h"
 #include "pspiofilemgr.h"
@@ -43,21 +42,14 @@
 #include "versioning.h"
 #include "logs.h"
 #include "putils.h"
+#include <errno.h>
+#include <sys/socket.h>
 
 #ifdef NAMERESOLV
   #include "minIni.h"
 #endif
 
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
-
-// Stop linker from linking "Kernel_library" which seems to cause issues ("library not found" error)
-int sceKernelLockLwMutex( SceLwMutexWorkarea *workarea __attribute__((unused)),
-                          int lockCount __attribute__((unused)),
-                          unsigned int *pTimeout __attribute__((unused))) { return 0; }
-
-int sceKernelUnlockLwMutex( SceLwMutexWorkarea *workarea __attribute__((unused)),
-                            int lockCount __attribute__((unused))) { return 0; }
-
 
 /// settings
 const int menuopendelay = 2000;  // wait ~2 seconds before showing menu & applying after spawning

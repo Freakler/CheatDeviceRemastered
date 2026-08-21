@@ -43,7 +43,6 @@
 #endif
 
 #if !defined __T
-  #include <ctype.h>
   #include <string.h>
   #include <stdlib.h>
   /* definition of TCHAR already in minIni.h */
