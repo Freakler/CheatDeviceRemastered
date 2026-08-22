@@ -34,7 +34,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -Os
   -fno-pic
   -G0
-  -ffast-math
+  -fno-math-errno
   -mpreferred-stack-boundary=4
   -fshort-wchar
   -mno-check-zero-division

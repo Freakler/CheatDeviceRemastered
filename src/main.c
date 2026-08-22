@@ -4541,14 +4541,14 @@ static int address_ctrl() {
   }
 
   if( hold_buttons & PSP_CTRL_DOWN ) {
-    tempaddress -= pow(0x10, addresspos); // addresspos 0: -= 0x1, 1: -= 0x10, 2: -= 0x100, ....
+    tempaddress -= 1 << (addresspos * 4); // addresspos 0: -= 0x1, 1: -= 0x10, 2: -= 0x100, ....
     if( tempaddress <= memory_low )
       tempaddress = memory_low;
     history_position = 0;
   }
 
   if( hold_buttons & PSP_CTRL_UP ) {
-    tempaddress += pow(0x10, addresspos); // addresspos 0: += 0x1, 1: += 0x10, 2: += 0x100, ....
+    tempaddress += 1 << (addresspos * 4); // addresspos 0: += 0x1, 1: += 0x10, 2: += 0x100, ....
   if ( tempaddress >= memory_high )
       tempaddress = memory_high;
     history_position = 0;
