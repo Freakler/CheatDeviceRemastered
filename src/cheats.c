@@ -10993,10 +10993,10 @@ void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         status = 1 - status;
 
-      } else if( keypress == PSP_CTRL_LEFT && i > 0) { // LEFT
+      } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
 
-      } else if( keypress == PSP_CTRL_RIGHT && i < list_size) { // RIGHT
+      } else if( keypress == PSP_CTRL_RIGHT && i < (list_size - 1) ) { // RIGHT
         i++;
 
       }
@@ -11005,7 +11005,7 @@ void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval
     case FUNC_SET:
       status = defaultstatus;
       i = 0;
-      if( defaultval >= 0 && defaultval <= list_size )
+      if( defaultval >= 0 && defaultval < (list_size - 1) )
         i = defaultval;
       break;
   }
