@@ -274,11 +274,20 @@ int getHighMemBound() { // thx Acid_Snake :)
 }
 
 int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius) {
-  return (sqrtf(powf(a-x, 2) + powf(b-y, 2) + powf(c-z, 2)) <= radius);
+  const float xdist = a - x;
+  const float ydist = b - y;
+  const float zdist = c - z;
+  const float dist2 = ( xdist * xdist + ydist * ydist + zdist * zdist );
+
+  return dist2 <= (radius * radius);
 }
 
 float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2) {
-  return sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2) + powf(z2 - z1, 2));
+  const float xdist = x2 - x1;
+  const float ydist = y2 - y1;
+  const float zdist = z2 - z1;
+
+  return sqrtf(xdist * xdist + ydist * ydist + zdist * zdist);
 }
 
 void getSizeString(char *string, uint64_t size) {
