@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "minIni.h"
 #include "main.h"
 #include "lang.h"
 #include <pspiofilemgr.h>
@@ -29,13 +28,12 @@
 #include <malloc.h>
 #include "putils.h"
 #include "logs.h"
+#include "minIni.h"
 
 #ifdef LANG
 
 extern char folder_translations[];
 extern const char *basefolder;
-
-static int translated_strings_left = TRANSLATED_STRINGS_LIMIT;
 
 static LangHashTable *langTableCreate()
 {
@@ -273,97 +271,68 @@ void GetLangINIInfo(LangFileTable *table, const char *filename)
   langFileTableAppend(table, version, author, lang, filename);
 }
 
-#if defined(LANG_DEBUG)
-u64 curr_time, after_time;
-char bufDebug[64];
-#endif
+static unsigned int translatedStringsLength = 0;
+static int ReadTranslationEntry(const char *section, const char *key, const char *value, void *user_data)
+{
+  if ( !section || !key || !value || !user_data ) return 0; // Invalid args
+
+  TranslationBrowseData *data = (TranslationBrowseData *)user_data;
+  if ( translatedStringsLength >= TRANSLATED_STRINGS_LIMIT ) return 0; // We've reached the limit!
+  translatedStringsLength++;
+
+  char original_string[256];
+  char translated_string[256];
+  snprintf(original_string, sizeof(original_string), "%s", key);
+  snprintf(translated_string, sizeof(translated_string), "%s", value);
+
+  // Empty or english string
+  if ( translated_string[0] == '\0' || !strcmp(original_string, translated_string) ) return 1;
+
+  langTableInsert(data->table, original_string, translated_string);
+  return 1;
+}
 
 static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection, int index)
 {
   if ( !table || !main_file_table || !INISection || *INISection == '\0' || index < 0 || index >= main_file_table->size ) return;
 
-  char original_string[256];
-  char translated_string[256];
-  char lang_path[128];
-  SceUID fp = -1;
-  SceIoStat stat;
-
-  #if defined(LANG_DEBUG)
-    curr_time = sceKernelGetSystemTimeWide();
+  #ifdef LANG_DEBUG
+  SceInt64 curr_time = sceKernelGetSystemTimeWide();
   #endif
-
+  
+  char lang_path[128];
   snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->path);
 
-  #if defined(LANG_DEBUG)
-    DEBUG_LOG("Reading Section '%s' from INI file '%s'", INISection, lang_path);
+  #ifdef LANG_DEBUG
+  DEBUG_LOG("Reading Section '%s' from INI file '%s'", INISection, lang_path);
   #endif
 
-  // Get file size (to allocate)
-  memset(&stat, 0, sizeof(SceIoStat));
-  if ( sceIoGetstat(lang_path, &stat) < 0 ) return;
-  if ( stat.st_size <= 0 ) return; // Invalid file size
+  ini_browse(ReadTranslationEntry, &(TranslationBrowseData){ 
+      .table = table,
+      .section = INISection,
+    },
+    lang_path
+  );
 
-  SceSize alloc_size = stat.st_size + 1;
-
-  char *fileread = (char *)malloc(alloc_size);
-  if ( !fileread ) return;
-
-  #if defined(LANG_DEBUG)
-    DEBUG_LOG("Allocated %u bytes for file", alloc_size);
-  #endif
-
-  if ( !ini_openread(lang_path, &fp) ) goto END_READING_TRANSLATIONS;
-
-  if ( sceIoRead(fp, fileread, stat.st_size) < 0 ) goto END_READING_TRANSLATIONS;
-
-  fileread[stat.st_size] = '\0'; // Terminate string
-
-  int i;
-  int temp_trans_strings_left = translated_strings_left;
-  for ( i = 0; i < temp_trans_strings_left; i++ )
-  {
-    // Get original string (key) from index
-    if ( !ini_getkeyfromstring(INISection, i, original_string, sizeof(original_string), fileread) )
-      break;
-
-    // Get (from key) the translation
-    ini_getsfromstring(INISection, original_string, original_string, translated_string, sizeof(translated_string), fileread);
-
-    // Don't load any English or empty string (it defaults to English)
-    if ( translated_string[0] == '\0' || !strcmp(original_string, translated_string) )
-      continue;
-
-    // Insert on table
-    if ( langTableInsert(table, original_string, translated_string) > 0 ) translated_strings_left--;
-  }
-
-  END_READING_TRANSLATIONS:
-  free(fileread); // Free allocated memory
-
-  #if defined(LANG_DEBUG)
-    DEBUG_LOG("Freed %u bytes", alloc_size);
-  #endif
-
-  if ( fp >= 0 ) ini_close(&fp);
-
-  #if defined(LANG_DEBUG)
-    after_time = sceKernelGetSystemTimeWide();
-    DEBUG_LOG("Translated Strings Left -> %d", translated_strings_left);
-    DEBUG_LOG("Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
+  #ifdef LANG_DEBUG
+  SceInt64 after_time = sceKernelGetSystemTimeWide();
+  DEBUG_LOG("Translated Strings Left -> %d", translated_strings_left);
+  DEBUG_LOG("Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
   #endif
 }
 
 void langTableUpdate(int langIndex)
 {
-  // Avoid mem leaks
-  translated_strings_left = TRANSLATED_STRINGS_LIMIT;
+  translatedStringsLength = 0;
 
   if (main_lang_table) {
+    // Avoid mem leaks
     langTableFree(main_lang_table);
     main_lang_table = NULL;
   }
 
   if (main_file_table) {
+    // Avoid mem leaks
     langFileTableFree(main_file_table);
     main_file_table = NULL;
   }
@@ -382,7 +351,7 @@ void langTableSetup(int langIndex)
   if ( !main_file_table || main_file_table->size == 1 ) return;
 
   // If current language is English (lang and file tables still need to be created)
-  if (langIndex == 0) return;
+  if ( langIndex == 0 ) return;
 
   ReadTranslationsFromINI(main_lang_table, "GENERAL", langIndex);
   ReadTranslationsFromINI(main_lang_table, LCS ? "LCS" : "VCS", langIndex);
@@ -394,7 +363,7 @@ void langTableSetup(int langIndex)
 char *_t(const char *string)
 {
   #ifdef LANG
-    if ( currLanguageID != 0 ) return langTableSearch(main_lang_table, string);
+  if ( currLanguageID != 0 ) return langTableSearch(main_lang_table, string);
   #endif
 
   return (char *)string;

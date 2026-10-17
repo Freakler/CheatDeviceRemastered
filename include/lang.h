@@ -54,6 +54,12 @@ typedef struct
   int size;
 } LangFileTable;
 
+typedef struct
+{
+  LangHashTable *table;
+  const char *section;
+} TranslationBrowseData;
+
 char *_t(const char *string);
 
 void langTableSetup(int langIndex);

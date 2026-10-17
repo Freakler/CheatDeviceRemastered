@@ -45,10 +45,6 @@
 #include <errno.h>
 #include <sys/socket.h>
 
-#ifdef NAMERESOLV
-  #include "minIni.h"
-#endif
-
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
 
 /// settings

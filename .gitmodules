@@ -1,3 +1,7 @@
 [submodule "SCRIPTS"]
 	path = SCRIPTS
 	url = https://github.com/Freakler/CheatDeviceRemastered-UserScripts
+
+[submodule "lib/minIni-PSP"]
+	path = lib/minIni-PSP
+	url = https://codeberg.org/daniemun/minIni-PSP
