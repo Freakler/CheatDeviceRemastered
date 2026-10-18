@@ -10192,9 +10192,10 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           0xC8, 0x01,
           0x0D, // 1@
 
-          /// mark_car_as_no_longer_needed
-          0xC8, 0x01,
-          0x0D, // 1@
+          /// mark_model_as_no_longer_needed
+          0x4E, 0x02,
+          0x08, // type = short
+          0x00, 0x00, // vehicle id 
 
           /// terminate_this_script
           0x4E, 0x00 // Opcode: 004E
@@ -10208,11 +10209,13 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
           writeShort(&script_spawnvehicle[42], 0x00D1);
           writeShort(&script_spawnvehicle[50], 0x013A);
           writeShort(&script_spawnvehicle[55], 0x0113);
-          writeShort(&script_spawnvehicle[58], 0x0023);
+          writeShort(&script_spawnvehicle[58], 0x0162);
+          writeShort(&script_spawnvehicle[63], 0x0023);
         }
 
         writeShort(&script_spawnvehicle[3], id); // insert vehicle_id
         writeShort(&script_spawnvehicle[28], id); // insert vehicle_id
+        writeShort(&script_spawnvehicle[61], id); // insert vehicle_id
 
         writeFloat(&script_spawnvehicle[10], x);
         writeFloat(&script_spawnvehicle[15], y);
