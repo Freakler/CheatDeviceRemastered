@@ -3534,39 +3534,43 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if GAME_LOGGING
-#define loglines 14
-char logstr[loglines][128] = { "a","b","c","","","","","","","","","x","y","z" }; // a = newest log
+#define LOG_LINES 14
+#define LOG_STRING_SIZE 128
+static char logstr[LOG_LINES][LOG_STRING_SIZE] = { 0 };
 
 void (*debugprint)(const char *text, ...);
 void debugprint_patched(const char *text, ...) {
   va_list list;
-  char string[128];
+  char finalstring[LOG_STRING_SIZE];
 
   va_start(list, text);
-  vsnprintf(string, 128, text, list);
+  vsnprintf(finalstring, LOG_STRING_SIZE, text, list);
   va_end(list);
 
-  /// add to log array
-  int i = loglines;
-  while( i > 0 ) {
-    snprintf(logstr[i], sizeof(logstr[i]), "%s", logstr[i-1]);
-  i--;
-  } snprintf(logstr[0], sizeof(logstr[0]), "%s", string);
+  memmove(logstr[1], logstr[0], (LOG_LINES - 1) * LOG_STRING_SIZE); // Move all logs up by 1
 
-  /// print to log.txt as well
-  GAME_LOG(string);
+  size_t len_string = strlen(finalstring);
+  strncpy(logstr[0], finalstring, len_string); // Add new log to logstr array
+  logstr[0][len_string] = '\0'; // Null-terminate
 
-  //sceKernelPrintf(string);
+  /// output to console as well
+  GAME_LOG(finalstring);
 }
 
 void drawGameLog() { // print log array
-  int i = loglines;
-  u32 step = 0x08000000;
-  u32 color = WHITE - (loglines * step);
-  float textsize = 0.5f;
-  float x = 470.0f, y = 75.0f, pad = 10.0f;
-  while( i >= 0 )
-    drawString(logstr[--i], ALIGN_RIGHT, FONT_DIALOG, textsize, SHADOW_OFF, x, y+=pad, color+=step);
+  const u32 colorAlphaStep = (u8)(0xFA / (LOG_LINES / 2)) << 24;
+  u32 color = WHITE;
+  const float textsize = 0.5f;
+  const float x = 470.0f;
+  float y = 225.0f;
+  const float ypad = 10.0f;
+
+  for ( int i = 0; i < LOG_LINES; i++ )
+  {
+    if ( i > (LOG_LINES / 2) ) color -= colorAlphaStep;
+    drawString(logstr[i], ALIGN_RIGHT, FONT_DIALOG, textsize, SHADOW_OFF, x, y, color);
+    y -= ypad;
+  }
 }
 #endif
 
