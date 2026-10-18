@@ -10132,6 +10132,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         017A: set_car_heading 1@ to DEG
         020F: lock_car_doors 1@ mode 1
         > 01C8: mark_car_as_no_longer_needed 1@
+        024E: mark_model_as_no_longer_needed 162
         004E: terminate_this_script
         ************************************************************/
 
@@ -10143,6 +10144,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int default
         00D1: set_car_heading 1@ to DEG
         013A: lock_car_doors 1@ mode 1
         > 0113: mark_car_as_no_longer_needed 1@
+        0162: mark_model_as_no_longer_needed 162
         0023: terminate_this_script
         ************************************************************/
 
