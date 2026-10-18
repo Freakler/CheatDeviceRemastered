@@ -67,9 +67,6 @@
  #define CONFIG_LOGGING      OFF
 #endif
 
-// use minIni?
-#define INI_PARSING defined(LANG) || defined (NAMERESOLV)
-
 /**********************************************************************************************************************/
 
 extern int ADRENALINE;
