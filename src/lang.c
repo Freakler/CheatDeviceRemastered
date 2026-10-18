@@ -316,7 +316,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
 
   #ifdef LANG_DEBUG
   SceInt64 after_time = sceKernelGetSystemTimeWide();
-  DEBUG_LOG("Translated Strings Left -> %d", translated_strings_left);
+  DEBUG_LOG("Num of Translated Strings -> %u", translatedStringsLength);
   DEBUG_LOG("Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
   #endif
 }
