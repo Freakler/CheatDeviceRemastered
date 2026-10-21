@@ -7182,13 +7182,13 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
       if( pcar && boost > 0 && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && flag_menu_running == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
 
         /// boats are inWater = true and inAir = true
-        // if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
+        if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
 
           /// SPEED
           setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * ((boost+1) * thrust) );
           setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * ((boost+1) * thrust) );
           setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * ((boost+1) * thrust) );
-        // }
+        }
       }
       break;
 
