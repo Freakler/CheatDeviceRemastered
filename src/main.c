@@ -42,8 +42,7 @@
 #include "versioning.h"
 #include "logs.h"
 #include "putils.h"
-#include <errno.h>
-#include <sys/socket.h>
+#include "minIni.h"
 
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
 
@@ -184,9 +183,9 @@ int hex_adr = -1; // mem address for HexEditor
 /// some externs
 extern u32 memory_low;
 extern u32 memory_high;
-extern int pplayer;
-extern int pcar;
-extern int pobj;
+extern u32 pplayer;
+extern u32 pcar;
+extern u32 pobj;
 extern int multiplayer;
 extern char speed[];
 extern char gear[];
@@ -651,7 +650,7 @@ int usercheats_draw() {
   }
 
   /// error checks of selected file
-  if( fileEndsWithExtension(filename, ".txt") ) { // check for txt
+  if( stringEndsWith(filename, ".txt") ) { // check for txt
 
     /// read in ALL cheat names and CURRENT selected cheat's meta data
     if( readtxtneeded || (usercheat_waittime > 0 && getGametime() > usercheat_waittime) ) {
@@ -1077,7 +1076,7 @@ int userscript_readtxtneeded = 1; // if 1
 char currentfile[64]; // current txt
 
 char script_subfldrs[128]; // contains additional path eg "/WIP/vehicles/" and will be merged to with script_folder
-char script_workfldr[256]; // into this one
+char script_workfldr[512]; // into this one
 
 #define SCRIPTNAMELGT 60  // max name length of cheat
 #define SCRIPTLINELGT 256 // max line length in txt
@@ -1085,7 +1084,7 @@ char script_workfldr[256]; // into this one
 #define CSTGXTS 32    // max custom strings possible (ALSO CHANGE IN cheats.c!!)
 #define CSTGXTLGT 256 // max custom string length (ALSO CHANGE IN cheats.c!!)
 
-ushort custom_gxts[CSTGXTS][CSTGXTLGT];
+unsigned short custom_gxts[CSTGXTS][CSTGXTLGT];
 
 #define SCRIPT_SIZE 16384   // maximum script size
 
@@ -1107,7 +1106,7 @@ static int is_file_userscript(const char* path)
   int i;
   for (i = 0; i < userscript_valid_extensions_num; i++)
   {
-    if ( fileEndsWithExtension(path, userscript_valid_extensions[i]) ) return 1;
+    if ( stringEndsWith(path, userscript_valid_extensions[i]) ) return 1;
   }
 
   return 0;
@@ -1226,7 +1225,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
 
   int i;
   float x, y;
-  char buffer[256];
+  char buffer[1024];
 
   /// draw title
   drawString(_t("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
@@ -1236,7 +1235,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
 
   /// draw folder
   if( script_subfldrs[0] != 0x00 ) {
-    snprintf(buffer, sizeof(buffer), "/%s", script_subfldrs);
+    snprintf(buffer, sizeof(buffer), "%s/", script_subfldrs);
     drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 410.0f+x-5.0f, 7.0f, COLOR_TEXT);
   }
 
@@ -1337,7 +1336,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
           else // folder is empty
             COLOR_TEMP = GREY;
 
-          snprintf(filename, sizeof(filename), "%s/", filename); // add slash because looks nicer
+          strcat(filename, "/"); // add slash because looks nicer
 
         } else
           COLOR_TEMP = GREY; // not a valid txt file (grey out)
@@ -1544,6 +1543,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
   return 0;
 }
 
+extern int isdigit(int x);
 static int userscripts_ctrl() {
   if( hold_buttons & PSP_CTRL_UP ) {
     if( userscript_selected_val <= 0 ) {
@@ -1603,7 +1603,7 @@ static int userscripts_ctrl() {
           break;
         } else script_subfldrs[i] = 0x00;
       }
-      snprintf(script_workfldr, sizeof(script_workfldr), "%s%s%s", buffer, script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/");
+      snprintf(script_workfldr, sizeof(script_workfldr), "%s%s%s", buffer, script_subfldrs, (!script_subfldrs[0]) ? "" : "/");
 
       // Only update HUD if we actually went to parent folder
       userscripts_update_array();
@@ -1618,10 +1618,13 @@ static int userscripts_ctrl() {
 
 
     if( pressed_buttons & PSP_CTRL_CROSS ) { // toggle cheat
-      snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
+      char curr_us_entry[1024];
+      snprintf(curr_us_entry, sizeof(curr_us_entry), "%s%s", script_workfldr, currentfile);
 
-      if( doesDirExist(buffer) && (countFilesInFolder(buffer) > 0 || (countFoldersInFolder(buffer) > 0)) ) {  // check folder + not empty
-        snprintf(script_subfldrs, sizeof(script_subfldrs), "%s%s%s", script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/", currentfile);
+      if( doesDirExist(curr_us_entry) && (countFilesInFolder(curr_us_entry) > 0 || (countFoldersInFolder(curr_us_entry) > 0)) ) {  // check folder + not empty
+        if ( script_subfldrs[0] ) strcat(script_subfldrs, "/");
+        strncat(script_subfldrs, currentfile, strlen(currentfile));
+
         snprintf(script_workfldr, sizeof(script_workfldr), "%s%s%s/%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs);
         userscripts_update_array();
 
@@ -1673,18 +1676,22 @@ static int userscripts_ctrl() {
 
         // // // // // // // // // // // // // // // // // // // // // // //
 
-        snprintf(buffer, sizeof(buffer), "%s%s", script_workfldr, currentfile);
-        SceUID file = sceIoOpen(buffer, PSP_O_RDONLY, 0777);
+        char file_path[PATH_MAX];
+        snprintf(file_path, sizeof(file_path), "%s%s", script_workfldr, currentfile);
+        SceUID file = sceIoOpen(file_path, PSP_O_RDONLY, 0777);
         if( file >= 0 ) {
 
           CustomScriptClear(addr, SCRIPT_SIZE); // zero script area in ScriptSpace
 
-          int i, j, k, opcode = -1;
+          unsigned int i;
+          int j, k;
+          int opcode = -1;
           u8 script[SCRIPT_SIZE]; // todo size
           for(i = 0; i < SCRIPT_SIZE; i++) // poorly memset
             script[i] = 0;
 
-          int pos = 0, line = 0, tempint;
+          unsigned int pos = 0, line = 0;
+          int tempint;
           float tempflt;
           char tempbuf[16];
           char readbuf[SCRIPTLINELGT]; // SCRIPTLINELGT is max line length
@@ -2015,9 +2022,9 @@ static int userscripts_ctrl() {
                       memset(identifier, 0, sizeof(identifier)); // clear
 
                       if( token[strlen(token)-1] != '\'' ) { // fugly incoming again
-                        snprintf(identifier, sizeof(identifier), "%s", token);
+                        snprintf(identifier, sizeof(identifier), "%s ", token);
                         token = strtok_r(saveptr, "\'", &saveptr); // custom text can have whitespaces.
-                        snprintf(identifier, sizeof(identifier), "%s %s", identifier, token);
+                        strncat(identifier, token, strlen(token));
                       } else
                         memcpy(identifier, token, strlen(token)-1);
 
@@ -2060,7 +2067,7 @@ static int userscripts_ctrl() {
 
                             /// save string as ushort in array
                             int ctr = 0;
-                            memset(custom_gxts[customtextcounter], 0, CSTGXTLGT * sizeof(ushort));
+                            memset(custom_gxts[customtextcounter], 0, CSTGXTLGT * sizeof(unsigned short));
                             while(identifier[ctr] != 0x00) {
                               custom_gxts[customtextcounter][ctr] = identifier[ctr];
                               ctr++;
@@ -2499,11 +2506,11 @@ static int userscripts_ctrl() {
 
           CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
 
-          char tempbuffffff[2048]; // quick temp printout
-          memset(&tempbuffffff, 0, sizeof(tempbuffffff));
-          for( i = 0; i < (pos < 2048 ? pos : 2048); i++ )
-            snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
-          USERSCRIPT_LOG("\nSCRIPT:%s\n\n", tempbuffffff);
+          // char tempbuffffff[2048]; // quick temp printout
+          // memset(&tempbuffffff, 0, sizeof(tempbuffffff));
+          // for( i = 0; i < (pos < 2048 ? pos : 2048); i++ )
+          //   snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
+          // USERSCRIPT_LOG("\nSCRIPT:%s\n\n", tempbuffffff);
 
           CustomScriptExecute(addr);
         }
@@ -2541,12 +2548,12 @@ static short flag_editor = 0;
 static char editor_titlebuffer[64];
 static const Editor_pack *editor_curmenu;
 
-static int editor_menumode  = -1;
-static int editor_toptions  = -1;
-static int editor_firstobj  = -1; // first object
-static int editor_lastobj   = -1; // last object
-static int editor_blocksize = -1; // size of object
-static int editor_blocks    = -1; // blocks available
+static int editor_menumode  = 0;
+static int editor_toptions  = 0;
+static u32 editor_firstobj  = 0; // first object
+static u32 editor_lastobj   = 0; // last object
+static int editor_blocksize = 0; // size of object
+static int editor_blocks    = 0; // blocks available
 
 /// editor position(s) saved globally (init with 0)
 int editor_pedobj_current        = 0;
@@ -2577,7 +2584,7 @@ static int editor_wasused = 0; // if > 0 at least one value was changed
 static const float editor_row_spacing = 15.f; // pixels between rows
 
 static int editor_block_current;
-static int editor_base_adr;
+static u32 editor_base_adr;
 static int editor_options;       // available options (set later)
 static int editor_showoptions;   // the number of value rows that should be displayed at once (0 to 2 possible)
 static int editor_draw_lower;    // some have no data in slots -> those can be disabled here
@@ -2632,7 +2639,6 @@ int editor_create(int mode, int toptions, const char *editortitle, const Editor_
 }
 
 static int editor_draw() {
-  int i, str_pos;
   char buffer[128];
   char buffer_top0[128]; // top option
   char buffer_top1[128]; // top option 2
@@ -2682,13 +2688,14 @@ static int editor_draw() {
       editor_block_current = editor_vehicleobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr)); // block menu
+        // snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
+        // if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
+        //   snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
 
-        snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
-        if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
+        char *vehicle_name = getRealVehicleNameViaID(getVehicleID(editor_base_adr));
+        if ( !vehicle_name || !(*vehicle_name) ) vehicle_name = getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr));
 
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s    %s: %s", buffer_top0, _t("Name"), buffer_top1);
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %i/%i      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr), _t("Name"), vehicle_name); // block menu
 
         editor_draw_lower = 1; // there is a Vehicle here
       } else {
@@ -2824,8 +2831,7 @@ static int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
 
       if( getInt(editor_base_adr) ){ // there is a pointer here
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %i/%i      %s: '%s'", _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10))); //block menu
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s   %s: %s", buffer_top0, _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %i/%i      %s: '%s'   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu
         editor_draw_lower = 1;
 
         editor_base_adr = getInt(editor_base_adr);
@@ -3047,7 +3053,7 @@ static int editor_draw() {
       editor_top = editor_selection_val;  // for scrolling up with selection
 
     /// work
-    for(i=editor_top; i < editor_showoptions+editor_top; i++, y += editor_row_spacing) {
+    for(int i=editor_top; i < editor_showoptions+editor_top; i++, y += editor_row_spacing) {
       if ( i == editor_selection_val && editor_selector == 0) {
         COLOR_TEMP = COLOR_CHEAT_ON;
         editor_cur_type = editor_curmenu[editor_selection_val].type;
@@ -3137,9 +3143,16 @@ static int editor_draw() {
 
           case TYPE_STRING:
             snprintf(buffer, sizeof(buffer), "'");
-            for( str_pos = 0; str_pos < pre && getByte(adr+str_pos) != 0x00; str_pos++ ) {
-              snprintf(buffer, sizeof(buffer), "%s%c", buffer, *(char*)(adr+str_pos));
-            } snprintf(buffer, sizeof(buffer), "%s'%s", buffer, fix);
+            buffer[0] = '\'';
+            // for( str_pos = 0; str_pos < pre && getByte(adr+str_pos) != 0x00; str_pos++ ) {
+            //   snprintf(buffer, sizeof(buffer), "%s%c", buffer, *(char*)(adr+str_pos));
+            // } snprintf(buffer, sizeof(buffer), "%s'%s", buffer, fix);
+
+            int str_pos = 0;
+            for ( ; str_pos < pre && getByte(adr+str_pos) != 0x00; str_pos++ )
+            {
+              buffer[str_pos+1] = *(char*)(adr+str_pos);
+            } buffer[str_pos+1] = '\''; buffer[str_pos+2] = '\0';
             break;
 
           case TYPE_DUMMY:
@@ -3407,7 +3420,8 @@ static int editor_ctrl() {
     if( pressed_buttons & PSP_CTRL_SELECT ) {
       //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
       if( (editor_menumode == EDITOR_PEDOBJ) && pplayer && editor_base_adr != pplayer ) {
-        int tadr = -1, pos = 0;
+        u32 tadr;
+        int pos = 0;
         for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize ) {
           if( tadr == pplayer )
             editor_block_current = pos;
@@ -3416,14 +3430,16 @@ static int editor_ctrl() {
 
       if( editor_menumode == EDITOR_VEHICLEOBJ ) {
         if( pcar && editor_base_adr != pcar ) { // inside car & its not yet selected
-          int tadr = -1, pos = 0;
+          u32 tadr;
+          int pos = 0;
           for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize) {
             if( tadr == pcar )
               editor_block_current = pos;
           }
         }
         if( !pcar && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj) { //
-          int tadr = -1, pos = 0;
+          u32 tadr;
+          int pos = 0;
           for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize) {
             if( tadr == getObjectsTouchedObjectAddress(pobj) )
               editor_block_current = pos;
@@ -3432,7 +3448,8 @@ static int editor_ctrl() {
       }
 
       if( ((editor_menumode == EDITOR_WORLDOBJ) || (editor_menumode == EDITOR_BUILDINGSIPL)) && getObjectsTouchedObjectAddress(pobj) != 0 ) {
-        int tadr = -1, pos = 0;
+        u32 tadr;
+        int pos = 0;
         for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize ) {
           if( tadr == getObjectsTouchedObjectAddress(pobj) )
             editor_block_current = pos;
@@ -4414,8 +4431,8 @@ static int freecam_ctrl() {
 *********************************************************************************************************/
 #ifdef HEXEDITOR
 static short flag_address = 0;
-static int tempaddress = -1; // stores the temp address which may or may not be hex_addr later
-static int addresspos = -1;  // position of cursor to digit to be adjusted
+static u32 tempaddress = 0; // stores the temp address which may or may not be hex_addr later
+static u32 addresspos = -1;  // position of cursor to digit to be adjusted
 
 #define ADR_HISTORY_SIZE 32
 static int adr_history[ADR_HISTORY_SIZE];
@@ -4681,13 +4698,13 @@ static const int hexeditor_colordelay = 3 * 1000 * 1000; // delay for changed va
 
 /// set & used by functions
 static int hexeditor_mode;      // 0 = use full memory location, 1 = start from 0x00000000 ( = lower bound)
-static int hexeditor_lowbound;  // lowest memory address allowed to be displayed
-static int hexeditor_highbound; // highest memory address allowed to be displayed
+static u32 hexeditor_lowbound;  // lowest memory address allowed to be displayed
+static u32 hexeditor_highbound; // highest memory address allowed to be displayed
 static char hexeditor_infobuffer[64];            // holds the additional string info of location displayed next to Headline
 static unsigned char hexeditor_memory[14][0x10]; // copy of displayed hex memory for comparison [lines][colums]
-static int hexeditor_memtime[14][0x10];          // holds the time of hex value for color stuff [lines][colums]
+static unsigned int hexeditor_memtime[14][0x10];          // holds the time of hex value for color stuff [lines][colums]
 static int hexeditor_lines;   // current number of lines that are displayed
-static int hexeditor_address; // the addresses displayed on the left on mode 0 (actual memory address)
+static u32 hexeditor_address; // the addresses displayed on the left on mode 0 (actual memory address)
 static int hexeditor_showadr; // the addresses displayed on the left on mode 1 (0x0000000 = starting address)
 static int hexeditor_browse_x; // cursor x
 static int hexeditor_browse_y; // cursor y
@@ -4698,7 +4715,7 @@ static int hex_addressmode = 0; // 0 = physical address, module load address, gl
 
 #define MARKERS 128
 
-static int hex_markers[MARKERS];
+static u32 hex_markers[MARKERS];
 
 static void hex_marker_add(u32 address) {
   int i;
@@ -4749,7 +4766,7 @@ void hex_marker_clear() {
     hex_markers[i] = 0;
 }
 
-int hexeditor_create(int address, int mode, int low, int high, const char *infostring) { // init HexEditor
+int hexeditor_create(u32 address, int mode, int low, int high, const char *infostring) { // init HexEditor
   DEBUG_LOG("%i: hexeditor_create(%s)", getGametime(), infostring);
 
   if( address >= memory_low && address <= memory_high )
@@ -4837,7 +4854,7 @@ static int hexeditor_draw() {
   int counter, scounter; // lines & bytes per line
   u32 SOMECOLOR;
   unsigned char current = 0x00;
-  int current2 = 0;
+  unsigned int current2 = 0;
 
 
     hex_adr = (hexeditor_address+(hexeditor_browse_y*0x10)+(hexeditor_browse_x*0x01)); // update address depending on cursor position
@@ -4900,9 +4917,9 @@ static int hexeditor_draw() {
         if( hex_addressmode == 1 )
           snprintf(buffer, sizeof(buffer), "0x%08lX", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
         else if( hex_addressmode == 2 )
-          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
+          snprintf(buffer, sizeof(buffer), "0x%08lX", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
         else
-          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) ); // display physical address "0x%08X"
+          snprintf(buffer, sizeof(buffer), "0x%08lX", (hexeditor_address+(counter*0x10)) ); // display physical address "0x%08X"
 
      } drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, 8, y, COLOR_TEXT);
 
@@ -5024,7 +5041,7 @@ static int hexeditor_draw() {
         drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 265.0f, 255.0f, RED);
 
 
-      if( *((int*)(hex_adr)) > memory_low && *((int*)(hex_adr)) < memory_high) { // link to accessible memory
+      if( *((u32*)(hex_adr)) > memory_low && *((u32*)(hex_adr)) < memory_high) { // link to accessible memory
         snprintf(buffer, sizeof(buffer), "0x%08X", *((int*)(hex_adr)) );
         if( flag_use_legend )
           drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 255.0f, RED);
@@ -5182,7 +5199,7 @@ static int hexeditor_ctrl() {
 
       } else { // open pointer location
         if( hex_adr % 0x4 == 0x0 ) {
-          if( getInt(hex_adr) > memory_low && getInt(hex_adr) < memory_high) { // pointer to accessible memory
+          if( (u32)getInt(hex_adr) > memory_low && (u32)getInt(hex_adr) < memory_high) { // pointer to accessible memory
 
             /* old version (drop mode 1)
             hex_adr = getInt(hex_adr);
@@ -6260,7 +6277,7 @@ int last_hash = -1;
 char hashbuffer[32];
 int name_resolver_status = -1;
 
-int name_resolver(SceSize args, void *argp) {
+int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
   DEBUG_LOG("name_resolver Thread started");
 
   char hashstr[16];
@@ -6548,7 +6565,7 @@ int OnModuleStart(SceModule *mod) {
 
 #define EMULATOR_DEVCTL__IS_EMULATOR  0x00000003
 
-int module_start(SceSize argc, void* argp) {
+int module_start(SceSize argc UNUSED, void* argp UNUSED) {
   sceCtrlPeekBufferPositive(&pad, 1);
 
   /// create basefolder to be save (for logfile this early)
@@ -6562,8 +6579,10 @@ int module_start(SceSize argc, void* argp) {
   /// config init
   #ifdef CONFIG
   snprintf(config, sizeof(config), "%s%s", basefolder, file_config); // always use the basefolder path
-  if( doesFileExist(config))
+  if ( doesFileExist(config) )
+  {
     INFO_LOG("Config .ini found! (%s)", config);
+  }
   #endif
 
   int i;
@@ -6583,7 +6602,7 @@ int module_start(SceSize argc, void* argp) {
 
   /// check available memory (high memory layout)
   memory_high = getHighMemBound();
-  if ( memory_high < 0 ) memory_high = 0x0A000000; // if it alloc mem fails, set default ~32 MB
+  if ( memory_high == 0 ) memory_high = 0x0A000000; // if it alloc mem fails, set default ~32 MB
 
   DEBUG_LOG("sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   DEBUG_LOG("sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
@@ -6614,12 +6633,13 @@ int module_start(SceSize argc, void* argp) {
 }
 
 // On module unload / stop
-int module_stop(SceSize argc, void* argp)
+int module_stop(SceSize argc UNUSED, void* argp UNUSED)
 {
   free_alloc_mem_cdr();
   return 0;
 }
 
+extern void memdestroy();
 void free_alloc_mem_cdr()
 {
   #ifdef USERSCRIPTS
@@ -6634,7 +6654,7 @@ void free_alloc_mem_cdr()
   memdestroy();
 }
 
-void _exit(int status)
+void _exit(int status UNUSED)
 {
   sceKernelExitGame();
   for (;;) ; /* Should never return */

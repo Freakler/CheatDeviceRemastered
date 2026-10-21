@@ -9,6 +9,7 @@
 #include "logs.h"
 #include "main.h"
 #include "versioning.h"
+#include "putils.h"
 
 #if LOGGING
 
@@ -36,6 +37,6 @@ void Log(LogLevel level, const char *funcName, const char *message, ...)
 
 #else
 
-void Log(LogLevel level, const char *funcName, const char *message, ...) { }
+void Log(LogLevel level UNUSED, const char *funcName UNUSED, const char *message UNUSED, ...) { }
 
 #endif

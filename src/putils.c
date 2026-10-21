@@ -231,7 +231,7 @@ void makedirs(const char *path) { // recursively create path
   }
 } */
 
-int getHighMemBound() { // thx Acid_Snake :)
+u32 getHighMemBound() { // thx Acid_Snake :)
   // PSP Fat -> ~24 MB
   // PSP Slim/Go/Street (~54 MB with High Memory Layout)
 
@@ -255,9 +255,9 @@ int getHighMemBound() { // thx Acid_Snake :)
 
 
   SceUID block = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "test", PSP_SMEM_High, 0x100, NULL);
-  if ( block < 0 ) return -1; // Shouldn't fail but we never know...
+  if ( block < 0 ) return 0; // Shouldn't fail but we never know...
 
-  int address = (int)sceKernelGetBlockHeadAddr(block) + 0x100; // highest address is not calculated precisely this way either but it gives a rough idea
+  u32 address = (u32)sceKernelGetBlockHeadAddr(block) + 0x100; // highest address is not calculated precisely this way either but it gives a rough idea
   sceKernelFreePartitionMemory(block);
 
 
@@ -268,7 +268,6 @@ int getHighMemBound() { // thx Acid_Snake :)
   /// manual adjustment for high-mem
   if( address >= 0x0B000000 && !PPSSPP )
     address = 0x0C000000; // SHOULD be the same for all CFWs
-
 
   return address;
 }
@@ -303,11 +302,11 @@ void getSizeString(char *string, uint64_t size) {
 }
 
 // Check if filename (or path) ends with extension
-int fileEndsWithExtension(const char* path, const char* extension)
+int stringEndsWith(const char* string, const char* endswith)
 {
-  if ( !path || !extension || *path == '\0' || *extension == '\0' ) return 0;
+  if ( !string || !endswith || *string == '\0' || *endswith == '\0' ) return 0;
 
-  return !strcasecmp(path + strlen(path) - strlen(extension), extension);
+  return !strcasecmp(string + strlen(string) - strlen(endswith), endswith);
 }
 
 // Get extension length
@@ -315,7 +314,7 @@ int getExtensionLength(const char* path)
 {
   if ( !path || *path == '\0' ) return 0;
 
-  char* dot = strrchr(path, '.'); // Find last dot
+  const char* dot = strrchr(path, '.'); // Find last dot
   if ( !dot ) return 0;
 
   return (int)(strlen(path) - (size_t)(dot - path));
@@ -356,15 +355,20 @@ uint32_t hash(const char *key, uint32_t len, uint32_t seed)
   // Process the tail (remaining bytes)
   switch (len & 3)
   {
-    case 3: k ^= (tail[2] << 16);
+    case 3:
+      k ^= (tail[2] << 16);
+      break;
 
-    case 2: k ^= (tail[1] << 8);
+    case 2:
+      k ^= (tail[1] << 8);
+      break;
 
     case 1: k ^= tail[0];
             k *= c1;
             k = (k << r1) | (k >> (32 - r1));
             k *= c2;
             h ^= k;
+            break;
   }
 
   h ^= len;

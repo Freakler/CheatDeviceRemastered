@@ -1445,7 +1445,7 @@ const mapicons_pack vcs_mapicons[] = {
 u32 memory_low  = 0x08400000; // memory bounds
 u32 memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C000000) dynamically overwritten in module_start
 
-int isInMemBounds(int valtocheck) {
+int isInMemBounds(u32 valtocheck) {
   return (valtocheck >= memory_low && valtocheck < memory_high);
 }
 
@@ -1642,7 +1642,7 @@ float getFloat(int adr) { // 32bit
   #endif
 }
 
-void setString(int adr, char* string, int mode) { // mode = 1 (where every second is a char)
+void setString(u32 adr, char* string, int mode) { // mode = 1 (where every second is a char)
   int pos, mem;
   static char str[256];
 
@@ -1663,18 +1663,18 @@ void setString(int adr, char* string, int mode) { // mode = 1 (where every secon
   #endif
 }
 
-char *getString(int adr, int mode) { // mode = 1 (where every second is a char)
-  int pos;
+char *getString(u32 adr, int mode) { // mode = 1 (where every second is a char)
   static char str[256];
 
-  memset(&str[0], 0, sizeof(str));
+  str[0] = '\0';
 
   #ifdef MEMCHECK
   if( adr >= memory_low && adr+256 < memory_high ) {
   #endif
-    for( pos = 0; pos < 256 && *(char*)(adr+pos) != 0x00; ((mode) ? pos+=2 : pos++) ) {
-      snprintf(str, sizeof(str), "%s%c", str, *(char*)(adr+pos));
-    }
+    int i = 0;
+    for( int pos = 0; pos < 256 && *(char*)(adr+pos) != 0x00; ((mode) ? pos+=2 : pos++), i++ ) {
+      str[i] = *(char*)(adr+pos);
+    } str[i] = '\0';
   #ifdef MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getString()", 5.00f);
@@ -1921,7 +1921,7 @@ void setPedAmmoForWeapon(int ped_base_adr, int type, int loaded, int total) {
 
 }
 
-char getPedsCurrentAnimation(int ped_base_adr) { // eg: 0x12 is entering vehicle
+char getPedsCurrentAnimation(int ped_base_adr UNUSED) { // eg: 0x12 is entering vehicle
   return getByte(pplayer + (LCS ? 0x250 : 0x894));
 }
 
@@ -1936,11 +1936,11 @@ unsigned char getPedID(int ped_base_adr) {
   else return 0xFF; // unknown
 }
 
-int getPedsVehicleObjectAddress(int base_adr) { // there will be address if ped is inside a vehicle
+u32 getPedsVehicleObjectAddress(int base_adr) { // there will be address if ped is inside a vehicle
   return getInt(base_adr + (LCS ? 0x534 : 0x480));
 }
 
-int getObjectsTouchedObjectAddress(int base_adr) { // there will be address if ped/vehicle touches other object (0 if nothing touched)
+u32 getObjectsTouchedObjectAddress(int base_adr) { // there will be address if ped/vehicle touches other object (0 if nothing touched)
   return getInt(base_adr + (LCS ? 0x12C : 0x150));
 }
 
@@ -2112,7 +2112,7 @@ float getVehicleWheelCamber(int vehicle_base_adr) {
   return getFloat(vehicle_base_adr + (LCS ? 0x618 : 0x6A8));
 }
 
-float getVehicleSpeed(int vehicle_base_adr) {
+float getVehicleSpeed(int vehicle_base_adr UNUSED) {
   //return getFloat(vehicle_base_adr + (LCS ? 0x124 : 0x108)); // calculated by game (up/down counts too) (has some weird multiplier?! (probably gamespeed) Which is also different for LCS vs VCS?!?! its ALSO not consistent and is calculated wrong with higher speeds sometimes...)
   return sqrtf((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144))) + (getFloat(pcar+(LCS?0x78:0x148)) * getFloat(pcar+(LCS?0x78:0x148)))); // doing it myself then!! sqrtf( x^2 + y^2 + z^2 )
 }
@@ -2139,7 +2139,7 @@ void setVehicleMakePhysical(int vehicle_base_adr) { // like game does it "FLOATI
   setInt(vehicle_base_adr + (LCS ? 0x44 : 0x48), (getInt(vehicle_base_adr + (LCS ? 0x44 : 0x48)) & 0xfffffe0f) | 0x30 ); // set 3x xx xx xx
 }
 
-void setVehicleRepairTyres(int vehicle_base_adr, short vehicle_type) {
+void setVehicleRepairTyres(int vehicle_base_adr UNUSED, short vehicle_type) {
   // short vehicle_type = getVehicleTypeByID(getVehicleID(vehicle_base_adr)); //use gloabl instead? -> yes
   if( vehicle_type == VEHICLE_CAR ) {
     // indeflatable  car tyres
@@ -2175,7 +2175,7 @@ int isVehicleInAir(int vehicle_base_adr) {
   return getByte(vehicle_base_adr+ (LCS ? 0x10A : 0x136)) == 0;
 }
 
-int isVehicleUpsideDown(int vehicle_base_adr) {
+int isVehicleUpsideDown(int vehicle_base_adr UNUSED) {
   return getFloat(pcar+0x28) < -0.85; // -0.00 would be on side of car | -1 completely on roof
 }
 
@@ -2306,7 +2306,8 @@ int getPickupsActiveObjects(int pickups_base, int pickups_max, int pickups_size)
 }
 
 int getPickupsActiveObjectsWithID(short id) {
-  int ret = 0, i, addr = global_pickups;
+  int ret = 0;
+  unsigned int i, addr = global_pickups;
   for( i = 0; i < var_pickupslots; addr+=var_pickupslotsize, i++) {
     if( getPickupIsActive(addr) && getPickupID(addr) == id )
       ret++;
@@ -2315,7 +2316,7 @@ int getPickupsActiveObjectsWithID(short id) {
 }
 
 int spawnPickup(short id, char type, short amount, float x, float y, float z) {
-  int cur_slot = 0;
+  unsigned int cur_slot = 0;
   int cur_offset = 0;
 
   for( cur_offset = global_pickups; cur_slot < var_pickupslots; cur_offset += var_pickupslotsize, cur_slot++ ) {
@@ -2451,7 +2452,7 @@ int getMapiconLinkedObjectSlotNumber(int mapicon_base_adr) { //return slot of ve
 }
 
 void removeMapIcon(int mapicon_base_adr) {
-  int i;
+  unsigned int i;
   for( i = mapicon_base_adr; i < mapicon_base_adr+var_radarblipslotsize; i++ )
     setByte(i,0x00);
 
@@ -2462,14 +2463,16 @@ void removeMapIcon(int mapicon_base_adr) {
 }
 
 void removeAllMapIcons() {
-  int i, j;
+  unsigned int i;
+  int j;
   for( i = 0, j = (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
     removeMapIcon(j);
   }
 }
 
 void removeAllCustomMapIcons() { // zeroes only the custom created ones!!!
-  int i, j;
+  unsigned int i;
+  int j;
   for( i = 0, j = (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
     // DEBUG_LOG("removeAllCustomMapIcons() loop %i 0x%08X", i, j);
     if( getByte(j+(LCS ? 0x4F : 0x2F)) == 0x01 ) { // my watermark to be a custom
@@ -2480,7 +2483,8 @@ void removeAllCustomMapIcons() { // zeroes only the custom created ones!!!
 }
 
 int createCustomMapIcon(char icon, int color, char onlywhenclose, char size, float x, float y, float z) {
-  int i, j;
+  unsigned int i;
+  int j;
   for( i = 0, j = (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(j) )
       continue;
@@ -2528,7 +2532,8 @@ int createCustomMapIcon(char icon, int color, char onlywhenclose, char size, flo
 }
 
 int createCustomMapIconsForPickupsWithID(short id, char icon, int color) {
-  int i, j, counter = 0;
+  unsigned int i;
+  int j, counter = 0;
   for( i = 0, j = global_pickups; i < var_pickupslots; i++, j+= var_pickupslotsize ) {
     if( getPickupID(j) == id && getPickupIsCollectable(j) ) { // && getPickupIsActive(j)
       createCustomMapIcon(icon, color, 0x00, 0x01, getPickupCoordX(j), getPickupCoordY(j), getPickupCoordZ(j));
@@ -2539,7 +2544,8 @@ int createCustomMapIconsForPickupsWithID(short id, char icon, int color) {
 }
 
 int createCustomMapIconsForWeaponsInRange(float range) {
-  int i, addr, counter = 0;
+  unsigned int i;
+  int addr, counter = 0;
   int color;
 
   float px = getFloat(pobj+0x30);
@@ -2885,7 +2891,8 @@ int getVehicleWorldSpawnSlotIsActive(int base) {
 }
 
 int getVehicleWorldSpawnSlotActiveObjects(int base) {
-  int ret = 0, i;
+  int ret = 0;
+  unsigned int i;
   for( i = 0; i < var_vehiclesworldspawnslots; base+=var_vehiclesworldspawnslotsize, i++) {
     if( getVehicleWorldSpawnSlotIsActive(base) )
       ret++;
@@ -2893,7 +2900,7 @@ int getVehicleWorldSpawnSlotActiveObjects(int base) {
   return ret;
 }
 
-int getVehicleWorldSpawnSlotAddress(int slot) { // slots start with 0!!!
+int getVehicleWorldSpawnSlotAddress(unsigned int slot) { // slots start with 0!!!
   if(slot > var_vehiclesworldspawnslots)
     return -1;
   return addr_vehiclesworldspawn + (var_vehiclesworldspawnslotsize * slot);
@@ -2904,7 +2911,7 @@ int isCustomParkedVehicleSpawnViaSlot(int slot) {
   return (getByte(addr + (LCS ? 0x2B : 0x2F)) == 0x42);
 }
 
-int createParkedVehicleSpawnViaSlot(int slot, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock) {
+int createParkedVehicleSpawnViaSlot(unsigned int slot, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock) {
   if( slot > var_vehiclesworldspawnslots )
     return -1;
 
@@ -2952,7 +2959,7 @@ int createParkedVehicleSpawnViaSlot(int slot, short id, float x, float y, float 
   return addr;
 }
 
-int createParkedVehicleSpawnViaReplaceID(short replace_id, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock) {
+int createParkedVehicleSpawnViaReplaceID(short replace_id UNUSED, short id UNUSED, float x UNUSED, float y UNUSED, float z UNUSED, float deg UNUSED, short color1 UNUSED, short color2 UNUSED, char alarm UNUSED, short door_lock UNUSED) {
   /// TODO
     // int slot = ....
     // return createParkedVehicleSpawnViaSlot(slot, id, x, y, z, deg, color1, color2, alarm, door_lock);
@@ -2967,7 +2974,8 @@ int getGarageVehicleSlotIsActive(int base) {
 }
 
 int getGarageVehicleActiveObjects(int base) {
-  int ret = 0, i;
+  int ret = 0;
+  unsigned int i;
   for( i = 0; i < var_garageslots; base+=var_garageslotsize, i++ ) {
     if( getGarageVehicleSlotIsActive(base) )
       ret++;
@@ -3143,12 +3151,12 @@ char *removeColor(char *string) { // fix - sindacco chronicles gave radio statio
   return string[0] == '~' ? &string[3] : string;
 }
 
-char *getRadioStationName(int no) { // for LCS: 0 = Head Radio, 1 = Double Clef, .... 10 = Radio Off
+char *getRadioStationName(unsigned int no) { // for LCS: 0 = Head Radio, 1 = Double Clef, .... 10 = Radio Off
   static char buf[32];
 
   if( no == var_radios ) // highest possible is "radio off"
     return removeColor(getGxtTranslation("FEA_NON"));
-  else if ( no < var_radios && no >= 0 ){
+  else if ( no < var_radios ){
     snprintf(buf, sizeof(buf), "FEA_FM%i", no);
     return removeColor(getGxtTranslation(buf));
   } else { // error
@@ -3193,11 +3201,11 @@ float getGamespeed() {
   return getFloat(global_timescale + (LCS ? 0 : gp));
 }
 
-int isPedCrouching(int ped) {
+int isPedCrouching(int ped UNUSED) {
   return getInt( pplayer + (LCS ? 0x198 : 0x1CC)) & (LCS ? 0x10 : 0x2000);
 }
 
-void TaskDuck(int ped) {
+void TaskDuck(int ped UNUSED) {
   if( LCS ) {
     // *(unsigned int *)(pplayer + 0x198) = *(unsigned int *)(pplayer + 0x198) | 8;
     setInt(pplayer + 0x198, getInt(pplayer + 0x198) | 8);
@@ -3211,7 +3219,8 @@ void TaskDuck(int ped) {
 }
 
 int removeIPLObjectsCollision(short id) {
-  int i, counter = 0, adr;
+  unsigned int i;
+  int counter = 0, adr;
   for( i = 0, adr = buildingsIPL_base; i < buildingsIPL_max; adr += var_buildingsIPLslotsize, i++ ) { // Buildings.ipl
     if(getShort(adr+0x58) == id)
     {
@@ -3231,7 +3240,8 @@ int removeIPLObjectsCollision(short id) {
 
 
 int getParticleOffsetFor(char *name) {
-  int i, offset = getInt(ptr_particleCFG+(LCS?0x0:gp)); // PARTICLE.CFG
+  unsigned int i;
+  int offset = getInt(ptr_particleCFG+(LCS?0x0:gp)); // PARTICLE.CFG
   for( i = 0; i < var_particleCFGslots; i++, offset += var_particleCFGslotsize ) {
     if( strcmp(name, getString(offset+0x4, 0)) == 0 ){
       return offset;
@@ -3240,9 +3250,9 @@ int getParticleOffsetFor(char *name) {
   return -1; // error not found
 }
 
-char *getPedstatName(int no) {
+char *getPedstatName(unsigned int no) {
   int adr = getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp))) + (no * var_pedstatDATslotsize);
-  if( no < 0 || no > var_pedstatDATslots - 1) {
+  if( no > var_pedstatDATslots - 1 ) {
     return "ERROR";
   }
   return getString(adr + (LCS ? 0x4 : 0x1A), 0);

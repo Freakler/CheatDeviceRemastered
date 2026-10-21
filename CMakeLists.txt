@@ -31,7 +31,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/archive"
-  C_STANDARD 99
+  C_STANDARD 23
   C_STANDARD_REQUIRED ON
 )
 
@@ -51,9 +51,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -mtune=mips32r2
 
   -Wall
-  -Wno-restrict
-  -Wno-format-truncation
-  -Wno-implicit-function-declaration
+  -Wextra
+  -Werror
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

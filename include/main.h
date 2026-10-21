@@ -225,7 +225,7 @@ int freecam_create();
 
 #ifdef HEXEDITOR
 int address_create();
-int hexeditor_create(int hexadr, int hexmode, int lowbound, int highbound, const char *infostring);
+int hexeditor_create(u32 hexadr, int hexmode, int lowbound, int highbound, const char *infostring);
 void hex_marker_addx(u32 address, int size);
 void hex_marker_clear();
 

@@ -132,7 +132,7 @@ extern void (* RefreshActorSkin)(int ped_obj);
 
 ////////////////////////////////////
 
-int isInMemBounds(int valtocheck);
+int isInMemBounds(u32 valtocheck);
 
 void setBit(int adr, char bit, char boolean);
 
@@ -157,8 +157,8 @@ unsigned char getNibbleHigh(int adr);
 void setFloat(int adr, float value);
 float getFloat(int adr);
 
-void setString(int adr, char* string, int mode);
-char *getString(int adr, int mode);
+void setString(u32 adr, char* string, int mode);
+char *getString(u32 adr, int mode);
 
 unsigned char *getSavedataKey();
 
@@ -180,7 +180,7 @@ void setUnlimitedSwimStatus(char value);
 
 float getPedFacingDirectionInDegree(int ped_base_adr);
 
-int getObjectsTouchedObjectAddress(int base_adr);
+u32 getObjectsTouchedObjectAddress(int base_adr);
 int getTypeFromAddress(int address);
 
 
@@ -207,7 +207,7 @@ char getPedsCurrentAnimation(int ped_base_adr);
 int getPedsCurrentWeapon(int ped_base_adr);
 
 unsigned char getPedID(int ped_base_adr);
-int getPedsVehicleObjectAddress(int base_adr);
+u32 getPedsVehicleObjectAddress(int base_adr);
 
 int getPedObjectIsActive(int ped_base_adr);
 int getPedActiveObjects(int peds_base, int peds_max, int peds_size);
@@ -357,9 +357,9 @@ void setRandomPedCheat(char id);
 /// Parked Vehicle Spawns
 int getVehicleWorldSpawnSlotIsActive(int base);
 int getVehicleWorldSpawnSlotActiveObjects(int base);
-int getVehicleWorldSpawnSlotAddress(int slot);
+int getVehicleWorldSpawnSlotAddress(unsigned int slot);
 int isCustomParkedVehicleSpawnViaSlot(int slot);
-int createParkedVehicleSpawnViaSlot(int slot, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock);
+int createParkedVehicleSpawnViaSlot(unsigned int slot, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock);
 int createParkedVehicleSpawnViaReplaceID(short replace_id, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock);
 
 
@@ -382,7 +382,7 @@ char *getRealVehicleNameViaID(short id);
 char *getGxtIdentifierForVehicleViaID(int id);
 char *vcs_getNameForPedViaID(int id);
 
-char *getRadioStationName(int no);
+char *getRadioStationName(unsigned int no);
 
 char *removeColor(char *string);
 
@@ -396,7 +396,7 @@ void setPedSkin(int ped_handle, const char *name);
 int removeIPLObjectsCollision(short id);
 
 int getParticleOffsetFor(char *name);
-char *getPedstatName(int no);
+char *getPedstatName(unsigned int no);
 
 
 /// SCM

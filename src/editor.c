@@ -190,7 +190,7 @@ const Editor_pack lcs_garage_menu[] = {
   // https://gtaforums.com/topic/838112-gta-vcs-special-vehicle-guide/
   // http://gtaforums.com/topic/849155-gta-lcs-special-vehicle-guide/page-47#entry1069557353
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -245,11 +245,11 @@ const Editor_pack vcs_garage_menu[] = {
   {"Variation 1"                , ""        , 0x2D      , TRUE    , TYPE_BYTE      , 0 /*hex*/ , 0            , 1    },
   {"Variation 2"                , ""        , 0x2E      , TRUE    , TYPE_BYTE      , 0 /*hex*/ , 0            , 1    },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
-void *garage_vehicle(int calltype, int keypress, int base_address, int address) {
+void *garage_vehicle(int calltype, int keypress, int base_address UNUSED, int address) {
   static char buffer[32];
 
   switch( calltype ) {
@@ -273,8 +273,8 @@ void *garage_vehicle(int calltype, int keypress, int base_address, int address) 
   return NULL;
 }
 
-void *radiostation(int calltype, int keypress, int base_address, int address) {
-  static int i = 0;
+void *radiostation(int calltype, int keypress, int base_address UNUSED, int address UNUSED) {
+  static unsigned int i = 0;
   static char buffer[16];
 
   switch( calltype ) {
@@ -299,8 +299,8 @@ void *radiostation(int calltype, int keypress, int base_address, int address) {
   return NULL;
 }
 
-void *pedstatname(int calltype, int keypress, int base_address, int address) {
-  static int i = 0;
+void *pedstatname(int calltype, int keypress, int base_address UNUSED, int address UNUSED) {
+  static unsigned int i = 0;
   static char buffer[16];
 
   switch( calltype ) {
@@ -423,7 +423,7 @@ const Editor_pack lcs_pedobj_menu[] = {
 
   {"Is targeted bool"                , ""      , 0xBB4     , FALSE    , TYPE_BOOL     , 0      , 0            , 0      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_pedobj_menu[] = {
@@ -479,7 +479,7 @@ const Editor_pack vcs_pedobj_menu[] = {
 
   {"Selected Weapon Slot"           , ""      , 0x789      , FALSE   , TYPE_BYTE       , DEC    , 0            , 1      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_vehicleobj_menu[] = {
@@ -564,7 +564,7 @@ const Editor_pack lcs_vehicleobj_menu[] = {
 
   {"Wheel Camber"                  , ""      , 0x618      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_vehicleobj_menu[] = {
@@ -583,7 +583,7 @@ const Editor_pack vcs_vehicleobj_menu[] = {
   {"Primary Color"             , ""        , 0x224     , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Secondary Color"           , ""        , 0x228     , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_worldobj_menu[] = {
@@ -600,7 +600,7 @@ const Editor_pack lcs_worldobj_menu[] = {
   {"Air Resistance"            , ""        , 0xDC      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.01   },
   {"Elasticity"                , ""        , 0xE0      , TRUE    , TYPE_FLOAT    , 2      , 0            , 0.01   },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_worldobj_menu[] = {
@@ -611,7 +611,7 @@ const Editor_pack vcs_worldobj_menu[] = {
 
   {"Identifier"                , ""      , 0x58      , FALSE   , TYPE_SHORT    , DEC    , 0            , 0x1    },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_pickups_menu[] = {
@@ -629,7 +629,7 @@ const Editor_pack lcs_pickups_menu[] = {
 
   {"is collected?"               , ""      , 0x33      , TRUE    , TYPE_BOOL     , 0      , 0            , 0      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_pickups_menu[] = {
@@ -647,7 +647,7 @@ const Editor_pack vcs_pickups_menu[] = {
   {"is collected?"               , ""      , 0x39      , TRUE    , TYPE_BOOL     , 0      , 0            , 0      },
 //{"0x3A able to take now?!"     , ""      , 0x39      , TRUE    , TYPE_BYTE     , HEX    , 0            , 0x1    },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 /****** LCS tests **********************************************************************
@@ -695,7 +695,7 @@ const Editor_pack lcs_mapicons_menu[] = {
   {"Display"                           , ""      , 0x3E      , TRUE    , TYPE_SHORT    , DEC    , 0            , 0x1    },
   {"Icon"                              , ""      , 0x40      , TRUE    , TYPE_SHORT    , DEC    , 0            , 0x1    }, // short?!
   {"?"                                 , ""      , 0x42      , TRUE    , TYPE_SHORT    , HEX    , 0            , 0x1    },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_mapicons_menu[] = {
@@ -726,7 +726,7 @@ const Editor_pack vcs_mapicons_menu[] = {
   {"?"                                 , ""      , 0x2A      , TRUE    , TYPE_BYTE     , HEX    , 0            , 0x1    },
   {"?"                                 , ""      , 0x2B      , TRUE    , TYPE_BYTE     , HEX    , 0            , 0x1    },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -756,7 +756,7 @@ void *mapicon_color(int calltype, int keypress, int base_address, int address) {
   return NULL;
 }
 
-void *mapicon_type(int calltype, int keypress, int base_address, int address) {
+void *mapicon_type(int calltype, int keypress UNUSED, int base_address UNUSED, int address UNUSED) {
   static char buffer[16];
 
   switch( calltype ) {
@@ -769,7 +769,7 @@ void *mapicon_type(int calltype, int keypress, int base_address, int address) {
   return NULL;
 }
 
-void *mapicon_slot(int calltype, int keypress, int base_address, int address) {
+void *mapicon_slot(int calltype, int keypress UNUSED, int base_address UNUSED, int address UNUSED) {
   static char buffer[16];
 
   switch( calltype ) {
@@ -920,7 +920,7 @@ const Editor_pack lcs_handlingcfg_menu[] = {
 
   ///** unused padding ***///
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_handlingcfg_menu[] = {
@@ -993,7 +993,7 @@ const Editor_pack vcs_handlingcfg_menu[] = {
   {"ModelFlag 7"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_LOW   , DEC    , model_flag       , 6      }, // 1: IS_BIKE      2: IS_HELI        4: IS_PLANE      8: IS_BOAT
   {"ModelFlag 8"                       , ""      , 0xD3      , TRUE    , TYPE_NIBBLE_HIGH  , DEC    , model_flag       , 7      }, //
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 /************************************
@@ -1023,27 +1023,27 @@ char *vcs_modelflags[] = { "FLAG_1A",      "FLAG_1B",      "FLAG_1C",     "FLAG_
                            "IS_BIKE",      "IS_HELI",      "IS_PLANE",    "IS_BOAT",
                            "FLAG_8A",      "FLAG_8B",      "FLAG_8C",     "FLAG_8D" };
 
-void *model_flag(int calltype, int keypress, int base_address, int address, int arg) { // ".steps" is alienated here to identify the position as "arg"
+void *model_flag(int calltype, int keypress, int base_address UNUSED, int address UNUSED, int arg) { // ".steps" is alienated here to identify the position as "arg"
   static char buffer[64];
   char nibble = (arg % 2 ? getNibbleHigh(address) : getNibbleLow(address));
 
   if( calltype == FUNC_GET_STRING ) {
-    memset(&buffer, 0, sizeof(buffer));
+    buffer[0] = '\0';
 
     if( nibble == 0 ) { // 0000
       snprintf(buffer, sizeof(buffer), "NONE");
     }
     if( 0x1 & nibble ) { // 0001
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0]);
+      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0]);
     }
     if( 0x2 & nibble ) { // 0010
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1]);
+      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1]);
     }
     if( 0x4 & nibble ) { // 0100
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2]);
+      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2]);
     }
     if( 0x8 & nibble ) { // 1000
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3]);
+      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3]);
     }
 
     return (void *)buffer;
@@ -1074,27 +1074,27 @@ char *vcs_handlingflags[] = { "FLAG_1A",      "FLAG_1B",          "FLAG_1C",   "
                               "FLAG_8A",      "FLAG_8B",          "FLAG_8C",   "FLAG_8D" };
 
 
-void *handling_flag(int calltype, int keypress, int base_address, int address, int arg) { // ".steps" is alienated here to identify the position as "arg"
+void *handling_flag(int calltype, int keypress, int base_address UNUSED, int address UNUSED, int arg) { // ".steps" is alienated here to identify the position as "arg"
   static char buffer[64];
   char nibble = (arg % 2 ? getNibbleHigh(address) : getNibbleLow(address));
 
   if( calltype == FUNC_GET_STRING ) {
-    memset(&buffer, 0, sizeof(buffer));
+    buffer[0] = '\0';
 
     if( nibble == 0 ) { // 0000
       snprintf(buffer, sizeof(buffer), "NONE");
     }
     if( 0x1 & nibble ) { // 0001
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 0]);
+      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 0]);
     }
     if( 0x2 & nibble ) { // 0010
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 1]);
+      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 1]);
     }
     if( 0x4 & nibble ) { // 0100
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 2]);
+      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 2]);
     }
     if( 0x8 & nibble ) { // 1000
-      snprintf(buffer, sizeof(buffer), "%s %s", buffer, vcs_handlingflags[(arg * 4) + 3]);
+      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 3]);
     }
 
     return (void *)buffer;
@@ -1116,7 +1116,7 @@ void *handling_flag(int calltype, int keypress, int base_address, int address, i
 }
 
 
-void *vehicle_enginetype(int calltype, int keypress, int base_address, int address) {
+void *vehicle_enginetype(int calltype, int keypress, int base_address UNUSED, int address UNUSED) {
   const char *list_name[] = { "Diesel", "Electro", "Petrol"};
   const unsigned char list_val[] = { 0x44, 0x45, 0x50 };
   static short list_size = ARRAY_SIZE(list_val);
@@ -1154,7 +1154,7 @@ void *vehicle_enginetype(int calltype, int keypress, int base_address, int addre
   return NULL;
 }
 
-void *vehicle_lights_front(int calltype, int keypress, int base_address, int address ) {
+void *vehicle_lights_front(int calltype, int keypress, int base_address UNUSED, int address UNUSED) {
   const char *list_name[] = { "Long", "Small", "Big", "Tall"};
   const unsigned char list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
   static short list_size = ARRAY_SIZE(list_val);
@@ -1192,7 +1192,7 @@ void *vehicle_lights_front(int calltype, int keypress, int base_address, int add
   return NULL;
 }
 
-void *vehicle_lights_rear(int calltype, int keypress, int base_address, int address ) {
+void *vehicle_lights_rear(int calltype, int keypress, int base_address UNUSED, int address ) {
   const char *list_name[] = { "Long", "Small", "Big", "Tall"};
   const unsigned char list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
   static short list_size = ARRAY_SIZE(list_val);
@@ -1230,7 +1230,7 @@ void *vehicle_lights_rear(int calltype, int keypress, int base_address, int addr
   return NULL;
 }
 
-void *vehicle_transtype(int calltype, int keypress, int base_address, int address ) {
+void *vehicle_transtype(int calltype, int keypress, int base_address UNUSED, int address ) {
   const char *list_name[] = { "Rear", "Front", "4-Wheel"};
   const unsigned char list_val[] = { 0x52, 0x46, 0x34 };
   static short list_size = ARRAY_SIZE(list_val);
@@ -1297,7 +1297,7 @@ const Editor_pack lcs_vehiclespawns_menu[] = {
 
   // TODO spawn in specific time period only? how handled???
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_vehiclespawns_menu[] = {
@@ -1323,7 +1323,7 @@ const Editor_pack vcs_vehiclespawns_menu[] = {
 
   /// TODO
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -1333,14 +1333,14 @@ const Editor_pack lcs_colsdat_menu[] = {
   {"Green value"            , "/255"    , 0x01      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {"Blue value"             , "/255"    , 0x02      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {"Alpha value"            , "/255"    , 0x03      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 const Editor_pack vcs_colsdat_menu[] = {
   //name                    //postfix    //address    //edit_bool //type        //precision  //*value      //steps    //min    //max
   {"Red value"              , "/255"    , 0x00      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {"Green value"            , "/255"    , 0x01      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {"Blue value"             , "/255"    , 0x02      , TRUE    , TYPE_BYTE      , DEC    , 0            , 0x1    },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_ipl_menu[] = { // todo for rotation : https://gtamods.com/wiki/Game.dtz#Generating_IPL_in_text_format
@@ -1353,7 +1353,7 @@ const Editor_pack lcs_ipl_menu[] = { // todo for rotation : https://gtamods.com/
 
   // TODO
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -1370,7 +1370,7 @@ const Editor_pack lcs_ide_menu[] = {
   {"Texture ID"                            , ""      , 0x1E      , TRUE    , TYPE_SHORT     , DEC    , 0            , 1      },
   {"Type (CRC32 hashed)"                   , ""      , 0x20      , TRUE    , TYPE_INTEGER   , HEX    , 0            , 1      },
   {"Offset to model in .DTZ"               , ""      , 0x24      , TRUE    , TYPE_INTEGER   , HEX    , 0            , 1      },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 const Editor_pack lcs_ide_obj_menu[] = {  /// 1 - obj
   {"Drawdistance 1"                        , ""      , 0x28      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
@@ -1381,7 +1381,7 @@ const Editor_pack lcs_ide_obj_menu[] = {  /// 1 - obj
   {"flags ?"                               , ""      , 0x36      , TRUE    , TYPE_BYTE     , HEX    , 0            , 1       },
   {"flags ?"                               , ""      , 0x37      , TRUE    , TYPE_BYTE     , HEX    , 0            , 1       },
   {"Offset to orig. IDE object (if LOD)"   , ""      , 0x38      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1       },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_ide_tobj_menu[] = {  /// 3 - tobj
@@ -1395,7 +1395,7 @@ const Editor_pack lcs_ide_tobj_menu[] = {  /// 3 - tobj
   {"Offset to orig. IDE object (if LOD)"   , ""      , 0x38      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1       },
   {"Time On"                               , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       },
   {"Time Off"                              , ""      , 0x40      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_ide_weap_menu[] = {  /// 4 - weap
@@ -1408,12 +1408,12 @@ const Editor_pack lcs_ide_weap_menu[] = {  /// 4 - weap
   {"flags ?"                               , ""      , 0x37      , TRUE    , TYPE_BYTE     , HEX    , 0            , 1       },
   {"Weapon.DAT ID"                         , ""      , 0x38      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       },
   {"Animation ID"                          , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1       },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_ide_hier_menu[] = {  /// 5 - hier
   // unused
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_ide_cars_menu[] = {  /// 6 - cars
@@ -1444,7 +1444,7 @@ const Editor_pack lcs_ide_cars_menu[] = {  /// 6 - cars
 
   {"?"                                    , ""      , 0xA4      , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   {"?"                                    , ""      , 0x184     , TRUE    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack lcs_ide_ped_menu[] = {  /// 7 - ped
@@ -1455,7 +1455,7 @@ const Editor_pack lcs_ide_ped_menu[] = {  /// 7 - ped
   {"Offset to ?"                          , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"RadioA"                               , ""      , 0x40      , TRUE    , TYPE_BYTE     , 0      , radiostation , 0      },
   {"RadioB"                               , ""      , 0x41      , TRUE    , TYPE_BYTE     , 0      , radiostation , 0      },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_ide_menu[] = {
@@ -1471,7 +1471,7 @@ const Editor_pack vcs_ide_menu[] = {
   {"?"                                    , ""      , 0x20      , TRUE    , TYPE_SHORT    , DEC    , 0            , 1      },
   {"Type (CRC32 hashed)"                  , ""      , 0x24      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Offset to model in .DTZ"              , ""      , 0x28      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_ide_obj_menu[] = {
@@ -1483,7 +1483,7 @@ const Editor_pack vcs_ide_obj_menu[] = {
   {"flags ?"                              , ""      , 0x3A      , TRUE    , TYPE_BYTE     , HEX    , 0            , 1      },
   {"flags ?"                              , ""      , 0x3B      , TRUE    , TYPE_BYTE     , HEX    , 0            , 1      },
   {"Offset to orig. IDE object (if LOD)"  , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_ide_tobj_menu[] = {
@@ -1497,7 +1497,7 @@ const Editor_pack vcs_ide_tobj_menu[] = {
   {"Offset to orig. IDE object (if LOD)"  , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Time On"                              , ""      , 0x40      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"Time Off"                             , ""      , 0x44      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_ide_weap_menu[] = {
@@ -1508,12 +1508,12 @@ const Editor_pack vcs_ide_weap_menu[] = {
   {"Weapon.DAT ID"                        , ""      , 0x3C      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"?"                                    , ""      , 0x40      , TRUE    , TYPE_INTEGER  , DEC    , 0            , 1      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_ide_hier_menu[] = {
 //{"Unknown"                 , ""      , 0x34      , TRUE    , TYPE_INTEGER    , DEC    , 0            , 1      , INT_MIN  , INT_MAX   },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_ide_cars_menu[] = {
@@ -1547,7 +1547,7 @@ const Editor_pack vcs_ide_cars_menu[] = {
 
   {"Decal ?"                  , ""           , 0x277     , TRUE    , TYPE_BYTE     , DEC    , 0            , 1      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_ide_ped_menu[] = {
@@ -1557,7 +1557,7 @@ const Editor_pack vcs_ide_ped_menu[] = {
   {"?"                        , ""           , 0xB8      , TRUE    , TYPE_INTEGER   , DEC   , 0            , 1      },
   {"?"                        , ""           , 0xC8      , TRUE    , TYPE_INTEGER   , DEC   , 0            , 1      },
   {"Name"                     , ""           , 0xE4      , TRUE    , TYPE_STRING    , 8     , 0            , 0      },
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -1634,7 +1634,7 @@ const Editor_pack lcs_particlecfg_menu[] = {
 
   //B2  C2  D2  FT  CR
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_particlecfg_menu[] = {
@@ -1699,7 +1699,7 @@ const Editor_pack vcs_particlecfg_menu[] = {
 //{"Flag 6"                               , ""        , 0x5D      , TRUE    , TYPE_BIT      , 6     , 0            , 0        },
 //{"Flag 7"                               , ""        , 0x5D      , TRUE    , TYPE_BIT      , 7     , 0            , 0        },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -1730,7 +1730,7 @@ const Editor_pack lcs_pedstatsdat_menu[] = {
   {"ShoppingBags"          , ""      , 0x30      , TRUE    , TYPE_BIT      , 6     , 0            , 0      },
   {"GunPanic"              , ""      , 0x30      , TRUE    , TYPE_BIT      , 7     , 0            , 0      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -1758,7 +1758,7 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
   {"ShoppingBags"             , ""      , 0x14      , TRUE    , TYPE_BIT      , 6     , 0            , 0      },
   {"GunPanic"                 , ""      , 0x14      , TRUE    , TYPE_BIT      , 7     , 0            , 0      },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -1772,7 +1772,7 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
 
   {"Identifier"              , ""      , 0x58      , FALSE    , TYPE_SHORT   , DEC    , 0            , 0x1    },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };*/
 
 
@@ -1817,7 +1817,7 @@ const Editor_pack lcs_weapondat_menu[] = {
   {"Flag 7 (unused)"       , ""      , 0x6F      , TRUE    , TYPE_NIBBLE_LOW  , HEX   , 0            , 0x1    },
   {"Flag 8 (unused)"       , ""      , 0x6F      , TRUE    , TYPE_NIBBLE_HIGH , HEX   , 0            , 0x1    },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 const Editor_pack vcs_weapondat_menu[] = {
@@ -1854,7 +1854,7 @@ const Editor_pack vcs_weapondat_menu[] = {
   {"Flag 7 (unused)"       , ""      , 0x03      , TRUE    , TYPE_NIBBLE_LOW  , HEX    , 0            , 0x1    },
   {"Flag 8 (unused)"       , ""      , 0x03      , TRUE    , TYPE_NIBBLE_HIGH , HEX    , 0            , 0x1    },
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 
@@ -1941,7 +1941,7 @@ const Editor_pack timecycdat_menu[] = {  // ~3KB
   {"Water B"              , ""      , 0x2700     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, //
   {"Water A"              , ""      , 0x27C0     , TRUE    , TYPE_BYTE      , DEC    , 0           , 1       }, //
 
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 /* by DenielX
@@ -2023,7 +2023,7 @@ const Editor_pack vcs_empire_menu[] = {
   {"State"              , ""       , 0x258    , TRUE    , TYPE_INTEGER    , DEC      , empire_state     , 1    }, // 523
   {"Gang Density"       , ""       , 0x78     , TRUE    , TYPE_INTEGER    , DEC      , 0                , 100  }, // 403 (depends on scale)
   {"Contruction Timer"  , " ms"    , 0x2D0    , TRUE    , TYPE_INTEGER    , DEC      , 0                , 1000 }, // 553
-  {NULL,NULL,0,0,0,0,0}
+  {NULL,NULL,0,0,0,0,0,0}
 };
 
 static u8 empire_script[] = {
@@ -2067,7 +2067,7 @@ char *empire_owner_name(int val) {
   } else return "Unknown";
 }
 
-void *empire_owner(int calltype, int keypress, int base_address, int address, int steps, int slot) {
+void *empire_owner(int calltype, int keypress, int base_address UNUSED, int address, int steps UNUSED, int slot) {
   static int i = 0;
   static char buffer[32];
 
@@ -2119,7 +2119,7 @@ char *empire_type_name(int val) {
   } else return "Unknown";
 }
 
-void *empire_type(int calltype, int keypress, int base_address, int address, int steps, int slot) {
+void *empire_type(int calltype, int keypress, int base_address UNUSED, int address UNUSED, int steps UNUSED, int slot) {
   static int i = 0;
   static char buffer[32];
 
@@ -2162,7 +2162,7 @@ char *empire_state_name(int val) {
   }
 }
 
-void *empire_state(int calltype, int keypress, int base_address, int address, int steps, int slot) {
+void *empire_state(int calltype, int keypress, int base_address UNUSED, int address, int steps UNUSED, int slot) {
   static int i = 0;
   static char buffer[32];
 
@@ -2206,7 +2206,7 @@ char *empire_scale_name(int val) {
   } else return "Unknown";
 }
 
-void *empire_scale(int calltype, int keypress, int base_address, int address, int steps, int slot) {
+void *empire_scale(int calltype, int keypress, int base_address UNUSED, int address, int steps UNUSED, int slot) {
   static int i = 0;
   static char buffer[16];
 
@@ -2236,7 +2236,7 @@ void *empire_scale(int calltype, int keypress, int base_address, int address, in
   return NULL;
 }
 
-void *empire_condition(int calltype, int keypress, int base_address, int address, int steps, int slot) {
+void *empire_condition(int calltype, int keypress, int base_address UNUSED, int address, int steps UNUSED, int slot) {
   static int i = 0;
   static char buffer[8];
 

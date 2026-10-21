@@ -233,10 +233,10 @@ static void langFileTableSearch()
     if ( FIO_SO_ISREG(dirent.d_stat.st_attr) )
     {
       // Suffix to ignore an .ini file (add "_ignore.ini" to the filename)
-      if ( fileEndsWithExtension(dirent.d_name, "_ignore.ini") ) continue;
+      if ( stringEndsWith(dirent.d_name, "_ignore.ini") ) continue;
 
       // If file is an .ini and is the 'sample.ini' file, get info from it (to add to menu selections)
-      if ( fileEndsWithExtension(dirent.d_name, ".ini") && strcasecmp(dirent.d_name, "sample.ini") != 0 )
+      if ( stringEndsWith(dirent.d_name, ".ini") && strcasecmp(dirent.d_name, "sample.ini") != 0 )
         GetLangINIInfo(main_file_table, dirent.d_name);
     }
 
@@ -298,6 +298,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
 
   #ifdef LANG_DEBUG
   SceInt64 curr_time = sceKernelGetSystemTimeWide();
+  (void)curr_time; // Dumb compiler
   #endif
   
   char lang_path[128];
@@ -315,9 +316,8 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   );
 
   #ifdef LANG_DEBUG
-  SceInt64 after_time = sceKernelGetSystemTimeWide();
   DEBUG_LOG("Num of Translated Strings -> %u", translatedStringsLength);
-  DEBUG_LOG("Time needed for read -> %.2f seconds", (float)(after_time-curr_time)/1000000.0f);
+  DEBUG_LOG("Time needed for read -> %.2f seconds", (float)(sceKernelGetSystemTimeWide() - curr_time) / 1000000.0f);
   #endif
 }
 

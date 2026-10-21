@@ -38,9 +38,9 @@ int gp_ = 0; // helper (also used in configs extern)
 
 /* FUNCTIONS ****************************************************************************/
 
-int (* GetPPLAYER)();
-int (* GetPOBJ)();
-int (* GetPCAR)();
+u32 (* GetPPLAYER)();
+u32 (* GetPOBJ)();
+u32 (* GetPCAR)();
 void (* SetNextWeather)(short weathercode);
 void (* SetWeatherNow)(short weathercode);
 void (* ReleaseWeather)(void);
@@ -129,9 +129,9 @@ extern const char *weather_vcs[];
 /// globals
 char retbuf[64]; // return string for cheats
 
-int pplayer = 0;
-int pcar = 0;
-int pobj = 0;
+u32 pplayer = 0;
+u32 pcar = 0;
+u32 pobj = 0;
 int pcar_id = 0;
 int pcar_type = 0;
 int gametimer = 0;
@@ -141,10 +141,10 @@ int multiplayer = 0;
 
 int peds_max = 0;
 int peds_cur = 0;
-int peds_base = 0;
+u32 peds_base = 0;
 int vehicles_max = 0;
 int vehicles_cur = 0;
-int vehicles_base = 0;
+u32 vehicles_base = 0;
 int worldobjs_max = 0;
 int worldobjs_cur = 0;
 int worldobjs_base = 0;
@@ -157,170 +157,170 @@ int pickups_cur = 0;
 int mapicons_cur = 0;
 int vehspawns_cur = 0;
 
-int dummysIPL_base = 0;
-int handlingcfg_cur = 0;
-int carcolsDAT_base = 0;
-int pedcolsDAT_base = 0; // VCS only
-int buildingsIPL_base = 0;
-int treadablesIPL_base = 0;
+u32 dummysIPL_base = 0;
+u32 handlingcfg_cur = 0;
+u32 carcolsDAT_base = 0;
+u32 pedcolsDAT_base = 0; // VCS only
+u32 buildingsIPL_base = 0;
+u32 treadablesIPL_base = 0;
 
 
 /// later set by PatchXCS //////////////////////////
-u32 addr_skipIntroMovie             = -1;
-u32 addr_neverFallOffBike_rollback  = -1;
-u32 addr_neverFallOffBike_hitobj    = -1;
-u32 addr_worldgravity               = -1;
-u32 addr_fpsCap                     = -1;
-u32 addr_buttoncheat                = -1;
-u32 addr_heliheight                 = -1;
+u32 addr_skipIntroMovie             = 0;
+u32 addr_neverFallOffBike_rollback  = 0;
+u32 addr_neverFallOffBike_hitobj    = 0;
+u32 addr_worldgravity               = 0;
+u32 addr_fpsCap                     = 0;
+u32 addr_buttoncheat                = 0;
+u32 addr_heliheight                 = 0;
 #ifdef PREVIEW
-u32 addr_policechaseheli_1          = -1;
-u32 addr_policechaseheli_2          = -1;
-u32 addr_policechaseheli_3          = -1;
+u32 addr_policechaseheli_1          = 0;
+u32 addr_policechaseheli_2          = 0;
+u32 addr_policechaseheli_3          = 0;
 #endif
-u32 addr_randompedcheat             = -1;
+u32 addr_randompedcheat             = 0;
 
-u32 global_weather          = -1;
-u32 global_trafficdensity   = -1;
-u32 global_peddensity       = -1;
-u32 global_freezegame       = -1;
-u32 global_gametimer        = -1;
-u32 global_timescale        = -1;
-u32 global_maxhealthmult    = -1;
-u32 global_maxarmormult     = -1;
-u32 global_unlimtedsprint   = -1;
-u32 global_unlimtedswim     = -1;
-u32 global_ismultiplayer    = -1;
-u32 global_clockmultiplier  = -1;
-u32 global_cheatusedboolean = -1;
-u32 global_cheatusedcounter = -1;
-u32 global_maxwantedlevel   = -1;
-u32 global_camera           = -1;
-u32 global_hudincutscene    = -1;
-u32 global_currentisland    = -1;
-u32 global_systemlanguage   = -1;
-u32 global_garagedata       = -1;
+u32 global_weather          = 0;
+u32 global_trafficdensity   = 0;
+u32 global_peddensity       = 0;
+u32 global_freezegame       = 0;
+u32 global_gametimer        = 0;
+u32 global_timescale        = 0;
+u32 global_maxhealthmult    = 0;
+u32 global_maxarmormult     = 0;
+u32 global_unlimtedsprint   = 0;
+u32 global_unlimtedswim     = 0;
+u32 global_ismultiplayer    = 0;
+u32 global_clockmultiplier  = 0;
+u32 global_cheatusedboolean = 0;
+u32 global_cheatusedcounter = 0;
+u32 global_maxwantedlevel   = 0;
+u32 global_camera           = 0;
+u32 global_hudincutscene    = 0;
+u32 global_currentisland    = 0;
+u32 global_systemlanguage   = 0;
+u32 global_garagedata       = 0;
 
-u32 ptr_pedestriansobj      = -1;
-u32 ptr_vehiclesobj         = -1;
-u32 ptr_worldobj            = -1;
-u32 ptr_businessobj         = -1; // VCS only
-u32 ptr_audioscriptobj      = -1;
+u32 ptr_pedestriansobj      = 0;
+u32 ptr_vehiclesobj         = 0;
+u32 ptr_worldobj            = 0;
+u32 ptr_businessobj         = 0; // VCS only
+u32 ptr_audioscriptobj      = 0;
 
-u32 global_pickups          = -1;
-u32 global_ptr_water        = -1;
-u32 global_buttoninput      = -1;
-u32 global_radioarea        = -1;
-u32 global_custrackarea     = -1;
-u32 global_radarblips       = -1;
-u32 global_developerflag    = -1;
-u32 global_freezetimers     = -1;
+u32 global_pickups          = 0;
+u32 global_ptr_water        = 0;
+u32 global_buttoninput      = 0;
+u32 global_radioarea        = 0;
+u32 global_custrackarea     = 0;
+u32 global_radarblips       = 0;
+u32 global_developerflag    = 0;
+u32 global_freezetimers     = 0;
 
-u32 global_ScriptSpace      = -1;
-u32 global_MainScriptSize   = -1;
-u32 global_LargestMissionScriptSize = -1;
+u32 global_ScriptSpace      = 0;
+u32 global_MainScriptSize   = 0;
+u32 global_LargestMissionScriptSize = 0;
 
-u32 global_mp_1             = -1;
-u32 global_mp_parameters    = -1;
-u32 global_OnAMissionFlag   = -1;
-u32 global_bridgeState      = -1;
-u32 global_m_pVehicleName   = -1;
-u32 global_m_pVehicleNameToPrint = -1;
+u32 global_mp_1             = 0;
+u32 global_mp_parameters    = 0;
+u32 global_OnAMissionFlag   = 0;
+u32 global_bridgeState      = 0;
+u32 global_m_pVehicleName   = 0;
+u32 global_m_pVehicleNameToPrint = 0;
 
-u32 global_Wind             = -1;
-u32 global_WindClipped      = -1;
-
-
-u32 global_displaysettings  = -1; // VCS only
-u32 global_radarbool        = -1; // LCS only
-u32 global_hudbool          = -1; // LCS only
-u32 global_maplegendbool    = -1; // LCS only
+u32 global_Wind             = 0;
+u32 global_WindClipped      = 0;
 
 
-u32 global_helpbox                = -1; // VCS only
-u32 global_helpbox_string         = -1; // LCS only
-u32 global_helpbox_timedisplayed  = -1; // LCS only
-u32 global_helpbox_displaybool    = -1; // LCS only
-u32 global_helpbox_permboxbool    = -1; // LCS only
-u32 global_helpbox_duration       = -1; // LCS only
-u32 global_dialog_string          = -1; // LCS only
+u32 global_displaysettings  = 0; // VCS only
+u32 global_radarbool        = 0; // LCS only
+u32 global_hudbool          = 0; // LCS only
+u32 global_maplegendbool    = 0; // LCS only
 
-u32 global_bmxjumpmult      = -1; // VCS only
 
-u32 var_garageslots         = -1;
-u32 var_garageslotsize      = -1;
+u32 global_helpbox                = 0; // VCS only
+u32 global_helpbox_string         = 0; // LCS only
+u32 global_helpbox_timedisplayed  = 0; // LCS only
+u32 global_helpbox_displaybool    = 0; // LCS only
+u32 global_helpbox_permboxbool    = 0; // LCS only
+u32 global_helpbox_duration       = 0; // LCS only
+u32 global_dialog_string          = 0; // LCS only
 
-u32 var_pickupslots         = -1;
-u32 var_pickupslotsize      = -1;
+u32 global_bmxjumpmult      = 0; // VCS only
 
-u32 var_radarblipslots      = -1;
-u32 var_radarblipslotsize   = -1;
-u32 var_radarblipspadding   = -1;
+u32 var_garageslots         = 0;
+u32 var_garageslotsize      = 0;
 
-u32 var_pedobjsize          = -1;
-u32 var_vehobjsize          = -1;
-u32 var_wldobjsize          = -1;
+u32 var_pickupslots         = 0;
+u32 var_pickupslotsize      = 0;
 
-u32 var_bsnobjsize          = -1;
+u32 var_radarblipslots      = 0;
+u32 var_radarblipslotsize   = 0;
+u32 var_radarblipspadding   = 0;
 
-u32 addr_vehiclesworldspawn        = -1;
-u32 var_vehiclesworldspawnslots    = -1;
-u32 var_vehiclesworldspawnslotsize = -1;
+u32 var_pedobjsize          = 0;
+u32 var_vehobjsize          = 0;
+u32 var_wldobjsize          = 0;
+
+u32 var_bsnobjsize          = 0;
+
+u32 addr_vehiclesworldspawn        = 0;
+u32 var_vehiclesworldspawnslots    = 0;
+u32 var_vehiclesworldspawnslotsize = 0;
 
 
 /// GAME.DTZ ////////////////////////
-u32 ptr_buildingsIPL          = -1;
-u32 buildingsIPL_max          = -1;
-u32 var_buildingsIPLslotsize  = -1;
+u32 ptr_buildingsIPL          = 0;
+u32 buildingsIPL_max          = 0;
+u32 var_buildingsIPLslotsize  = 0;
 
-u32 ptr_treadablesIPL         = -1;
-u32 treadablesIPL_max         = -1;
-u32 var_treadablesIPLslotsize = -1;
+u32 ptr_treadablesIPL         = 0;
+u32 treadablesIPL_max         = 0;
+u32 var_treadablesIPLslotsize = 0;
 
-u32 ptr_dummysIPL             = -1;
-u32 dummysIPL_max             = -1;
-u32 var_dummysIPLslotsize     = -1;
+u32 ptr_dummysIPL             = 0;
+u32 dummysIPL_max             = 0;
+u32 var_dummysIPLslotsize     = 0;
 
-u32 ptr_handlingCFG           = -1;
-u32 var_handlingcfgslots      = -1;
-u32 var_handlingcfgslotsize   = -1;
+u32 ptr_handlingCFG           = 0;
+u32 var_handlingcfgslots      = 0;
+u32 var_handlingcfgslotsize   = 0;
 
-u32 ptr_particleCFG           = -1;
-u32 var_particleCFGslots      = -1;
-u32 var_particleCFGslotsize   = -1;
+u32 ptr_particleCFG           = 0;
+u32 var_particleCFGslots      = 0;
+u32 var_particleCFGslotsize   = 0;
 
-u32 ptr_carcolsDAT            = -1;
-u32 var_carcolsdatslots       = -1;
-u32 var_carcolsdatslotsize    = -1;
+u32 ptr_carcolsDAT            = 0;
+u32 var_carcolsdatslots       = 0;
+u32 var_carcolsdatslotsize    = 0;
 
-u32 ptr_pedstatTable          = -1;
-u32 var_pedstatDATslots       = -1;
-u32 var_pedstatDATslotsize    = -1;
+u32 ptr_pedstatTable          = 0;
+u32 var_pedstatDATslots       = 0;
+u32 var_pedstatDATslotsize    = 0;
 
-u32 ptr_weaponTable           = -1;
-u32 var_weaponDATslots        = -1;
-u32 var_weaponDATslotsize     = -1;
+u32 ptr_weaponTable           = 0;
+u32 var_weaponDATslots        = 0;
+u32 var_weaponDATslotsize     = 0;
 
 
-u32 ptr_timecycDAT            = -1;
+u32 ptr_timecycDAT            = 0;
 
-u32 ptr_IDEs                  = -1;
-u32 ptr_IDETable              = -1;
+u32 ptr_IDEs                  = 0;
+u32 ptr_IDETable              = 0;
 
-u32 ptr_gxtloadadr            = -1;
-u32 ptr_radarIconList         = -1;
+u32 ptr_gxtloadadr            = 0;
+u32 ptr_radarIconList         = 0;
 
-u32 var_radios                = -1;
-u32 render                    = -1;
+u32 var_radios                = 0;
+u32 render                    = 0;
 
-u32 ptr_memory_main           = -1;
+u32 ptr_memory_main           = 0;
 
 
 /// savedataeditor - scraped since not working on emu and save space
 #ifdef SAVEDITOR
-u32 savedatakey  = -1;
-u32 titleid      = -1;
-u32 saveprefix   = -1;
+u32 savedatakey  = 0;
+u32 titleid      = 0;
+u32 saveprefix   = 0;
 #endif
 
 #ifdef PREVIEW
@@ -751,7 +751,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   ///for FPS stuff
-  if( addr_fpsCap == -1 && _lw(addr - 0x70) == 0x3C043586  && _lw(addr + 0x18) == 0x00402025  && _lw(addr + 0x64) == 0x34040001 ) {  // LCS US 3.00 -> 0x002AF398
+  if( addr_fpsCap == 0 && _lw(addr - 0x70) == 0x3C043586  && _lw(addr + 0x18) == 0x00402025  && _lw(addr + 0x64) == 0x34040001 ) {  // LCS US 3.00 -> 0x002AF398
     /*******************************************************************
      *  0x002AF378: 0x2C840002 '...,' - sltiu      $a0, $a0, 2
     *******************************************************************/
@@ -786,7 +786,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// global gametimer
-  if( global_gametimer == -1 && _lw(addr - 0xC) == 0x02002825 && _lw(addr - 0x4) == 0x00001025 && _lw(addr + 0x14) == 0x02002025 ) {
+  if( global_gametimer == 0 && _lw(addr - 0xC) == 0x02002825 && _lw(addr - 0x4) == 0x00001025 && _lw(addr + 0x14) == 0x02002025 ) {
     /*******************************************************************
      *  0x001DB5EC: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x001DB5F0: 0x8C84A144 'D...' - lw         $a0, -24252($a0)
@@ -798,7 +798,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// global timescale
-  if( global_timescale == -1 && _lw(addr) == 0x3C053F80 && _lw(addr + 0x18) == 0xE48C0010 && _lw(addr + 0x20) == 0x2405FFFF ) { // 0x000e5fe0
+  if( global_timescale == 0 && _lw(addr) == 0x3C053F80 && _lw(addr + 0x18) == 0xE48C0010 && _lw(addr + 0x20) == 0x2405FFFF ) { // 0x000e5fe0
     /*******************************************************************
      * 0x000E5FEC: 0x3C050036 '6..<' - lui        $a1, 0x36
      * 0x000E5FF0: 0xE4ADA158 'X...' - swc1       $fpr13, -24232($a1)
@@ -810,7 +810,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// global_currentisland & global_systemlanguage [this function sets lots of globals -> weather, clock, cheatsused, gamespeed]
-  if( global_currentisland == -1 && _lw(addr + 0x20) == 0xAE040008  && _lw(addr + 0x18C) == 0xAE040070 ) {
+  if( global_currentisland == 0 && _lw(addr + 0x20) == 0xAE040008  && _lw(addr + 0x18C) == 0xAE040070 ) {
     /*******************************************************************
      *  0x000ACA2C: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x000ACA30: 0x8C84A46C 'l...' - lw         $a0, -23444($a0)
@@ -828,7 +828,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// globals pointers to objects
-  if( ptr_pedestriansobj == -1 && _lw(addr + 0x2C) == 0x02409825 &&  _lw(addr + 0x6C) == 0x00000000 && _lw(addr + 0xF0) == 0x02402025 ) { //0x00037714
+  if( ptr_pedestriansobj == 0 && _lw(addr + 0x2C) == 0x02409825 &&  _lw(addr + 0x6C) == 0x00000000 && _lw(addr + 0xF0) == 0x02402025 ) { //0x00037714
     /*******************************************************************
      *  0x00037718: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x00037720: 0x8C90853C '<...' - lw         $s0, -31428($a0)
@@ -870,7 +870,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// /// /// FOR CHEATS ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///
 
   /// skip intro movies
-  if( addr_skipIntroMovie == -1 && _lw(addr + 0x8) == 0x3C05005A && _lw(addr + 0x24) == 0x00002825  ) {
+  if( addr_skipIntroMovie == 0 && _lw(addr + 0x8) == 0x3C05005A && _lw(addr + 0x24) == 0x00002825  ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
     addr_skipIntroMovie = addr; // 0x001BCFD0
     //MAKE_DUMMY_FUNCTION(0x89C0FD0, 0); //for test
@@ -878,21 +878,21 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// never fall off bike.. when rolling backwards
-  if( addr_neverFallOffBike_rollback == -1 && _lw(addr-0x18) == 0x45000012 && _lw(addr-0xC) == 0x3405002C && _lw(addr - 0x4) == 0x02403825 && _lw(addr + 0x8) == 0x8E0401FC ) {
+  if( addr_neverFallOffBike_rollback == 0 && _lw(addr-0x18) == 0x45000012 && _lw(addr-0xC) == 0x3405002C && _lw(addr - 0x4) == 0x02403825 && _lw(addr + 0x8) == 0x8E0401FC ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
     addr_neverFallOffBike_rollback = addr; // 0x000DEF44
     return 1;
   }
 
   /// never fall off bike.. when hitting object
-  if( addr_neverFallOffBike_hitobj == -1 && _lw(addr - 0x4) == 0x34050027 && _lw(addr + 0x4) == 0x00004025 && _lw(addr + 0xB8) == 0x00000000 ) { // last one is #hacky
+  if( addr_neverFallOffBike_hitobj == 0 && _lw(addr - 0x4) == 0x34050027 && _lw(addr + 0x4) == 0x00004025 && _lw(addr + 0xB8) == 0x00000000 ) { // last one is #hacky
     PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
     addr_neverFallOffBike_hitobj = addr; // 0x0023DBFC | ULUX -> 0x0020B2D8
     return 1;
   }
 
   /// world gravity
-  if( addr_worldgravity == -1 && _lw(addr - 0x18) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
+  if( addr_worldgravity == 0 && _lw(addr - 0x18) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
     addr_worldgravity = addr; // 0x0020A898
     return 1;
@@ -915,7 +915,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// traffic density multiplier value
-  if( global_trafficdensity == -1 && _lw(addr - 0x10) == 0x34060001 && _lw(addr - 0x18) == 0x02002025 && _lw(addr+0x8) == 0x100000B7 && _lw(addr+0xC) == 0x00001025 ) {
+  if( global_trafficdensity == 0 && _lw(addr - 0x10) == 0x34060001 && _lw(addr - 0x18) == 0x02002025 && _lw(addr+0x8) == 0x100000B7 && _lw(addr+0xC) == 0x00001025 ) {
     /*******************************************************************
      *
      *
@@ -926,7 +926,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// ped density multiplier value
-  if( global_peddensity == -1 && _lw(addr + 0x38) == 0x00001025 && _lw(addr + 0x4C) == 0x00A62821 && _lw(addr + 0x84) == 0x00001025 ) {
+  if( global_peddensity == 0 && _lw(addr + 0x38) == 0x00001025 && _lw(addr + 0x4C) == 0x00A62821 && _lw(addr + 0x84) == 0x00001025 ) {
     /*******************************************************************
      *
      *
@@ -938,7 +938,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global settings toggles (radar, hud and more)
-  if( global_hudbool == -1 && _lw(addr - 0x10) == 0x34040120 && _lw(addr - 0x3C) == 0x34040001 ){
+  if( global_hudbool == 0 && _lw(addr - 0x10) == 0x34040120 && _lw(addr - 0x3C) == 0x34040001 ){
     global_hudbool = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_hudbool", global_hudbool-text_addr, global_hudbool); // 0x00355C4A
 
@@ -951,7 +951,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// global max health & armor multiplier
-  if( global_maxhealthmult == -1 && _lw(addr - 0x24) == 0x00001025 &&  _lw(addr - 0x14) == 0x02002025 && _lw(addr + 0x64) == 0x02002025 && _lw(addr + 0xF8) == 0x00408825  ) {
+  if( global_maxhealthmult == 0 && _lw(addr - 0x24) == 0x00001025 &&  _lw(addr - 0x14) == 0x02002025 && _lw(addr + 0x64) == 0x02002025 && _lw(addr + 0xF8) == 0x00408825  ) {
     /*******************************************************************
      *  0x00192274: 0x3C050038 '8..<' - lui        $a1, 0x38
      *  0x0019228C: 0x24A55B10 '.[.$' - addiu      $a1, $a1, 23312
@@ -979,7 +979,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global never get tired from sprinting & Multiplayer bool
-  if( global_ismultiplayer == -1 && _lw(addr + 0x28) == 0x3C05C316 && _lw(addr + 0x84) == 0x3C063F00 && _lw(addr + 0xA8) == 0x3C0543FA ) { // 0x0013F37C (in LCS FUN_0013f37c, VCS FUN_001447a0)
+  if( global_ismultiplayer == 0 && _lw(addr + 0x28) == 0x3C05C316 && _lw(addr + 0x84) == 0x3C063F00 && _lw(addr + 0xA8) == 0x3C0543FA ) { // 0x0013F37C (in LCS FUN_0013f37c, VCS FUN_001447a0)
     /*******************************************************************
      *  0x0013F37C: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x0013F380: 0x90A52C7C '|,..' - lbu        $a1, 11388($a1)
@@ -1021,7 +1021,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global clock multiplier
-  if( global_clockmultiplier == -1 && _lw(addr + 0x8) == 0x3404000C && _lw(addr - 0x14) == 0x00808025 && _lw(addr + 0xA0) == 0x00000000 ) { // 0x0003834C
+  if( global_clockmultiplier == 0 && _lw(addr + 0x8) == 0x3404000C && _lw(addr - 0x14) == 0x00808025 && _lw(addr + 0xA0) == 0x00000000 ) { // 0x0003834C
     /*******************************************************************
      *  0x0003834C: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x00038350: 0xAC90A1A4 '....' - sw         $s0, -24156($a0)
@@ -1033,7 +1033,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// globals cheat used boolean & counter (from Cheat_WeaponSet1)
-  if( global_cheatusedboolean == -1 && _lw(addr - 0x4) == 0x34040120 && _lw(addr - 0x1C) == 0x34040115 && _lw(addr - 0x5C) == 0x00402025 ) {  // 0x000B8FDC / ULUX -> 0x001F8E70
+  if( global_cheatusedboolean == 0 && _lw(addr - 0x4) == 0x34040120 && _lw(addr - 0x1C) == 0x34040115 && _lw(addr - 0x5C) == 0x00402025 ) {  // 0x000B8FDC / ULUX -> 0x001F8E70
     /*******************************************************************
      *  0x0028FB20: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x0028FB24: 0x3C040035 '5..<' - lui        $a0, 0x35
@@ -1049,7 +1049,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global_freezegame
-  if( global_freezegame == -1 && _lw(addr + 0xE0) == 0x3405009E && _lw(addr + 0x30) == 0x02002025 ) { // 0x000B8FDC / ULUX -> 0x0010B00C
+  if( global_freezegame == 0 && _lw(addr + 0xE0) == 0x3405009E && _lw(addr + 0x30) == 0x02002025 ) { // 0x000B8FDC / ULUX -> 0x0010B00C
     /*******************************************************************
      *  0x000B8FDC: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x000B8FE0: 0x9084A4F8 '....' - lbu        $a0, -23304($a0)
@@ -1061,7 +1061,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// globals for helpbox (via "FUN_00182e94_ClearSmallPrints")
-  if( global_helpbox_string == -1 && _lw(addr - 0x10) == 0x14C0FFF2 && _lw(addr + 0x5C) == 0x28A90100 ) { // US 3.00 -> 0x00182E94 / ULUX -> 0x001599BC
+  if( global_helpbox_string == 0 && _lw(addr - 0x10) == 0x14C0FFF2 && _lw(addr + 0x5C) == 0x28A90100 ) { // US 3.00 -> 0x00182E94 / ULUX -> 0x001599BC
     /*******************************************************************
      *  0x00182EB4: 0x3C080065 'e..<' - lui        $t0, 0x65
      *  0x00182EC8: 0x25089DC0 '...%' - addiu      $t0, $t0, -25152
@@ -1105,7 +1105,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global camera stuff
-  if( global_camera == -1 && _lw(addr - 0x18) == 0x108001E6 && _lw(addr - 0x28) == 0x30840001 && _lw(addr + 0xA0) == 0x34110006 ) { // 0x001E1818 / ULUX -> 0x00192A90
+  if( global_camera == 0 && _lw(addr - 0x18) == 0x108001E6 && _lw(addr - 0x28) == 0x30840001 && _lw(addr + 0xA0) == 0x34110006 ) { // 0x001E1818 / ULUX -> 0x00192A90
     /*******************************************************************
      *  0x001E1818: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x001E1820: 0x2484F3A0 '...$' - addiu      $a0, $a0, -3168
@@ -1180,7 +1180,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global_hudincutscene
-  if( global_hudincutscene == -1 && _lw(addr + 0x7C) == 0x34120096  && _lw(addr + 0x60) == 0x34110118 && _lw(addr + 0x24) == 0x34130001  ) {
+  if( global_hudincutscene == 0 && _lw(addr + 0x7C) == 0x34120096  && _lw(addr + 0x60) == 0x34110118 && _lw(addr + 0x24) == 0x34130001  ) {
     /*******************************************************************
      *  0x00163198: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0016319C: 0x9084A214 '....' - lbu        $a0, -24044($a0)
@@ -1192,7 +1192,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global_ptr_water
-  if( global_ptr_water == -1 && _lw(addr + 0x118) == 0x90A50129 && _lw(addr + 0x40) == 0x3404000C ) {
+  if( global_ptr_water == 0 && _lw(addr + 0x118) == 0x90A50129 && _lw(addr + 0x40) == 0x3404000C ) {
     /*******************************************************************
      *  0x00109ADC: 0x3C040033 '3..<' - lui        $a0, 0x33
      *  0x00109AE8: 0xAC851FE0 '....' - sw         $a1, 8160($a0)
@@ -1204,7 +1204,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global_buttoninput (used for to trigger stock cheats)
-  if( global_buttoninput == -1 && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) {  // 0x0025A5C4
+  if( global_buttoninput == 0 && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) {  // 0x0025A5C4
     /*******************************************************************
      *  0x0025A5C4: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x0025A5C8: 0x24955DA0 '.].$' - addiu      $s5, $a0, 23968
@@ -1215,7 +1215,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// addr_buttoncheat (used for to trigger stock cheats)
-  if( addr_buttoncheat == -1 && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 ) { // 0x00292B20
+  if( addr_buttoncheat == 0 && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 ) { // 0x00292B20
     /*******************************************************************
      *  0x00292B20: 0x10800004 '....' - beqz       $a0, loc_00292B34
     *******************************************************************/
@@ -1239,7 +1239,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | 0x0026D218 | OK!
    **************************************/
-  if( global_garagedata == -1 && _lw(addr - 0x20) == 0x2404FFFF && _lw(addr + 0x30) == 0x29040004 ) { //
+  if( global_garagedata == 0 && _lw(addr - 0x20) == 0x2404FFFF && _lw(addr + 0x30) == 0x29040004 ) { //
 
     /*******************************************************************
      *  0x001376B4: 0x3C050063 'c..<' - lui        $a1, 0x63
@@ -1275,7 +1275,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-  if( global_pickups == -1 && _lw(addr - 0x74) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) { // 0x0027E680
+  if( global_pickups == 0 && _lw(addr - 0x74) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) { // 0x0027E680
     /*******************************************************************
      *  0x0027E680: 0x3C020062 'b..<' - lui        $v0, 0x62
      *  0x0027E688: 0x24424980 '.IB$' - addiu      $v0, $v0, 18816
@@ -1315,7 +1315,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     HIJACK_FUNCTION(addr, _checkCustomTracksReady_patched, _checkCustomTracksReady); // sub_00034A28
     return 1;
   } // not for ULUX
-  if( global_radioarea == -1 && _lw(addr + 0x24) == 0x2A040038 && _lw(addr - 0x28) == 0x34050016 ) {  // 0x00296958
+  if( global_radioarea == 0 && _lw(addr + 0x24) == 0x2A040038 && _lw(addr - 0x28) == 0x34050016 ) {  // 0x00296958
     /*******************************************************************
      *  0x00296958: 0x3C040039 '9..<' - lui        $a0, 0x39
      *  0x00296960: 0x2484B4F8 '...$' - addiu      $a0, $a0, -19208
@@ -1339,7 +1339,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | too different!
    **************************************/
-  if( global_custrackarea == -1 && _lw(addr + 0x4C) == 0x34060014 && _lw(addr + 0x74) == 0x34060160 ) { // 0x000AD924
+  if( global_custrackarea == 0 && _lw(addr + 0x4C) == 0x34060014 && _lw(addr + 0x74) == 0x34060160 ) { // 0x000AD924
     /*******************************************************************
      *  0x000AD924: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x000AD928: 0x8C846F70 'po..' - lw         $a0, 28528($a0)
@@ -1365,7 +1365,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-  if( global_radarblips == -1 && _lw(addr + 0x80) == 0x3C043F80 && _lw(addr + 0x3C) == 0x24420001 &&  _lw(addr + 0x14) == 0x01094021  ) { // FUN_00163e40
+  if( global_radarblips == 0 && _lw(addr + 0x80) == 0x3C043F80 && _lw(addr + 0x3C) == 0x24420001 &&  _lw(addr + 0x14) == 0x01094021  ) { // FUN_00163e40
     /*******************************************************************
      *  0x00163E58: 0x3C090064 'd..<' - lui        $t1, 0x64
      *  0x00163E5C: 0x25296A20 ' j)%' - addiu      $t1, $t1, 27168
@@ -1406,7 +1406,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | too different!
    **************************************/
-  if( ptr_memory_main == -1 && _lw(addr + 0x98) == 0x3C044754 && _lw(addr + 0xC0) == 0x30A500FF ) {  // FUN_000673bc
+  if( ptr_memory_main == 0 && _lw(addr + 0x98) == 0x3C044754 && _lw(addr + 0xC0) == 0x30A500FF ) {  // FUN_000673bc
     /*******************************************************************
      *  0x000673E4: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x000673F0: 0x2484D640 '@..$' - addiu      $a0, $a0, -10688
@@ -1473,7 +1473,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
     return 1;
   }
-  if( ptr_memory_main == -1 && _lw(addr + 0x94) == 0x3C044754 && _lw(addr + 0xC4) == 0x30A500FF ) { // 0x00011E84 - ULUX ONLY VERSION (because DTZ func too different)
+  if( ptr_memory_main == 0 && _lw(addr + 0x94) == 0x3C044754 && _lw(addr + 0xC4) == 0x30A500FF ) { // 0x00011E84 - ULUX ONLY VERSION (because DTZ func too different)
     PATCH_LOG("ptr_buildingsIPL, ptr_treadablesIPL, ptr_dummysIPL, ptr_handlingCFG, ptr_particleCFG, ptr_timecycDAT, ptr_memory_main");
 
     ptr_memory_main = (_lh(addr+0x24) * 0x10000) + (int16_t)_lh(addr+0x30);
@@ -1515,7 +1515,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-  if( ptr_carcolsDAT == -1 && _lw(addr + 0x24) == 0x2A64000B && _lw(addr - 0x3C) == 0x02A03025 ) { // 0x0000974C
+  if( ptr_carcolsDAT == 0 && _lw(addr + 0x24) == 0x2A64000B && _lw(addr - 0x3C) == 0x02A03025 ) { // 0x0000974C
     /*******************************************************************
      *  0x0000974C: 0x3C050033 '3..<' - lui        $a1, 0x33
      *  0x00009750: 0x8CA5FC50 'P...' - lw         $a1, -944($a1)
@@ -1543,7 +1543,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( ptr_pedstatTable == -1 && _lw(addr - 0x34) == 0x24A50088 && _lw(addr + 0x14) == 0x8C840000 ) { // 0x0017DBEC (inside FUN_0017db24)
+   if( ptr_pedstatTable == 0 && _lw(addr - 0x34) == 0x24A50088 && _lw(addr + 0x14) == 0x8C840000 ) { // 0x0017DBEC (inside FUN_0017db24)
     /*******************************************************************
      *  0x0017DBEC: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x0017DBF0: 0x8CA5A14C 'L...' - lw         $a1, -24244($a1)
@@ -1572,7 +1572,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( ptr_IDEs == -1 && _lw(addr + 0x54) == 0x90850010 && _lw(addr + 0x6C) == 0x8CA50004 ) { // FUN_00224af4_IDE
+   if( ptr_IDEs == 0 && _lw(addr + 0x54) == 0x90850010 && _lw(addr + 0x6C) == 0x8CA50004 ) { // FUN_00224af4_IDE
     /*******************************************************************
      *  0x00224B00: 0x3C140036 '6..<' - lui        $s4, 0x36
      *  0x00224B18: 0xAE84A140 '@...' - sw         $a0, -24256($s4)
@@ -1607,7 +1607,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( addr_vehiclesworldspawn == -1 && _lw(addr + 0x40) == 0x01601825 && _lw(addr + 0x90) == 0x2442FFFF ) { // FUN_002cec38_checkSetVehicleWorldSpawn
+   if( addr_vehiclesworldspawn == 0 && _lw(addr + 0x40) == 0x01601825 && _lw(addr + 0x90) == 0x2442FFFF ) { // FUN_002cec38_checkSetVehicleWorldSpawn
     /*******************************************************************
      *  0x002CECA8: 0x3C020065 'e..<' - lui        $v0, 0x65
      *  0x002CECAC: 0x2442AAC0 '..B$' - addiu      $v0, $v0, -21824
@@ -1663,7 +1663,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
     return 1;
   }
-  if( ptr_gxtloadadr == -1 && _lw(addr + 0x28) == 0x0040B025 && _lw(addr + 0x64) == 0x2408FFFF ) { // 0x00028EDC near "MP_SNEW"
+  if( ptr_gxtloadadr == 0 && _lw(addr + 0x28) == 0x0040B025 && _lw(addr + 0x64) == 0x2408FFFF ) { // 0x00028EDC near "MP_SNEW"
     /*******************************************************************
      *  0x00028EDC: 0x3C140033 '3..<' - lui        $s4, 0x33
      *  0x00028EE0: 0x8E84207C '| ..' - lw         $a0, 8316($s4)
@@ -1674,7 +1674,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// radarIcon (for names)
-  if( ptr_radarIconList == -1 && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x12) == 0x3C04 && _lh(addr + 0x4A) == 0x24A5 && _lw(addr + 0xC) == 0x00000000 ) { // FUN_00162bac_loadRadarIcons
+  if( ptr_radarIconList == 0 && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x12) == 0x3C04 && _lh(addr + 0x4A) == 0x24A5 && _lw(addr + 0xC) == 0x00000000 ) { // FUN_00162bac_loadRadarIcons
     /*******************************************************************
      *  0x00162BD0: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x00162BD8: 0x2484A6C0 '...$' - addiu      $a0, $a0, -22848
@@ -1699,7 +1699,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | 0x0010B180
    **************************************/
-  if( var_radios == -1 && _lh(addr - 0x4) == 0xFF && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) ) { // 0x000B9164
+  if( var_radios == 0 && _lh(addr - 0x4) == 0xFF && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) ) { // 0x000B9164
     /*******************************************************************
      *  0x000B9164: 0x2A44000B '..D*' - slti       $a0, $s2, 11
     *******************************************************************/
@@ -1710,7 +1710,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// render global (used for cWorldStreamRender)
-  if( render == -1 && _lw(addr + 0x20) == 0x34050002 && _lh(addr + 0x2A) == 0x1480 && _lw(addr - 0x34) == 0x00000000 && _lw(addr + 0x44) == 0x00000000  ) { // 0x001BEA9C
+  if( render == 0 && _lw(addr + 0x20) == 0x34050002 && _lh(addr + 0x2A) == 0x1480 && _lw(addr - 0x34) == 0x00000000 && _lw(addr + 0x44) == 0x00000000  ) { // 0x001BEA9C
     /*******************************************************************
      *  0x001BEA9C: 0x3C110035 '5..<' - lui        $s1, 0x35
      *  0x001BEAA0: 0x8E247144 'Dq$.' - lw         $a0, 28996($s1)
@@ -1803,7 +1803,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// global_developerflag (read from multiplayer menu function)
-  if( global_developerflag == -1 && _lw(addr + 0x30) == 0x340800A0 && _lw(addr - 0xC) == 0x28440002 ) { // 0x0002E0A0
+  if( global_developerflag == 0 && _lw(addr + 0x30) == 0x340800A0 && _lw(addr - 0xC) == 0x28440002 ) { // 0x0002E0A0
     /*******************************************************************
      *  0x0002E0A0: 0x3C040033 '3..<' - lui        $a0, 0x33
      *  0x0002E0A4: 0x9084010E '....' - lbu        $a0, 270($a0)
@@ -1815,7 +1815,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   }
 
   /// global_freezetimers
-  if( global_freezetimers == -1 && _lw(addr + 0x14) == 0x2406FFFE && _lw(addr + 0x34) == 0x02402025 /*_lw(addr + 0x14) == 0x2406FFFE && _lw(addr - 0x30) == 0x34050004*/ ) { // 0x00154400
+  if( global_freezetimers == 0 && _lw(addr + 0x14) == 0x2406FFFE && _lw(addr + 0x34) == 0x02402025 /*_lw(addr + 0x14) == 0x2406FFFE && _lw(addr - 0x30) == 0x34050004*/ ) { // 0x00154400
     /*******************************************************************
      *  0x00154400: 0x3C040039 '9..<' - lui        $a0, 0x39
      *  0x00154404: 0x2484E388 '...$' - addiu      $a0, $a0, -7288
@@ -1949,7 +1949,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// addr_heliheight
-  if( addr_heliheight == -1 && _lh(addr) == 0x42A0 && _lh(addr +0x20) == 0x428C && _lw(addr + 0x14) == 0x00000000 ) {  // 0x0009F778
+  if( addr_heliheight == 0 && _lh(addr) == 0x42A0 && _lh(addr +0x20) == 0x428C && _lw(addr + 0x14) == 0x00000000 ) {  // 0x0009F778
     /*******************************************************************
      *  0x0009F778: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0 (default 80.0f)
     *******************************************************************/
@@ -1967,7 +1967,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     return 1;
   }
   /// globals: ScriptSpace & MainScriptSize
-  if( global_ScriptSpace == -1 && _lw(addr - 0x34) == 0x26100008 && _lw(addr + 0x28) == 0x34040001 ) { // 0x000E0FA0
+  if( global_ScriptSpace == 0 && _lw(addr - 0x34) == 0x26100008 && _lw(addr + 0x28) == 0x34040001 ) { // 0x000E0FA0
     /*******************************************************************
      *  0x000E0FA0: 0x3C100033 '3..<' - lui        $s0, 0x33
      *  0x000E0FA4: 0x8E054D7C '|M..' - lw         $a1, 19836($s0)
@@ -2009,7 +2009,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// areas: multiplayer
-  if( global_mp_parameters == -1 && _lw(addr + 0x10) == 0x2C850007 && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0xC) == 0x00000000 ) { // 0x00171100
+  if( global_mp_parameters == 0 && _lw(addr + 0x10) == 0x2C850007 && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0xC) == 0x00000000 ) { // 0x00171100
     /*******************************************************************
      *  0x00171100: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x00171108: 0x2484D768 'h..$' - addiu      $a0, $a0, -10392
@@ -2062,7 +2062,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
 
   /// globals VehicleName
-  if( global_m_pVehicleName == -1 && _lw(addr - 0x14) == 0x34040004 && _lw(addr + 0x28) == 0x28850003 ) { // 0x00187400 (inside Draw())
+  if( global_m_pVehicleName == 0 && _lw(addr - 0x14) == 0x34040004 && _lw(addr + 0x28) == 0x28850003 ) { // 0x00187400 (inside Draw())
 
     /*******************************************************************
      *  0x00187400: 0x3C040036 '6..<' - lui        $a0, 0x36
@@ -2101,7 +2101,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( ptr_weaponTable == -1 && _lw(addr + 0x18) == 0x10E00004 && _lw(addr + 0x4) == 0x000431C0 ) {  // FUN_0014997c
+   if( ptr_weaponTable == 0 && _lw(addr + 0x18) == 0x10E00004 && _lw(addr + 0x4) == 0x000431C0 ) {  // FUN_0014997c
     /*******************************************************************
      *  0x0014998C: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00149990: 0x8CA5A660 '`...' - lw         $a1, -22944($a1)
@@ -2125,7 +2125,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
   #ifdef PREVIEW
   /// wind
-  if( global_Wind == -1 && _lw(addr + 0x34) == 0x2A440015 && _lw(addr + 0x48) == 0x2A440014 ) { // 0x001307FC
+  if( global_Wind == 0 && _lw(addr + 0x34) == 0x2A440015 && _lw(addr + 0x48) == 0x2A440014 ) { // 0x001307FC
   /*******************************************************************
      *  0x001307FC: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0013081C: 0xE490A1F8 '....' - swc1       $fpr16, -24072($a0)
@@ -2148,7 +2148,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   #endif
 
   /// addr_randompedcheat
-  if( addr_randompedcheat == -1 && _lw(addr - 0x14) == 0x2A04006D ) {  // 0x00290928
+  if( addr_randompedcheat == 0 && _lw(addr - 0x14) == 0x2A04006D ) {  // 0x00290928
     /*******************************************************************
      *  0x00290928: 0x1211FFDF '....' - beq        $s0, $s1, loc_002908A8
     *******************************************************************/
@@ -2193,8 +2193,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULUX-80142 v0.02 | Unknown    | Not Tested
    * ULUX-80146 v0.02 | 0x0027F7E8 | OK!
    **************************************/
-  static u32 jalSceKernelMaxFreeMemSizeInstruction = -1;
-  if ( jalSceKernelMaxFreeMemSizeInstruction == -1 && _lw(addr + 0x18) == 0x3C0400C0 && _lw(addr + 0x08) == 0x3C040160 && _lw(addr - 0xC) == 0x00022A82 )
+  static u32 jalSceKernelMaxFreeMemSizeInstruction = 0;
+  if ( jalSceKernelMaxFreeMemSizeInstruction == 0 && _lw(addr + 0x18) == 0x3C0400C0 && _lw(addr + 0x08) == 0x3C040160 && _lw(addr - 0xC) == 0x00022A82 )
   {
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
@@ -2272,7 +2272,7 @@ void FUN_test_patched() {
 
 
 void (*testfuncv)(int a, int b);
-void testfuncv_patched(int a, int b) {
+void testfuncv_patched(int a UNUSED, int b UNUSED) {
   //char buffer[256];
   //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
   //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
@@ -2388,7 +2388,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 | 0x001FFE00 | OK!
    **************************************/
 //if( _lw(addr - 0xC) == 0x1000FFF7 && _lw(addr + 0x4) == 0x00000000 && _lw(addr + 0x8) == 0x27A60010 && _lw(addr + 0x10) == 0x00602825 && _lw(addr + 0x1C) == 0x8FA40014 ) { // 0x002030D4
-  if( addr_fpsCap == -1 && _lw(addr + 0x6C) == 0x34040006 && _lw(addr - 0x20) == 0x2C840002 ) { // 0x002030D4
+  if( addr_fpsCap == 0 && _lw(addr + 0x6C) == 0x34040006 && _lw(addr - 0x20) == 0x2C840002 ) { // 0x002030D4
     PATCH_LOG("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
     addr_fpsCap = addr-0x20; // 0x002030B4
 
@@ -2440,7 +2440,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |  |
    * ULET-00417 v0.06 | 0x0002F9AC | OK!
    **************************************/
-  if( global_gametimer == -1 && _lw(addr + 0xC) == 0x00A6202B && _lw(addr - 0x20) == 0x03E00008 && _lw(addr + 0x50) == 0x00000000 ) {
+  if( global_gametimer == 0 && _lw(addr + 0xC) == 0x00A6202B && _lw(addr - 0x20) == 0x03E00008 && _lw(addr + 0x50) == 0x00000000 ) {
     /*******************************************************************
      *  0x00026BB8: 0x8F851DEC '....' - lw         $a1, 7660($gp)
     *******************************************************************/
@@ -2459,7 +2459,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |  |
    * ULET-00417 v0.06 |  |
    **************************************/
-  if( global_currentisland == -1 && _lw(addr + 0x4c) == 0xAE040014  &&  _lw(addr + 0x1A8) == 0xA2040074 ) {
+  if( global_currentisland == 0 && _lw(addr + 0x4c) == 0xAE040014  &&  _lw(addr + 0x1A8) == 0xA2040074 ) {
     /*******************************************************************
      *  0x002B2660: 0x8F851DE4 '....' - lw         $a1, 7652($gp)
     *******************************************************************/
@@ -2476,7 +2476,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// globals pointers to objects
-  if( ptr_pedestriansobj == -1 && _lw(addr + 0x88) == 0x340501DB && _lw(addr + 0x5C) == 0x34050028 && _lw(addr + 0x30) == 0x34050046 ) {
+  if( ptr_pedestriansobj == 0 && _lw(addr + 0x88) == 0x340501DB && _lw(addr + 0x5C) == 0x34050028 && _lw(addr + 0x30) == 0x34050046 ) {
     /*******************************************************************
      *  0x0018C1C8: 0xAF90C198 '....' - sw         $s0, -15976($gp)
     *******************************************************************/
@@ -2512,7 +2512,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     return 1;
   }
   /// add-on objects' sizes)
-  if( var_pedobjsize == -1 && _lw(addr + 0xD4) == 0x2495FFFF && _lw(addr + 0xFC) == 0x02A4202A && _lw(addr + 0x190) == 0x02408825 ) {
+  if( var_pedobjsize == 0 && _lw(addr + 0xD4) == 0x2495FFFF && _lw(addr + 0xFC) == 0x02A4202A && _lw(addr + 0x190) == 0x02408825 ) {
     /*******************************************************************
      * 0x0008F5C8: 0x24040D10 '...$' - li         $a0, 3344
     *******************************************************************/
@@ -2539,21 +2539,21 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// /// /// FOR CHEATS ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///
 
   /// skip intro movies --> (JP version black screen after patch)
-  if( addr_skipIntroMovie == -1 && _lw(addr - 0x30) == 0x34050003 && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0x8) == 0xAFBF0000 ) { // JP version black screen after patch (0x08804000 + 0x001C7DD4)
+  if( addr_skipIntroMovie == 0 && _lw(addr - 0x30) == 0x34050003 && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0x8) == 0xAFBF0000 ) { // JP version black screen after patch (0x08804000 + 0x001C7DD4)
     PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
     addr_skipIntroMovie = addr; // 0x001309A8
     return 1;
   }
 
   /// never fall off bike.. when rolling backwards
-  if( addr_neverFallOffBike_rollback == -1 && _lw(addr-0xC) == 0x3405002F && _lw(addr + 0x4) == 0x00004025 && _lw(addr - 0x28) == 0x3C04BF00 && _lw(addr - 0x68) == 0x00000000 ) {
+  if( addr_neverFallOffBike_rollback == 0 && _lw(addr-0xC) == 0x3405002F && _lw(addr + 0x4) == 0x00004025 && _lw(addr - 0x28) == 0x3C04BF00 && _lw(addr - 0x68) == 0x00000000 ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
     addr_neverFallOffBike_rollback = addr; // 0x000EBE8C - nop out function call
     return 1;
   }
 
   /// never fall off bike.. when hitting object
-  if( addr_neverFallOffBike_hitobj == -1 && _lw(addr - 0x54) == 0x00409025 && (_lw(addr + 0x1C) == 0x2404FFF6 || _lw(addr + 0x14) == 0x2404FFF6 ) ) { // 0x002614D4
+  if( addr_neverFallOffBike_hitobj == 0 && _lw(addr - 0x54) == 0x00409025 && (_lw(addr + 0x1C) == 0x2404FFF6 || _lw(addr + 0x14) == 0x2404FFF6 ) ) { // 0x002614D4
     /*******************************************************************
      *  0x002614D4: 0x0C0C0345 'E...' - jal        sub_00300D14
     *******************************************************************/
@@ -2564,7 +2564,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 
   /// world gravity
-  if( addr_worldgravity == -1 && _lw(addr - 0x10) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
+  if( addr_worldgravity == 0 && _lw(addr - 0x10) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
     addr_worldgravity = addr; // 0x00263690
     return 1;
@@ -2585,7 +2585,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// global settings toggle (special! there should be an address at gp+global_displaysettings -> addr there + 0x13 is toggle radar
-  if( global_displaysettings == -1 && _lw(addr - 0x4c) == 0x34050001 &&  _lw(addr + 0x8) == 0x14800004 && _lw(addr) == _lw(addr+0x18) ) {  // 0x001B679C
+  if( global_displaysettings == 0 && _lw(addr - 0x4c) == 0x34050001 &&  _lw(addr + 0x8) == 0x14800004 && _lw(addr) == _lw(addr+0x18) ) {  // 0x001B679C
     /*******************************************************************
      *  0x001B6798: 0x00000000 '....' - nop
      *  0x001B679C: 0x8F8416F4 '....' - lw         $a0, 5876($gp)
@@ -2599,7 +2599,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 
   /// traffic & ped density multiplier value(s)
-  if( global_trafficdensity == -1 && _lw(addr - 0x4) == 0x2412FFFF && _lw(addr + 0x4) == 0x00A08825 && _lw(addr + 0x2C) == 0x00000000  ) {
+  if( global_trafficdensity == 0 && _lw(addr - 0x4) == 0x2412FFFF && _lw(addr + 0x4) == 0x00A08825 && _lw(addr + 0x2C) == 0x00000000  ) {
     /*******************************************************************
      *  0x00060E30: 0xE7941538 '8...' - swc1       $fpr20, 5432($gp)
     *******************************************************************/
@@ -2619,7 +2619,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 
   /// global max health & armor multiplier
-  if( global_maxarmormult == -1 && _lw(addr - 0x2C) == 0x10000027 && _lw(addr - 0x8) == 0x00000000 && _lw(addr + 0x10) == 0x10000002 &&  _lw(addr + 0x3C) == 0x02002025 ) {
+  if( global_maxarmormult == 0 && _lw(addr - 0x2C) == 0x10000027 && _lw(addr - 0x8) == 0x00000000 && _lw(addr + 0x10) == 0x10000002 &&  _lw(addr + 0x3C) == 0x02002025 ) {
     /*******************************************************************
      *  0x003003F8: 0x3C04003E '>..<' - lui        $a0, 0x3E
      *  0x003003FC: 0x2484A4B0 '...$' - addiu      $a0, $a0, -23376
@@ -2648,7 +2648,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 | 0x0013D734 | OK!
    **************************************/
-  if( global_ismultiplayer == -1 && _lw(addr + 0x24) == 0x3C05C2C8 && _lw(addr + 0x80) == 0x3C053F00 && _lw(addr + 0xA4) == 0x3C0543FA ) { // 0x001447A0 (in FUN_001447a0)
+  if( global_ismultiplayer == 0 && _lw(addr + 0x24) == 0x3C05C2C8 && _lw(addr + 0x80) == 0x3C053F00 && _lw(addr + 0xA4) == 0x3C0543FA ) { // 0x001447A0 (in FUN_001447a0)
     /*******************************************************************
      *  0x001447A0: 0x9385E458 'X...' - lbu        $a1, -7080($gp)
     *******************************************************************/
@@ -2708,7 +2708,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 |
    **************************************/
   //if( _lw(addr + 0x8) == 0x3404000C && _lw(addr + 0x18) == 0x3C043F80 && _lw(addr + 0x20) == 0x44846000 && _lw(addr + 0x50) == 0x00000000  ) { // 0x0013D91C
-  if( global_clockmultiplier == -1 && ((_lw(addr - 0x3C) == 0x3C0242C8 && _lw(addr - 0x30) == 0x34050006 && _lw(addr + 0x8) == 0x3404000C) ||  // 0x0013D91C
+  if( global_clockmultiplier == 0 && ((_lw(addr - 0x3C) == 0x3C0242C8 && _lw(addr - 0x30) == 0x34050006 && _lw(addr + 0x8) == 0x3404000C) ||  // 0x0013D91C
       (_lw(addr - 0x80) == 0x3C0242C8 && _lw(addr - 0x74) == 0x34050006 && _lw(addr + 0x8) == 0x3404000C)) ) { // ULUS v1.01 - 0x00130590
     /*******************************************************************
      *  0x0013D91C: 0xAF841DDC '....' - sw         $a0, 7644($gp)
@@ -2719,7 +2719,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// globals cheat used boolean & counter
-  if( global_cheatusedcounter == -1 && _lw(addr - 0x4) == 0x34040168 && _lw(addr - 0x1C) == 0x3404015D && _lw(addr - 0x5C) == 0x00402025 ) {
+  if( global_cheatusedcounter == 0 && _lw(addr - 0x4) == 0x34040168 && _lw(addr - 0x1C) == 0x3404015D && _lw(addr - 0x5C) == 0x00402025 ) {
     /*******************************************************************
      *
     *******************************************************************/
@@ -2737,7 +2737,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 
   /// global_freezegame and global_hudincutscene
-  if( global_freezegame == -1 && _lw(addr + 0xB8) == 0x340500CF && _lw(addr - 0x1C) == 0x00808025 ) {
+  if( global_freezegame == 0 && _lw(addr + 0xB8) == 0x340500CF && _lw(addr - 0x1C) == 0x00808025 ) {
     /*******************************************************************
      *  0x00086CA8: 0x938420A8 '. ..' - lbu        $a0, 8360($gp)
     *******************************************************************/
@@ -2758,7 +2758,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 
   /// global for helpbox (special! there should be an address at gp+global_helpbox -> addr there + x
-  if( global_helpbox == -1 && _lw(addr + 0x80) == 0x3404014B && _lw(addr + 0x258) == 0x34040168 ) { // 0x00184E28
+  if( global_helpbox == 0 && _lw(addr + 0x80) == 0x3404014B && _lw(addr + 0x258) == 0x34040168 ) { // 0x00184E28
     /**** from cheat give weapons 1 ***********************************
      * 0x00184E28: 0x8F8416D8 '....' - lw         $a0, 5848($gp)
     *******************************************************************/
@@ -2769,7 +2769,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// global camera stuff (inside "FUN_002bfe5c_Load_GTA_VCDat")
-  if( global_camera == -1 && _lw(addr + 0xC8) == 0x34150000 && _lw(addr + 0x16C) == 0x00003025 ) {
+  if( global_camera == 0 && _lw(addr + 0xC8) == 0x34150000 && _lw(addr + 0x16C) == 0x00003025 ) {
     /*******************************************************************
      *  0x002BFEE4: 0x3C10003C '<..<' - lui        $s0, 0x3C
      *  0x002BFEE8: 0x26103E30 '0>.&' - addiu      $s0, $s0, 15920
@@ -2805,7 +2805,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// global_ptr_water
-  if( global_ptr_water == -1 && ((_lw(addr - 0x28) == 0x03A03025 && _lw(addr + 0x34) == 0x00094F82) ||  // 0x002F40FC
+  if( global_ptr_water == 0 && ((_lw(addr - 0x28) == 0x03A03025 && _lw(addr + 0x34) == 0x00094F82) ||  // 0x002F40FC
       (_lw(addr - 0x3C) == 0x02803025 && _lw(addr + 0x58) == 0x00074883)) ) { // ULUS v1.01
     /*******************************************************************
      *  0x002F40FC: 0xAF85052C ',...' - sw         $a1, 1324($gp)
@@ -2824,7 +2824,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-  if( global_buttoninput == -1 && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) { // 0x000C2934
+  if( global_buttoninput == 0 && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) { // 0x000C2934
     /*******************************************************************
      *  0x000C2934: 0x3C04003E '>..<' - lui        $a0, 0x3E
      *  0x000C2938: 0x2495A610 '...$' - addiu      $s5, $a0, -23024
@@ -2836,7 +2836,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// addr_buttoncheat (used for to trigger stock cheats)
-  if( addr_buttoncheat == -1 && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 && _lw(addr - 0x74) == 0x3405004C ) { // 0x00187A10
+  if( addr_buttoncheat == 0 && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 && _lw(addr - 0x74) == 0x3405004C ) { // 0x00187A10
     /*******************************************************************
      *  0x00187A10: 0x10800004 '....' - beqz       $a0, loc_00187A24
     *******************************************************************/
@@ -2847,7 +2847,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// global_garagedata
-  if( global_garagedata == -1 && _lw(addr - 0x10) == 0x2404FFFF && _lw(addr + 0x3C) == 0x24C60030 ) {  // 0x46F9B0
+  if( global_garagedata == 0 && _lw(addr - 0x10) == 0x2404FFFF && _lw(addr + 0x3C) == 0x24C60030 ) {  // 0x46F9B0
     /*******************************************************************
      *  0x00168E80: 0x3C050047 'G..<' - lui        $a1, 0x47
      *  0x00168E90: 0x24A5F9B0 '...$' - addiu      $a1, $a1, -1616
@@ -2864,7 +2864,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// VCS Pickups
-  if( global_pickups == -1 && _lw(addr - 0x70) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) {  // 0x000EF880
+  if( global_pickups == 0 && _lw(addr - 0x70) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) {  // 0x000EF880
     /*******************************************************************
      *  0x000EF880: 0x3C020046 'F..<' - lui        $v0, 0x46
      *  0x000EF888: 0x24423930 '09B$' - addiu      $v0, $v0, 14640
@@ -2894,7 +2894,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
     return 1;
   }
-  if ( global_radioarea == -1 && _lw(addr + 0x24) == 0x2A04003A && _lw(addr - 0x10) == 0x00002825 ) {  // 0x001B34A4
+  if ( global_radioarea == 0 && _lw(addr + 0x24) == 0x2A04003A && _lw(addr - 0x10) == 0x00002825 ) {  // 0x001B34A4
     /*******************************************************************
      *  0x001B34A4: 0x3C04003D '=..<' - lui        $a0, 0x3D
      *  0x001B34AC: 0x2484BC10 '...$' - addiu      $a0, $a0, -17392
@@ -2911,7 +2911,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-  if( global_custrackarea == -1 && ((_lw(addr - 0x20) == 0x3404006D && _lw(addr + 0x44) == 0x00002025) ||  // 0x000842E8
+  if( global_custrackarea == 0 && ((_lw(addr - 0x20) == 0x3404006D && _lw(addr + 0x44) == 0x00002025) ||  // 0x000842E8
       (_lw(addr + 0x2c) == 0x3412006D && _lw(addr - 0x14) == 0x00000000)) ) { // ULUS v1.01
     /*******************************************************************
      *  0x000842E8: 0x8F841708 '....' - lw         $a0, 5896($gp)
@@ -2923,7 +2923,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// VCS Radar Blips
-  if( var_radarblipspadding == -1 && _lw(addr + 0x1c) == 0x340A0000 && _lw(addr + 0x48) == 0x254A0001 &&  _lw(addr + 0x84) == 0x2406FFFE  ) { // FUN_0000A03C
+  if( var_radarblipspadding == 0 && _lw(addr + 0x1c) == 0x340A0000 && _lw(addr + 0x48) == 0x254A0001 &&  _lw(addr + 0x84) == 0x2406FFFE  ) { // FUN_0000A03C
     /*******************************************************************
      *  0x0000A06C: 0x81220290 '..".' - lb         $v0, 656($t1)  <----- 0x290     ?????
      *
@@ -2956,7 +2956,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-   if( global_radarblips == -1 && _lw(addr + 0x60) == 0x26240080 && _lw(addr + 0x2c) == 0x2405FFFF && _lw(addr + 0xB4) == 0x00002825 ) { // FUN_0001fa2c
+   if( global_radarblips == 0 && _lw(addr + 0x60) == 0x26240080 && _lw(addr + 0x2c) == 0x2405FFFF && _lw(addr + 0xB4) == 0x00002825 ) { // FUN_0001fa2c
     /*******************************************************************
      *  0x0001FA64: 0x8F8416DC '....' - lw         $a0, 5852($gp)
     *******************************************************************/
@@ -2967,7 +2967,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// world vehicle spawns
-  if( addr_vehiclesworldspawn == -1 && _lw(addr + 0x54) == 0x01201825 && _lw(addr + 0xA8) == 0x00605825 ) { // FUN_002e9448_checkSetVehicleWorldSpawn
+  if( addr_vehiclesworldspawn == 0 && _lw(addr + 0x54) == 0x01201825 && _lw(addr + 0xA8) == 0x00605825 ) { // FUN_002e9448_checkSetVehicleWorldSpawn
     /*******************************************************************
      *  0x002E94C0: 0x3C050068 'h..<' - lui        $a1, 0x68
      *  0x002E94C4: 0x24A5CA20 ' ..$' - addiu      $a1, $a1, -13792
@@ -3018,7 +3018,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 |
    * ULET-00417 v0.07 |
    **************************************/
-   if( ptr_memory_main == -1 && _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
+   if( ptr_memory_main == 0 && _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
     /*******************************************************************
      *  0x0024F720: 0x3C04003C '<..<' - lui        $a0, 0x3C
      *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
@@ -3096,7 +3096,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 | 0x002E3E90
    * ULET-00417 v0.07 | 0x002E8C64
    **************************************/
-  if( ptr_IDEs == -1 && _lw(addr + 0x28) == 0x34100006 && _lw(addr + 0x44) == 0x90850010 ) {  // FUN_002e8884_IDE
+  if( ptr_IDEs == 0 && _lw(addr + 0x28) == 0x34100006 && _lw(addr + 0x44) == 0x90850010 ) {  // FUN_002e8884_IDE
     /*******************************************************************
      *  0x002E8898: 0xAF841DE8 '....' - sw         $a0, 7656($gp)
     *******************************************************************/
@@ -3113,7 +3113,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// pedstat.dat (in DTZ but need to get globals from other location)
-  if( ptr_pedstatTable == -1 && _lw(addr - 0x30) == 0x24A5008C && _lw(addr + 0x8) == 0x8C840000 ) { // 0x001D0528 (inside FUN_001d0480)
+  if( ptr_pedstatTable == 0 && _lw(addr - 0x30) == 0x24A5008C && _lw(addr + 0x8) == 0x8C840000 ) { // 0x001D0528 (inside FUN_001d0480)
     /*******************************************************************
      *  0x001D0528: 0x8F851DA4 '....' - lw         $a1, 7588($gp)
     *******************************************************************/
@@ -3133,7 +3133,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
     return 1;
   }
-  if( ptr_gxtloadadr == -1 && _lw(addr - 0x8) == 0x02209025 && _lw(addr + 0x24) == 0x240AFFFF ) { // 0x00070F80
+  if( ptr_gxtloadadr == 0 && _lw(addr - 0x8) == 0x02209025 && _lw(addr + 0x24) == 0x240AFFFF ) { // 0x00070F80
     /*******************************************************************
      *  00070f80 e8 d9 84 8f     lw         param_1,-0x2618(gp)
     *******************************************************************/
@@ -3144,7 +3144,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// radarIcon (for names)
-  if( ptr_radarIconList == -1 && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x26) == 0x2604 && _lh(addr + 0x1A) == 0x2784 ) { // FUN_0000c1b8_loadRadarIcons
+  if( ptr_radarIconList == 0 && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x26) == 0x2604 && _lh(addr + 0x1A) == 0x2784 ) { // FUN_0000c1b8_loadRadarIcons
     /*******************************************************************
      *  0x0000C1DC: 0x260419E0 '...&' - addiu      $a0, $s0, 6624
     *******************************************************************/
@@ -3155,7 +3155,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// radio stations count
-  if( var_radios == -1 && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) && _lw(addr - 0xC) == 0x00000000 ) { // 0x000B9164
+  if( var_radios == 0 && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) && _lw(addr - 0xC) == 0x00000000 ) { // 0x000B9164
     /*******************************************************************
      *  0x000B9164: 0x2A44000B '..D*' - slti       $a0, $s2, 11
     *******************************************************************/
@@ -3167,7 +3167,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 
   /// render global (used for cWorldStreamRender)
-  if( render == -1 && _lw(addr + 0x8) == 0x34050002 && _lh(addr + 0x12) == 0x1480 && _lw(addr - 0x18) == 0x00000000 && _lw(addr + 0x2C) == 0x00000000  ) { // 0x0013218C
+  if( render == 0 && _lw(addr + 0x8) == 0x34050002 && _lh(addr + 0x12) == 0x1480 && _lw(addr - 0x18) == 0x00000000 && _lw(addr + 0x2C) == 0x00000000  ) { // 0x0013218C
     /*******************************************************************
      *  0x0013218C: 0x8F8416E8 '....' - lw         $a0, 5864($gp)
     *******************************************************************/
@@ -3209,7 +3209,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   } */
 
   /// global_freezetimers
-  if( global_freezetimers == -1 && _lw(addr - 0x34) == 0x2405FFFF && _lw(addr - 0x28) == 0x34150001 ) { // 0x00060FE8
+  if( global_freezetimers == 0 && _lw(addr - 0x34) == 0x2405FFFF && _lw(addr - 0x28) == 0x34150001 ) { // 0x00060FE8
     /*******************************************************************
      *  0x00060FE8: 0x3C04003F '?..<' - lui        $a0, 0x3F
      *  0x00060FEC: 0x24845AE0 '.Z.$' - addiu      $a0, $a0, 23264
@@ -3311,7 +3311,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     return 1;
   }
   /// globals: ScriptSpace & MainScriptSize
-  if( global_ScriptSpace == -1 && _lw(addr + 0x2C) == 0xA204020A && _lw(addr + 0x28) == 0x34040001 ) { // 0x002B8118
+  if( global_ScriptSpace == 0 && _lw(addr + 0x2C) == 0xA204020A && _lw(addr + 0x28) == 0x34040001 ) { // 0x002B8118
     /*******************************************************************
      *  0x002B8118: 0x8F858E24 '$...' - lw         $a1, -29148($gp)
     *******************************************************************/
@@ -3347,7 +3347,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// areas: multiplayer
-  if( global_mp_parameters == -1 && _lw(addr + 0x10) == 0x2C85000A && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0x10) == 0x00000000 ) { // 0x0006CE78
+  if( global_mp_parameters == 0 && _lw(addr + 0x10) == 0x2C85000A && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0x10) == 0x00000000 ) { // 0x0006CE78
 
     /*******************************************************************
      *  0x0006CE78: 0x3C04003C '<..<' - lui        $a0, 0x3C
@@ -3397,7 +3397,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-   if( ptr_weaponTable == -1 && _lw(addr + 0x10) == 0x10C00004 && _lw(addr) == 0x000439C0 ) {  // FUN_0031bd70
+   if( ptr_weaponTable == 0 && _lw(addr + 0x10) == 0x10C00004 && _lw(addr) == 0x000439C0 ) {  // FUN_0031bd70
     /*******************************************************************
      *  0x0031BD7C: 0x8F852950 'P)..' - lw         $a1, 10576($gp)
     *******************************************************************/
@@ -3412,7 +3412,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
 
   /// bmx jump multiplier (bmx can't jump in ULUS v1.01 and older!)
-  if( global_bmxjumpmult == -1 && _lw(addr - 0x1C) == 0x3C053F80 && _lw(addr - 0x28) == 0xC48C0630 ) { // in FUN_001658c8_bmx_jumping
+  if( global_bmxjumpmult == 0 && _lw(addr - 0x1C) == 0x3C053F80 && _lw(addr - 0x28) == 0xC48C0630 ) { // in FUN_001658c8_bmx_jumping
     /*******************************************************************
      *  0x00165950: 0xC78EBC34 '4...' - lwc1       $fpr14, -17356($gp)
     *******************************************************************/
@@ -3425,7 +3425,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
   /// police chase helicopter model
   #ifdef PREVIEW
-  if( addr_policechaseheli_1 == -1 && _lw(addr) == 0x34050105 && _lw(addr + 0x1C) == 0x34050105 ) { // 0x02d4100 in FUN_002d3e94_StreamVehiclesAndPeds
+  if( addr_policechaseheli_1 == 0 && _lw(addr) == 0x34050105 && _lw(addr + 0x1C) == 0x34050105 ) { // 0x02d4100 in FUN_002d3e94_StreamVehiclesAndPeds
     /*******************************************************************
      *  0x002D4100: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
@@ -3433,7 +3433,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     addr_policechaseheli_1 = addr;
     return 1;
   }
-  if( addr_policechaseheli_2 == -1 && _lw(addr) == 0x34040105 && _lw(addr - 0xC) == 0x24A50004 ) { // 0x01ed254 in FUN_001ed12c
+  if( addr_policechaseheli_2 == 0 && _lw(addr) == 0x34040105 && _lw(addr - 0xC) == 0x24A50004 ) { // 0x01ed254 in FUN_001ed12c
     /*******************************************************************
      *  0x001ED254: 0x34040105 '...4' - li         $a0, 0x105
     *******************************************************************/
@@ -3441,7 +3441,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     addr_policechaseheli_2 = addr;
     return 1;
   }
-  if( addr_policechaseheli_3 == -1 && _lw(addr) == 0x34050105 && _lw(addr + 0x8) == 0x34060001 ) { // 0x01ed68c in FUN_001ed600
+  if( addr_policechaseheli_3 == 0 && _lw(addr) == 0x34050105 && _lw(addr + 0x8) == 0x34060001 ) { // 0x01ed68c in FUN_001ed600
     /*******************************************************************
      *  0x001ED68C: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
@@ -3469,7 +3469,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   }
 
   /// addr_heliheight (also planes)
-  if( addr_heliheight == -1 && _lh(addr) == 0x42A0 && _lh(addr + 0x18) == 0xBF80 && _lw(addr + 0xC) == 0x00000000 ) {  // 0x002FDDA0
+  if( addr_heliheight == 0 && _lh(addr) == 0x42A0 && _lh(addr + 0x18) == 0xBF80 && _lw(addr + 0xC) == 0x00000000 ) {  // 0x002FDDA0
     /*******************************************************************
      *  0x002FDDA0: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0
     *******************************************************************/
@@ -3481,7 +3481,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
 
   #ifdef PREVIEW
   /// wind
-  if( global_Wind == -1 && _lw(addr + 0x14) == 0x3C053F33 && _lw(addr + 0x2C) == 0x28850015  ) { // 0x002F8E04
+  if( global_Wind == 0 && _lw(addr + 0x14) == 0x3C053F33 && _lw(addr + 0x2C) == 0x28850015  ) { // 0x002F8E04
     /*******************************************************************
      *  0x002F8E04: 0xE78F209C '. ..' - swc1       $fpr15, 8348($gp)
     *******************************************************************/
@@ -3510,8 +3510,8 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 | Unknown    | Not Tested
    * ULET-00417 v0.06 | 0x002B00E4 | OK!
    **************************************/
-  static u32 jalSceKernelMaxFreeMemSizeInstruction = -1;
-  if ( jalSceKernelMaxFreeMemSizeInstruction == -1 && _lw(addr - 0x4) == 0x24847800 && _lw(addr - 0xc) == 0x3C0400C1 && _lw(addr + 0x8) == 0x3C040053 )
+  static u32 jalSceKernelMaxFreeMemSizeInstruction = 0;
+  if ( jalSceKernelMaxFreeMemSizeInstruction == 0 && _lw(addr - 0x4) == 0x24847800 && _lw(addr - 0xc) == 0x3C0400C1 && _lw(addr + 0x8) == 0x3C040053 )
   {
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
@@ -4131,6 +4131,7 @@ mode 0 - streets, some buildings
 mode 1 - more detailed buildings and interior
 mode 2 - everything with transparency like trees, windows etc
 **************************************************************/
+extern SceUID memcreate(SceSize vplSize);
 void (* cWorldStream_Render)(void *this, int mode);
 void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered -> allow cheat menu
 
@@ -4304,7 +4305,7 @@ void DrawLoadingBar_patched(float param_1) {
 
 int (* LoadStringFromGXT)(int gxt_adr,char *string,int param_3,int param_4,int param_5, int param_6,int param_7,int param_8);
 int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4, int param_5, int param_6,int param_7,int param_8) {
-  //ushort *text = testfunc(param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8);
+  //unsinged short *text = testfunc(param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8);
   int ret = LoadStringFromGXT(gxt_adr, string, param_3, param_4, param_5, param_6, param_7, param_8);
 
   // USERSCRIPT_LOG("CTextGet 0x%08X: 0x%08X %s", ret, gxt_adr, string);
@@ -4313,7 +4314,7 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   #ifdef USERSCRIPTS
   #define CSTGXTS 32 // defined in main
   #define CSTGXTLGT 256 // ...
-  extern ushort custom_gxts[CSTGXTS][CSTGXTLGT];
+  extern unsigned short custom_gxts[CSTGXTS][CSTGXTLGT];
   if( strncmp(string, "CUST_", 5) == 0 ) { // CUST_00, CUST_01, ...
     USERSCRIPT_LOG("%s", string);
 
@@ -4424,7 +4425,7 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void user_cheats(int calltype, int keypress, int defaultstatus) {
+void user_cheats(int calltype, int keypress, int defaultstatus UNUSED) {
   switch( calltype ) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
@@ -4437,7 +4438,7 @@ void user_cheats(int calltype, int keypress, int defaultstatus) {
 }
 
 #ifdef USERSCRIPTS
-void user_scripts(int calltype, int keypress, int defaultstatus) {
+void user_scripts(int calltype, int keypress, int defaultstatus UNUSED) {
   switch( calltype ) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
@@ -4477,7 +4478,7 @@ void hexeditpcar() {
 #endif
 
 #ifdef FREECAM
-void freecam(int calltype, int keypress, int defaultstatus) {
+void freecam(int calltype, int keypress, int defaultstatus UNUSED) {
 
   switch( calltype ) {
     case FUNC_CHANGE_VALUE:
@@ -5342,7 +5343,7 @@ void bttncht_playcredits() {
 /* void bttncht_randomplayer() {
   if( LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, SQUARE, TRIANGLE);
 } */
-void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
   static int model = -1;
 
   switch( calltype ) {
@@ -5567,7 +5568,7 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
       else // fix for bad config value
         i = 2;
 
-      if( addr_fpsCap != -1 ) {
+      if( addr_fpsCap != 0 ) {
         if( status ) goto fpscap_enable;
         else goto fpscap_disable;
       }
@@ -5652,7 +5653,7 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
  *
  * Notes:     Because vehicles don't like teleportation there is an aditionl fix needed to "calm down" momentum values. see "teleportFixForVehicle()"
  ******************************************************************************************************************************************************/
-void *teleporter(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *teleporter(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
   static int i = 0;
 
   switch( calltype ) {
@@ -6911,7 +6912,7 @@ void *unlimited_ammo(int calltype, int keypress, int defaultstatus) {
  **************************************************************************************************************************************/
 void *heavy_player(int calltype, int keypress, int defaultstatus) {
   static int status;
-  static int pplyrbckp = 0;
+  static u32 pplyrbckp = 0;
   static int vehicleflag = 0;
   static float backup1 = 0;
   static float backup2 = 0;
@@ -7181,13 +7182,13 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
       if( pcar && boost > 0 && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && flag_menu_running == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
 
         /// boats are inWater = true and inAir = true
-        if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
+        // if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
 
           /// SPEED
           setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * ((boost+1) * thrust) );
           setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * ((boost+1) * thrust) );
           setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * ((boost+1) * thrust) );
-        }
+        // }
       }
       break;
 
@@ -7237,7 +7238,7 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
  **************************************************************************************************************************************/
 void *untouchable(int calltype, int keypress, int defaultstatus) {
   static int status, j;
-  int base = -1;
+  u32 base = 0;
   //static forcemult = 0;
 
   switch( calltype ) {
@@ -7598,7 +7599,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
   static float wheels; // for backup
   static int hovermation = 2;
   static int hovermation_time = 0;
-  const static wchar_t *delo = L"Delorean";
+  static const wchar_t *delo = L"Delorean";
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7928,9 +7929,7 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
       break;
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), "%.1fg", gravity);
-      if( gravity_reverse )
-        snprintf(retbuf, sizeof(retbuf), "%s   up = reverse", retbuf);
+      snprintf(retbuf, sizeof(retbuf), "%.1fg   %s", gravity, gravity_reverse ? "up = reverse" : "");
       return retbuf;
 
     case FUNC_CHANGE_VALUE:
@@ -8068,7 +8067,7 @@ void *driveonwalls(int calltype, int keypress, int defaultstatus) {
  *
  * Notes:     for VCS the full color value is in vehcile_object @ 0x224 & 0x228 while LCS uses presets
  ******************************************************************************************************************************************************/
-void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
+void *vehicle_base_color(int calltype, int keypress, int defaultstatus UNUSED) {
   static char lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
   static int vcs_color = 0;  // VCS : 0xFFRRGGBB  -> in ram  -> BB GG RR FF   BB GG RR FF
   static char pos = 2;
@@ -8143,7 +8142,7 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus) {
+void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus UNUSED) {
   static char lcs_color = 0; // LCS : 0 to 127        BASE         STRIPE
   static int vcs_color = 0;  // VCS : 0xFFRRGGBB -> in ram -> BB GG RR FF   BB GG RR FF
   static char pos = 2;
@@ -8341,7 +8340,8 @@ void *traffic_density(int calltype, int keypress, int defaultstatus) {
  **************************************************************************************************************************************/
 void *traffic_freeze(int calltype, int keypress, int defaultstatus) {
   static int status;
-  int j, base;
+  int j;
+  u32 base;
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
@@ -8554,7 +8554,7 @@ void *freeze_timers(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_SET:
       status = defaultstatus;
-      if( !status && global_freezetimers != -1 )
+      if( !status && global_freezetimers != 0 )
         goto freezetimers_disable;
       break;
   }
@@ -8603,7 +8603,7 @@ void *peds_killaiming(int calltype, int keypress, int defaultstatus) {
       //snprintf(buffer, sizeof(buffer), "Debug: %i, 0x%08X = 0x%08X", peds_max, base, pobj);
       //setTimedTextbox(buffer, 7.00f);
       for( j = 0; j < peds_max; j++, base += var_pedobjsize ) {
-        if( getInt(base+(LCS?0x6BC:0x81C)) == pobj ) { // can be pplayer or pcar -> use pobj
+        if( (u32)getInt(base+(LCS?0x6BC:0x81C)) == pobj ) { // can be pplayer or pcar -> use pobj
           setPedHealthAndArmor(base, 0, 0);
         }
       }
@@ -8639,7 +8639,7 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
   static int status;
   static int j;
 
-  int base = -1;
+  u32 base = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -9041,8 +9041,8 @@ CPed_ProcessControl
 float walkspd_mult = 1.00f;
 float pedwalkspd_mult = 1.00f;
 
-void (*UpdatePosition)(int handle);
-void UpdatePosition_patched(int handle) {
+void (*UpdatePosition)(u32 handle);
+void UpdatePosition_patched(u32 handle) {
 
   if( walking_speed(FUNC_GET_STATUS,-1,-1,-1) != 0 ) { // only if CHEAT status is ON
     //DEBUG_LOG("walking_speed is enabled");
@@ -9171,7 +9171,7 @@ void *pedwalking_speed(int calltype, int keypress, int defaultstatus, int defaul
  *
  * Notes:     /
  **************************************************************************************************************************************/
-void *world_time(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *world_time(int calltype, int keypress, int defaultstatus, int defaultval UNUSED) {
   static int status = 0;
   static char current_hour = 0;
   static char current_min = 0;
@@ -9264,7 +9264,7 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval) 
  *   5 = going up
  *   6 = is down permanent
  **************************************************************************************************************************************/
-void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defaultval UNUSED) {
   static int status, state = 1;
   //const char *list_statenames[] = { "up permanently", "up", "descending", "down", "about to ascend", "ascending", "down permanently" };
 
@@ -9396,7 +9396,7 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
  *
  * Notes:   When CHeats are used two globals (bool & counter) are set and will be saved / loaded from savegame!
  **************************************************************************************************************************************/
-void *no_cheating_warning(int calltype, int keypress, int defaultstatus) {
+void *no_cheating_warning(int calltype, int keypress, int defaultstatus UNUSED) {
   static int status;
   //int gp_tmp = (LCS ? 0 : gp); //to minimize code
 
@@ -9450,10 +9450,10 @@ void *no_cheating_warning(int calltype, int keypress, int defaultstatus) {
 
 void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int defaultval) {
   static int status = 0;
-  static int i = 0; // default radio station
+  static unsigned int i = 0; // default radio station
   static int j;
 
-  int base = -1;
+  u32 base = 0;
 
   switch( calltype ) {
 
@@ -9683,7 +9683,7 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
  *
  * Notes:
  ******************************************************************************************************************************************************/
-void *pickup_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *pickup_spawner(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
   static int i = 0;
   static float x = 0, y = 0, z = 0;
 
@@ -9829,7 +9829,7 @@ char *lcs_playerModels[] = {  // 8 chars max
 }; // VCS via IDE (can even load all peds this way)
 
 /// only special chars for LCS and very experimental
-void *player_model(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *player_model(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
   static int i = 0;
   static int list_size = ARRAY_SIZE(lcs_playerModels) - 1;
   static char buf[16] = "";
@@ -9898,12 +9898,12 @@ void *player_model(int calltype, int keypress, int defaultstatus, int defaultval
  *
  * Notes: https://gtaforums.com/topic/993259-the-reason-why-boats-spawn-scheme-works-for-helicopters-and-planes-in-gta-3-and-vc/
  ******************************************************************************************************************************************************/
-void *vehicle_spawner(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
   static short id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
 
   //#ifndef DEBUG
-  static int i = 0;
+  static unsigned int i = 0;
   static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI ("escape"), AEROPL, DODO ("deaddodo")
   static short blacklist_vcs[] = { 0x118 }; // AEROPL  (TOPFUN 0xF2 already patched)
   //#endif
@@ -10261,7 +10261,8 @@ if( no destination icons && pay'n'spray icon is global map visible bool )  ?
 /// vcs races: blue arrows over other cars before destination sphere
 
 void teleport_next_sub() {
-  int i, type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  unsigned int i; 
+  int type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsVisible(base) && getMapiconID(base) == 0x00 ) { // && getMapiconColor(base) != 0x00 aka red (exclude targets) good idea?
@@ -10348,7 +10349,8 @@ void *teleport_next(int calltype, int keypress) {
 
 
 void teleport_mission() { // gets next mission host location from mapicon
-  int i, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  unsigned int i;
+  int base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconType(base) == 0x05 ) {
@@ -10368,7 +10370,8 @@ void teleport_mission() { // gets next mission host location from mapicon
 
 /// TODO - get_ground_z_for_3d_coord (opcode: 02D3)
 void teleport_marker() {
-  int i, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  unsigned int i;
+  int base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++) {
     if( getMapiconIsActive(base) && getMapiconID(base) == (LCS ? 49 : 0x10) ) {
@@ -10387,7 +10390,8 @@ green    green  = Object / !pickup
 
 */
 void kill_all_targets() {
-  int i, type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  unsigned int i;
+  int type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconID(base) == 0x00 && getMapiconColor(base) == 0x00 ) { // red == target
@@ -10434,7 +10438,8 @@ void kill_all_targets() {
 
 
 void freeze_all_targets() {
-  int i, type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  unsigned int i;
+  int type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconID(base) == 0x00 && getMapiconColor(base) == 0x00 ) { // red == target
@@ -10561,7 +10566,8 @@ void buttonApplyOnce(int i) { // apply once on button press
     }
 
   } else if( i == 13 ) { // Impulse
-    int j, base;
+    int j;
+    u32 base;
     float radius = 50.0f; // in which force should be applied
     float x1 = getFloat(pobj+0x30);
     float y1 = getFloat(pobj+0x34);
@@ -11064,6 +11070,9 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
       } else if( j == 4 ) { // player's vehicles
         //snprintf(retbuf, sizeof(retbuf), "Player's Vehicle(s)");
       }
+      else {
+        strncpy(retbuf, "Error", sizeof(retbuf));
+      }
       return (void *)retbuf;
 
     case FUNC_APPLY:
@@ -11380,7 +11389,7 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
       z = getFloat(pobj+0x38) + 6.00f;
 
       /// Vehicles
-      int base = vehicles_base;
+      u32 base = vehicles_base;
       for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
         if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
           setVehicleMakePhysical(base);
@@ -11588,7 +11597,7 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
  *
  * Notes: all logic is inside the hooked functions
  **************************************************************************************************************************************/
-void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultval UNUSED) {
   static int status = 0;
 
   switch( calltype ) {

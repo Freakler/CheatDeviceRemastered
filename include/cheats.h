@@ -68,9 +68,9 @@ typedef struct {
 /// Calls
 SceInt64 sceKernelGetSystemTimeWidePatched(void);
 
-extern int (* GetPPLAYER)();
-extern int (* GetPOBJ)();
-extern int (* GetPCAR)();
+extern u32 (* GetPPLAYER)();
+extern u32 (* GetPOBJ)();
+extern u32 (* GetPCAR)();
 
 extern void (* SetNextWeather)(short weathercode);
 extern void (* SetWeatherNow)(short weathercode);
@@ -137,8 +137,8 @@ extern void Loadscreen_patched(char * string1, char * string2, char *txdname, un
 extern void (*DrawLoadingBar)(float param_1);
 extern void DrawLoadingBar_patched(float param_1);
 
-extern void (*UpdatePosition)(int handle);
-extern void UpdatePosition_patched(int handle);
+extern void (*UpdatePosition)(u32 handle);
+extern void UpdatePosition_patched(u32 handle);
 
 //#ifdef SWIM
 extern int (*FUN_00109dac_CWaterLevel_GetWaterLevel)(float param_1,float param_2,float *param_3);

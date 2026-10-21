@@ -104,7 +104,7 @@ VCHT
 
 int saveing = 0; // my mutex flag thing
 
-static int save_thread(SceSize args, void *argp) {
+static int save_thread(SceSize args UNUSED, void *argp UNUSED) {
   DEBUG_LOG("%i: save_thread()", getGametime());
 
   /// this is not as its supposed to have worked
@@ -219,7 +219,7 @@ static int save_thread(SceSize args, void *argp) {
   return 0;
 }
 
-int save_config(const Menu_pack *menu_list, int menu_max) {
+int save_config(const Menu_pack *menu_list UNUSED, int menu_max UNUSED) {
   DEBUG_LOG("%i: save_config(%s)", getGametime(), config);
 
   ///////////////////////
@@ -539,7 +539,7 @@ int load_config(const Menu_pack *menu_list, int menu_max) { // loads menu defaul
           int status = getValueFromConfigFor(file, LCS ? "LCHT" : "VCHT", menu_list[i].conf_id);
           int valuee = getValueFromConfigFor(file, LCS ? "LVAL" : "VVAL", menu_list[i].conf_id);
           //CONFIG_LOG("id 0x%04X -> status %d, valuee %d", menu_list[i].conf_id, status, valuee);
-          func(FUNC_SET, keypress, status < 0 ? menu_list[i].def_stat : status, valuee < 0 ? 0xDEADBEEF : valuee);
+          func(FUNC_SET, keypress, status < 0 ? menu_list[i].def_stat : status, valuee < 0 ? 0x0EADBEEF : valuee);
         }
 
         /// CATEGORIES //////////////////////////
@@ -715,7 +715,7 @@ int workAchievement(SceUID file, achievement_pack *achlist, int menu_max) {
 
 /////////////////////////////////////////////////////////////////
 
-int setValueInConfigFor(short id, int value) {
+int setValueInConfigFor(short id UNUSED, int value UNUSED) {
 
   // if id found
     // update value

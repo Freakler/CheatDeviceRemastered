@@ -42,18 +42,19 @@ extern void writeFloat(uint8_t *address, float value);
 extern char *_fgets(char *s, int size, SceUID stream);
 
 extern void makedirs(const char *path);
-extern int getHighMemBound();
+extern u32 getHighMemBound();
 
 extern int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius);
 extern float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2);
 
 extern void getSizeString(char *string, uint64_t size);
 
-extern int fileEndsWithExtension(const char *path, const char* extension);
+extern int stringEndsWith(const char *path, const char* extension);
 extern int getExtensionLength(const char* path);
 
 extern uint32_t hash(const char *key, uint32_t len, uint32_t seed);
 
 #define ARRAY_SIZE(x) ( sizeof(x) / sizeof(x[0]) )
+#define UNUSED __attribute__((unused))
 
 #endif /* __PUTILS_H__ */

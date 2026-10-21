@@ -37,6 +37,7 @@ Draw Rectangles via:
 
 #include "blitn.h"
 #include "logs.h"
+#include "putils.h"
 
 /***********
 ~w~ = white
@@ -159,8 +160,8 @@ static const u8 VCS_GAMECODES[] = {
 static const u16 *UNICODES[] = { VCS_UNICODES, LCS_UNICODES };
 static const u8 *GAMECODES[] = { VCS_GAMECODES, LCS_GAMECODES };
 static const size_t CHARMAP_LENS[] = {
-  sizeof(VCS_UNICODES) / sizeof(VCS_UNICODES[0]),
-  sizeof(LCS_UNICODES) / sizeof(LCS_UNICODES[0])
+  ARRAY_SIZE(VCS_UNICODES),
+  ARRAY_SIZE(LCS_UNICODES),
 };
 
 // Using question mark because replacement character is missing in FONT_HEADING.
@@ -371,7 +372,7 @@ void drawString(const char *string, int origin, short style, float scale, short 
 
 }
 
-void drawStringLCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
+void drawStringLCS(const char *string, int origin, short style, float scale, short shadow UNUSED, float x, float y, u32 color) {
   wchar_t str[MSGLENGTH] = L" ";
   Utf8ToGameEncoding(string, str);
 
@@ -391,7 +392,7 @@ void drawStringLCS(const char *string, int origin, short style, float scale, sho
   PrintString_LCS(x,y, str, 0);
 }
 
-void drawStringVCS(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
+void drawStringVCS(const char *string, int origin, short style, float scale, short shadow UNUSED, float x, float y, u32 color) {
   float coords[4];
 
   wchar_t str[MSGLENGTH] = L" ";
@@ -661,7 +662,7 @@ static void mymenurender_VCS_patched() {
 }
 
 
-static int FindPatchLCS(u32 addr, u32 text_addr) {
+static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
   /*************************************
    * ULUS-10041 v1.02 | 0x0010dfa8 | OK!
    * ULUS-10041 v1.05 | 0x001BEF40 | OK!
@@ -927,7 +928,7 @@ static int FindPatchLCS(u32 addr, u32 text_addr) {
 }
 
 
-static int FindPatchVCS(u32 addr, u32 text_addr) {
+static int FindPatchVCS(u32 addr, u32 text_addr UNUSED) {
   /*************************************
    * ULUS-10160 v1.03 | 0x001325BC | OK!
    * ULES-00502 v1.02 | 0x001324E8 | OK!
