@@ -1,46 +1,46 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#include <pspkerneltypes.h>
+#include "mctypes.h"
 #include <pspiofilemgr.h>
 
 #include "editor.h"
 
 #define VERSION "v1.0h4" // displayed in title
 
-#define OFF 0
-#define ON  1
-
 /** FEATURE-FLAGS *****************************************************************************************************/
 
-// #define LITE // 'Lite' version with less features for more memory on PSP-1000
+// #define DEBUG    // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
+// #define PREVIEW  // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
-// #define DEBUG // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
-// #define PREVIEW // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
+#define LITE      OFF // 'Lite' version with less features for more memory on PSP-1000
+#define LOGGING   ON  // General Logging (DEBUG, INFO, WARNING, ERROR)
+#define MEMCHECK  ON  // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
-#define LOGGING OFF // General Logging (DEBUG, INFO, WARNING, ERROR)
-
-#define MEMCHECK // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
-
-#ifndef LITE
+#if !LITE
  #define NAMERESOLV   // ( ~10  KB ) name resolver system for translating hashes
  #define FREECAM      // ( ~22  KB )
  #define EDITORS      // ( ~105 KB )
@@ -48,11 +48,11 @@
  #define HEXEDITOR    // ( ~30  KB )
  #define CONFIG       // ( ~8   KB )
  #define LANG         // ( ~6   KB )
- #define SWIM
- #define SPECIAL_VEHICLES // todo -> LCS: spawn "HELI" (0xC6)  VCS: Plane crashes because of something else
-//  #define ACHIEVEMENTS     // ( ~4 KB ) discontinued
+//  #define SWIM
+//  #define SPECIAL_VEHICLES // TODO: LCS: spawn "HELI" (0xC6)  VCS: Plane crashes because of something else
 //  #define SAVEDITOR        // (  ? KB ) removed
 //  #define MEMORY           // display memory usage on screen (LCS US v3.00 only)
+
 #else
  #undef LOGGING
  #undef DEBUG
@@ -60,8 +60,8 @@
 #endif
 
 #if LOGGING
- #define PATCH_LOGGING       OFF  // debug logging for detected patch locations only
- #define MEMORY_LOGGING      OFF  // logging bad memory access to console
+ #define PATCH_LOGGING       ON  // debug logging for detected patch locations only
+ #define MEMORY_LOGGING      ON  // logging bad memory access to console
  #define USERSCRIPT_LOGGING  OFF  // debug logging for userscripts only
  #define GAME_LOGGING        OFF  // display developer logs on screen + to file (LCS US v3.00 only)
  #define CONFIG_LOGGING      OFF
@@ -69,26 +69,23 @@
 
 /**********************************************************************************************************************/
 
-extern int ADRENALINE;
-extern int PPSSPP;
-extern int LCS;
-extern int VCS;
+extern bool ADRENALINE, PPSSPP, LCS, VCS;
 
 typedef struct {
-  const char *path;
-  const char cat;
-  const char type;
-  const char LC; // for Liberty City Stories
-  const char VC; // for Vice City Stories
-  const char SP; // for Singleplayer
-  const char MP; // for Multiplayer
-  const short conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
-  const char def_stat;
+  const u8string path;
+  const uint8 cat;
+  const uint8 type;
+  const bool LC; // for Liberty City Stories
+  const bool VC; // for Vice City Stories
+  const bool SP; // for Singleplayer
+  const bool MP; // for Multiplayer
+  const uint16 conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
+  const int8 def_stat;
   void *value;
-  const char *msg1;
-  const char *msg2;
-  const char *desc;
-} Menu_pack;
+  const u8string msg1;
+  const u8string msg2;
+  const u8string desc;
+} CDRMenuItem;
 
 
 enum {
@@ -166,73 +163,72 @@ enum {
   CAT_COUNTER // my little counter (must be last)
 };
 
-void draw();
-void stopMenu();
-void closeMenu();
+extern void draw();
+extern void stopMenu();
+extern void closeMenu();
 
-void buttonInput();
-void applyCheats();
-void applyOnce();
-void checkCheats();
+extern void buttonInput();
+extern void applyCheats();
+extern void applyOnce();
+extern void checkCheats();
 
-int menu_draw(const Menu_pack *menu_list, int menu_max);
-int menu_ctrl(const Menu_pack *menu_list, int menu_max);
-int menu_setDefaults(const Menu_pack *menu_list, int menu_max /*, char *config*/ );
-int menu_apply(const Menu_pack *menu_list, int menu_max);
-int menu_check(const Menu_pack *menu_list, int menu_max);
+extern void menu_draw(const CDRMenuItem *menu_list, usize menu_max);
+extern void menu_ctrl(const CDRMenuItem *menu_list, usize menu_max);
+extern void menu_apply(const CDRMenuItem *menu_list, usize menu_max);
+extern void menu_check(const CDRMenuItem *menu_list, usize menu_max);
 
-void *category_toggle(int type, int cat, int set);
+extern void *category_toggle(int type, int cat, int set);
 
-int module_stop(SceSize argc, void* argp);
-int module_start(SceSize argc, void* argp);
-
-extern const Menu_pack main_menu[];
-extern const int menu_size;
+extern const CDRMenuItem main_menu[];
+extern const array_size menu_size;
 
 /////////////////////////////////////////////
 
-int editor_create(int mode, int toptions, const char *editortitle, const Editor_pack *editor_menu, int first_obj, int block_size, int blocks);
+extern void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const Editor_pack *editor_menu, uaddr first_obj, usize block_size, usize blocks);
+
+#ifdef PREVIEW
+extern void usercheats_create();
+extern void usercheats_draw();
+extern void usercheats_ctrl();
+#endif
+
+#ifdef USERSCRIPTS
 
 typedef struct userscript_entry
 {
-  char* path; // Allocated when needed
-  int attr;
-  int files_folders_count;
+  u8string path; // Allocated when needed
+  uint32 attr;
+  usize files_folders_count;
 } userscript_entry;
 
-int usercheats_create();
-int usercheats_draw();
-int usercheats_ctrl();
-
-#ifdef USERSCRIPTS
-int free_userscripts_array();
-int userscripts_create();
+extern func_stat free_userscripts_array();
+extern void userscripts_create();
 #endif
 
 #ifdef SAVEDITOR
-int saveselector_create();
-int saveselector_draw();
-int saveselector_ctrl();
+extern void saveselector_create();
+extern void saveselector_draw();
+extern void saveselector_ctrl();
 
-int saveditor_create();
-int saveditor_draw();
-int saveditor_ctrl();
+extern void saveditor_create();
+extern void saveditor_draw();
+extern void saveditor_ctrl();
 #endif
 
 #ifdef FREECAM
-int freecam_create();
+extern void freecam_create();
 #endif
 
 #ifdef HEXEDITOR
-int address_create();
-int hexeditor_create(u32 hexadr, int hexmode, int lowbound, int highbound, const char *infostring);
-void hex_marker_addx(u32 address, int size);
-void hex_marker_clear();
+extern void address_create();
+extern void hexeditor_create(uaddr hexadr, int hexmode, uaddr lowbound, uaddr highbound, const u8string infostring);
+extern void hex_marker_addx(uaddr address, usize size);
+extern void hex_marker_clear();
 
 #endif
 
-void free_alloc_mem_cdr();
+extern void free_alloc_mem_cdr();
 
-extern int LCS;
+extern bool LCS;
 
 #endif

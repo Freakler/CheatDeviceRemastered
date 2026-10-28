@@ -1,19 +1,24 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #include <stdio.h>
@@ -33,300 +38,299 @@
 #include "lang.h"
 #include "logs.h"
 
-register int gp asm("gp"); // for VCS
-int gp_ = 0; // helper (also used in configs extern)
+register uaddr gp __asm__("gp"); // for VCS
+uaddr gp_ = 0; // helper (also used in configs extern)
 
 /* FUNCTIONS ****************************************************************************/
 
-u32 (* GetPPLAYER)();
-u32 (* GetPOBJ)();
-u32 (* GetPCAR)();
-void (* SetNextWeather)(short weathercode);
-void (* SetWeatherNow)(short weathercode);
-void (* ReleaseWeather)(void);
-void (* TaskCharWith)(unsigned int ped, int val, unsigned int object);
-void (* WarpPedIntoVehicle)(int ped, int vehicle); // FUN_001b90ec_warpPedIntoVehicle(int ped, int veh) (has more attributes in VCS!!!!)
-void (* WarpPedIntoVehicleAsPassenger)(int ped, int vehicle, int seat); // FUN_001b9470_warpPedIntoVehicleAsPassenger(int ped, int veh, int seat)
-void (* RequestModel)(unsigned int model_id, unsigned int param_2); // , unsigned int param_3, unsigned int param_4, unsigned int param_5);
-int (* GiveWeaponAndAmmo)(int ped_obj, int param_2, unsigned int ammo); // , unsigned int param_4, unsigned int param_5);
-void (* SetActorSkinTo)(int ped_obj, const char *name); // name must be lower case!!
-void (* LoadAllModelsNow)(char x);
-void (* RefreshActorSkin)(int ped_obj);
-void (* TaskDuckLCS)(int ped_obj);
-void (* TaskDuckVCS)(int ped_obj, int duration, char x);
-void (* TaskUnDuck)(int ped_obj, char x);
-int (* SetWantedLevel)(int pplayer, int stars);
-int (* SetMaxWantedLevel)(int stars);
-int (* StartNewScript)(int ip);
-void (* TankControl)(int handle);
-void (* BlowupVehiclesInPath)(int handle);
-void (* DoHoverSuspensionRatios)(int handle);
-int (* IsPlayerOnAMission)(void);
-void (* SetBridgeState)(int state);
+uaddr (*GetPPLAYER)();
+uaddr (*GetPOBJ)();
+uaddr (*GetPCAR)();
+void (* CWeather_ForceWeather)(int16 weather);
+void (* CWeather_ForceWeatherNow)(int16 weather);
+void (* CWeather_ReleaseWeather)(void);
+void  (*TaskCharWith)(uint32 ped, int val, uint32 object);
+void  (*WarpPedIntoVehicle)(int ped, int vehicle); // FUN_001b90ec_warpPedIntoVehicle(int ped, int veh) (has more attributes in VCS!!!!)
+void  (*WarpPedIntoVehicleAsPassenger)(int ped, int vehicle, int seat); // FUN_001b9470_warpPedIntoVehicleAsPassenger(int ped, int veh, int seat)
+void  (*RequestModel)(uint32 model_id, uint32 param_2); // , uint32 param_3, uint32 param_4, uint32 param_5);
+int   (*GiveWeaponAndAmmo)(int ped_obj, int param_2, uint32 ammo); // , uint32 param_4, uint32 param_5);
+void  (*SetActorSkinTo)(int ped_obj, const char *name); // name must be lower case!!
+void  (*LoadAllModelsNow)(char x);
+void  (*RefreshActorSkin)(int ped_obj);
+void  (*TaskDuckLCS)(int ped_obj);
+void  (*TaskDuckVCS)(int ped_obj, int duration, char x);
+void  (*TaskUnDuck)(int ped_obj, char x);
+int   (*SetWantedLevel)(int pplayer, int stars);
+int   (*SetMaxWantedLevel)(int stars);
+int   (*StartNewScript)(int ip);
+void  (*TankControl)(int handle);
+void  (*BlowupVehiclesInPath)(int handle);
+void  (*DoHoverSuspensionRatios)(int handle);
+int   (*IsPlayerOnAMission)(void);
+void  (*SetBridgeState)(int state);
 
 /* FUNCTIONS ****************************************************************************/
 
 /// externs
-extern int LCS, VCS, PPSSPP, ADRENALINE;
+extern bool LCS, VCS, PPSSPP, ADRENALINE;
 
-extern int menuopendelay;
-extern u32 mod_text_addr;
-extern u32 mod_text_size;
-extern u32 mod_data_size;
+extern uint32 menuopendelay;
+extern uaddr mod_text_addr;
+extern usize mod_text_size;
+extern usize mod_data_size;
 
 extern float SIZE_SMALL, SIZE_NORMAL, SIZE_BIG, SIZE_HUGE; // for drawString()
 
 /**//**//**//**//**//**//**//**//**//**//**//**//**//**//**/
 
-extern const teleports_pack lcs_teleports[];
-extern int lcs_teleportersize;
+extern const GTAWorldLocation lcs_teleports[];
+extern array_size lcs_teleportersize;
 
-extern const teleports_pack vcs_teleports[];
-extern int vcs_teleportersize;
+extern const GTAWorldLocation vcs_teleports[];
+extern array_size vcs_teleportersize;
 
-extern const pickups_pack lcs_pickups[];
-extern int lcs_pickupsize;
+extern const GTAPickup lcs_pickups[];
+extern array_size lcs_pickupsize;
 
-extern const pickups_pack vcs_pickups[];
-extern int vcs_pickupsize;
+extern const GTAPickup vcs_pickups[];
+extern array_size vcs_pickupsize;
 
 /**//**//**//**//**//**//**//**//**//**//**//**//**//**//**/
 
 extern short showoptions;
-extern char category_index[];
+extern bool category_index[];
 
 extern u32 current_buttons, pressed_buttons, hold_buttons;
 extern float xstick, ystick, xstick_, ystick_;
 
-extern short flag_menu_start;
-extern short flag_menu_show;
-extern short flag_menu_running;
-extern short flag_keys_disable;
-extern short flag_draw_FPS;
-extern short flag_draw_MEM;
-extern short flag_draw_COORDS;
-extern short flag_draw_SPEEDO;
-extern short flag_draw_DEBUG;
-extern short flag_use_liveconfig; // #ifdef CONFIG
-extern short flag_customusic;
-extern short flag_coll_cats;
-extern short flag_freecam;
-extern short flag_use_cataltfont;
-extern short flag_ui_blocking;
-extern short flag_use_legend;
-extern short flag_swapxr;
+extern uint8 flag_menu_start;
+extern bool flag_menu_show;
+extern bool flag_menu_running;
+extern bool flag_keys_disable;
+extern bool flag_draw_FPS;
+extern bool flag_draw_MEM;
+extern bool flag_draw_COORDS;
+extern bool flag_draw_SPEEDO;
+extern bool flag_draw_DEBUG;
+extern bool flag_use_liveconfig; // #ifdef CONFIG
+extern uint8 flag_customusic;
+extern bool flag_coll_cats;
+extern bool flag_freecam;
+extern bool flag_use_cataltfont;
+extern bool flag_ui_blocking;
+extern bool flag_use_legend;
+extern bool flag_swapxr;
 
-extern u32 memory_low;
-extern u32 memory_high;
+extern uaddr memory_low;
+extern uaddr memory_high;
 
-extern char L,R,UP,DOWN,LEFT,RIGHT,CROSS,CIRCLE,SQUARE,TRIANGLE,NONE;
-extern char key_to_pad;
+extern uint8 L,R,UP,DOWN,LEFT,RIGHT,CROSS,CIRCLE,SQUARE,TRIANGLE,NONE;
+extern uint32 key_to_pad;
 
-extern const char *weather_lcs[];
-extern const char *weather_vcs[];
+extern const u8string weather_lcs[];
+extern const u8string weather_vcs[];
 
 
 /// globals
-char retbuf[64]; // return string for cheats
+u8char retbuf[64]; // return string for cheats
 
-u32 pplayer = 0;
-u32 pcar = 0;
-u32 pobj = 0;
-int pcar_id = 0;
-int pcar_type = 0;
-int gametimer = 0;
-int island = 0;
-int language = 0;
-int multiplayer = 0;
+uaddr pplayer = 0;
+uaddr pcar = 0;
+uaddr pobj = 0;
+uint16 pcar_id = 0;
+uint8 pcar_type = 0;
+uint32 gametimer = 0;
+int32 island = 0;
+int32 language = 0;
+bool multiplayer = 0;
 
-int peds_max = 0;
-int peds_cur = 0;
-u32 peds_base = 0;
-int vehicles_max = 0;
-int vehicles_cur = 0;
-u32 vehicles_base = 0;
-int worldobjs_max = 0;
-int worldobjs_cur = 0;
-int worldobjs_base = 0;
-//int businessobjs_max = 0;
-//int businessobjs_cur = 0;
-//int businessobjs_base = 0;
+usize peds_max = 0;
+array_uidx peds_cur = 0;
+uaddr peds_base = 0;
+usize vehicles_max = 0;
+array_uidx vehicles_cur = 0;
+uaddr vehicles_base = 0;
+usize worldobjs_max = 0;
+array_uidx worldobjs_cur = 0;
+uaddr worldobjs_base = 0;
+//usize businessobjs_max = 0;
+//array_uidx businessobjs_cur = 0;
+//uaddr businessobjs_base = 0;
 
-int garage_cur = 0;
-int pickups_cur = 0;
-int mapicons_cur = 0;
-int vehspawns_cur = 0;
+array_uidx garage_cur = 0;
+array_uidx pickups_cur = 0;
+array_uidx mapicons_cur = 0;
+array_uidx vehspawns_cur = 0;
 
-u32 dummysIPL_base = 0;
-u32 handlingcfg_cur = 0;
-u32 carcolsDAT_base = 0;
-u32 pedcolsDAT_base = 0; // VCS only
-u32 buildingsIPL_base = 0;
-u32 treadablesIPL_base = 0;
+uaddr dummysIPL_base = 0;
+uaddr handlingcfg_cur = 0;
+uaddr carcolsDAT_base = 0;
+uaddr pedcolsDAT_base = 0; // VCS only
+uaddr buildingsIPL_base = 0;
+uaddr treadablesIPL_base = 0;
 
 
 /// later set by PatchXCS //////////////////////////
-u32 addr_skipIntroMovie             = 0;
-u32 addr_neverFallOffBike_rollback  = 0;
-u32 addr_neverFallOffBike_hitobj    = 0;
-u32 addr_worldgravity               = 0;
-u32 addr_fpsCap                     = 0;
-u32 addr_buttoncheat                = 0;
-u32 addr_heliheight                 = 0;
+uaddr addr_skipIntroMovie             = 0;
+uaddr addr_neverFallOffBike_rollback  = 0;
+uaddr addr_neverFallOffBike_hitobj    = 0;
+uaddr addr_worldgravity               = 0;
+uaddr addr_fpsCap                     = 0;
+uaddr addr_buttoncheat                = 0;
+uaddr addr_heliheight                 = 0;
 #ifdef PREVIEW
-u32 addr_policechaseheli_1          = 0;
-u32 addr_policechaseheli_2          = 0;
-u32 addr_policechaseheli_3          = 0;
+uaddr addr_policechaseheli_1          = 0;
+uaddr addr_policechaseheli_2          = 0;
+uaddr addr_policechaseheli_3          = 0;
 #endif
-u32 addr_randompedcheat             = 0;
+uaddr addr_randompedcheat             = 0;
 
-u32 global_weather          = 0;
-u32 global_trafficdensity   = 0;
-u32 global_peddensity       = 0;
-u32 global_freezegame       = 0;
-u32 global_gametimer        = 0;
-u32 global_timescale        = 0;
-u32 global_maxhealthmult    = 0;
-u32 global_maxarmormult     = 0;
-u32 global_unlimtedsprint   = 0;
-u32 global_unlimtedswim     = 0;
-u32 global_ismultiplayer    = 0;
-u32 global_clockmultiplier  = 0;
-u32 global_cheatusedboolean = 0;
-u32 global_cheatusedcounter = 0;
-u32 global_maxwantedlevel   = 0;
-u32 global_camera           = 0;
-u32 global_hudincutscene    = 0;
-u32 global_currentisland    = 0;
-u32 global_systemlanguage   = 0;
-u32 global_garagedata       = 0;
+uaddr global_weather          = 0;
+uaddr global_trafficdensity   = 0;
+uaddr global_peddensity       = 0;
+uaddr global_freezegame       = 0;
+uaddr global_gametimer        = 0;
+uaddr global_timescale        = 0;
+uaddr global_maxhealthmult    = 0;
+uaddr global_maxarmormult     = 0;
+uaddr global_unlimtedsprint   = 0;
+uaddr global_unlimtedswim     = 0;
+uaddr global_ismultiplayer    = 0;
+uaddr global_clockmultiplier  = 0;
+uaddr global_cheatusedboolean = 0;
+uaddr global_cheatusedcounter = 0;
+uaddr global_maxwantedlevel   = 0;
+uaddr global_camera           = 0;
+uaddr global_hudincutscene    = 0;
+uaddr global_currentisland    = 0;
+uaddr global_systemlanguage   = 0;
+uaddr global_garagedata       = 0;
 
-u32 ptr_pedestriansobj      = 0;
-u32 ptr_vehiclesobj         = 0;
-u32 ptr_worldobj            = 0;
-u32 ptr_businessobj         = 0; // VCS only
-u32 ptr_audioscriptobj      = 0;
+uaddr ptr_pedestriansobj      = 0;
+uaddr ptr_vehiclesobj         = 0;
+uaddr ptr_worldobj            = 0;
+uaddr ptr_businessobj         = 0; // VCS only
+uaddr ptr_audioscriptobj      = 0;
 
-u32 global_pickups          = 0;
-u32 global_ptr_water        = 0;
-u32 global_buttoninput      = 0;
-u32 global_radioarea        = 0;
-u32 global_custrackarea     = 0;
-u32 global_radarblips       = 0;
-u32 global_developerflag    = 0;
-u32 global_freezetimers     = 0;
+uaddr global_pickups          = 0;
+uaddr global_ptr_water        = 0;
+uaddr global_buttoninput      = 0;
+uaddr global_radioarea        = 0;
+uaddr global_custrackarea     = 0;
+uaddr global_radarblips       = 0;
+uaddr global_developerflag    = 0;
+uaddr global_freezetimers     = 0;
 
-u32 global_ScriptSpace      = 0;
-u32 global_MainScriptSize   = 0;
-u32 global_LargestMissionScriptSize = 0;
+uaddr global_ScriptSpace      = 0;
+uaddr global_MainScriptSize   = 0;
+uaddr global_LargestMissionScriptSize = 0;
 
-u32 global_mp_1             = 0;
-u32 global_mp_parameters    = 0;
-u32 global_OnAMissionFlag   = 0;
-u32 global_bridgeState      = 0;
-u32 global_m_pVehicleName   = 0;
-u32 global_m_pVehicleNameToPrint = 0;
+uaddr global_mp_1             = 0;
+uaddr global_mp_parameters    = 0;
+uaddr global_OnAMissionFlag   = 0;
+uaddr global_bridgeState      = 0;
+uaddr global_m_pVehicleName   = 0;
+uaddr global_m_pVehicleNameToPrint = 0;
 
-u32 global_Wind             = 0;
-u32 global_WindClipped      = 0;
-
-
-u32 global_displaysettings  = 0; // VCS only
-u32 global_radarbool        = 0; // LCS only
-u32 global_hudbool          = 0; // LCS only
-u32 global_maplegendbool    = 0; // LCS only
+uaddr global_Wind             = 0;
+uaddr global_WindClipped      = 0;
 
 
-u32 global_helpbox                = 0; // VCS only
-u32 global_helpbox_string         = 0; // LCS only
-u32 global_helpbox_timedisplayed  = 0; // LCS only
-u32 global_helpbox_displaybool    = 0; // LCS only
-u32 global_helpbox_permboxbool    = 0; // LCS only
-u32 global_helpbox_duration       = 0; // LCS only
-u32 global_dialog_string          = 0; // LCS only
+uaddr global_displaysettings  = 0; // VCS only
+uaddr global_radarbool        = 0; // LCS only
+uaddr global_hudbool          = 0; // LCS only
+uaddr global_maplegendbool    = 0; // LCS only
 
-u32 global_bmxjumpmult      = 0; // VCS only
 
-u32 var_garageslots         = 0;
-u32 var_garageslotsize      = 0;
+uaddr global_helpbox                = 0; // VCS only
+uaddr global_helpbox_string         = 0; // LCS only
+uaddr global_helpbox_timedisplayed  = 0; // LCS only
+uaddr global_helpbox_displaybool    = 0; // LCS only
+uaddr global_helpbox_permboxbool    = 0; // LCS only
+uaddr global_helpbox_duration       = 0; // LCS only
+uaddr global_dialog_string          = 0; // LCS only
 
-u32 var_pickupslots         = 0;
-u32 var_pickupslotsize      = 0;
+uaddr global_bmxjumpmult      = 0; // VCS only
 
-u32 var_radarblipslots      = 0;
-u32 var_radarblipslotsize   = 0;
-u32 var_radarblipspadding   = 0;
+usize var_garageslots         = 0;
+usize var_garageslotsize      = 0;
 
-u32 var_pedobjsize          = 0;
-u32 var_vehobjsize          = 0;
-u32 var_wldobjsize          = 0;
+usize var_pickupslots         = 0;
+usize var_pickupslotsize      = 0;
 
-u32 var_bsnobjsize          = 0;
+usize var_radarblipslots      = 0;
+usize var_radarblipslotsize   = 0;
+uaddr var_radarblipspadding   = 0;
 
-u32 addr_vehiclesworldspawn        = 0;
-u32 var_vehiclesworldspawnslots    = 0;
-u32 var_vehiclesworldspawnslotsize = 0;
+usize var_pedobjsize          = 0;
+usize var_vehobjsize          = 0;
+usize var_wldobjsize          = 0;
+
+usize var_bsnobjsize          = 0;
+
+uaddr addr_vehiclesworldspawn        = 0;
+uaddr var_vehiclesworldspawnslots    = 0;
+usize var_vehiclesworldspawnslotsize = 0;
 
 
 /// GAME.DTZ ////////////////////////
-u32 ptr_buildingsIPL          = 0;
-u32 buildingsIPL_max          = 0;
-u32 var_buildingsIPLslotsize  = 0;
+uaddr ptr_buildingsIPL          = 0;
+uaddr buildingsIPL_max          = 0;
+usize var_buildingsIPLslotsize  = 0;
 
-u32 ptr_treadablesIPL         = 0;
-u32 treadablesIPL_max         = 0;
-u32 var_treadablesIPLslotsize = 0;
+uaddr ptr_treadablesIPL         = 0;
+uaddr treadablesIPL_max         = 0;
+usize var_treadablesIPLslotsize = 0;
 
-u32 ptr_dummysIPL             = 0;
-u32 dummysIPL_max             = 0;
-u32 var_dummysIPLslotsize     = 0;
+uaddr ptr_dummysIPL             = 0;
+uaddr dummysIPL_max             = 0;
+usize var_dummysIPLslotsize     = 0;
 
-u32 ptr_handlingCFG           = 0;
-u32 var_handlingcfgslots      = 0;
-u32 var_handlingcfgslotsize   = 0;
+uaddr ptr_handlingCFG           = 0;
+uaddr var_handlingcfgslots      = 0;
+usize var_handlingcfgslotsize   = 0;
 
-u32 ptr_particleCFG           = 0;
-u32 var_particleCFGslots      = 0;
-u32 var_particleCFGslotsize   = 0;
+uaddr ptr_particleCFG           = 0;
+usize var_particleCFGslots      = 0;
+usize var_particleCFGslotsize   = 0;
 
-u32 ptr_carcolsDAT            = 0;
-u32 var_carcolsdatslots       = 0;
-u32 var_carcolsdatslotsize    = 0;
+uaddr ptr_carcolsDAT            = 0;
+usize var_carcolsdatslots       = 0;
+usize var_carcolsdatslotsize    = 0;
 
-u32 ptr_pedstatTable          = 0;
-u32 var_pedstatDATslots       = 0;
-u32 var_pedstatDATslotsize    = 0;
+uaddr ptr_pedstatTable          = 0;
+usize var_pedstatDATslots       = 0;
+usize var_pedstatDATslotsize    = 0;
 
-u32 ptr_weaponTable           = 0;
-u32 var_weaponDATslots        = 0;
-u32 var_weaponDATslotsize     = 0;
+uaddr ptr_weaponTable           = 0;
+usize var_weaponDATslots        = 0;
+usize var_weaponDATslotsize     = 0;
 
+uaddr ptr_timecycDAT            = 0;
 
-u32 ptr_timecycDAT            = 0;
+uaddr ptr_IDEs                  = 0;
+uaddr ptr_IDETable              = 0;
 
-u32 ptr_IDEs                  = 0;
-u32 ptr_IDETable              = 0;
+uaddr ptr_gxtloadadr            = 0;
+uaddr ptr_radarIconList         = 0;
 
-u32 ptr_gxtloadadr            = 0;
-u32 ptr_radarIconList         = 0;
+uaddr var_radios                = 0;
+uaddr render                    = 0;
 
-u32 var_radios                = 0;
-u32 render                    = 0;
-
-u32 ptr_memory_main           = 0;
+uaddr ptr_memory_main           = 0;
 
 
 /// savedataeditor - scraped since not working on emu and save space
 #ifdef SAVEDITOR
-u32 savedatakey  = 0;
-u32 titleid      = 0;
-u32 saveprefix   = 0;
+uaddr savedatakey  = 0;
+uaddr titleid      = 0;
+uaddr saveprefix   = 0;
 #endif
 
 #ifdef PREVIEW
 /** Test-Area ***********************************************************************************************/
 
-  u32 testoffs = -1; // offset address for testing only
+  uaddr testoffs = -1; // offset address for testing only
 
   int test = 0;
   int runfunc = 0;
@@ -346,9 +350,9 @@ u32 saveprefix   = 0;
   int (*findFreeVehicleSlot)();
   void (*FUN_000bc3d4)(int param_1);
 
-  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, unsigned int param_7, unsigned int param_8, unsigned int param_9, u32 param_10,char param_11);
+  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, uint32 param_7, uint32 param_8, uint32 param_9, u32 param_10,char param_11);
 
-  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, unsigned int param_7, unsigned int param_8, unsigned int param_9, u32 param_10,char param_11);
+  int (*FUN_000bc6d4_checkForGround)(float *param_1, char *param_2,int *param_3,char param_4,char param_5, char param_6, uint32 param_7, uint32 param_8, uint32 param_9, u32 param_10,char param_11);
 
   void (*FUN_002cedc0_spawnParkedVehicles)(int *param_1);
   //int (*FUN_002ce7ec)(int *param_1);
@@ -395,10 +399,10 @@ u32 saveprefix   = 0;
 
   ////////////////////////////////////////////  ////////////////////////////////////////////  ////////////////////////////////////////////
 
-  unsigned int (*testfunc2)(int param_1, unsigned int param_2);
-  unsigned int testfunc2_patched(int param_1, unsigned int param_2) { //FUN_0016fcd0_CElementGroupModelInfo_GetNodeFromId
+  uint32 (*testfunc2)(int param_1, uint32 param_2);
+  uint32 testfunc2_patched(int param_1, uint32 param_2) { //FUN_0016fcd0_CElementGroupModelInfo_GetNodeFromId
     int ret = testfunc2( param_1, param_2);
-    DEBUG_LOG("ret = 0x%08X, param_1: 0x%08X, param_2: 0x%08X", ret, param_1, param_2);
+    DEBUG_LOG("ret = 0x%08X, param_1: 0x%08X, param_2: 0x%08lX", ret, param_1, param_2);
     static int last = -1;
     if( ret == 0 ) {
       return last;
@@ -408,13 +412,11 @@ u32 saveprefix   = 0;
     return 0;
   }
 
-  void (*testfunc)(int ide, int wheel_no, unsigned int *vectors);
-  void testfunc_patched(int ide, int wheel_no, unsigned int *vectors) { //FUN_0007243c_CVehicleModelInfo_GetWheelPosn
-    //char buffer[256];
-    //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
-    //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
+  void (*testfunc)(uaddr ide, int wheel_no, uint32 *vectors);
+  void testfunc_patched(uaddr ide, int wheel_no, uint32 *vectors) { //FUN_0007243c_CVehicleModelInfo_GetWheelPosn
+    //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED, "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
 
-    DEBUG_LOG("ide: 0x%08X, wheel: %d, vectors: 0x%08X", ide, wheel_no, vectors);
+    DEBUG_LOG("ide: 0x%08X, wheel: %d, vectors: 0x%p", ide, wheel_no, vectors);
 
     //static int last = -1;
 
@@ -446,7 +448,7 @@ u32 saveprefix   = 0;
 */
 SceSize sceKernelMaxFreeMemSize_patched(void)
 {
-  const SceSize memory_free = 512 * 1024; /* 512 KB */
+  const SceSize memory_free = KiB(512); /* 512 KB */
   const SceSize memory_available = sceKernelMaxFreeMemSize();
 
   /* Check for Extra Memory */
@@ -454,7 +456,7 @@ SceSize sceKernelMaxFreeMemSize_patched(void)
   else return memory_available; /* 32 MB? -> well, bad luck then */
 }
 
-int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
+bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   #ifdef PREVIEW
   if( LCS && patchonce ) { // FOR TESTING ONLY
@@ -733,25 +735,25 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !cWorldStream_Render && _lw(addr + 0x50) == 0x0080A025 && _lw(addr + 0x5C) == 0x02002025 && _lw(addr + 0x88) == 0x2C840001 ) { // LCS US 3.00 -> 0x00150344
     PATCH_LOG("0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, cWorldStream_Render_Patched, cWorldStream_Render);
-    return 1;
+    return true;
   }
 
   /// for stopMenu(); [in pause menu]
   if( !FUN_002db0c0 && ((_lw(addr + 0xC) == 0x00808025  && _lw(addr + 0x10) == 0x341101DD && _lw(addr + 0x28) == 0xAFB20018) || (_lw(addr + 0x8) == 0x00808025  && _lw(addr + 0xC) == 0x340401DD && _lw(addr + 0x28) == 0xAFBF0018)) ) { //0x002DB0C0 || 0x002433D0 for ulux
     PATCH_LOG("0x%08X (0x%08X) --> FUN_002db0c0()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, FUN_002db0c0_patched, FUN_002db0c0); //
-    return 1;
-  } // ULUX-002 OK but ugly (functions are quite different) todo?
+    return true;
+  } // TODO: ULUX-002 OK but ugly (functions are quite different)?
 
   /// disable Button Input --> same as VCS
   if( !buttonsToAction && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {  //not save
     PATCH_LOG("0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, buttonsToActionPatched, buttonsToAction); // 0x00294E88
-    return 1;
+    return true;
   }
 
   ///for FPS stuff
-  if( addr_fpsCap == 0 && _lw(addr - 0x70) == 0x3C043586  && _lw(addr + 0x18) == 0x00402025  && _lw(addr + 0x64) == 0x34040001 ) {  // LCS US 3.00 -> 0x002AF398
+  if ( !addr_fpsCap && _lw(addr - 0x70) == 0x3C043586  && _lw(addr + 0x18) == 0x00402025  && _lw(addr + 0x64) == 0x34040001 ) {  // LCS US 3.00 -> 0x002AF398
     /*******************************************************************
      *  0x002AF378: 0x2C840002 '...,' - sltiu      $a0, $a0, 2
     *******************************************************************/
@@ -764,7 +766,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     PATCH_LOG("0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
     MAKE_CALL(addr, sceKernelGetSystemTimeWidePatched); //LCS US 3.00 -> 0x002AF398
 
-    return 1;
+    return true;
   }
 
 
@@ -775,68 +777,71 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !GetPPLAYER && _lw(addr + 0x8) == 0x000429C0 && _lw(addr + 0xC) == 0x00A53021 && _lw(addr + 0x18) == 0x00A42023 && _lw(addr + 0x2C) == 0x8C820000 ) {  //0x1d18b0
     PATCH_LOG("0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
     GetPPLAYER = (void*)(addr); //get pplayer
-    return 1;
+    return true;
   }
 
   /// get pobj function
   if( !GetPCAR && _lw(addr - 0x18) == 0x00000000 && _lw(addr + 0x8) == 0x000429C0 && _lw(addr + 0x24) == 0x00852021 && _lw(addr + 0x2C) == 0x10800006  ) {  //0x1d17b4
     PATCH_LOG("0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
     GetPCAR = (void*)(addr); // get pcar
-    return 1;
+    return true;
   }
 
   /// global gametimer
-  if( global_gametimer == 0 && _lw(addr - 0xC) == 0x02002825 && _lw(addr - 0x4) == 0x00001025 && _lw(addr + 0x14) == 0x02002025 ) {
+  if( !global_gametimer && _lw(addr - 0xC) == 0x02002825 && _lw(addr - 0x4) == 0x00001025 && _lw(addr + 0x14) == 0x02002025 ) {
     /*******************************************************************
      *  0x001DB5EC: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x001DB5F0: 0x8C84A144 'D...' - lw         $a0, -24252($a0)
     *******************************************************************/
-    global_gametimer = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_gametimer = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) --> global_gametimer 0x%08X", global_gametimer-text_addr, global_gametimer, addr-text_addr); // 0x35A144
 
-    return 1;
+    return true;
   }
 
   /// global timescale
-  if( global_timescale == 0 && _lw(addr) == 0x3C053F80 && _lw(addr + 0x18) == 0xE48C0010 && _lw(addr + 0x20) == 0x2405FFFF ) { // 0x000e5fe0
+  if ( !global_timescale && _lw(addr) == 0x3C053F80 && _lw(addr + 0x18) == 0xE48C0010 && _lw(addr + 0x20) == 0x2405FFFF ) { // 0x000e5fe0
     /*******************************************************************
      * 0x000E5FEC: 0x3C050036 '6..<' - lui        $a1, 0x36
      * 0x000E5FF0: 0xE4ADA158 'X...' - swc1       $fpr13, -24232($a1)
     *******************************************************************/
-    global_timescale = (_lh(addr+0xC) * 0x10000) + (int16_t)_lh(addr+0x10); // actual address!
+    global_timescale = (_lh(addr+0xC) * 0x10000) + (int16)_lh(addr+0x10); // actual address!
     PATCH_LOG("0x%08X (0x%08X) --> global_timescale 0x%08X", global_timescale-text_addr, global_timescale, addr-text_addr); // DAT_0035a158_TimeScale
 
-    return 1;
+    return true;
   }
 
   /// global_currentisland & global_systemlanguage [this function sets lots of globals -> weather, clock, cheatsused, gamespeed]
-  if( global_currentisland == 0 && _lw(addr + 0x20) == 0xAE040008  && _lw(addr + 0x18C) == 0xAE040070 ) {
+  if ( !global_currentisland && _lw(addr + 0x20) == 0xAE040008  && _lw(addr + 0x18C) == 0xAE040070 ) {
     /*******************************************************************
      *  0x000ACA2C: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x000ACA30: 0x8C84A46C 'l...' - lw         $a0, -23444($a0)
     *******************************************************************/
-    global_currentisland = (_lh(addr+0x14) * 0x10000) + (int16_t)_lh(addr+0x18); // actual address!
+    global_currentisland = (_lh(addr+0x14) * 0x10000) + (int16)_lh(addr+0x18); // actual address!
     PATCH_LOG("0x%08X (0x%08X) --> global_currentisland", global_currentisland-text_addr, global_currentisland); // DAT_0035A46C
 
     /*******************************************************************
      *  0x000ACA40: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x000ACA48: 0x8CA45C9C '.\..' - lw         $a0, 23708($a1)
     *******************************************************************/
-    global_systemlanguage = (_lh(addr+0x28) * 0x10000) + (int16_t)_lh(addr+0x30); //actual address!
+    global_systemlanguage = (_lh(addr+0x28) * 0x10000) + (int16)_lh(addr+0x30); //actual address!
     PATCH_LOG("0x%08X (0x%08X) --> global_systemlanguage", global_systemlanguage-text_addr, global_systemlanguage); // DAT_00355c9c
-    return 1;
+
+    HIJACK_FUNCTION(addr, FUN_000B0A18_Patched, FUN_000B0A18);
+
+    return true;
   }
 
   /// globals pointers to objects
-  if( ptr_pedestriansobj == 0 && _lw(addr + 0x2C) == 0x02409825 &&  _lw(addr + 0x6C) == 0x00000000 && _lw(addr + 0xF0) == 0x02402025 ) { //0x00037714
+  if ( !ptr_pedestriansobj && _lw(addr + 0x2C) == 0x02409825 &&  _lw(addr + 0x6C) == 0x00000000 && _lw(addr + 0xF0) == 0x02402025 ) { //0x00037714
     /*******************************************************************
      *  0x00037718: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x00037720: 0x8C90853C '<...' - lw         $s0, -31428($a0)
      *
      *  0x00037744: 0x24040CB0 '...$' - li         $a0, 3248
     *******************************************************************/
-    ptr_pedestriansobj = (_lh(addr+0x4) * 0x10000) + (int16_t)_lh(addr+0xC); // actual address!
-    var_pedobjsize = (int16_t)_lh(addr+0x30); // 0xCB0
+    ptr_pedestriansobj = (_lh(addr+0x4) * 0x10000) + (int16)_lh(addr+0xC); // actual address!
+    var_pedobjsize = (int16)_lh(addr+0x30); // 0xCB0
     PATCH_LOG("0x%08X (0x%08X) --> ptr_pedestriansobj", ptr_pedestriansobj-text_addr, ptr_pedestriansobj); // DAT_0034853c
     PATCH_LOG("var_pedobjsize = 0x%X", var_pedobjsize); //
 
@@ -846,7 +851,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *
      *  0x00037814: 0x2631F920 ' .1&' - addiu      $s1, $s1, -1760
     *******************************************************************/
-    ptr_vehiclesobj = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0x88); // actual address!
+    ptr_vehiclesobj = (_lh(addr+0x84) * 0x10000) + (int16)_lh(addr+0x88); // actual address!
     var_vehobjsize = 0x10000 - _lh(addr+0x100); // 0x6E0
     PATCH_LOG("0x%08X (0x%08X) --> ptr_vehiclesobj", ptr_vehiclesobj-text_addr, ptr_vehiclesobj); // DAT_00348540
     PATCH_LOG("var_vehobjsize = 0x%X", var_vehobjsize); //
@@ -857,12 +862,12 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *
      *  0x00037884: 0x2673FDE0 '..s&' - addiu      $s3, $s3, -544
     *******************************************************************/
-    ptr_worldobj = (_lh(addr+0x104) * 0x10000) + (int16_t)_lh(addr+0x108); // actual address!
+    ptr_worldobj = (_lh(addr+0x104) * 0x10000) + (int16)_lh(addr+0x108); // actual address!
     var_wldobjsize = 0x10000 - _lh(addr+0x170); // 0x220
     PATCH_LOG("0x%08X (0x%08X) --> ptr_worldobj", ptr_worldobj-text_addr, ptr_worldobj); // DAT_0034854c
     PATCH_LOG("var_wldobjsize = 0x%X", var_wldobjsize); //
 
-    return 1;
+    return true;
   }
 
 
@@ -870,76 +875,76 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   /// /// /// FOR CHEATS ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///
 
   /// skip intro movies
-  if( addr_skipIntroMovie == 0 && _lw(addr + 0x8) == 0x3C05005A && _lw(addr + 0x24) == 0x00002825  ) {
+  if ( !addr_skipIntroMovie && _lw(addr + 0x8) == 0x3C05005A && _lw(addr + 0x24) == 0x00002825  ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
     addr_skipIntroMovie = addr; // 0x001BCFD0
     //MAKE_DUMMY_FUNCTION(0x89C0FD0, 0); //for test
-    return 1;
+    return true;
   }
 
   /// never fall off bike.. when rolling backwards
-  if( addr_neverFallOffBike_rollback == 0 && _lw(addr-0x18) == 0x45000012 && _lw(addr-0xC) == 0x3405002C && _lw(addr - 0x4) == 0x02403825 && _lw(addr + 0x8) == 0x8E0401FC ) {
+  if ( !addr_neverFallOffBike_rollback && _lw(addr-0x18) == 0x45000012 && _lw(addr-0xC) == 0x3405002C && _lw(addr - 0x4) == 0x02403825 && _lw(addr + 0x8) == 0x8E0401FC ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
     addr_neverFallOffBike_rollback = addr; // 0x000DEF44
-    return 1;
+    return true;
   }
 
   /// never fall off bike.. when hitting object
-  if( addr_neverFallOffBike_hitobj == 0 && _lw(addr - 0x4) == 0x34050027 && _lw(addr + 0x4) == 0x00004025 && _lw(addr + 0xB8) == 0x00000000 ) { // last one is #hacky
+  if ( !addr_neverFallOffBike_hitobj && _lw(addr - 0x4) == 0x34050027 && _lw(addr + 0x4) == 0x00004025 && _lw(addr + 0xB8) == 0x00000000 ) { // last one is #hacky
     PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
     addr_neverFallOffBike_hitobj = addr; // 0x0023DBFC | ULUX -> 0x0020B2D8
-    return 1;
+    return true;
   }
 
   /// world gravity
-  if( addr_worldgravity == 0 && _lw(addr - 0x18) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
+  if ( !addr_worldgravity && _lw(addr - 0x18) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
     addr_worldgravity = addr; // 0x0020A898
-    return 1;
+    return true;
   }
 
   /// set weather function(s)
-  if( !SetNextWeather && _lw(addr + 0x1C) == 0x2404FFFF  && _lw(addr - 0x14) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x14) == 0x03E00008 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> SetNextWeather(), SetWeatherNow(), ReleaseWeather()", addr-text_addr, addr);
-    SetNextWeather = (void*)(addr-0xC);  // 0x12EDB0
-    SetWeatherNow  = (void*)(addr);      // 0x12edbc
-    ReleaseWeather = (void*)(addr+0x1C); // 0x12EDD8
+  if( !CWeather_ForceWeather && _lw(addr + 0x1C) == 0x2404FFFF  && _lw(addr - 0x14) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x14) == 0x03E00008 ) {
+    PATCH_LOG("0x%08X (0x%08X) -> CWeather_ForceWeather(), CWeather_ForceWeatherNow(), CWeather_ReleaseWeather()", addr-text_addr, addr);
+    CWeather_ForceWeather = (void*)(addr-0xC);  // 0x12EDB0
+    CWeather_ForceWeatherNow  = (void*)(addr);      // 0x12edbc
+    CWeather_ReleaseWeather = (void*)(addr+0x1C); // 0x12EDD8
     /*******************************************************************
      *
      *
     *******************************************************************/
-    global_weather = (_lh(addr+0x8) * 0x10000) + (int16_t)_lh(addr + 0xC); // actual address!  (only to READ current weather)
+    global_weather = (_lh(addr+0x8) * 0x10000) + (int16)_lh(addr + 0xC); // actual address!  (only to READ current weather)
     PATCH_LOG("0x%08X (0x%08X) -> global_weather", global_weather-text_addr, global_weather); // 0x0035A484
-    return 1;
+    return true;
   }
 
 
   /// traffic density multiplier value
-  if( global_trafficdensity == 0 && _lw(addr - 0x10) == 0x34060001 && _lw(addr - 0x18) == 0x02002025 && _lw(addr+0x8) == 0x100000B7 && _lw(addr+0xC) == 0x00001025 ) {
+  if ( !global_trafficdensity && _lw(addr - 0x10) == 0x34060001 && _lw(addr - 0x18) == 0x02002025 && _lw(addr+0x8) == 0x100000B7 && _lw(addr+0xC) == 0x00001025 ) {
     /*******************************************************************
      *
      *
     *******************************************************************/
-    global_trafficdensity = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_trafficdensity = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_trafficdensity", global_trafficdensity-text_addr, global_trafficdensity); // 0x00347CDC
-    return 1;
+    return true;
   }
 
   /// ped density multiplier value
-  if( global_peddensity == 0 && _lw(addr + 0x38) == 0x00001025 && _lw(addr + 0x4C) == 0x00A62821 && _lw(addr + 0x84) == 0x00001025 ) {
+  if ( !global_peddensity && _lw(addr + 0x38) == 0x00001025 && _lw(addr + 0x4C) == 0x00A62821 && _lw(addr + 0x84) == 0x00001025 ) {
     /*******************************************************************
      *
      *
     *******************************************************************/
-    global_peddensity = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_peddensity = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_peddensity", global_peddensity-text_addr, global_peddensity); // 0x00352610
-    return 1;
+    return true;
   }
 
 
   /// global settings toggles (radar, hud and more)
-  if( global_hudbool == 0 && _lw(addr - 0x10) == 0x34040120 && _lw(addr - 0x3C) == 0x34040001 ){
-    global_hudbool = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+  if ( !global_hudbool && _lw(addr - 0x10) == 0x34040120 && _lw(addr - 0x3C) == 0x34040001 ){
+    global_hudbool = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_hudbool", global_hudbool-text_addr, global_hudbool); // 0x00355C4A
 
     global_radarbool = global_hudbool + 0x2; // hehe-hacky (actual address!)
@@ -947,17 +952,17 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
     global_maplegendbool = global_hudbool + 0x23; // hehe-hacky (actual address!)
     PATCH_LOG("0x%08X (0x%08X) -> global_maplegendbool", global_maplegendbool-text_addr, global_maplegendbool); // DAT_00355c6d_mapLegendBool
-    return 1;
+    return true;
   }
 
   /// global max health & armor multiplier
-  if( global_maxhealthmult == 0 && _lw(addr - 0x24) == 0x00001025 &&  _lw(addr - 0x14) == 0x02002025 && _lw(addr + 0x64) == 0x02002025 && _lw(addr + 0xF8) == 0x00408825  ) {
+  if ( !global_maxhealthmult && _lw(addr - 0x24) == 0x00001025 &&  _lw(addr - 0x14) == 0x02002025 && _lw(addr + 0x64) == 0x02002025 && _lw(addr + 0xF8) == 0x00408825  ) {
     /*******************************************************************
      *  0x00192274: 0x3C050038 '8..<' - lui        $a1, 0x38
      *  0x0019228C: 0x24A55B10 '.[.$' - addiu      $a1, $a1, 23312
      *  0x00192294: 0x90850167 'g...' - lbu        $a1, 359($a0)
     *******************************************************************/
-    global_maxhealthmult = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x18) + _lh(addr+0x20); // actual address!
+    global_maxhealthmult = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x18) + _lh(addr+0x20); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x00385c77
 
     /*******************************************************************
@@ -971,20 +976,20 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     TESTVAL3 = _lh(addr+0x20);
     #endif
 
-    global_maxarmormult = (_lh(addr+0x78) * 0x10000) + (int16_t)_lh(addr+0x90) + _lh(addr+0x98); // actual address!
+    global_maxarmormult = (_lh(addr+0x78) * 0x10000) + (int16)_lh(addr+0x90) + _lh(addr+0x98); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x00385c78
-    return 1;
+    return true;
   }
 
 
 
   /// global never get tired from sprinting & Multiplayer bool
-  if( global_ismultiplayer == 0 && _lw(addr + 0x28) == 0x3C05C316 && _lw(addr + 0x84) == 0x3C063F00 && _lw(addr + 0xA8) == 0x3C0543FA ) { // 0x0013F37C (in LCS FUN_0013f37c, VCS FUN_001447a0)
+  if ( !global_ismultiplayer && _lw(addr + 0x28) == 0x3C05C316 && _lw(addr + 0x84) == 0x3C063F00 && _lw(addr + 0xA8) == 0x3C0543FA ) { // 0x0013F37C (in LCS FUN_0013f37c, VCS FUN_001447a0)
     /*******************************************************************
      *  0x0013F37C: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x0013F380: 0x90A52C7C '|,..' - lbu        $a1, 11388($a1)
     *******************************************************************/
-    global_ismultiplayer = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_ismultiplayer = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_ismultiplayer", global_ismultiplayer-text_addr, global_ismultiplayer); // DAT_00352c7c_isMultiplayerActive
 
     /*******************************************************************
@@ -993,9 +998,9 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x0013F3E0: 0x00A62821 '!(..' - addu       $a1, $a1, $a2
      *  0x0013F3E4: 0x90A50164 'd...' - lbu        $a1, 356($a1)
     *******************************************************************/
-    global_unlimtedsprint = (_lh(addr+0x5C) * 0x10000) + (int16_t)_lh(addr+0x60) + _lh(addr+0x68); //actual address!
+    global_unlimtedsprint = (_lh(addr+0x5C) * 0x10000) + (int16)_lh(addr+0x60) + _lh(addr+0x68); //actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_00385c74_playerNeverGetsTired
-    return 1;
+    return true;
   }
 
 
@@ -1003,7 +1008,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !SetWantedLevel && _lw(addr + 0x64) == 0x00409025 && _lw(addr - 0xE0) == 0x340400CA ) { // 0x00140DF4
     PATCH_LOG("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
     SetWantedLevel = (void*)(addr);
-    return 1;
+    return true;
   }
 
   /// SetMaxWantedLevel function + global
@@ -1014,83 +1019,83 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x002C958C: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x002C95B4: 0xACA64B9C '.K..' - sw         $a2, 19356($a1)
     *******************************************************************/
-    global_maxwantedlevel = (_lh(addr+0x1C) * 0x10000) + (int16_t)_lh(addr+0x44); // actual address!
+    global_maxwantedlevel = (_lh(addr+0x1C) * 0x10000) + (int16)_lh(addr+0x44); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_maxwantedlevel", global_maxwantedlevel-text_addr, global_maxwantedlevel); // DAT_00354b9c
-    return 1;
+    return true;
   }
 
 
   /// global clock multiplier
-  if( global_clockmultiplier == 0 && _lw(addr + 0x8) == 0x3404000C && _lw(addr - 0x14) == 0x00808025 && _lw(addr + 0xA0) == 0x00000000 ) { // 0x0003834C
+  if ( !global_clockmultiplier && _lw(addr + 0x8) == 0x3404000C && _lw(addr - 0x14) == 0x00808025 && _lw(addr + 0xA0) == 0x00000000 ) { // 0x0003834C
     /*******************************************************************
      *  0x0003834C: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x00038350: 0xAC90A1A4 '....' - sw         $s0, -24156($a0)
     *******************************************************************/
-    global_clockmultiplier = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_clockmultiplier = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_clockmultiplier", global_clockmultiplier-text_addr, global_clockmultiplier); // DAT_0035A1A4
-    return 1;
+    return true;
   }
 
 
   /// globals cheat used boolean & counter (from Cheat_WeaponSet1)
-  if( global_cheatusedboolean == 0 && _lw(addr - 0x4) == 0x34040120 && _lw(addr - 0x1C) == 0x34040115 && _lw(addr - 0x5C) == 0x00402025 ) {  // 0x000B8FDC / ULUX -> 0x001F8E70
+  if ( !global_cheatusedboolean && _lw(addr - 0x4) == 0x34040120 && _lw(addr - 0x1C) == 0x34040115 && _lw(addr - 0x5C) == 0x00402025 ) {  // 0x000B8FDC / ULUX -> 0x001F8E70
     /*******************************************************************
      *  0x0028FB20: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x0028FB24: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x0028FB28: 0x8CA6A38C '....' - lw         $a2, -23668($a1)
      *  0x0028FB2C: 0xA0902432 '2$..' - sb         $s0, 9266($a0)
     *******************************************************************/
-    global_cheatusedboolean = (_lh(addr+0x4) * 0x10000) + (int16_t)_lh(addr+0xC); // actual address!
-    global_cheatusedcounter = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
+    global_cheatusedboolean = (_lh(addr+0x4) * 0x10000) + (int16)_lh(addr+0xC); // actual address!
+    global_cheatusedcounter = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_cheatusedboolean", global_cheatusedboolean-text_addr, global_cheatusedboolean); // DAT_00352432
     PATCH_LOG("0x%08X (0x%08X) -> global_cheatusedcounter", global_cheatusedcounter-text_addr, global_cheatusedcounter); // DAT_0035A38C
-    return 1;
+    return true;
   }
 
 
   /// global_freezegame
-  if( global_freezegame == 0 && _lw(addr + 0xE0) == 0x3405009E && _lw(addr + 0x30) == 0x02002025 ) { // 0x000B8FDC / ULUX -> 0x0010B00C
+  if ( !global_freezegame && _lw(addr + 0xE0) == 0x3405009E && _lw(addr + 0x30) == 0x02002025 ) { // 0x000B8FDC / ULUX -> 0x0010B00C
     /*******************************************************************
      *  0x000B8FDC: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x000B8FE0: 0x9084A4F8 '....' - lbu        $a0, -23304($a0)
     *******************************************************************/
-    global_freezegame = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_freezegame = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_freezegame", global_freezegame-text_addr, global_freezegame); // DAT_0035A4F8
-    return 1;
+    return true;
   }
 
 
   /// globals for helpbox (via "FUN_00182e94_ClearSmallPrints")
-  if( global_helpbox_string == 0 && _lw(addr - 0x10) == 0x14C0FFF2 && _lw(addr + 0x5C) == 0x28A90100 ) { // US 3.00 -> 0x00182E94 / ULUX -> 0x001599BC
+  if ( !global_helpbox_string && _lw(addr - 0x10) == 0x14C0FFF2 && _lw(addr + 0x5C) == 0x28A90100 ) { // US 3.00 -> 0x00182E94 / ULUX -> 0x001599BC
     /*******************************************************************
      *  0x00182EB4: 0x3C080065 'e..<' - lui        $t0, 0x65
      *  0x00182EC8: 0x25089DC0 '...%' - addiu      $t0, $t0, -25152
     *******************************************************************/
-    global_helpbox_string = (_lh(addr+0x20) * 0x10000) + (int16_t)_lh(addr+0x34); // actual address!
+    global_helpbox_string = (_lh(addr+0x20) * 0x10000) + (int16)_lh(addr+0x34); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_string", global_helpbox_string-text_addr, global_helpbox_string); // DAT_00649dc0
     /*******************************************************************
      *  0x00182EFC: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00182F00: 0xACA0A808 '....' - sw         $zr, -22520($a1)
     *******************************************************************/
-    global_helpbox_timedisplayed = (_lh(addr+0x68) * 0x10000) + (int16_t)_lh(addr+0x6C); // actual address!
+    global_helpbox_timedisplayed = (_lh(addr+0x68) * 0x10000) + (int16)_lh(addr+0x6C); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_timedisplayed", global_helpbox_timedisplayed-text_addr, global_helpbox_timedisplayed); // DAT_0035a808
     /*******************************************************************
      *  0x00182F0C: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00182F10: 0xACA0A810 '....' - sw         $zr, -22512($a1)
     *******************************************************************/
-    global_helpbox_displaybool = (_lh(addr+0x78) * 0x10000) + (int16_t)_lh(addr+0x7C); // actual address!
+    global_helpbox_displaybool = (_lh(addr+0x78) * 0x10000) + (int16)_lh(addr+0x7C); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_displaybool", global_helpbox_displaybool-text_addr, global_helpbox_displaybool); // DAT_0035a810
     /*******************************************************************
      *  0x00182F1C: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00182F20: 0xA0A0A815 '....' - sb         $zr, -22507($a1)
     *******************************************************************/
-    global_helpbox_permboxbool = (_lh(addr+0x88) * 0x10000) + (int16_t)_lh(addr+0x8C); // actual address!
+    global_helpbox_permboxbool = (_lh(addr+0x88) * 0x10000) + (int16)_lh(addr+0x8C); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_permboxbool", global_helpbox_permboxbool-text_addr, global_helpbox_permboxbool); // DAT_0035a815
     /*******************************************************************
      *  0x00182F5C: 0x3C060036 '6..<' - lui        $a2, 0x36
      *  0x00182F64: 0xE4CCA818 '....' - swc1       $fpr12, -22504($a2)
     *******************************************************************/
-    global_helpbox_duration = (_lh(addr+0xC8) * 0x10000) + (int16_t)_lh(addr+0xD0); // actual address!
+    global_helpbox_duration = (_lh(addr+0xC8) * 0x10000) + (int16)_lh(addr+0xD0); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_duration", global_helpbox_duration-text_addr, global_helpbox_duration); // DAT_0035a818
 
 
@@ -1098,21 +1103,21 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x00182EC0: 0x3C040065 'e..<' - lui        $a0, 0x65
      *  0x00182ED4: 0x24849BC0 '...$' - addiu      $a0, $a0, -25664
     *******************************************************************/
-    global_dialog_string = (_lh(addr+0x2C) * 0x10000) + (int16_t)_lh(addr+0x40); // actual address!
+    global_dialog_string = (_lh(addr+0x2C) * 0x10000) + (int16)_lh(addr+0x40); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_dialog_string", global_dialog_string-text_addr, global_dialog_string); // DAT_00649bc0
-    return 1;
+    return true;
   }
 
 
   /// global camera stuff
-  if( global_camera == 0 && _lw(addr - 0x18) == 0x108001E6 && _lw(addr - 0x28) == 0x30840001 && _lw(addr + 0xA0) == 0x34110006 ) { // 0x001E1818 / ULUX -> 0x00192A90
+  if ( !global_camera && _lw(addr - 0x18) == 0x108001E6 && _lw(addr - 0x28) == 0x30840001 && _lw(addr + 0xA0) == 0x34110006 ) { // 0x001E1818 / ULUX -> 0x00192A90
     /*******************************************************************
      *  0x001E1818: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x001E1820: 0x2484F3A0 '...$' - addiu      $a0, $a0, -3168
     *******************************************************************/
-    global_camera = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); //actual address!
+    global_camera = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); //actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_0037F3A0
-    return 1;
+    return true;
   }
 
 
@@ -1151,7 +1156,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     if( _lh(addr+0xA6) == 0xA253 ) _sh(0xA240, addr+0xA6); // just to be sure
     */
 
-    return 1;
+    return true;
   }
   if( _lw(addr) == 0x34040994 && _lw(addr-0xDC) == 0x34150001 && (_lw(addr+0x40) == _lw(addr+0x90)) ) {  //0x002D695C (in FUN_002D6838 called when ???)
     PATCH_LOG("UNCENSOR GERMAN VERSION 2/2! (0x%08X)", addr-text_addr);
@@ -1175,53 +1180,53 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       _sh(_lh(addr+0x3C), addr+0x90);
     }
 
-    return 1;
+    return true;
   }
 
 
   /// global_hudincutscene
-  if( global_hudincutscene == 0 && _lw(addr + 0x7C) == 0x34120096  && _lw(addr + 0x60) == 0x34110118 && _lw(addr + 0x24) == 0x34130001  ) {
+  if ( !global_hudincutscene && _lw(addr + 0x7C) == 0x34120096  && _lw(addr + 0x60) == 0x34110118 && _lw(addr + 0x24) == 0x34130001  ) {
     /*******************************************************************
      *  0x00163198: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0016319C: 0x9084A214 '....' - lbu        $a0, -24044($a0)
     *******************************************************************/
-    global_hudincutscene = (_lh(addr+0x3C) * 0x10000) + (int16_t)_lh(addr+0x40); // actual address!
+    global_hudincutscene = (_lh(addr+0x3C) * 0x10000) + (int16)_lh(addr+0x40); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_0035a214
-    return 1;
+    return true;
   }
 
 
   /// global_ptr_water
-  if( global_ptr_water == 0 && _lw(addr + 0x118) == 0x90A50129 && _lw(addr + 0x40) == 0x3404000C ) {
+  if ( !global_ptr_water && _lw(addr + 0x118) == 0x90A50129 && _lw(addr + 0x40) == 0x3404000C ) {
     /*******************************************************************
      *  0x00109ADC: 0x3C040033 '3..<' - lui        $a0, 0x33
      *  0x00109AE8: 0xAC851FE0 '....' - sw         $a1, 8160($a0)
     *******************************************************************/
-    global_ptr_water = (_lh(addr+0x4) * 0x10000) + (int16_t)_lh(addr+0x10); // actual address!
+    global_ptr_water = (_lh(addr+0x4) * 0x10000) + (int16)_lh(addr+0x10); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_ptr_water", global_ptr_water-text_addr, global_ptr_water); // DAT_00331fe0_toWater
-    return 1;
+    return true;
   }
 
 
   /// global_buttoninput (used for to trigger stock cheats)
-  if( global_buttoninput == 0 && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) {  // 0x0025A5C4
+  if ( !global_buttoninput && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) {  // 0x0025A5C4
     /*******************************************************************
      *  0x0025A5C4: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x0025A5C8: 0x24955DA0 '.].$' - addiu      $s5, $a0, 23968
     *******************************************************************/
-    global_buttoninput = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_buttoninput = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x00385DA0
-    return 1;
+    return true;
   }
 
   /// addr_buttoncheat (used for to trigger stock cheats)
-  if( addr_buttoncheat == 0 && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 ) { // 0x00292B20
+  if ( !addr_buttoncheat && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 ) { // 0x00292B20
     /*******************************************************************
      *  0x00292B20: 0x10800004 '....' - beqz       $a0, loc_00292B34
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
     addr_buttoncheat = addr; // 0x00292B20
-    return 1;
+    return true;
   }
 
   /// global_garagedata
@@ -1239,13 +1244,13 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | 0x0026D218 | OK!
    **************************************/
-  if( global_garagedata == 0 && _lw(addr - 0x20) == 0x2404FFFF && _lw(addr + 0x30) == 0x29040004 ) { //
+  if ( !global_garagedata && _lw(addr - 0x20) == 0x2404FFFF && _lw(addr + 0x30) == 0x29040004 ) { //
 
     /*******************************************************************
      *  0x001376B4: 0x3C050063 'c..<' - lui        $a1, 0x63
      *  0x001376C0: 0x24A54A88 '.J.$' - addiu      $a1, $a1, 19080
     *******************************************************************/
-    global_garagedata = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0xC); // actual address!
+    global_garagedata = (_lh(addr) * 0x10000) + (int16)_lh(addr+0xC); // actual address!
     PATCH_LOG("0x%08X: 0x%08X -> global_garagedata", addr-text_addr, global_garagedata-text_addr); // 0x634A88
 
     /*******************************************************************
@@ -1257,7 +1262,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     PATCH_LOG("var_garageslots = 0x%08X", var_garageslots); //
     PATCH_LOG("var_garageslotsize = 0x%08X", var_garageslotsize); //
 
-    return 1;
+    return true;
   }
 
   /// LCS Pickups
@@ -1275,23 +1280,23 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-  if( global_pickups == 0 && _lw(addr - 0x74) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) { // 0x0027E680
+  if ( !global_pickups && _lw(addr - 0x74) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) { // 0x0027E680
     /*******************************************************************
      *  0x0027E680: 0x3C020062 'b..<' - lui        $v0, 0x62
      *  0x0027E688: 0x24424980 '.IB$' - addiu      $v0, $v0, 18816
     *******************************************************************/
-    global_pickups = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
+    global_pickups = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00624980
 
     /*******************************************************************
      *
      *
     *******************************************************************/
-    var_pickupslots = (int16_t)_lh(addr+0x34); // *(short*)(addr+0x34);
-    var_pickupslotsize = (int16_t)_lh(addr+0x3C); // *(char*)(addr+0x3C);
+    var_pickupslots = (int16)_lh(addr+0x34); // *(short*)(addr+0x34);
+    var_pickupslotsize = (int16)_lh(addr+0x3C); // *(char*)(addr+0x3C);
     PATCH_LOG("var_pickupslots = 0x%08X", var_pickupslots); // 0x14F ? 0x150
     PATCH_LOG("var_pickupslotsize = 0x%08X", var_pickupslotsize); // 0x60
-    return 1;
+    return true;
   }
 
 
@@ -1313,16 +1318,16 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !_checkCustomTracksReady && _lw(addr + 0x2C) == 0x8C84000C && _lw(addr + 0x38) == 0x01094021 && _lw(addr + 0x64) == 0x00000000 ) {
     PATCH_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, _checkCustomTracksReady_patched, _checkCustomTracksReady); // sub_00034A28
-    return 1;
+    return true;
   } // not for ULUX
-  if( global_radioarea == 0 && _lw(addr + 0x24) == 0x2A040038 && _lw(addr - 0x28) == 0x34050016 ) {  // 0x00296958
+  if ( !global_radioarea && _lw(addr + 0x24) == 0x2A040038 && _lw(addr - 0x28) == 0x34050016 ) {  // 0x00296958
     /*******************************************************************
      *  0x00296958: 0x3C040039 '9..<' - lui        $a0, 0x39
      *  0x00296960: 0x2484B4F8 '...$' - addiu      $a0, $a0, -19208
     *******************************************************************/
-    global_radioarea = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
+    global_radioarea = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x0038B4F8
-    return 1;
+    return true;
   }
 
   /*************************************
@@ -1339,14 +1344,14 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | too different!
    **************************************/
-  if( global_custrackarea == 0 && _lw(addr + 0x4C) == 0x34060014 && _lw(addr + 0x74) == 0x34060160 ) { // 0x000AD924
+  if ( !global_custrackarea && _lw(addr + 0x4C) == 0x34060014 && _lw(addr + 0x74) == 0x34060160 ) { // 0x000AD924
     /*******************************************************************
      *  0x000AD924: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x000AD928: 0x8C846F70 'po..' - lw         $a0, 28528($a0)
     *******************************************************************/
-    global_custrackarea = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_custrackarea = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_custrackarea", global_custrackarea-text_addr, global_custrackarea); // DAT_00356f70_CustomTracksArea
-    return 1;
+    return true;
   }
 
 
@@ -1365,18 +1370,18 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-  if( global_radarblips == 0 && _lw(addr + 0x80) == 0x3C043F80 && _lw(addr + 0x3C) == 0x24420001 &&  _lw(addr + 0x14) == 0x01094021  ) { // FUN_00163e40
+  if ( !global_radarblips && _lw(addr + 0x80) == 0x3C043F80 && _lw(addr + 0x3C) == 0x24420001 &&  _lw(addr + 0x14) == 0x01094021  ) { // FUN_00163e40
     /*******************************************************************
      *  0x00163E58: 0x3C090064 'd..<' - lui        $t1, 0x64
      *  0x00163E5C: 0x25296A20 ' j)%' - addiu      $t1, $t1, 27168
     *******************************************************************/
-    global_radarblips = (_lh(addr+0x18) * 0x10000) + (int16_t)_lh(addr+0x1C); // actual address!
+    global_radarblips = (_lh(addr+0x18) * 0x10000) + (int16)_lh(addr+0x1C); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_radarblips", global_radarblips-text_addr, global_radarblips); // DAT_00646A20
 
     /*******************************************************************
      *  0x00163E6C: 0x2C48004B 'K.H,' - sltiu      $t0, $v0, 75
     *******************************************************************/
-    var_radarblipslots = (int16_t)_lh(addr+0x2C);
+    var_radarblipslots = (int16)_lh(addr+0x2C);
     PATCH_LOG("var_radarblipslots = 0x%08X", var_radarblipslots); //0x4B
 
     /*******************************************************************
@@ -1385,9 +1390,9 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x00163E90: 0x00024900 '.I..' - sll        $t1, $v0, 4      shift bits to left by 4    =   ..010000 = 0x10 (16)
      *  0x00163E94: 0x01094021 '!@..' - addu       $t0, $t0, $t1    add t0 and t1 = 0x50 (80)
      *******************************************************************/
-    var_radarblipslotsize = 0x50; // TODO
+    var_radarblipslotsize = 0x50; // TODO:
     PATCH_LOG("var_radarblipslotsize = 0x%08X", var_radarblipslotsize); //0x50
-    return 1;
+    return true;
   }
 
 
@@ -1406,12 +1411,12 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | too different!
    **************************************/
-  if( ptr_memory_main == 0 && _lw(addr + 0x98) == 0x3C044754 && _lw(addr + 0xC0) == 0x30A500FF ) {  // FUN_000673bc
+  if ( !ptr_memory_main && _lw(addr + 0x98) == 0x3C044754 && _lw(addr + 0xC0) == 0x30A500FF ) {  // FUN_000673bc
     /*******************************************************************
      *  0x000673E4: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x000673F0: 0x2484D640 '@..$' - addiu      $a0, $a0, -10688
     *******************************************************************/
-    ptr_memory_main = (_lh(addr+0x28) * 0x10000) + (int16_t)_lh(addr+0x34);
+    ptr_memory_main = (_lh(addr+0x28) * 0x10000) + (int16)_lh(addr+0x34);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_0037d640
 
 
@@ -1419,18 +1424,18 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x000675B8: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x000675BC: 0xACA41F14 '....' - sw         $a0, 7956($a1)
     *******************************************************************/
-    ptr_handlingCFG = (_lh(addr+0x1FC) * 0x10000) + (int16_t)_lh(addr+0x200);
+    ptr_handlingCFG = (_lh(addr+0x1FC) * 0x10000) + (int16)_lh(addr+0x200);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_handlingCFG", ptr_handlingCFG-text_addr, ptr_handlingCFG); // DAT_00351f14_PTR_handling.cfg
-    var_handlingcfgslots     = 80; // where to find? TODO
-    var_handlingcfgslotsize   = 0xF0; // where to find?
+    var_handlingcfgslots     = 80; // TODO: where to find?
+    var_handlingcfgslotsize   = 0xF0; // TODO: where to find?
 
 
     /*******************************************************************
      *  0x0006749C: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x000674A0: 0xACA48544 'D...' - sw         $a0, -31420($a1)
     *******************************************************************/
-    ptr_buildingsIPL = (_lh(addr+0xE0) * 0x10000) + (int16_t)_lh(addr+0xE4);
-    var_buildingsIPLslotsize = 0x60; //todo?!
+    ptr_buildingsIPL = (_lh(addr+0xE0) * 0x10000) + (int16)_lh(addr+0xE4);
+    var_buildingsIPLslotsize = 0x60; // TODO:
     PATCH_LOG("0x%08X (0x%08X) -> ptr_buildingsIPL", ptr_buildingsIPL-text_addr, ptr_buildingsIPL); // DAT_00348544_PTR_toPTRtoMapParts1
 
 
@@ -1438,8 +1443,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x000674A8: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x000674AC: 0xACA48548 'H...' - sw         $a0, -31416($a1)
     *******************************************************************/
-    ptr_treadablesIPL = (_lh(addr+0xEC) * 0x10000) + (int16_t)_lh(addr+0xF0);
-    var_treadablesIPLslotsize = 0x60; //todo?
+    ptr_treadablesIPL = (_lh(addr+0xEC) * 0x10000) + (int16)_lh(addr+0xF0);
+    var_treadablesIPLslotsize = 0x60; // TODO:
     PATCH_LOG("0x%08X (0x%08X) -> ptr_treadablesIPL", ptr_treadablesIPL-text_addr, ptr_treadablesIPL); // DAT_00348548_PTR_toPTRtoMapParts2
 
 
@@ -1447,8 +1452,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x000674B4: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x000674B8: 0xACA48550 'P...' - sw         $a0, -31408($a1)
     *******************************************************************/
-    ptr_dummysIPL = (_lh(addr+0xF8) * 0x10000) + (int16_t)_lh(addr+0xFC);
-    var_dummysIPLslotsize = 0x60; //todo?
+    ptr_dummysIPL = (_lh(addr+0xF8) * 0x10000) + (int16)_lh(addr+0xFC);
+    var_dummysIPLslotsize = 0x60; // TODO:
     PATCH_LOG("0x%08X (0x%08X) -> ptr_dummysIPL", ptr_dummysIPL-text_addr, ptr_dummysIPL); // DAT_00348550_PTR_toPTRtoMapParts3
 
 
@@ -1456,9 +1461,9 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x000675F0: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x000675F4: 0xACA4A42C ',...' - sw         $a0, -23508($a1)
     *******************************************************************/
-    ptr_particleCFG = (_lh(addr+0x234) * 0x10000) + (int16_t)_lh(addr+0x238);
-    var_particleCFGslots   = 82; //where to find?
-    var_particleCFGslotsize = 0x94; //where to find?
+    ptr_particleCFG = (_lh(addr+0x234) * 0x10000) + (int16)_lh(addr+0x238);
+    var_particleCFGslots   = 82; // TODO: where to find?
+    var_particleCFGslotsize = 0x94; // TODO: where to find?
     PATCH_LOG("0x%08X (0x%08X) -> ptr_particleCFG", ptr_particleCFG-text_addr, ptr_particleCFG); // DAT_0035a42c_particle.cfg
 
 
@@ -1466,38 +1471,38 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x000675D0: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x000675D4: 0x8C841980 '....' - lw         $a0, 6528($a0)
     *******************************************************************/
-    ptr_timecycDAT = (_lh(addr+0x214) * 0x10000) + (int16_t)_lh(addr+0x218);
+    ptr_timecycDAT = (_lh(addr+0x214) * 0x10000) + (int16)_lh(addr+0x218);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_timecycDAT", ptr_timecycDAT-text_addr, ptr_timecycDAT); // PTR_DAT_00351980_timecyc.dat
 
-    // get more file locations here TODO
+    // TODO: get more file locations here
 
-    return 1;
+    return true;
   }
-  if( ptr_memory_main == 0 && _lw(addr + 0x94) == 0x3C044754 && _lw(addr + 0xC4) == 0x30A500FF ) { // 0x00011E84 - ULUX ONLY VERSION (because DTZ func too different)
+  if ( !ptr_memory_main && _lw(addr + 0x94) == 0x3C044754 && _lw(addr + 0xC4) == 0x30A500FF ) { // 0x00011E84 - ULUX ONLY VERSION (because DTZ func too different)
     PATCH_LOG("ptr_buildingsIPL, ptr_treadablesIPL, ptr_dummysIPL, ptr_handlingCFG, ptr_particleCFG, ptr_timecycDAT, ptr_memory_main");
 
-    ptr_memory_main = (_lh(addr+0x24) * 0x10000) + (int16_t)_lh(addr+0x30);
+    ptr_memory_main = (_lh(addr+0x24) * 0x10000) + (int16)_lh(addr+0x30);
 
-    ptr_buildingsIPL = (_lh(addr+0xF8) * 0x10000) + (int16_t)_lh(addr+0xFC);
-    var_buildingsIPLslotsize = 0x60; // todo?!
+    ptr_buildingsIPL = (_lh(addr+0xF8) * 0x10000) + (int16)_lh(addr+0xFC);
+    var_buildingsIPLslotsize = 0x60; // TODO: ?!
 
-    ptr_treadablesIPL = (_lh(addr+0x104) * 0x10000) + (int16_t)_lh(addr+0x108);
-    var_treadablesIPLslotsize = 0x60; // todo?
+    ptr_treadablesIPL = (_lh(addr+0x104) * 0x10000) + (int16)_lh(addr+0x108);
+    var_treadablesIPLslotsize = 0x60; // TODO: ?
 
-    ptr_dummysIPL = (_lh(addr+0x110) * 0x10000) + (int16_t)_lh(addr+0x114);
-    var_dummysIPLslotsize = 0x60; // todo?
+    ptr_dummysIPL = (_lh(addr+0x110) * 0x10000) + (int16)_lh(addr+0x114);
+    var_dummysIPLslotsize = 0x60; // TODO: ?
 
-    ptr_handlingCFG = (_lh(addr+0x218) * 0x10000) + (int16_t)_lh(addr+0x21C);
-    var_handlingcfgslots   = 80; // where to find?
-    var_handlingcfgslotsize = 0xF0; // where to find?
+    ptr_handlingCFG = (_lh(addr+0x218) * 0x10000) + (int16)_lh(addr+0x21C);
+    var_handlingcfgslots   = 80; // TODO: where to find?
+    var_handlingcfgslotsize = 0xF0; // TODO: where to find?
 
-    ptr_particleCFG = (_lh(addr+0x250) * 0x10000) + (int16_t)_lh(addr+0x254);
-    var_particleCFGslots   = 82; // where to find?
-    var_particleCFGslotsize = 0x94; // where to find?
+    ptr_particleCFG = (_lh(addr+0x250) * 0x10000) + (int16)_lh(addr+0x254);
+    var_particleCFGslots   = 82; // TODO: where to find?
+    var_particleCFGslotsize = 0x94; // TODO: where to find?
 
-    ptr_timecycDAT = (_lh(addr+0x230) * 0x10000) + (int16_t)_lh(addr+0x234);
+    ptr_timecycDAT = (_lh(addr+0x230) * 0x10000) + (int16)_lh(addr+0x234);
 
-    return 1;
+    return true;
   }
 
   /// carcols.dat (in DTZ but need to get global from other location)
@@ -1515,17 +1520,17 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-  if( ptr_carcolsDAT == 0 && _lw(addr + 0x24) == 0x2A64000B && _lw(addr - 0x3C) == 0x02A03025 ) { // 0x0000974C
+  if ( !ptr_carcolsDAT && _lw(addr + 0x24) == 0x2A64000B && _lw(addr - 0x3C) == 0x02A03025 ) { // 0x0000974C
     /*******************************************************************
      *  0x0000974C: 0x3C050033 '3..<' - lui        $a1, 0x33
      *  0x00009750: 0x8CA5FC50 'P...' - lw         $a1, -944($a1)
     *******************************************************************/
-    ptr_carcolsDAT = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    ptr_carcolsDAT = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_carcolsDAT", ptr_carcolsDAT-text_addr, ptr_carcolsDAT); // DAT_0032fc50_PTR_carcols.dat
-    var_carcolsdatslots   = 128; //where to find? TODO
-    var_carcolsdatslotsize   = 0x4; //where to find?
+    var_carcolsdatslots   = 128; // TODO: where to find?
+    var_carcolsdatslotsize   = 0x4; // TODO: where to find?
 
-    return 1;
+    return true;
   }
 
   /// pedstat.dat (in DTZ but need to get globals from other location)
@@ -1543,18 +1548,18 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( ptr_pedstatTable == 0 && _lw(addr - 0x34) == 0x24A50088 && _lw(addr + 0x14) == 0x8C840000 ) { // 0x0017DBEC (inside FUN_0017db24)
+   if ( !ptr_pedstatTable && _lw(addr - 0x34) == 0x24A50088 && _lw(addr + 0x14) == 0x8C840000 ) { // 0x0017DBEC (inside FUN_0017db24)
     /*******************************************************************
      *  0x0017DBEC: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x0017DBF0: 0x8CA5A14C 'L...' - lw         $a1, -24244($a1)
     *******************************************************************/
-    ptr_pedstatTable = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    ptr_pedstatTable = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_pedstatTable", ptr_pedstatTable-text_addr, ptr_pedstatTable); // DAT_0035a14c_pedstats.dat
 
-    var_pedstatDATslots   = 42; // where to find? TODO
-    var_pedstatDATslotsize = 0x34; // where to find?
+    var_pedstatDATslots   = 42; // TODO: where to find?
+    var_pedstatDATslotsize = 0x34; // TODO: where to find?
 
-    return 1;
+    return true;
   }
 
   /// IDEs (in DTZ but need to get globals from other location)
@@ -1572,12 +1577,12 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( ptr_IDEs == 0 && _lw(addr + 0x54) == 0x90850010 && _lw(addr + 0x6C) == 0x8CA50004 ) { // FUN_00224af4_IDE
+   if ( !ptr_IDEs && _lw(addr + 0x54) == 0x90850010 && _lw(addr + 0x6C) == 0x8CA50004 ) { // FUN_00224af4_IDE
     /*******************************************************************
      *  0x00224B00: 0x3C140036 '6..<' - lui        $s4, 0x36
      *  0x00224B18: 0xAE84A140 '@...' - sw         $a0, -24256($s4)
     *******************************************************************/
-    ptr_IDEs = (_lh(addr+0xC) * 0x10000) + (int16_t)_lh(addr+0x24);
+    ptr_IDEs = (_lh(addr+0xC) * 0x10000) + (int16)_lh(addr+0x24);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_IDEs", ptr_IDEs-text_addr, ptr_IDEs); // DAT_0035a140_VAR_IDEoffsets
 
 
@@ -1585,10 +1590,10 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x00224B04: 0x3C130035 '5..<' - lui        $s3, 0x35
      *  0x00224B28: 0xAE6593BC '..e.' - sw         $a1, -27716($s3)
     *******************************************************************/
-    ptr_IDETable = (_lh(addr+0x10) * 0x10000) + (int16_t)_lh(addr+0x34);
+    ptr_IDETable = (_lh(addr+0x10) * 0x10000) + (int16)_lh(addr+0x34);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_IDETable", ptr_IDETable-text_addr, ptr_IDETable); //DAT_003493bc_PTR_IDETable
 
-    return 1;
+    return true;
   }
 
 
@@ -1607,17 +1612,17 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( addr_vehiclesworldspawn == 0 && _lw(addr + 0x40) == 0x01601825 && _lw(addr + 0x90) == 0x2442FFFF ) { // FUN_002cec38_checkSetVehicleWorldSpawn
+   if ( !addr_vehiclesworldspawn && _lw(addr + 0x40) == 0x01601825 && _lw(addr + 0x90) == 0x2442FFFF ) { // FUN_002cec38_checkSetVehicleWorldSpawn
     /*******************************************************************
      *  0x002CECA8: 0x3C020065 'e..<' - lui        $v0, 0x65
      *  0x002CECAC: 0x2442AAC0 '..B$' - addiu      $v0, $v0, -21824
     *******************************************************************/
-    addr_vehiclesworldspawn = (_lh(addr+0x70) * 0x10000) + (int16_t)_lh(addr+0x74);
+    addr_vehiclesworldspawn = (_lh(addr+0x70) * 0x10000) + (int16)_lh(addr+0x74);
 
     /*******************************************************************
      *  0x002CEC70: 0x284300C3 '..C(' - slti       $v1, $v0, 195
     *******************************************************************/
-    var_vehiclesworldspawnslots = (int16_t)_lh(addr+0x38);
+    var_vehiclesworldspawnslots = (int16)_lh(addr+0x38);
 
     /*******************************************************************
      *    0x002CEC98: 0x00022100 '.!..' - sll        $a0, $v0, 4
@@ -1625,13 +1630,13 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *    0x002CECA0: 0x00021080 '....' - sll        $v0, $v0, 2
      *    0x002CECA4: 0x00442023 '# D.' - subu       $a0, $v0, $a0
     *******************************************************************/
-    var_vehiclesworldspawnslotsize = 0x2C; //get from code is complicated here TODO
+    var_vehiclesworldspawnslotsize = 0x2C; // TODO: get from code is complicated here
 
     PATCH_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x64aac0
     PATCH_LOG("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
     PATCH_LOG("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize);
 
-    return 1;
+    return true;
   }
 
 
@@ -1653,7 +1658,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    /* if( _lw(addr + 0x9C) == 0x26A5FFE0 && _lw(addr + 0xFC) == 0x00000000 ) { // FUN_001bd8dc_loadSplashScreen
     PATCH_LOG("0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, loadSplashScreen_patched, loadSplashScreen);
-    return 1;
+    return true;
   } */
 
   /// loadStringFromGXT
@@ -1661,27 +1666,27 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
     PATCH_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
     LoadStringFromGXT = (void*)(addr); // FUN_0010fad4_loadStringFromGXT
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
-    return 1;
+    return true;
   }
-  if( ptr_gxtloadadr == 0 && _lw(addr + 0x28) == 0x0040B025 && _lw(addr + 0x64) == 0x2408FFFF ) { // 0x00028EDC near "MP_SNEW"
+  if ( !ptr_gxtloadadr && _lw(addr + 0x28) == 0x0040B025 && _lw(addr + 0x64) == 0x2408FFFF ) { // 0x00028EDC near "MP_SNEW"
     /*******************************************************************
      *  0x00028EDC: 0x3C140033 '3..<' - lui        $s4, 0x33
      *  0x00028EE0: 0x8E84207C '| ..' - lw         $a0, 8316($s4)
     *******************************************************************/
-    ptr_gxtloadadr = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    ptr_gxtloadadr = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_gxtloadadr", ptr_gxtloadadr-text_addr, ptr_gxtloadadr); //DAT_0033207c_gxtLoadAdr
-    return 1;
+    return true;
   }
 
   /// radarIcon (for names)
-  if( ptr_radarIconList == 0 && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x12) == 0x3C04 && _lh(addr + 0x4A) == 0x24A5 && _lw(addr + 0xC) == 0x00000000 ) { // FUN_00162bac_loadRadarIcons
+  if ( !ptr_radarIconList && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x12) == 0x3C04 && _lh(addr + 0x4A) == 0x24A5 && _lw(addr + 0xC) == 0x00000000 ) { // FUN_00162bac_loadRadarIcons
     /*******************************************************************
      *  0x00162BD0: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x00162BD8: 0x2484A6C0 '...$' - addiu      $a0, $a0, -22848
     *******************************************************************/
-    ptr_radarIconList = (_lh(addr+0x24) * 0x10000) + (int16_t)_lh(addr+0x2C);
+    ptr_radarIconList = (_lh(addr+0x24) * 0x10000) + (int16)_lh(addr+0x2C);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_radarIconList", ptr_radarIconList-text_addr, ptr_radarIconList); // DAT_0035a6c0_radarIcon_0
-    return 1;
+    return true;
   }
 
   /// radio stations count
@@ -1699,25 +1704,25 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 | 0x0010B180
    **************************************/
-  if( var_radios == 0 && _lh(addr - 0x4) == 0xFF && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) ) { // 0x000B9164
+  if ( !var_radios && _lh(addr - 0x4) == 0xFF && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) ) { // 0x000B9164
     /*******************************************************************
      *  0x000B9164: 0x2A44000B '..D*' - slti       $a0, $s2, 11
     *******************************************************************/
-    var_radios = (int16_t)_lh(addr);
-    var_radios -= 1;
+    var_radios = (int16)_lh(addr);
+    var_radios -= 0x1;
     PATCH_LOG("var_radios = 0x%08X", var_radios);
-    return 1;
+    return true;
   }
 
   /// render global (used for cWorldStreamRender)
-  if( render == 0 && _lw(addr + 0x20) == 0x34050002 && _lh(addr + 0x2A) == 0x1480 && _lw(addr - 0x34) == 0x00000000 && _lw(addr + 0x44) == 0x00000000  ) { // 0x001BEA9C
+  if ( !render && _lw(addr + 0x20) == 0x34050002 && _lh(addr + 0x2A) == 0x1480 && _lw(addr - 0x34) == 0x00000000 && _lw(addr + 0x44) == 0x00000000  ) { // 0x001BEA9C
     /*******************************************************************
      *  0x001BEA9C: 0x3C110035 '5..<' - lui        $s1, 0x35
      *  0x001BEAA0: 0x8E247144 'Dq$.' - lw         $a0, 28996($s1)
     *******************************************************************/
-    render = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    render = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> render", render-text_addr, render); //DAT_00357144_render
-    return 1;
+    return true;
   }
 
   #ifdef SAVEDITOR
@@ -1744,7 +1749,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
        *  0x000AEE54: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEE78: 0x24A5017C '|..$' - addiu      $a1, $a1, 380
       *******************************************************************/
-      savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16_t)_lh(addr+0xA0);
+      savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16)_lh(addr+0xA0);
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (later)", savedatakey-text_addr, savedatakey); // DAT_0033017c_SAVEKEY
     }
     if( _lh(addr + 0x9C) == 0x0010 ) { // decryption key for initial versions (like US v1.05)
@@ -1752,7 +1757,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
        *  0x000AEEE8: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEF10: 0x24A5007C '|..$' - addiu      $a1, $a1, 124
       *******************************************************************/
-      savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16_t)_lh(addr+0xA4);
+      savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16)_lh(addr+0xA4);
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (initial)", savedatakey-text_addr, savedatakey);
     }
 
@@ -1760,12 +1765,12 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x000AEDD8: 0x3C040031 '1..<' - lui        $a0, 0x31
      *  0x000AEDDC: 0x2493DB7C '|..$' - addiu      $s3, $a0, -9348
     *******************************************************************/
-    titleid = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    titleid = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> titleid", titleid-text_addr, titleid); //s_ULUS10041_0030db7c
 
     saveprefix = titleid + 0xC;
 
-    return 1;
+    return true;
   }
   if( _lh(addr + 0x34) == 0x004C  && _lh(addr + 0x4) == 0x0007  && _lh(addr - 0x14) == 0x0005 ) { // German Version is too different  0x000AEE14
 
@@ -1774,7 +1779,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
        *  0x000AEE98: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEEC0: 0x24A5003C '<..$' - addiu      $a1, $a1, 60
       *******************************************************************/
-      savedatakey = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0xAC); // 0x0033003C
+      savedatakey = (_lh(addr+0x84) * 0x10000) + (int16)_lh(addr+0xAC); // 0x0033003C
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v1.00)", savedatakey-text_addr, savedatakey);
     }
     if( _lh(addr + 0xA0) == 0x0010 ) { //decryption key for GER v2.00
@@ -1782,7 +1787,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
        *  0x000AEE98: 0x3C050033 '3..<' - lui        $a1, 0x33
        *  0x000AEEC0: 0x24A5003C '<..$' - addiu      $a1, $a1, 60
       *******************************************************************/
-      savedatakey = (_lh(addr+0x84) * 0x10000) + (int16_t)_lh(addr+0xA8); // 0x0033003C
+      savedatakey = (_lh(addr+0x84) * 0x10000) + (int16)_lh(addr+0xA8); // 0x0033003C
       PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v2.00)", savedatakey-text_addr, savedatakey);
     }
 
@@ -1790,40 +1795,40 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x000AEE14: 0x3C040031 '1..<' - lui        $a0, 0x31
      *  0x000AEE1C: 0x2494DBBC '...$' - addiu      $s4, $a0, -9284
     *******************************************************************/
-    titleid = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // 0x0030DBBC "ULES00182" v1.00 (0x30DAFC v2.00)
+    titleid = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // 0x0030DBBC "ULES00182" v1.00 (0x30DAFC v2.00)
 
     PATCH_LOG("0x%08X (0x%08X) -> titleid (GERMAN)", titleid-text_addr, titleid);
 
     saveprefix = titleid + 0xC; //"S"
 
-    return 1;
+    return true;
   }
 
   #endif
 
 
   /// global_developerflag (read from multiplayer menu function)
-  if( global_developerflag == 0 && _lw(addr + 0x30) == 0x340800A0 && _lw(addr - 0xC) == 0x28440002 ) { // 0x0002E0A0
+  if ( !global_developerflag && _lw(addr + 0x30) == 0x340800A0 && _lw(addr - 0xC) == 0x28440002 ) { // 0x0002E0A0
     /*******************************************************************
      *  0x0002E0A0: 0x3C040033 '3..<' - lui        $a0, 0x33
      *  0x0002E0A4: 0x9084010E '....' - lbu        $a0, 270($a0)
     *******************************************************************/
-    global_developerflag = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    global_developerflag = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> global_developerflag", global_developerflag-text_addr, global_developerflag); // DAT_0033010e_developerFlag
 
-    return 1;
+    return true;
   }
 
   /// global_freezetimers
-  if( global_freezetimers == 0 && _lw(addr + 0x14) == 0x2406FFFE && _lw(addr + 0x34) == 0x02402025 /*_lw(addr + 0x14) == 0x2406FFFE && _lw(addr - 0x30) == 0x34050004*/ ) { // 0x00154400
+  if ( !global_freezetimers && _lw(addr + 0x14) == 0x2406FFFE && _lw(addr + 0x34) == 0x02402025 /*_lw(addr + 0x14) == 0x2406FFFE && _lw(addr - 0x30) == 0x34050004*/ ) { // 0x00154400
     /*******************************************************************
      *  0x00154400: 0x3C040039 '9..<' - lui        $a0, 0x39
      *  0x00154404: 0x2484E388 '...$' - addiu      $a0, $a0, -7288
      *  0x00154408: 0xA080014D 'M...' - sb         $zr, 333($a0)
     *******************************************************************/
-    global_freezetimers = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4) + (int16_t)_lh(addr+0x8);
+    global_freezetimers = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4) + (int16)_lh(addr+0x8);
     PATCH_LOG("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_0038e4d5_freezeOnScreenTimer
-    return 1;
+    return true;
   }
 
 
@@ -1858,65 +1863,65 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
       AND from inside another void returning function!!! WTF!
     *******************************************************************************/
 
-    return 1;
+    return true;
   }
 
   /// warp ped to vehicle
   if( !WarpPedIntoVehicle && _lw(addr + 0x10) == 0x34120012  && _lw(addr + 0x3C) == 0x34040001 ) {
     PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
     WarpPedIntoVehicle = (void*)(addr); // 0x1b90ec
-    return 1;
+    return true;
   }
   /// warp ped to vehicle as passenger
   if( !WarpPedIntoVehicleAsPassenger && _lw(addr + 0x14) == 0x34080012  && _lw(addr + 0x3C) == 0x34040001 ) {
     PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
     WarpPedIntoVehicleAsPassenger = (void*)(addr); // 0x1b9470
-    return 1;
+    return true;
   }
 
   /// request model
   if( !RequestModel && _lw(addr + 0x14) == 0x28941324  && _lw(addr + 0x34) == 0x00102100 ) {
     PATCH_LOG("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
     RequestModel = (void*)(addr); // 0x1c6c28
-    return 1;
+    return true;
   }
   /// GiveWeaponAndAmmo
   if( !GiveWeaponAndAmmo && _lw(addr + 0x6C) == 0x269205A0  && _lw(addr + 0x38) == 0x00132140 ) {
     PATCH_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
     GiveWeaponAndAmmo = (void*)(addr); // 0x19b2f4
-    return 1;
+    return true;
   }
 
   /// SetActorSkinTo (needs name to be lower case!)
   if( !SetActorSkinTo && _lw(addr + 0x28) == 0x340500A1  && _lw(addr + 0x44) == 0x24840040 ) {
     PATCH_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
     SetActorSkinTo = (void*)(addr);  // 0x001a1174
-    return 1;
+    return true;
   }
   /// LoadAllModelsNow
   if( !LoadAllModelsNow && (_lw(addr + 0x4) == 0x308400FF  && _lw(addr + 0x50) == 0x3C100002) /* || ULUX (func params diff) --> (_lw(addr + 0x4) == 0x308500FF  && _lw(addr + 0x44) == 0x0016B080) */ ) { // FUN_001c6f64_LoadAllRequestedModels
     PATCH_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
     LoadAllModelsNow = (void*)(addr); // 0x001c6f64
-    return 1;
+    return true;
   }
   /// RefreshActorSkin
   if( !RefreshActorSkin && _lw(addr + 0x38) == 0xAE04034C  && _lw(addr + 0x10) == 0x2404FFFF ) {
     PATCH_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
     RefreshActorSkin = (void*)(addr); // 0x001a1210
-    return 1;
+    return true;
   }
 
   /// TaskDuckLCS
   if( !TaskDuckLCS && _lw(addr + 0x18) == 0x34050099  && _lw(addr + 0x70) == 0x34840010 ) { // FUN_000835fc_taskDuck
     PATCH_LOG("0x%08X (0x%08X) -> TaskDuckLCS()", addr-text_addr, addr);
     TaskDuckLCS = (void*)(addr); // 0x000835fc
-    return 1;
+    return true;
   }
   /// TaskUnDuck
   if( !TaskUnDuck && _lw(addr + 0x20) == 0x34050099  && _lw(addr + 0x64) == 0x3C06C080 ) { // FUN_000837d0_unduck
     PATCH_LOG("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
     TaskUnDuck = (void*)(addr); // 0x000837d0
-    return 1;
+    return true;
   }
 
 
@@ -1938,25 +1943,25 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    if( !DrawLoadingBar && _lw(addr + 0x34) == 0x3C053E80 && _lw(addr + 0x18) == 0x3C044040 ) { // FUN_001bdbf8_DrawLoadingBar
     PATCH_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar); // ULUX OK!
-    return 1;
+    return true;
   }
   if( !Loadscreen && _lh(addr + 0x18) == 0x00FF && _lw(addr + 0x14) == 0x00C09825 ) { // FUN_001bde98_DrawLoadscreen
     PATCH_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, Loadscreen_patched, Loadscreen);
-    return 1;
+    return true;
   }
 
 
 
   /// addr_heliheight
-  if( addr_heliheight == 0 && _lh(addr) == 0x42A0 && _lh(addr +0x20) == 0x428C && _lw(addr + 0x14) == 0x00000000 ) {  // 0x0009F778
+  if ( !addr_heliheight && _lh(addr) == 0x42A0 && _lh(addr +0x20) == 0x428C && _lw(addr + 0x14) == 0x00000000 ) {  // 0x0009F778
     /*******************************************************************
      *  0x0009F778: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0 (default 80.0f)
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     addr_heliheight = addr; // 0x0009F778
     if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
-    return 1;
+    return true;
   }
 
 
@@ -1964,25 +1969,25 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !StartNewScript && _lw(addr - 0xC) == 0x2402FFFF  && _lw(addr + 0x30) == 0x24C70001 && _lw(addr + 0x58) == 0x34040001 ) { // FUN_015415c
     PATCH_LOG("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
     StartNewScript = (void*)(addr); // 0x15415c
-    return 1;
+    return true;
   }
   /// globals: ScriptSpace & MainScriptSize
-  if( global_ScriptSpace == 0 && _lw(addr - 0x34) == 0x26100008 && _lw(addr + 0x28) == 0x34040001 ) { // 0x000E0FA0
+  if ( !global_ScriptSpace && _lw(addr - 0x34) == 0x26100008 && _lw(addr + 0x28) == 0x34040001 ) { // 0x000E0FA0
     /*******************************************************************
      *  0x000E0FA0: 0x3C100033 '3..<' - lui        $s0, 0x33
      *  0x000E0FA4: 0x8E054D7C '|M..' - lw         $a1, 19836($s0)
     *******************************************************************/
-    global_ScriptSpace = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    global_ScriptSpace = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> global_ScriptSpace", global_ScriptSpace-text_addr, global_ScriptSpace); // DAT_00334d7c_ScriptSpace
 
     /*******************************************************************
      *  0x000E0FA8: 0x3C110036 '6..<' - lui        $s1, 0x36
      *  0x000E0FAC: 0x8E27A4BC '..'.' - lw         $a3, -23364($s1)
     *******************************************************************/
-    global_MainScriptSize = (_lh(addr+0x8) * 0x10000) + (int16_t)_lh(addr+0xC);
+    global_MainScriptSize = (_lh(addr+0x8) * 0x10000) + (int16)_lh(addr+0xC);
     PATCH_LOG("0x%08X (0x%08X) -> global_MainScriptSize", global_MainScriptSize-text_addr, global_MainScriptSize); // DAT_0035a4bc_MainScriptSize
 
-    /// TODO ?
+    /// TODO: ?
     if( mod_text_size == 0x0031F854 )
       global_LargestMissionScriptSize = global_MainScriptSize - 0x4;  // ULUX
     else
@@ -1990,7 +1995,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
 
     PATCH_LOG("0x%08X (0x%08X) -> global_LargestMissionScriptSize", global_LargestMissionScriptSize-text_addr, global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
 
-    return 1;
+    return true;
   } // ULUX OK
 
 
@@ -1998,34 +2003,34 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !TankControl && _lw(addr + 0x50) == 0x3C04BFB2  && _lw(addr + 0x78) == 0x3C04403C ) { // FUN_0001c7f8
     PATCH_LOG("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
     TankControl = (void*)(addr); //
-    return 1;
+    return true;
   }
   /// BlowupVehiclesInPath
   if( !BlowupVehiclesInPath && _lw(addr + 0x38) == 0x3C053DCC  && _lw(addr + 0x58) == 0x30840004 ) { // FUN_00008900
     PATCH_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
     BlowupVehiclesInPath = (void*)(addr); //
-    return 1;
+    return true;
   }
 
 
   /// areas: multiplayer
-  if( global_mp_parameters == 0 && _lw(addr + 0x10) == 0x2C850007 && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0xC) == 0x00000000 ) { // 0x00171100
+  if ( !global_mp_parameters && _lw(addr + 0x10) == 0x2C850007 && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0xC) == 0x00000000 ) { // 0x00171100
     /*******************************************************************
      *  0x00171100: 0x3C040038 '8..<' - lui        $a0, 0x38
      *  0x00171108: 0x2484D768 'h..$' - addiu      $a0, $a0, -10392
     *******************************************************************/
-    global_mp_parameters = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8);
+    global_mp_parameters = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8);
     PATCH_LOG("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_0037d768
 
     /*******************************************************************
      *  0x00171134: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x00171138: 0x8C846DF8 '.m..' - lw         $a0, 28152($a0)
     *******************************************************************/
-    global_mp_1 = (_lh(addr+0x34) * 0x10000) + (int16_t)_lh(addr+0x38);
+    global_mp_1 = (_lh(addr+0x34) * 0x10000) + (int16)_lh(addr+0x38);
     PATCH_LOG("0x%08X (0x%08X) -> global_mp_1", global_mp_1-text_addr, global_mp_1); // DAT_00356df8
 
 
-    return 1;
+    return true;
   }
 
 
@@ -2039,10 +2044,10 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x001541F0: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x001541F4: 0x8C84A48C '....' - lw         $a0, -23412($a0)
     *******************************************************************/
-    global_OnAMissionFlag = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    global_OnAMissionFlag = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> global_OnAMissionFlag", global_OnAMissionFlag-text_addr, global_OnAMissionFlag); // DAT_0035a48c_OnAMissionFlag
 
-    return 1;
+    return true;
   }
 
   /// SetBridgeState
@@ -2054,27 +2059,27 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *  0x001615EC: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x001615F8: 0xACA4A69C '....' - sw         $a0, -22884($a1)
     *******************************************************************/
-    global_bridgeState = (_lh(addr+0x8) * 0x10000) + (int16_t)_lh(addr+0x14);
+    global_bridgeState = (_lh(addr+0x8) * 0x10000) + (int16)_lh(addr+0x14);
     PATCH_LOG("0x%08X (0x%08X) -> global_bridgeState", global_bridgeState-text_addr, global_bridgeState); // DAT_0035a69c_bridgeState
 
-    return 1;
+    return true;
   }
 
 
   /// globals VehicleName
-  if( global_m_pVehicleName == 0 && _lw(addr - 0x14) == 0x34040004 && _lw(addr + 0x28) == 0x28850003 ) { // 0x00187400 (inside Draw())
+  if ( !global_m_pVehicleName && _lw(addr - 0x14) == 0x34040004 && _lw(addr + 0x28) == 0x28850003 ) { // 0x00187400 (inside Draw())
 
     /*******************************************************************
      *  0x00187400: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x00187404: 0x8C84A81C '....' - lw         $a0, -22500($a0)
     *******************************************************************/
-    global_m_pVehicleName = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4);
+    global_m_pVehicleName = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
     PATCH_LOG("0x%08X (0x%08X) -> global_m_pVehicleName", global_m_pVehicleName-text_addr, global_m_pVehicleName); // DAT_0035a81c_m_pVehicleName
 
     global_m_pVehicleNameToPrint = global_m_pVehicleName + 0x10;
     PATCH_LOG("0x%08X (0x%08X) -> global_m_pVehicleNameToPrint", global_m_pVehicleNameToPrint-text_addr, global_m_pVehicleNameToPrint); // DAT_0035a82c_m_pVehicleNameToPrint
 
-    return 1;
+    return true;
   }
 
   /// CalculateNewVelocity
@@ -2082,7 +2087,7 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   //if( _lw(addr + 0x60) == 0x3C044334  && _lw(addr + 0x2C) == 0x00808025 ) { // FUN_001a8368_CalculateNewVelocity
     PATCH_LOG("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, UpdatePosition_patched, UpdatePosition); //
-    return 1;
+    return true;
   }
 
 
@@ -2101,18 +2106,18 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULET-00362 v0.01 |
    * ULUX-80142 v0.02 |
    **************************************/
-   if( ptr_weaponTable == 0 && _lw(addr + 0x18) == 0x10E00004 && _lw(addr + 0x4) == 0x000431C0 ) {  // FUN_0014997c
+   if ( !ptr_weaponTable && _lw(addr + 0x18) == 0x10E00004 && _lw(addr + 0x4) == 0x000431C0 ) {  // FUN_0014997c
     /*******************************************************************
      *  0x0014998C: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00149990: 0x8CA5A660 '`...' - lw         $a1, -22944($a1)
     *******************************************************************/
-    ptr_weaponTable = (_lh(addr+0x10) * 0x10000) + (int16_t)_lh(addr+0x14);
+    ptr_weaponTable = (_lh(addr+0x10) * 0x10000) + (int16)_lh(addr+0x14);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // DAT_0035a660_weapon.dat
 
-    var_weaponDATslots   = 37; // where to find? TODO
+    var_weaponDATslots   = 37; // TODO: where to find?
     var_weaponDATslotsize = 0x70;
 
-    return 1;
+    return true;
   }
 
 
@@ -2120,41 +2125,41 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !DoHoverSuspensionRatios && _lw(addr + 0x60) == 0x84A40058  && _lw(addr + 0xB8) == 0x34160000 ) { // FUN_00009138
     PATCH_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
     DoHoverSuspensionRatios = (void*)(addr); //
-    return 1;
+    return true;
   }
 
   #ifdef PREVIEW
   /// wind
-  if( global_Wind == 0 && _lw(addr + 0x34) == 0x2A440015 && _lw(addr + 0x48) == 0x2A440014 ) { // 0x001307FC
+  if ( !global_Wind && _lw(addr + 0x34) == 0x2A440015 && _lw(addr + 0x48) == 0x2A440014 ) { // 0x001307FC
   /*******************************************************************
      *  0x001307FC: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0013081C: 0xE490A1F8 '....' - swc1       $fpr16, -24072($a0)
     *******************************************************************/
-    global_Wind = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x20);
+    global_Wind = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x20);
     PATCH_LOG("0x%08X (0x%08X) -> global_Wind", global_Wind-text_addr, global_Wind); // DAT_0035a1f8_Wind
 
     /*******************************************************************
      *  0x00130828: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0013082C: 0xE491A570 'p...' - swc1       $fpr17, -23184($a0)
     *******************************************************************/
-    global_WindClipped = (_lh(addr+0x2C) * 0x10000) + (int16_t)_lh(addr+0x30);
+    global_WindClipped = (_lh(addr+0x2C) * 0x10000) + (int16)_lh(addr+0x30);
     PATCH_LOG("0x%08X (0x%08X) -> global_WindClipped", global_WindClipped-text_addr, global_WindClipped); // DAT_0035a570_WindClipped
     /// nop out to stop game from setting it on its own (we take care of it in the cheat function)
   _sw(0x00000000, addr + 0x2c);
   _sw(0x00000000, addr + 0x30);
 
-    return 1;
+    return true;
   }
   #endif
 
   /// addr_randompedcheat
-  if( addr_randompedcheat == 0 && _lw(addr - 0x14) == 0x2A04006D ) {  // 0x00290928
+  if ( !addr_randompedcheat && _lw(addr - 0x14) == 0x2A04006D ) {  // 0x00290928
     /*******************************************************************
      *  0x00290928: 0x1211FFDF '....' - beq        $s0, $s1, loc_002908A8
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_randompedcheat", addr-text_addr, addr);
     addr_randompedcheat = addr; // 0
-    return 1;
+    return true;
   }
 
   #ifdef SWIM
@@ -2162,17 +2167,17 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
   if( !FUN_000e7d70_CCam_IsTargetInWater && _lw(addr + 0x18) == 0x3C04C5BB && _lw(addr + 0x5C) == 0x3C04C5BB ) { // FUN_000e7d70_CCam_IsTargetInWater
     HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0);
     PATCH_LOG("0x%08X (0x%08X) -> CCam_IsTargetInWater", addr-text_addr, addr); //
-    return 1;
+    return true;
   }
   if( !FUN_00109dac_CWaterLevel_GetWaterLevel && _lw(addr + 0x0) == 0x3C064500 && _lw(addr + 0x2C) == 0x340A0080 ) { // FUN_00109dac_CWaterLevel_GetWaterLevel
     FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(addr); // needs to be called in "ProcessBuoyancy"
     PATCH_LOG("0x%08X (0x%08X) -> CWaterLevel_GetWaterLevel", addr-text_addr, addr); //
-    return 1;
+    return true;
   }
   if( !FUN_001a8d9c_CPed_ProcessBuoyancy && _lw(addr + 0x4) == 0x3C063F8C && _lw(addr + 0x44) == 0x34050037 ) { // FUN_001a8d9c_CPed_ProcessBuoyancy
     HIJACK_FUNCTION(addr, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
     PATCH_LOG("0x%08X (0x%08X) -> CPed_ProcessBuoyancy", addr-text_addr, addr); //
-    return 1;
+    return true;
   }
   #endif
 
@@ -2193,8 +2198,8 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
    * ULUX-80142 v0.02 | Unknown    | Not Tested
    * ULUX-80146 v0.02 | 0x0027F7E8 | OK!
    **************************************/
-  static u32 jalSceKernelMaxFreeMemSizeInstruction = 0;
-  if ( jalSceKernelMaxFreeMemSizeInstruction == 0 && _lw(addr + 0x18) == 0x3C0400C0 && _lw(addr + 0x08) == 0x3C040160 && _lw(addr - 0xC) == 0x00022A82 )
+  static uaddr jalSceKernelMaxFreeMemSizeInstruction = 0;
+  if ( !jalSceKernelMaxFreeMemSizeInstruction && _lw(addr + 0x18) == 0x3C0400C0 && _lw(addr + 0x08) == 0x3C040160 && _lw(addr - 0xC) == 0x00022A82 )
   {
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
@@ -2215,16 +2220,16 @@ int PatchLCS(u32 addr, u32 text_addr) { //Liberty City Stories
      *
      * Anyways, I'm not a big fan of this implementation, if anyone has suggestions to improve this, lemme know ;)
      */
-    for( u32 i = 0; i < mod_text_size; i += 4 )
+    for( uaddr i = 0; i < mod_text_size; i += sizeof(uaddr) )
     {
-      u32 addr_i = i + text_addr;
+      uaddr addr_i = i + text_addr;
       if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
     }
 
-    return 1;
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 
@@ -2233,7 +2238,7 @@ void (*FUN_test)();
 void FUN_test_patched() {
 
   /// TEXT
-  u32 textcolor = WHITE;
+  CRGBA textcolor = WHITE;
   ResetFontStyling();
   SetFontStyle(1);
   SetColor(&textcolor);
@@ -2245,13 +2250,13 @@ void FUN_test_patched() {
 
 
   /// BOX
-  u32 color = CHDVC_MAGENTA;
+  CRGBA color = CHDVC_MAGENTA;
   float coordinates[4];
   float *ptr_coords = (float *)SetBoxCoords(50.0f, 20.0f, 400.0f, 100.0f, coordinates);
   DrawRect(ptr_coords, &color, 0x1);
 
   /// TEXT 2
-  u32 textcolor2 = CHDVC_ORANGE;
+  CRGBA textcolor2 = CHDVC_ORANGE;
   ResetFontStyling();
   SetFontStyle(1);
   SetColor(&textcolor2);
@@ -2262,7 +2267,7 @@ void FUN_test_patched() {
   PrintString_VCS(wbuf2, (int)25.0f, (int)40.0f);
 
   /// BOX 2
-  u32 color2 = WHITE;
+  CRGBA color2 = WHITE;
   float coordinates2[4];
   float *ptr_coords2 = (float *)SetBoxCoords(100.0f, 50.0f, 350.0f, 130.0f, coordinates2);
   DrawRect(ptr_coords2, &color2, 0x1);
@@ -2273,14 +2278,12 @@ void FUN_test_patched() {
 
 void (*testfuncv)(int a, int b);
 void testfuncv_patched(int a UNUSED, int b UNUSED) {
-  //char buffer[256];
-  //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
-  //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
+  //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED, "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
 
   DEBUG_LOG("a: 0x%08X, b: 0x%08X", a, b);
 }
 
-int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
+bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
   #ifdef PREVIEW
   if( VCS && patchonce ) { // FOR TESTING ONLY
     /// fullscreen loading bar size (Like LCS) ///////
@@ -2348,7 +2351,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( !cWorldStream_Render && _lw(addr + 0x84) == 0x3C043F80 && _lw(addr + 0x70) == 0x3C043D4C  ) {
     PATCH_LOG("[0] 0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, cWorldStream_Render_Patched, cWorldStream_Render); // 0x00154D28
-    return 1;
+    return true;
   }
 
   /// for stopMenu(); [in pause menu]
@@ -2362,7 +2365,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( !FUN_002c22a0 && _lw(addr + 0x8) == 0x00808025  && _lw(addr + 0x1C) == 0x00000000 && _lw(addr + 0x3C) == 0x308400FF ) {
     PATCH_LOG("[0] 0x%08X (0x%08X) --> FUN_002c22a0()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, FUN_002c22a0_patched, FUN_002c22a0); //
-    return 1;
+    return true;
   }
 
   /// disable Button Input --> same as LCS
@@ -2376,7 +2379,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( !buttonsToAction && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {
     PATCH_LOG("[0] 0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, buttonsToActionPatched, buttonsToAction); // 0x0018A288
-    return 1;
+    return true;
   }
 
   /// for FPS calculation
@@ -2388,14 +2391,14 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 | 0x001FFE00 | OK!
    **************************************/
 //if( _lw(addr - 0xC) == 0x1000FFF7 && _lw(addr + 0x4) == 0x00000000 && _lw(addr + 0x8) == 0x27A60010 && _lw(addr + 0x10) == 0x00602825 && _lw(addr + 0x1C) == 0x8FA40014 ) { // 0x002030D4
-  if( addr_fpsCap == 0 && _lw(addr + 0x6C) == 0x34040006 && _lw(addr - 0x20) == 0x2C840002 ) { // 0x002030D4
+  if ( !addr_fpsCap && _lw(addr + 0x6C) == 0x34040006 && _lw(addr - 0x20) == 0x2C840002 ) { // 0x002030D4
     PATCH_LOG("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
     addr_fpsCap = addr-0x20; // 0x002030B4
 
     PATCH_LOG("[0] 0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
     MAKE_CALL(addr, sceKernelGetSystemTimeWidePatched); // 0x002030D4
 
-    return 1;
+    return true;
   }
 
 
@@ -2413,7 +2416,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( !GetPPLAYER && _lw(addr + 0x8) == 0x00043200 && _lw(addr + 0x18) == 0x00C42021 && _lw(addr + 0x28) == 0x8C820000 ) {  // 0x0015c424
     PATCH_LOG("[1] 0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
     GetPPLAYER = (void*)(addr); // get pplayer
-    return 1;
+    return true;
   }
 
   /// pcar function
@@ -2429,7 +2432,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
       (_lw(addr + 0x10) == 0x00042140 && _lw(addr + 0x4) == 0x00842821 && _lw(addr - 0xC) == 0x24820140)) ) {  // ULUS v1.01
     PATCH_LOG("[1] 0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
     GetPCAR = (void*)(addr); // get pcar
-    return 1;
+    return true;
   }
 
   /// global gametimer
@@ -2440,15 +2443,15 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |  |
    * ULET-00417 v0.06 | 0x0002F9AC | OK!
    **************************************/
-  if( global_gametimer == 0 && _lw(addr + 0xC) == 0x00A6202B && _lw(addr - 0x20) == 0x03E00008 && _lw(addr + 0x50) == 0x00000000 ) {
+  if ( !global_gametimer && _lw(addr + 0xC) == 0x00A6202B && _lw(addr - 0x20) == 0x03E00008 && _lw(addr + 0x50) == 0x00000000 ) {
     /*******************************************************************
      *  0x00026BB8: 0x8F851DEC '....' - lw         $a1, 7660($gp)
     *******************************************************************/
-    global_gametimer = (int16_t) _lh(addr); // WITHOUT GP!!
+    global_gametimer = (int16) _lh(addr); // WITHOUT GP!!
     PATCH_LOG("[1] 0x%08X --> global_gametimer", global_gametimer); // 0x1DEC
 
     global_timescale = global_gametimer + 0xC;
-    return 1;
+    return true;
   }
 
   /// global_currentisland & global_systemlanguage [this function sets lots of globals -> weather, clock, cheatsused, gamespeed]
@@ -2459,64 +2462,66 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |  |
    * ULET-00417 v0.06 |  |
    **************************************/
-  if( global_currentisland == 0 && _lw(addr + 0x4c) == 0xAE040014  &&  _lw(addr + 0x1A8) == 0xA2040074 ) {
+  if ( !global_currentisland && _lw(addr + 0x4c) == 0xAE040014  &&  _lw(addr + 0x1A8) == 0xA2040074 ) {
     /*******************************************************************
      *  0x002B2660: 0x8F851DE4 '....' - lw         $a1, 7652($gp)
     *******************************************************************/
-    global_currentisland = (int16_t) _lh(addr+0xC); // WITHOUT GP!!
+    global_currentisland = (int16) _lh(addr+0xC); // WITHOUT GP!!
     PATCH_LOG("[1] 0x%08X --> global_currentisland", global_currentisland); // uGp00001de4
 
     /*******************************************************************
      *  0x002B2694: 0x8F841EBC '....' - lw         $a0, 7868($gp)
     *******************************************************************/
-    global_systemlanguage = (int16_t) _lh(addr+0x40); // WITHOUT GP!!
+    global_systemlanguage = (int16) _lh(addr+0x40); // WITHOUT GP!!
     PATCH_LOG("[1] 0x%08X --> global_systemlanguage", global_systemlanguage); // uGp00001EBC
 
-    return 1;
+    HIJACK_FUNCTION(addr, FUN_000B0A18_Patched, FUN_000B0A18);
+
+    return true;
   }
 
   /// globals pointers to objects
-  if( ptr_pedestriansobj == 0 && _lw(addr + 0x88) == 0x340501DB && _lw(addr + 0x5C) == 0x34050028 && _lw(addr + 0x30) == 0x34050046 ) {
+  if ( !ptr_pedestriansobj && _lw(addr + 0x88) == 0x340501DB && _lw(addr + 0x5C) == 0x34050028 && _lw(addr + 0x30) == 0x34050046 ) {
     /*******************************************************************
      *  0x0018C1C8: 0xAF90C198 '....' - sw         $s0, -15976($gp)
     *******************************************************************/
-    ptr_pedestriansobj = (int16_t)_lh(addr+0x38); // WITHOUT GP!!
+    ptr_pedestriansobj = (int16)_lh(addr+0x38); // WITHOUT GP!!
     PATCH_LOG("0x%08X --> ptr_pedestriansobj", ptr_pedestriansobj); // puGpffffc198
 
     /*******************************************************************
      *  0x0018C1F4: 0xAF90C19C '....' - sw         $s0, -15972($gp)
     *******************************************************************/
-    ptr_vehiclesobj = (int16_t)_lh(addr+0x64); //WITHOUT GP!!
+    ptr_vehiclesobj = (int16)_lh(addr+0x64); //WITHOUT GP!!
     PATCH_LOG("0x%08X --> ptr_vehiclesobj", ptr_vehiclesobj); // puGpffffc19c
 
     /*******************************************************************
      *  0x0018C220: 0xAF90C1A8 '....' - sw         $s0, -15960($gp)
     *******************************************************************/
-    ptr_worldobj =  (int16_t)_lh(addr+0x90); // WITHOUT GP!!
+    ptr_worldobj =  (int16)_lh(addr+0x90); // WITHOUT GP!!
     DEBUG_LOG("0x%08X --> ptr_worldobj", ptr_worldobj); // puGpffffc1a8
 
     /*******************************************************************
      *  0x0018C24C: 0xAF90C1AC '....' - sw         $s0, -15956($gp)
     *******************************************************************/
-    ptr_businessobj =  (int16_t)_lh(addr+0xBC); // WITHOUT GP!!
+    ptr_businessobj =  (int16)_lh(addr+0xBC); // WITHOUT GP!!
     PATCH_LOG("0x%08X --> ptr_businessobj", ptr_businessobj); // puGpffffc1ac
 
     /*******************************************************************
      *  0x0018C278: 0xAF91C1B4 '....' - sw         $s1, -15948($gp)
     *******************************************************************/
-    ptr_audioscriptobj = (int16_t)_lh(addr+0xE8); // WITHOUT GP!!
+    ptr_audioscriptobj = (int16)_lh(addr+0xE8); // WITHOUT GP!!
     PATCH_LOG("0x%08X --> ptr_audioscriptobj", ptr_audioscriptobj); // puGpffffc1b4
 
-    var_bsnobjsize = 0x160; // from where? TODO
+    var_bsnobjsize = 0x160; // TODO: from where?
 
-    return 1;
+    return true;
   }
   /// add-on objects' sizes)
-  if( var_pedobjsize == 0 && _lw(addr + 0xD4) == 0x2495FFFF && _lw(addr + 0xFC) == 0x02A4202A && _lw(addr + 0x190) == 0x02408825 ) {
+  if ( !var_pedobjsize && _lw(addr + 0xD4) == 0x2495FFFF && _lw(addr + 0xFC) == 0x02A4202A && _lw(addr + 0x190) == 0x02408825 ) {
     /*******************************************************************
      * 0x0008F5C8: 0x24040D10 '...$' - li         $a0, 3344
     *******************************************************************/
-    var_pedobjsize = (int16_t)_lh(addr+0x3C); // 0xD10
+    var_pedobjsize = (int16)_lh(addr+0x3C); // 0xD10
     PATCH_LOG("var_pedobjsize = 0x%X", var_pedobjsize); //
 
     /*******************************************************************
@@ -2531,7 +2536,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     var_wldobjsize = 0x10000 - _lh(addr+0x214); // 0x220
     PATCH_LOG("var_wldobjsize = 0x%X", var_wldobjsize); //
 
-    return 1;
+    return true;
   }
 
 
@@ -2539,93 +2544,93 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /// /// /// FOR CHEATS ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///  ///
 
   /// skip intro movies --> (JP version black screen after patch)
-  if( addr_skipIntroMovie == 0 && _lw(addr - 0x30) == 0x34050003 && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0x8) == 0xAFBF0000 ) { // JP version black screen after patch (0x08804000 + 0x001C7DD4)
+  if ( !addr_skipIntroMovie && _lw(addr - 0x30) == 0x34050003 && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0x8) == 0xAFBF0000 ) { // JP version black screen after patch (0x08804000 + 0x001C7DD4)
     PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
     addr_skipIntroMovie = addr; // 0x001309A8
-    return 1;
+    return true;
   }
 
   /// never fall off bike.. when rolling backwards
-  if( addr_neverFallOffBike_rollback == 0 && _lw(addr-0xC) == 0x3405002F && _lw(addr + 0x4) == 0x00004025 && _lw(addr - 0x28) == 0x3C04BF00 && _lw(addr - 0x68) == 0x00000000 ) {
+  if ( !addr_neverFallOffBike_rollback && _lw(addr-0xC) == 0x3405002F && _lw(addr + 0x4) == 0x00004025 && _lw(addr - 0x28) == 0x3C04BF00 && _lw(addr - 0x68) == 0x00000000 ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
     addr_neverFallOffBike_rollback = addr; // 0x000EBE8C - nop out function call
-    return 1;
+    return true;
   }
 
   /// never fall off bike.. when hitting object
-  if( addr_neverFallOffBike_hitobj == 0 && _lw(addr - 0x54) == 0x00409025 && (_lw(addr + 0x1C) == 0x2404FFF6 || _lw(addr + 0x14) == 0x2404FFF6 ) ) { // 0x002614D4
+  if ( !addr_neverFallOffBike_hitobj && _lw(addr - 0x54) == 0x00409025 && (_lw(addr + 0x1C) == 0x2404FFF6 || _lw(addr + 0x14) == 0x2404FFF6 ) ) { // 0x002614D4
     /*******************************************************************
      *  0x002614D4: 0x0C0C0345 'E...' - jal        sub_00300D14
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
     addr_neverFallOffBike_hitobj = addr; // 0x002614D4 - nop out function call
-    return 1;
+    return true;
   }
 
 
   /// world gravity
-  if( addr_worldgravity == 0 && _lw(addr - 0x10) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
+  if ( !addr_worldgravity && _lw(addr - 0x10) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
     PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
     addr_worldgravity = addr; // 0x00263690
-    return 1;
+    return true;
   }
 
   /// set weather function
-  if( !SetNextWeather && _lw(addr - 0x10) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x8) == 0x03E00008 && _lw(addr+0x10) == 0x2404FFFF && _lw(addr+0x14) == 0x03E00008 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> SetNextWeather(), SetWeatherNow(), ReleaseWeather()", addr-text_addr, addr);
-    SetNextWeather = (void*)(addr-0x8);  // 0x2F74E0
-    SetWeatherNow  = (void*)(addr);      // 0x2F74E8
-    ReleaseWeather = (void*)(addr+0x10); // 0x2F74F8
+  if( !CWeather_ForceWeather && _lw(addr - 0x10) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x8) == 0x03E00008 && _lw(addr+0x10) == 0x2404FFFF && _lw(addr+0x14) == 0x03E00008 ) {
+    PATCH_LOG("0x%08X (0x%08X) -> CWeather_ForceWeather(), CWeather_ForceWeatherNow(), CWeather_ReleaseWeather()", addr-text_addr, addr);
+    CWeather_ForceWeather = (void*)(addr-0x8);  // 0x2F74E0
+    CWeather_ForceWeatherNow  = (void*)(addr);      // 0x2F74E8
+    CWeather_ReleaseWeather = (void*)(addr+0x10); // 0x2F74F8
     /*******************************************************************
      *  0x002F74EC: 0xA7842098 '. ..' - sh         $a0, 8344($gp)
     *******************************************************************/
-    global_weather = (int16_t)_lh(addr + 0x4); // WITHOUT GP!! (only to READ current weather)
+    global_weather = (int16)_lh(addr + 0x4); // WITHOUT GP!! (only to READ current weather)
     PATCH_LOG("0x%08X -> global_weather", global_weather); //0x2098
-    return 1;
+    return true;
   }
 
   /// global settings toggle (special! there should be an address at gp+global_displaysettings -> addr there + 0x13 is toggle radar
-  if( global_displaysettings == 0 && _lw(addr - 0x4c) == 0x34050001 &&  _lw(addr + 0x8) == 0x14800004 && _lw(addr) == _lw(addr+0x18) ) {  // 0x001B679C
+  if ( !global_displaysettings && _lw(addr - 0x4c) == 0x34050001 &&  _lw(addr + 0x8) == 0x14800004 && _lw(addr) == _lw(addr+0x18) ) {  // 0x001B679C
     /*******************************************************************
      *  0x001B6798: 0x00000000 '....' - nop
      *  0x001B679C: 0x8F8416F4 '....' - lw         $a0, 5876($gp)
      *  0x001B67A4: 0x14800004 '....' - bnez       $a0, loc_001B67B8
      *  0x001B67B0: 0x00000000 '....' - nop
     *******************************************************************/
-    global_displaysettings = (int16_t)_lh(addr); //WITHOUT GP!!
+    global_displaysettings = (int16)_lh(addr); //WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_displaysettings", global_displaysettings); //16F4
-    return 1;
+    return true;
   }
 
 
   /// traffic & ped density multiplier value(s)
-  if( global_trafficdensity == 0 && _lw(addr - 0x4) == 0x2412FFFF && _lw(addr + 0x4) == 0x00A08825 && _lw(addr + 0x2C) == 0x00000000  ) {
+  if ( !global_trafficdensity && _lw(addr - 0x4) == 0x2412FFFF && _lw(addr + 0x4) == 0x00A08825 && _lw(addr + 0x2C) == 0x00000000  ) {
     /*******************************************************************
      *  0x00060E30: 0xE7941538 '8...' - swc1       $fpr20, 5432($gp)
     *******************************************************************/
-    global_trafficdensity = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_trafficdensity = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_trafficdensity", global_trafficdensity); // 0x1538
 
     /*******************************************************************
      *  0x00060E24: 0xE794D1C4 '....' - swc1       $fpr20, -11836($gp)
     *******************************************************************/
-    global_peddensity = (int16_t)_lh(addr-0xC); // WITHOUT GP!!
+    global_peddensity = (int16)_lh(addr-0xC); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_peddensity", global_peddensity); // 0xFFFFD1C4
 
-    return 1;
+    return true;
   }
 
 
 
 
   /// global max health & armor multiplier
-  if( global_maxarmormult == 0 && _lw(addr - 0x2C) == 0x10000027 && _lw(addr - 0x8) == 0x00000000 && _lw(addr + 0x10) == 0x10000002 &&  _lw(addr + 0x3C) == 0x02002025 ) {
+  if ( !global_maxarmormult && _lw(addr - 0x2C) == 0x10000027 && _lw(addr - 0x8) == 0x00000000 && _lw(addr + 0x10) == 0x10000002 &&  _lw(addr + 0x3C) == 0x02002025 ) {
     /*******************************************************************
      *  0x003003F8: 0x3C04003E '>..<' - lui        $a0, 0x3E
      *  0x003003FC: 0x2484A4B0 '...$' - addiu      $a0, $a0, -23376
      *  0x00300400: 0x90840151 'Q...' - lbu        $a0, 337($a0)
     *******************************************************************/
-    global_maxarmormult = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4) + _lh(addr+0x8); // actual address!
+    global_maxarmormult = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4) + _lh(addr+0x8); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x3DA601
 
     /*******************************************************************
@@ -2633,10 +2638,10 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x003003A4: 0x2484A4B0 '...$' - addiu      $a0, $a0, -23376
      *  0x003003A8: 0x90840150 'P...' - lbu        $a0, 336($a0)
     *******************************************************************/
-    global_maxhealthmult = (_lh(addr-0x58) * 0x10000) + (int16_t)_lh(addr-0x54) + _lh(addr-0x50); // actual address!
+    global_maxhealthmult = (_lh(addr-0x58) * 0x10000) + (int16)_lh(addr-0x54) + _lh(addr-0x50); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x3DA600
 
-    return 1;
+    return true;
   }
 
 
@@ -2648,11 +2653,11 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 | 0x0013D734 | OK!
    **************************************/
-  if( global_ismultiplayer == 0 && _lw(addr + 0x24) == 0x3C05C2C8 && _lw(addr + 0x80) == 0x3C053F00 && _lw(addr + 0xA4) == 0x3C0543FA ) { // 0x001447A0 (in FUN_001447a0)
+  if ( !global_ismultiplayer && _lw(addr + 0x24) == 0x3C05C2C8 && _lw(addr + 0x80) == 0x3C053F00 && _lw(addr + 0xA4) == 0x3C0543FA ) { // 0x001447A0 (in FUN_001447a0)
     /*******************************************************************
      *  0x001447A0: 0x9385E458 'X...' - lbu        $a1, -7080($gp)
     *******************************************************************/
-    global_ismultiplayer = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_ismultiplayer = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("[1] 0x%08X -> global_ismultiplayer", global_ismultiplayer); // cGpffffe458
 
     /*******************************************************************
@@ -2662,11 +2667,11 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x001447FC: 0x00A62821 '!(..' - addu       $a1, $a1, $a2
      *  0x00144800: 0x90A5014D 'M...' - lbu        $a1, 333($a1)
     *******************************************************************/
-    global_unlimtedsprint = (_lh(addr+0x50) * 0x10000) + (int16_t)_lh(addr+0x58) + _lh(addr+0x60); // actual address!
+    global_unlimtedsprint = (_lh(addr+0x50) * 0x10000) + (int16)_lh(addr+0x58) + _lh(addr+0x60); // actual address!
     global_unlimtedswim = global_unlimtedsprint-1; // Yes, it is always 1 byte behind unlimited_sprinting bool
     PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_003da5fd_playerNeverGetsTired
 
-    return 1;
+    return true;
   }
 
   /// SetWantedLevel function
@@ -2674,7 +2679,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     SetWantedLevel = (void*)(addr);
     PATCH_LOG("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
 
-    return 1;
+    return true;
   }
   /// SetMaxWantedLevel function + global
   if( !SetMaxWantedLevel && _lw(addr + 0xC) == 0x2C850007 && _lw(addr + 0x88) == 0x34040005 ) { // 0x002afe3c
@@ -2685,10 +2690,10 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x002AFE78: 0xAF84F6E8 '....' - sw         $a0, -2328($gp)
     *******************************************************************/
-    global_maxwantedlevel = (int16_t)_lh(addr+0x3C); // WITHOUT GP!!
+    global_maxwantedlevel = (int16)_lh(addr+0x3C); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_maxwantedlevel", global_maxwantedlevel); // uGpfffff6e8
 
-    return 1;
+    return true;
   }
 
 
@@ -2708,40 +2713,40 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 |
    **************************************/
   //if( _lw(addr + 0x8) == 0x3404000C && _lw(addr + 0x18) == 0x3C043F80 && _lw(addr + 0x20) == 0x44846000 && _lw(addr + 0x50) == 0x00000000  ) { // 0x0013D91C
-  if( global_clockmultiplier == 0 && ((_lw(addr - 0x3C) == 0x3C0242C8 && _lw(addr - 0x30) == 0x34050006 && _lw(addr + 0x8) == 0x3404000C) ||  // 0x0013D91C
+  if ( !global_clockmultiplier && ((_lw(addr - 0x3C) == 0x3C0242C8 && _lw(addr - 0x30) == 0x34050006 && _lw(addr + 0x8) == 0x3404000C) ||  // 0x0013D91C
       (_lw(addr - 0x80) == 0x3C0242C8 && _lw(addr - 0x74) == 0x34050006 && _lw(addr + 0x8) == 0x3404000C)) ) { // ULUS v1.01 - 0x00130590
     /*******************************************************************
      *  0x0013D91C: 0xAF841DDC '....' - sw         $a0, 7644($gp)
     *******************************************************************/
-    global_clockmultiplier = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_clockmultiplier = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_clockmultiplier", global_clockmultiplier); // uGp00001ddc
-    return 1;
+    return true;
   }
 
   /// globals cheat used boolean & counter
-  if( global_cheatusedcounter == 0 && _lw(addr - 0x4) == 0x34040168 && _lw(addr - 0x1C) == 0x3404015D && _lw(addr - 0x5C) == 0x00402025 ) {
+  if ( !global_cheatusedcounter && _lw(addr - 0x4) == 0x34040168 && _lw(addr - 0x1C) == 0x3404015D && _lw(addr - 0x5C) == 0x00402025 ) {
     /*******************************************************************
      *
     *******************************************************************/
-    global_cheatusedcounter = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_cheatusedcounter = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_cheatusedcounter", global_cheatusedcounter); // iGp00002448
 
     /*******************************************************************
      *
     *******************************************************************/
-    global_cheatusedboolean = (int16_t)_lh(addr+0x4); // WITHOUT GP!!
+    global_cheatusedboolean = (int16)_lh(addr+0x4); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_cheatusedboolean", global_cheatusedboolean); // uGpffffc0fe
 
-    return 1;
+    return true;
   }
 
 
   /// global_freezegame and global_hudincutscene
-  if( global_freezegame == 0 && _lw(addr + 0xB8) == 0x340500CF && _lw(addr - 0x1C) == 0x00808025 ) {
+  if ( !global_freezegame && _lw(addr + 0xB8) == 0x340500CF && _lw(addr - 0x1C) == 0x00808025 ) {
     /*******************************************************************
      *  0x00086CA8: 0x938420A8 '. ..' - lbu        $a0, 8360($gp)
     *******************************************************************/
-    global_freezegame = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_freezegame = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_freezegame", global_freezegame); // 0x20A8
 
     /*******************************************************************
@@ -2749,35 +2754,35 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x00086CBC: 0x24843E30 '0>.$' - addiu      $a0, $a0, 15920
      *  0x00086CC0: 0x90840804 '....' - lbu        $a0, 2052($a0)
     *******************************************************************/
-    global_hudincutscene = (_lh(addr+0x10) * 0x10000) + (int16_t)_lh(addr+0x14) + (int16_t)_lh(addr+0x18); // actual address!
+    global_hudincutscene = (_lh(addr+0x10) * 0x10000) + (int16)_lh(addr+0x14) + (int16)_lh(addr+0x18); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_003c4634
 
-    return 1;
+    return true;
   }
 
 
 
   /// global for helpbox (special! there should be an address at gp+global_helpbox -> addr there + x
-  if( global_helpbox == 0 && _lw(addr + 0x80) == 0x3404014B && _lw(addr + 0x258) == 0x34040168 ) { // 0x00184E28
+  if ( !global_helpbox && _lw(addr + 0x80) == 0x3404014B && _lw(addr + 0x258) == 0x34040168 ) { // 0x00184E28
     /**** from cheat give weapons 1 ***********************************
      * 0x00184E28: 0x8F8416D8 '....' - lw         $a0, 5848($gp)
     *******************************************************************/
-    global_helpbox = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_helpbox = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_helpbox", global_helpbox); // iGp000016d8
 
-    return 1;
+    return true;
   }
 
   /// global camera stuff (inside "FUN_002bfe5c_Load_GTA_VCDat")
-  if( global_camera == 0 && _lw(addr + 0xC8) == 0x34150000 && _lw(addr + 0x16C) == 0x00003025 ) {
+  if ( !global_camera && _lw(addr + 0xC8) == 0x34150000 && _lw(addr + 0x16C) == 0x00003025 ) {
     /*******************************************************************
      *  0x002BFEE4: 0x3C10003C '<..<' - lui        $s0, 0x3C
      *  0x002BFEE8: 0x26103E30 '0>.&' - addiu      $s0, $s0, 15920
     *******************************************************************/
-    global_camera = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_camera = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_003C3E30
 
-    return 1;
+    return true;
   }
 
 
@@ -2801,19 +2806,19 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     //if( _lh(addr+0xAE) == 0xA380 ) _sh(0xA390, addr+0xAE); // PauseMenu crash???
     if( _lh(addr+0x2B6) == 0xA380 ) _sh(0xA390, addr+0x2B6); // but works with this alone, so..
 
-    return 1;
+    return true;
   }
 
   /// global_ptr_water
-  if( global_ptr_water == 0 && ((_lw(addr - 0x28) == 0x03A03025 && _lw(addr + 0x34) == 0x00094F82) ||  // 0x002F40FC
+  if ( !global_ptr_water && ((_lw(addr - 0x28) == 0x03A03025 && _lw(addr + 0x34) == 0x00094F82) ||  // 0x002F40FC
       (_lw(addr - 0x3C) == 0x02803025 && _lw(addr + 0x58) == 0x00074883)) ) { // ULUS v1.01
     /*******************************************************************
      *  0x002F40FC: 0xAF85052C ',...' - sw         $a1, 1324($gp)
     *******************************************************************/
-    global_ptr_water =  (int16_t)_lh(addr); // WITHOUT GP!!
+    global_ptr_water =  (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_ptr_water", global_ptr_water); // uGp0000052c
 
-    return 1;
+    return true;
   }
 
   /// global_buttoninput (used for to trigger stock cheats)
@@ -2824,35 +2829,35 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-  if( global_buttoninput == 0 && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) { // 0x000C2934
+  if ( !global_buttoninput && _lw(addr + 0x10) == 0x3053FFFF && _lw(addr + 0x44) == 0x0093282A ) { // 0x000C2934
     /*******************************************************************
      *  0x000C2934: 0x3C04003E '>..<' - lui        $a0, 0x3E
      *  0x000C2938: 0x2495A610 '...$' - addiu      $s5, $a0, -23024
     *******************************************************************/
-    global_buttoninput = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4); // actual address!
+    global_buttoninput = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x3da610
 
-    return 1;
+    return true;
   }
 
   /// addr_buttoncheat (used for to trigger stock cheats)
-  if( addr_buttoncheat == 0 && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 && _lw(addr - 0x74) == 0x3405004C ) { // 0x00187A10
+  if ( !addr_buttoncheat && _lw(addr + 0x10) == 0x34050032 && _lw(addr - 0x24) == 0x34050031 && _lw(addr - 0x74) == 0x3405004C ) { // 0x00187A10
     /*******************************************************************
      *  0x00187A10: 0x10800004 '....' - beqz       $a0, loc_00187A24
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
 
     addr_buttoncheat = addr; // 0x00187A10
-    return 1;
+    return true;
   }
 
   /// global_garagedata
-  if( global_garagedata == 0 && _lw(addr - 0x10) == 0x2404FFFF && _lw(addr + 0x3C) == 0x24C60030 ) {  // 0x46F9B0
+  if ( !global_garagedata && _lw(addr - 0x10) == 0x2404FFFF && _lw(addr + 0x3C) == 0x24C60030 ) {  // 0x46F9B0
     /*******************************************************************
      *  0x00168E80: 0x3C050047 'G..<' - lui        $a1, 0x47
      *  0x00168E90: 0x24A5F9B0 '...$' - addiu      $a1, $a1, -1616
     *******************************************************************/
-    global_garagedata = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x10); // actual address!
+    global_garagedata = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x10); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_garagedata", global_garagedata-text_addr, global_garagedata); //
 
     var_garageslots = *(char*)(addr+0x24); // 0xC = 12 slots (4 in each garage)
@@ -2860,24 +2865,24 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     PATCH_LOG("var_garageslots = 0x%08X", var_garageslots); //
     PATCH_LOG("var_garageslotsize = 0x%08X", var_garageslotsize); //
 
-    return 1;
+    return true;
   }
 
   /// VCS Pickups
-  if( global_pickups == 0 && _lw(addr - 0x70) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) {  // 0x000EF880
+  if ( !global_pickups && _lw(addr - 0x70) == 0x30870003 && _lw(addr + 0x44) == 0x00001025 &&  _lw(addr + 0x4) == 0x34050000  ) {  // 0x000EF880
     /*******************************************************************
      *  0x000EF880: 0x3C020046 'F..<' - lui        $v0, 0x46
      *  0x000EF888: 0x24423930 '09B$' - addiu      $v0, $v0, 14640
     *******************************************************************/
-    global_pickups = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
+    global_pickups = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00463930
 
-    var_pickupslots = (int16_t)_lh(addr+0x34);
-    var_pickupslotsize = (int16_t)_lh(addr+0x3C);
+    var_pickupslots = (int16)_lh(addr+0x34);
+    var_pickupslotsize = (int16)_lh(addr+0x3C);
     PATCH_LOG("var_pickupslots = 0x%08X", var_pickupslots); // 0x14F ? 0x150
     PATCH_LOG("var_pickupslotsize = 0x%08X", var_pickupslotsize); // 0x40
 
-    return 1;
+    return true;
   }
 
   /// Custom Music
@@ -2892,17 +2897,17 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     HIJACK_FUNCTION(addr, _checkCustomTracksReady_patched, _checkCustomTracksReady); // sub_000B2860
     PATCH_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
 
-    return 1;
+    return true;
   }
-  if ( global_radioarea == 0 && _lw(addr + 0x24) == 0x2A04003A && _lw(addr - 0x10) == 0x00002825 ) {  // 0x001B34A4
+  if ( !global_radioarea && _lw(addr + 0x24) == 0x2A04003A && _lw(addr - 0x10) == 0x00002825 ) {  // 0x001B34A4
     /*******************************************************************
      *  0x001B34A4: 0x3C04003D '=..<' - lui        $a0, 0x3D
      *  0x001B34AC: 0x2484BC10 '...$' - addiu      $a0, $a0, -17392
     *******************************************************************/
-    global_radioarea = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8); // actual address!
+    global_radioarea = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
     PATCH_LOG("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x003CBC10
 
-    return 1;
+    return true;
   }
   /*************************************
    * ULUS-10160 v1.03 |
@@ -2911,42 +2916,42 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-  if( global_custrackarea == 0 && ((_lw(addr - 0x20) == 0x3404006D && _lw(addr + 0x44) == 0x00002025) ||  // 0x000842E8
+  if ( !global_custrackarea && ((_lw(addr - 0x20) == 0x3404006D && _lw(addr + 0x44) == 0x00002025) ||  // 0x000842E8
       (_lw(addr + 0x2c) == 0x3412006D && _lw(addr - 0x14) == 0x00000000)) ) { // ULUS v1.01
     /*******************************************************************
      *  0x000842E8: 0x8F841708 '....' - lw         $a0, 5896($gp)
     *******************************************************************/
-    global_custrackarea = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_custrackarea = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_custrackarea", global_custrackarea); // iGp00001708
 
-    return 1;
+    return true;
   }
 
   /// VCS Radar Blips
-  if( var_radarblipspadding == 0 && _lw(addr + 0x1c) == 0x340A0000 && _lw(addr + 0x48) == 0x254A0001 &&  _lw(addr + 0x84) == 0x2406FFFE  ) { // FUN_0000A03C
+  if ( !var_radarblipspadding && _lw(addr + 0x1c) == 0x340A0000 && _lw(addr + 0x48) == 0x254A0001 &&  _lw(addr + 0x84) == 0x2406FFFE  ) { // FUN_0000A03C
     /*******************************************************************
      *  0x0000A06C: 0x81220290 '..".' - lb         $v0, 656($t1)  <----- 0x290     ?????
      *
      *  0x000a0a0: 70 02 25 ad     sw         param_2,0x270(t1)    <----- 0x270
     *******************************************************************/
-    var_radarblipspadding = (int16_t)_lh(addr+0x64);
+    var_radarblipspadding = (int16)_lh(addr+0x64);
     PATCH_LOG("var_radarblipspadding = 0x%08X", var_radarblipspadding); // 0x270
 
 
     /*******************************************************************
      *  0x0000A090: 0x2D48004B 'K.H-' - sltiu      $t0, $t2, 75
     *******************************************************************/
-    var_radarblipslots = (int16_t)_lh(addr+0x54);
+    var_radarblipslots = (int16)_lh(addr+0x54);
     PATCH_LOG("var_radarblipslots = 0x%08X", var_radarblipslots); // 0x4B
 
 
     /*******************************************************************
      *  0x0000A088: 0x25290030 '0.)%' - addiu      $t1, $t1, 48
      *******************************************************************/
-    var_radarblipslotsize = (int16_t)_lh(addr+0x4C);
+    var_radarblipslotsize = (int16)_lh(addr+0x4C);
     PATCH_LOG("var_radarblipslotsize = 0x%08X", var_radarblipslotsize); // 0x30
 
-    return 1;
+    return true;
   }
 
   /*************************************
@@ -2956,40 +2961,40 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-   if( global_radarblips == 0 && _lw(addr + 0x60) == 0x26240080 && _lw(addr + 0x2c) == 0x2405FFFF && _lw(addr + 0xB4) == 0x00002825 ) { // FUN_0001fa2c
+   if ( !global_radarblips && _lw(addr + 0x60) == 0x26240080 && _lw(addr + 0x2c) == 0x2405FFFF && _lw(addr + 0xB4) == 0x00002825 ) { // FUN_0001fa2c
     /*******************************************************************
      *  0x0001FA64: 0x8F8416DC '....' - lw         $a0, 5852($gp)
     *******************************************************************/
     global_radarblips = _lh(addr+0x38); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_radarblips", global_radarblips); // iGp000016dc
 
-    return 1;
+    return true;
   }
 
   /// world vehicle spawns
-  if( addr_vehiclesworldspawn == 0 && _lw(addr + 0x54) == 0x01201825 && _lw(addr + 0xA8) == 0x00605825 ) { // FUN_002e9448_checkSetVehicleWorldSpawn
+  if ( !addr_vehiclesworldspawn && _lw(addr + 0x54) == 0x01201825 && _lw(addr + 0xA8) == 0x00605825 ) { // FUN_002e9448_checkSetVehicleWorldSpawn
     /*******************************************************************
      *  0x002E94C0: 0x3C050068 'h..<' - lui        $a1, 0x68
      *  0x002E94C4: 0x24A5CA20 ' ..$' - addiu      $a1, $a1, -13792
     *******************************************************************/
-    addr_vehiclesworldspawn = (_lh(addr+0x78) * 0x10000) + (int16_t)_lh(addr+0x7C); // 0x0067CA20
+    addr_vehiclesworldspawn = (_lh(addr+0x78) * 0x10000) + (int16)_lh(addr+0x7C); // 0x0067CA20
 
     /*******************************************************************
      *  0x002E947C: 0x28E300C3 '...(' - slti       $v1, $a3, 195
     *******************************************************************/
-    var_vehiclesworldspawnslots = (int16_t)_lh(addr+0x34);
+    var_vehiclesworldspawnslots = (int16)_lh(addr+0x34);
 
     /*******************************************************************
      *
      *
     *******************************************************************/
-    var_vehiclesworldspawnslotsize = 0x30; // get from code is complicated here TODO
+    var_vehiclesworldspawnslotsize = 0x30; // TODO: get from code is complicated here
 
     PATCH_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x0067CA20
     PATCH_LOG("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
     PATCH_LOG("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize);
 
-    return 1;
+    return true;
   }
 
   /// for loadscreen TXDs replacement (VCS's Multiplayer loadscreen are lower quality and look quite bad. Furthermore VCS has random loadscreens already. And 12 singleplayer ones btw!!)
@@ -3003,7 +3008,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   /*if( _lw(addr + 0x9C) == 0x30A50080 && _lw(addr + 0xD8) == 0x00402825 ) { // FUN_0013109c_loadSplashScreen
     PATCH_LOG("[0] 0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, loadSplashScreen_patched, loadSplashScreen);
-    return 1;
+    return true;
   }*/
 
 
@@ -3018,12 +3023,12 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 |
    * ULET-00417 v0.07 |
    **************************************/
-   if( ptr_memory_main == 0 && _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
+   if ( !ptr_memory_main && _lw(addr + 0xA4) == 0x3C044754 /*&& _lw(addr + 0xA8) == 0x24844147*/ ) { // FUN_0024f6f0
     /*******************************************************************
      *  0x0024F720: 0x3C04003C '<..<' - lui        $a0, 0x3C
      *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
     *******************************************************************/
-    ptr_memory_main = (_lh(addr+0x30) * 0x10000) + (int16_t)_lh(addr+0x3C);
+    ptr_memory_main = (_lh(addr+0x30) * 0x10000) + (int16)_lh(addr+0x3C);
     PATCH_LOG("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_003c2500
 
     /*******************************************************************
@@ -3033,55 +3038,55 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     //ptr_handlingCFG = _lh(addr+0x250); //WITHOUT GP!!
     //PATCH_LOG("0x%08X -> ptr_handlingCFG", ptr_handlingCFG); //uGp00002700
     //ptr_handlingCFG     = 0x000018;
-    //var_handlingcfgslots     = 53; //todo where to find
-    //var_handlingcfgslotsize   = 0xE0; //todo where to find
+    //var_handlingcfgslots     = 53; // TODO: where to find
+    //var_handlingcfgslotsize   = 0xE0; // TODO: where to find
 
-    /// get more here TODO
+    /// TODO: get more here
 
     /*******************************************************************
      *  0024f7e4 a0 c1 84 af     sw         a0,-0x3e60(gp)
     *******************************************************************/
-    ptr_buildingsIPL = (int16_t) _lh(addr+0xF4); // WITHOUT GP!!
-    var_buildingsIPLslotsize = 0x60; // todo?!
+    ptr_buildingsIPL = (int16) _lh(addr+0xF4); // WITHOUT GP!!
+    var_buildingsIPLslotsize = 0x60; // TODO:
     PATCH_LOG("0x%08X -> ptr_buildingsIPL", ptr_buildingsIPL); // uGpffffc1a0
 
     /*******************************************************************
      * 0024f7ec a4 c1 84 af     sw         a0,-0x3e5c(gp)
     *******************************************************************/
-    ptr_treadablesIPL = (int16_t) _lh(addr+0xFC); // WITHOUT GP!!
-    var_treadablesIPLslotsize = 0x60; // todo?
+    ptr_treadablesIPL = (int16) _lh(addr+0xFC); // WITHOUT GP!!
+    var_treadablesIPLslotsize = 0x60; // TODO:
     PATCH_LOG("0x%08X -> ptr_treadablesIPL", ptr_treadablesIPL); // uGpffffc1a4
 
     /*******************************************************************
      * 0024f7f4 b0 c1 84 af     sw         a0,-0x3e50(gp)
     *******************************************************************/
-    ptr_dummysIPL = (int16_t) _lh(addr+0x104); // WITHOUT GP!!
-    var_dummysIPLslotsize = 0x60; // todo?
+    ptr_dummysIPL = (int16) _lh(addr+0x104); // WITHOUT GP!!
+    var_dummysIPLslotsize = 0x60; // TODO:
     PATCH_LOG("0x%08X -> ptr_dummysIPL", ptr_dummysIPL); // uGpffffc1b0
 
     /*******************************************************************
      * 0x0024F95C: 0xAF842270 'p"..' - sw         $a0, 8816($gp)
     *******************************************************************/
-    ptr_particleCFG = (int16_t) _lh(addr+0x26C); // WITHOUT GP!!
-    var_particleCFGslots   = 90; // where to find?
-    var_particleCFGslotsize = 0x84; // where to find?
+    ptr_particleCFG = (int16) _lh(addr+0x26C); // WITHOUT GP!!
+    var_particleCFGslots   = 90; // TODO: where to find?
+    var_particleCFGslotsize = 0x84; // TODO: where to find?
     PATCH_LOG("0x%08X -> ptr_particleCFG", ptr_particleCFG); // uGp00002270
 
     /*******************************************************************
      * 0x0024f8dc d0 16 84 8f     lw         a0,LAB_000016d0(gp)
     *******************************************************************/
-    ptr_carcolsDAT = (int16_t) _lh(addr+0x1EC); // WITHOUT GP!!
+    ptr_carcolsDAT = (int16) _lh(addr+0x1EC); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> ptr_carcolsDAT", ptr_carcolsDAT); // ptr at iGp000016d0 + 8
-    var_carcolsdatslots   = 128; // where to find?
-    var_carcolsdatslotsize   = 0x3; // where to find?
+    var_carcolsdatslots   = 128; // TODO: where to find?
+    var_carcolsdatslotsize   = 0x3; // TODO: where to find?
 
     /*******************************************************************
      * 0x0024F93C: 0x8F85A470 'p...' - lw         $a1, -23440($gp)
     *******************************************************************/
-    ptr_timecycDAT = (int16_t) _lh(addr+0x24C); // WITHOUT GP!!
+    ptr_timecycDAT = (int16) _lh(addr+0x24C); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> ptr_timecycDAT", ptr_timecycDAT); // ptr at piGpffffa470
 
-    return 1;
+    return true;
   }
 
 
@@ -3096,34 +3101,34 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULET-00417 v0.06 | 0x002E3E90
    * ULET-00417 v0.07 | 0x002E8C64
    **************************************/
-  if( ptr_IDEs == 0 && _lw(addr + 0x28) == 0x34100006 && _lw(addr + 0x44) == 0x90850010 ) {  // FUN_002e8884_IDE
+  if ( !ptr_IDEs && _lw(addr + 0x28) == 0x34100006 && _lw(addr + 0x44) == 0x90850010 ) {  // FUN_002e8884_IDE
     /*******************************************************************
      *  0x002E8898: 0xAF841DE8 '....' - sw         $a0, 7656($gp)
     *******************************************************************/
-    ptr_IDEs = (int16_t) _lh(addr+0x14); // WITHOUT GP!!
+    ptr_IDEs = (int16) _lh(addr+0x14); // WITHOUT GP!!
     PATCH_LOG("0x%08X (0x%08X) -> ptr_IDEs = 0x%08X", addr+0x14-text_addr, addr+0x14, ptr_IDEs); //uGp00001de8
 
     /*******************************************************************
      *  0x002E88A8: 0xAF850018 '....' - sw         $a1, 24($gp)
     *******************************************************************/
-    ptr_IDETable = (int16_t) _lh(addr+0x24); // WITHOUT GP!!
+    ptr_IDETable = (int16) _lh(addr+0x24); // WITHOUT GP!!
     PATCH_LOG("0x%08X (0x%08X) -> ptr_IDETable = 0x%08X", addr+0x24-text_addr, addr+0x24, ptr_IDETable); // iGp00000018
 
-    return 1;
+    return true;
   }
 
   /// pedstat.dat (in DTZ but need to get globals from other location)
-  if( ptr_pedstatTable == 0 && _lw(addr - 0x30) == 0x24A5008C && _lw(addr + 0x8) == 0x8C840000 ) { // 0x001D0528 (inside FUN_001d0480)
+  if ( !ptr_pedstatTable && _lw(addr - 0x30) == 0x24A5008C && _lw(addr + 0x8) == 0x8C840000 ) { // 0x001D0528 (inside FUN_001d0480)
     /*******************************************************************
      *  0x001D0528: 0x8F851DA4 '....' - lw         $a1, 7588($gp)
     *******************************************************************/
-    ptr_pedstatTable = (int16_t) _lh(addr); // WITHOUT GP!!
+    ptr_pedstatTable = (int16) _lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> ptr_pedstatTable", ptr_pedstatTable); // iGp00001da4
 
-    var_pedstatDATslots   = 42; // where to find?
-    var_pedstatDATslotsize = 0x34; // where to find?
+    var_pedstatDATslots   = 42; // TODO: where to find?
+    var_pedstatDATslotsize = 0x34; // TODO: where to find?
 
-    return 1;
+    return true;
   }
 
   /// loadStringFromGXT
@@ -3131,49 +3136,49 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     PATCH_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
     LoadStringFromGXT = (void*)(addr); //FUN_0010fad4_loadStringFromGXT
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
-    return 1;
+    return true;
   }
-  if( ptr_gxtloadadr == 0 && _lw(addr - 0x8) == 0x02209025 && _lw(addr + 0x24) == 0x240AFFFF ) { // 0x00070F80
+  if ( !ptr_gxtloadadr && _lw(addr - 0x8) == 0x02209025 && _lw(addr + 0x24) == 0x240AFFFF ) { // 0x00070F80
     /*******************************************************************
      *  00070f80 e8 d9 84 8f     lw         param_1,-0x2618(gp)
     *******************************************************************/
-    ptr_gxtloadadr = (int16_t) _lh(addr); // WITHOUT GP!!
+    ptr_gxtloadadr = (int16) _lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> ptr_gxtloadadr", ptr_gxtloadadr); // ppiGpffffd9e8
 
-    return 1;
+    return true;
   }
 
   /// radarIcon (for names)
-  if( ptr_radarIconList == 0 && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x26) == 0x2604 && _lh(addr + 0x1A) == 0x2784 ) { // FUN_0000c1b8_loadRadarIcons
+  if ( !ptr_radarIconList && _lw(addr + 0x20) == 0x00402025 && _lh(addr + 0x26) == 0x2604 && _lh(addr + 0x1A) == 0x2784 ) { // FUN_0000c1b8_loadRadarIcons
     /*******************************************************************
      *  0x0000C1DC: 0x260419E0 '...&' - addiu      $a0, $s0, 6624
     *******************************************************************/
-    ptr_radarIconList = (int16_t) _lh(addr+0x24); // its just an offset in this case to calc with
+    ptr_radarIconList = (int16) _lh(addr+0x24); // its just an offset in this case to calc with
     PATCH_LOG("0x%08X -> ptr_radarIconList", ptr_radarIconList); // 0x19E0
 
-    return 1;
+    return true;
   }
 
   /// radio stations count
-  if( var_radios == 0 && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) && _lw(addr - 0xC) == 0x00000000 ) { // 0x000B9164
+  if ( !var_radios && _lh(addr + 0x10) == 0xFF && _lw(addr + 0x24) == 0x00000000 && (_lw(addr) == _lw(addr + 0x14)) && _lw(addr - 0xC) == 0x00000000 ) { // 0x000B9164
     /*******************************************************************
      *  0x000B9164: 0x2A44000B '..D*' - slti       $a0, $s2, 11
     *******************************************************************/
-    var_radios = (int16_t)_lh(addr);
-    var_radios -= 1;
+    var_radios = (int16)_lh(addr);
+    var_radios -= 0x1;
     PATCH_LOG("var_radios = 0x%08X", var_radios);
-    return 1;
+    return true;
   }
 
 
   /// render global (used for cWorldStreamRender)
-  if( render == 0 && _lw(addr + 0x8) == 0x34050002 && _lh(addr + 0x12) == 0x1480 && _lw(addr - 0x18) == 0x00000000 && _lw(addr + 0x2C) == 0x00000000  ) { // 0x0013218C
+  if ( !render && _lw(addr + 0x8) == 0x34050002 && _lh(addr + 0x12) == 0x1480 && _lw(addr - 0x18) == 0x00000000 && _lw(addr + 0x2C) == 0x00000000  ) { // 0x0013218C
     /*******************************************************************
      *  0x0013218C: 0x8F8416E8 '....' - lw         $a0, 5864($gp)
     *******************************************************************/
-    render = (int16_t) _lh(addr);
+    render = (int16) _lh(addr);
     PATCH_LOG("render -> 0x%08X", render); // iGp000016e8
-    return 1;
+    return true;
   }
 
 
@@ -3189,7 +3194,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************
      *  0x002B3A14: 0x2785F748 'H..'' - addiu      $a1, $gp, -2232
     *******************************************************************
-    savedatakey = (int16_t) _lh(addr);
+    savedatakey = (int16) _lh(addr);
     PATCH_LOG("savedatakey -> 0x%08X", savedatakey); // gp0xfffff748
 
 
@@ -3197,92 +3202,92 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
      *  0x002B39A4: 0x2792F7DC '...'' - addiu      $s2, $gp, -2084
     *******************************************************************
     if( _lh(addr + 0x58) == 0x9 ) // all versions
-      titleid = (int16_t) _lh(addr-0x70);
+      titleid = (int16) _lh(addr-0x70);
     else // German version
-      titleid = (int16_t) _lh(addr-0x74);
+      titleid = (int16) _lh(addr-0x74);
 
     PATCH_LOG("titleid -> 0x%08X", titleid); // gp0xfffff7dc
 
     saveprefix = titleid + 0xC;
 
-    return 1;
+    return true;
   } */
 
   /// global_freezetimers
-  if( global_freezetimers == 0 && _lw(addr - 0x34) == 0x2405FFFF && _lw(addr - 0x28) == 0x34150001 ) { // 0x00060FE8
+  if ( !global_freezetimers && _lw(addr - 0x34) == 0x2405FFFF && _lw(addr - 0x28) == 0x34150001 ) { // 0x00060FE8
     /*******************************************************************
      *  0x00060FE8: 0x3C04003F '?..<' - lui        $a0, 0x3F
      *  0x00060FEC: 0x24845AE0 '.Z.$' - addiu      $a0, $a0, 23264
      *  0x00060FF0: 0xA080014D 'M...' - sb         $zr, 333($a0)
     *******************************************************************/
-    global_freezetimers = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x4) + (int16_t)_lh(addr+0x8);
+    global_freezetimers = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4) + (int16)_lh(addr+0x8);
     PATCH_LOG("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_003f5c2d_freezeOnScreenTimer
 
-    return 1;
+    return true;
   }
 
   /// ped task function
   if( !TaskCharWith && _lw(addr + 0x38) == 0x3405003A  && _lw(addr + 0x70) == 0x30840200 ) {
     PATCH_LOG("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
     TaskCharWith = (void*)(addr);  // 0x002c9698
-    return 1;
+    return true;
   }
 
   /// warp ped to vehicle
   if( !WarpPedIntoVehicle && _lw(addr + 0x10) == 0x34120012 && _lw(addr + 0x14) == 0x00808825 ) {
     PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
     WarpPedIntoVehicle = (void*)(addr);  // 0x00127a54
-    return 1;
+    return true;
   }
   /// warp ped to vehicle as passenger
   if( !WarpPedIntoVehicleAsPassenger && _lw(addr + 0x14) == 0x34080012 && _lw(addr + 0x1C) == 0x00809025 ) {
     PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
     WarpPedIntoVehicleAsPassenger = (void*)(addr);  // 0x00127dc4
-    return 1;
+    return true;
   }
   /// request model
   if( !RequestModel && _lw(addr + 0x4) == 0x00C03825 && _lw(addr + 0x40) == 0x00003025 && _lw(addr + 0xC) == _lw(addr + 0x30) ) {
     PATCH_LOG("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
     RequestModel = (void*)(addr); // 0x2cf258
-    return 1;
+    return true;
   }
   /// GiveWeaponAndAmmo
   if( !GiveWeaponAndAmmo && _lw(addr + 0x48) == 0x0204A021  && _lw(addr + 0xC) == 0x00A08825 ) {
     PATCH_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
     GiveWeaponAndAmmo = (void*)(addr); // 0x001177DC
-    return 1;
+    return true;
   }
 
   /// SetActorSkinTo (needs name to be lower case!)
   if( !SetActorSkinTo && _lw(addr + 0x2C) == 0x340600A0  && _lw(addr + 0x48) == 0x24840048 ) {
     PATCH_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
     SetActorSkinTo = (void*)(addr); // 0x0010ae04
-    return 1;
+    return true;
   }
   /// LoadAllModelsNow
   if( !LoadAllModelsNow && _lw(addr + 0x4) == 0x308600FF  && _lw(addr + 0x14) == 0x34050001  && _lw(addr - 0x10) == 0x00003025 ) {
     PATCH_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
     LoadAllModelsNow = (void*)(addr); //0x002cf610
-    return 1;
+    return true;
   }
   /// RefreshActorSkin
   if( !RefreshActorSkin && _lw(addr + 0x1C) == 0x24C40030  && _lw(addr + 0x3C) == 0x34050001 ) {
     PATCH_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
     RefreshActorSkin = (void*)(addr); // 0x0010af00
-    return 1;
+    return true;
   }
 
   /// TaskDuckVCS
   if( !TaskDuckVCS && _lw(addr + 0x34) == 0x34060099  && _lw(addr + 0x90) == 0x34842000 ) { // FUN_001a71f0_taskDuck
     PATCH_LOG("0x%08X (0x%08X) -> TaskDuckVCS()", addr-text_addr, addr);
     TaskDuckVCS = (void*)(addr); // 0x001a71f0
-    return 1;
+    return true;
   }
   /// TaskUnDuck
   if( !TaskUnDuck && _lw(addr + 0x20) == 0x34060099  && _lw(addr + 0x6C) == 0x3C06C080 ) { // FUN_001a74fc_unDuck
     PATCH_LOG("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
     TaskUnDuck = (void*)(addr); // 0x001a74fc
-    return 1;
+    return true;
   }
 
   /// for loadscreen debug text
@@ -3296,74 +3301,74 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    if( !DrawLoadingBar && _lw(addr + 0x2C) == 0x3C043E80 && _lw(addr + 0x10) == 0x3C044040 ) { // FUN_00131490_DrawLoadingBar
     PATCH_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar);
-    return 1;
+    return true;
   }
   if( !Loadscreen && _lw(addr + 0x18) == 0x30F100FF && _lw(addr + 0x14) == 0x00C09025 ) { // FUN_0013170c_DrawLoadscreen
     PATCH_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, Loadscreen_patched, Loadscreen);
-    return 1;
+    return true;
   }
 
   /// StartNewScript
   if( !StartNewScript && _lw(addr - 0xC) == 0x2402FFFF  && _lw(addr + 0x28) == 0x24A60001 && _lw(addr + 0x4C) == 0x34040001 ) { // FUN_0005F470
     PATCH_LOG("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
     StartNewScript = (void*)(addr); // 0x0005F470
-    return 1;
+    return true;
   }
   /// globals: ScriptSpace & MainScriptSize
-  if( global_ScriptSpace == 0 && _lw(addr + 0x2C) == 0xA204020A && _lw(addr + 0x28) == 0x34040001 ) { // 0x002B8118
+  if ( !global_ScriptSpace && _lw(addr + 0x2C) == 0xA204020A && _lw(addr + 0x28) == 0x34040001 ) { // 0x002B8118
     /*******************************************************************
      *  0x002B8118: 0x8F858E24 '$...' - lw         $a1, -29148($gp)
     *******************************************************************/
-    global_ScriptSpace = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_ScriptSpace = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_ScriptSpace", global_ScriptSpace); // iGpffff8e24 aka ScriptSpace
 
     /*******************************************************************
      *  0x002B811C: 0x8F861F44 'D...' - lw         $a2, 8004($gp)
     *******************************************************************/
-    global_MainScriptSize = (int16_t)_lh(addr+0x4); // WITHOUT GP!!
+    global_MainScriptSize = (int16)_lh(addr+0x4); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_MainScriptSize", global_MainScriptSize); // iGp00001f44 aka MainScriptSize
 
     /*******************************************************************
      *  0x02b8100: 50 1f 90 8f     lw         s0,LAB_00001f50(gp)
     *******************************************************************/
-    global_LargestMissionScriptSize = (int16_t)_lh(addr-0x18); // WITHOUT GP!!
+    global_LargestMissionScriptSize = (int16)_lh(addr-0x18); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_LargestMissionScriptSize", global_LargestMissionScriptSize); // iGp00001f50 aka LargestMissionScriptSize
 
-    return 1;
+    return true;
   }
 
   /// TankControl
   if( !TankControl && _lw(addr + 0x50) == 0x3C04BFB2  && _lw(addr + 0x78) == 0x3C04403C ) { // FUN_00043c68_TankControl
     PATCH_LOG("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
     TankControl = (void*)(addr); //
-    return 1;
+    return true;
   }
   /// BlowupVehiclesInPath
   if( !BlowupVehiclesInPath && _lw(addr + 0x38) == 0x3C053DCC  && _lw(addr + 0x58) == 0x30840080 ) { // FUN_0002eb18_blowupVehiclesInPath
     PATCH_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
     BlowupVehiclesInPath = (void*)(addr); //
-    return 1;
+    return true;
   }
 
   /// areas: multiplayer
-  if( global_mp_parameters == 0 && _lw(addr + 0x10) == 0x2C85000A && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0x10) == 0x00000000 ) { // 0x0006CE78
+  if ( !global_mp_parameters && _lw(addr + 0x10) == 0x2C85000A && _lw(addr + 0x1C) == 0x00042080 && _lw(addr - 0x10) == 0x00000000 ) { // 0x0006CE78
 
     /*******************************************************************
      *  0x0006CE78: 0x3C04003C '<..<' - lui        $a0, 0x3C
      *  0x0006CE80: 0x24844FC0 '.O.$' - addiu      $a0, $a0, 20416
     *******************************************************************/
-    global_mp_parameters = (_lh(addr) * 0x10000) + (int16_t)_lh(addr+0x8);
+    global_mp_parameters = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8);
     PATCH_LOG("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_003c4fc0
 
 
     /*******************************************************************
      *  0x0006CEAC: 0x8F841704 '....' - lw         $a0, 5892($gp)
     *******************************************************************/
-    global_mp_1 = (int16_t)_lh(addr+0x34); // WITHOUT GP!!
+    global_mp_1 = (int16)_lh(addr+0x34); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_mp_1", global_mp_1); // iGp00001704
 
-    return 1;
+    return true;
   }
 
   /// IsPlayerOnAMission
@@ -3374,10 +3379,10 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x0005F4F8: 0x8F841F20 ' ...' - lw         $a0, 7968($gp)
     *******************************************************************/
-    global_OnAMissionFlag = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_OnAMissionFlag = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_OnAMissionFlag", global_OnAMissionFlag); // iGp00001f20
 
-    return 1;
+    return true;
   }
 
   /// CalculateNewVelocity
@@ -3385,7 +3390,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   //if( _lw(addr + 0x118) == 0x3C044334  && _lw(addr + 0x28) == 0x00808025 ) { // FUN_00115480_CalculateNewVelocity
     PATCH_LOG("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, UpdatePosition_patched, UpdatePosition); //
-    return 1;
+    return true;
   }
 
 
@@ -3397,57 +3402,57 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |
    * ULET-00417 v0.06 |
    **************************************/
-   if( ptr_weaponTable == 0 && _lw(addr + 0x10) == 0x10C00004 && _lw(addr) == 0x000439C0 ) {  // FUN_0031bd70
+   if ( !ptr_weaponTable && _lw(addr + 0x10) == 0x10C00004 && _lw(addr) == 0x000439C0 ) {  // FUN_0031bd70
     /*******************************************************************
      *  0x0031BD7C: 0x8F852950 'P)..' - lw         $a1, 10576($gp)
     *******************************************************************/
-    ptr_weaponTable = (int16_t)_lh(addr+0xC); // WITHOUT GP!!
+    ptr_weaponTable = (int16)_lh(addr+0xC); // WITHOUT GP!!
     PATCH_LOG("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // piGp00002950
 
-    var_weaponDATslots   = 40; // where to find? TODO
+    var_weaponDATslots   = 40; // TODO: where to find?
     var_weaponDATslotsize = 0x70;
 
-    return 1;
+    return true;
   }
 
 
   /// bmx jump multiplier (bmx can't jump in ULUS v1.01 and older!)
-  if( global_bmxjumpmult == 0 && _lw(addr - 0x1C) == 0x3C053F80 && _lw(addr - 0x28) == 0xC48C0630 ) { // in FUN_001658c8_bmx_jumping
+  if ( !global_bmxjumpmult && _lw(addr - 0x1C) == 0x3C053F80 && _lw(addr - 0x28) == 0xC48C0630 ) { // in FUN_001658c8_bmx_jumping
     /*******************************************************************
      *  0x00165950: 0xC78EBC34 '4...' - lwc1       $fpr14, -17356($gp)
     *******************************************************************/
-    global_bmxjumpmult = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_bmxjumpmult = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_bmxjumpmult", global_bmxjumpmult); // fGpffffbc34
 
-    return 1;
+    return true;
   }
 
 
   /// police chase helicopter model
   #ifdef PREVIEW
-  if( addr_policechaseheli_1 == 0 && _lw(addr) == 0x34050105 && _lw(addr + 0x1C) == 0x34050105 ) { // 0x02d4100 in FUN_002d3e94_StreamVehiclesAndPeds
+  if ( !addr_policechaseheli_1 && _lw(addr) == 0x34050105 && _lw(addr + 0x1C) == 0x34050105 ) { // 0x02d4100 in FUN_002d3e94_StreamVehiclesAndPeds
     /*******************************************************************
      *  0x002D4100: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_1", addr-text_addr, addr);
     addr_policechaseheli_1 = addr;
-    return 1;
+    return true;
   }
-  if( addr_policechaseheli_2 == 0 && _lw(addr) == 0x34040105 && _lw(addr - 0xC) == 0x24A50004 ) { // 0x01ed254 in FUN_001ed12c
+  if ( !addr_policechaseheli_2 && _lw(addr) == 0x34040105 && _lw(addr - 0xC) == 0x24A50004 ) { // 0x01ed254 in FUN_001ed12c
     /*******************************************************************
      *  0x001ED254: 0x34040105 '...4' - li         $a0, 0x105
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_2", addr-text_addr, addr);
     addr_policechaseheli_2 = addr;
-    return 1;
+    return true;
   }
-  if( addr_policechaseheli_3 == 0 && _lw(addr) == 0x34050105 && _lw(addr + 0x8) == 0x34060001 ) { // 0x01ed68c in FUN_001ed600
+  if ( !addr_policechaseheli_3 && _lw(addr) == 0x34050105 && _lw(addr + 0x8) == 0x34060001 ) { // 0x01ed68c in FUN_001ed600
     /*******************************************************************
      *  0x001ED68C: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_3", addr-text_addr, addr);
     addr_policechaseheli_3 = addr;
-    return 1;
+    return true;
   }
   #endif
 
@@ -3455,7 +3460,7 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
   if( !DoHoverSuspensionRatios && _lw(addr + 0x60) == 0x84A40056  && _lw(addr + 0x90) == 0x8C950000 ) { // FUN_0002f358
     PATCH_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
     DoHoverSuspensionRatios = (void*)(addr); //
-    return 1;
+    return true;
   }
 
   /// pre-load garage vehicles when player spawns (this "feature" is what causes the famous garage bug) (not present in ULUS v1.01 and older!)
@@ -3465,39 +3470,39 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> 'garage bug fix'", addr-text_addr, addr);
     _sw(0x00000000, addr); // nop function
-    return 1;
+    return true;
   }
 
   /// addr_heliheight (also planes)
-  if( addr_heliheight == 0 && _lh(addr) == 0x42A0 && _lh(addr + 0x18) == 0xBF80 && _lw(addr + 0xC) == 0x00000000 ) {  // 0x002FDDA0
+  if ( !addr_heliheight && _lh(addr) == 0x42A0 && _lh(addr + 0x18) == 0xBF80 && _lw(addr + 0xC) == 0x00000000 ) {  // 0x002FDDA0
     /*******************************************************************
      *  0x002FDDA0: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     addr_heliheight = addr; // 0x002FDDA0
     if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
-    return 1;
+    return true;
   }
 
   #ifdef PREVIEW
   /// wind
-  if( global_Wind == 0 && _lw(addr + 0x14) == 0x3C053F33 && _lw(addr + 0x2C) == 0x28850015  ) { // 0x002F8E04
+  if ( !global_Wind && _lw(addr + 0x14) == 0x3C053F33 && _lw(addr + 0x2C) == 0x28850015  ) { // 0x002F8E04
     /*******************************************************************
      *  0x002F8E04: 0xE78F209C '. ..' - swc1       $fpr15, 8348($gp)
     *******************************************************************/
-    global_Wind = (int16_t)_lh(addr); // WITHOUT GP!!
+    global_Wind = (int16)_lh(addr); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_Wind", global_Wind); // fGp0000209c
 
     /*******************************************************************
      *  0x002F8E24: 0xE7901E50 'P...' - swc1       $fpr16, 7760($gp)
     *******************************************************************/
-    global_WindClipped = (int16_t)_lh(addr+0x20); // WITHOUT GP!!
+    global_WindClipped = (int16)_lh(addr+0x20); // WITHOUT GP!!
     PATCH_LOG("0x%08X -> global_WindClipped", global_WindClipped); // fGp00001e50
 
     /// nop out to stop game from setting it on its own (we take care of it in the cheat function)
     _sw(0x00000000, addr + 0x20); // 0x002f8e24
 
-    return 1;
+    return true;
   }
   #endif
 
@@ -3510,8 +3515,8 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 | Unknown    | Not Tested
    * ULET-00417 v0.06 | 0x002B00E4 | OK!
    **************************************/
-  static u32 jalSceKernelMaxFreeMemSizeInstruction = 0;
-  if ( jalSceKernelMaxFreeMemSizeInstruction == 0 && _lw(addr - 0x4) == 0x24847800 && _lw(addr - 0xc) == 0x3C0400C1 && _lw(addr + 0x8) == 0x3C040053 )
+  static uaddr jalSceKernelMaxFreeMemSizeInstruction = 0;
+  if ( !jalSceKernelMaxFreeMemSizeInstruction && _lw(addr - 0x4) == 0x24847800 && _lw(addr - 0xc) == 0x3C0400C1 && _lw(addr + 0x8) == 0x3C040053 )
   {
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
@@ -3520,28 +3525,28 @@ int PatchVCS(u32 addr, u32 text_addr) { // Vice City Stories
     PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", REV_JAL(addr)-text_addr, REV_JAL(addr));
 
     /* Read this same code in PatchLCS for more info / context. */
-    for( u32 i = 0; i < mod_text_size; i += 4 )
+    for( uaddr i = 0; i < mod_text_size; i += sizeof(uaddr) )
     {
-      u32 addr_i = i + text_addr;
+      uaddr addr_i = i + text_addr;
       if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
     }
 
-    return 1;
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if GAME_LOGGING
 #define LOG_LINES 14
 #define LOG_STRING_SIZE 128
-static char logstr[LOG_LINES][LOG_STRING_SIZE] = { 0 };
+static u8char logstr[LOG_LINES][LOG_STRING_SIZE] = { 0 };
 
-void (*debugprint)(const char *text, ...);
-void debugprint_patched(const char *text, ...) {
+void (*debugprint)(const u8string text, ...);
+void debugprint_patched(const u8string text, ...) {
   va_list list;
-  char finalstring[LOG_STRING_SIZE];
+  u8char finalstring[LOG_STRING_SIZE];
 
   va_start(list, text);
   vsnprintf(finalstring, LOG_STRING_SIZE, text, list);
@@ -3558,8 +3563,8 @@ void debugprint_patched(const char *text, ...) {
 }
 
 void drawGameLog() { // print log array
-  const u32 colorAlphaStep = (u8)(0xFA / (LOG_LINES / 2)) << 24;
-  u32 color = WHITE;
+  const uint8 colorAlphaStep = (uint8)(0xFA / (LOG_LINES / 2));
+  CRGBA color = WHITE;
   const float textsize = 0.5f;
   const float x = 470.0f;
   float y = 225.0f;
@@ -3567,8 +3572,8 @@ void drawGameLog() { // print log array
 
   for ( int i = 0; i < LOG_LINES; i++ )
   {
-    if ( i > (LOG_LINES / 2) ) color -= colorAlphaStep;
-    drawString(logstr[i], ALIGN_RIGHT, FONT_DIALOG, textsize, SHADOW_OFF, x, y, color);
+    if ( i > (LOG_LINES / 2) ) color.a -= colorAlphaStep;
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, textsize, SHADOW_OFF, x, y, color, logstr[i]);
     y -= ypad;
   }
 }
@@ -3581,74 +3586,38 @@ int (*FUN_0029fed4)(int param_1); // calc "largest free"
 extern char buffer[256];
 
 void drawMemoryUsage() {
-  char sizestr[16];
-  getSizeString(sizestr, sceKernelTotalFreeMemSize());
-  snprintf(buffer, sizeof(buffer), "sceKernelTotalFreeMemSize = %s", sizestr);
-  drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 20.0f, RED);
-
-  getSizeString(sizestr, sceKernelMaxFreeMemSize());
-  snprintf(buffer, sizeof(buffer), "sceKernelMaxFreeMemSize = %s", sizestr);
-  drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 35.0f, RED);
-
+  drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 20.0f, RED, "sceKernelTotalFreeMemSize = %s", SIZESTR(sceKernelTotalFreeMemSize()));
+  drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 35.0f, RED, "sceKernelMaxFreeMemSize = %s", SIZESTR(sceKernelMaxFreeMemSize()));
 
   FUN_0029febc = (void*)(mod_text_addr + 0x29febc); // calc "free"
   FUN_0029fed4 = (void*)(mod_text_addr + 0x29fed4); // calc "largest free"
 
   int _main = mod_text_addr + 0x37d640; // DAT_0037d640 "ptr_memory_main"
-  drawString("main", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 40.0f, WHITE);
-
-  getSizeString(sizestr, getInt(_main));
-  snprintf(buffer, sizeof(buffer), "total: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 50.0f, RED);
-
-  getSizeString(sizestr, FUN_0029febc(_main));
-  snprintf(buffer, sizeof(buffer), "free: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 60.0f, RED);
-
-  getSizeString(sizestr, FUN_0029fed4(_main));
-  snprintf(buffer, sizeof(buffer), "largest: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 70.0f, RED);
-
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 40.0f, WHITE, "main");
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 50.0f, RED, "total: %s", SIZESTR(getInt(_main)));
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 60.0f, RED, "free: %s", SIZESTR(FUN_0029febc(_main)));
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 70.0f, RED, "largest: %s", SIZESTR(FUN_0029fed4(_main)));
 
   int _streaming = mod_text_addr + 0x385870; // DAT_00385870
-  drawString("streaming", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 90.0f, WHITE);
-
-  getSizeString(sizestr, getInt(_streaming));
-  snprintf(buffer, sizeof(buffer), "total: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 100.0f, RED);
-
-  getSizeString(sizestr, FUN_0029febc(_streaming));
-  snprintf(buffer, sizeof(buffer), "free: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 110.0f, RED);
-
-  getSizeString(sizestr, FUN_0029fed4(_streaming));
-  snprintf(buffer, sizeof(buffer), "largest: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 120.0f, RED);
-
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 90.0f, WHITE, "streaming");
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 100.0f, RED, "total: %s", SIZESTR(getInt(_streaming)));
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 110.0f, RED, "free: %s", SIZESTR(FUN_0029febc(_streaming)));
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 120.0f, RED, "largest: %s", SIZESTR(FUN_0029fed4(_streaming)));
 
   int _volatile = mod_text_addr + 0x3859a0; // DAT_003859a0
-  drawString("volatile", ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 140.0f, WHITE);
-
-  getSizeString(sizestr, getInt(_volatile));
-  snprintf(buffer, sizeof(buffer), "total: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 150.0f, RED);
-
-  getSizeString(sizestr, FUN_0029febc(_volatile));
-  snprintf(buffer, sizeof(buffer), "free: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 160.0f, RED);
-
-  getSizeString(sizestr, FUN_0029fed4(_volatile));
-  snprintf(buffer, sizeof(buffer), "largest: %s", sizestr);
-  drawString(buffer, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 170.0f, RED);
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 140.0f, WHITE, "volatile");
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 150.0f, RED, "total: %s", SIZESTR(getInt(_volatile)));
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 160.0f, RED, "free: %s", SIZESTR(FUN_0029febc(_volatile)));
+  drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 170.0f, RED, "largest: %s", SIZESTR(FUN_0029fed4(_volatile)));
 }
 #endif
 
 /// Game's Function Calls & Hijacks //////////////////////////////////////////////////////////////////////////////////////////////////
 
 SceInt64 cur_micros = 0, delta_micros = 0, last_micros = 0;
-u32 frames = 0;
+usize frames = 0;
 float fps = 0.0f;
-int memory_main_free = 0;
+usize memory_main_free = 0;
 
 SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   SceInt64 cur_micros = sceKernelGetSystemTimeWide();
@@ -3659,19 +3628,19 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
     frames = 0;
   } frames++;
 
-  memory_main_free = getInt(ptr_memory_main + 0x10) - getInt(ptr_memory_main + 0xC) - getInt(ptr_memory_main + 0x14); // basically what FUN_0029febc does
+  memory_main_free = (usize)getInt(ptr_memory_main + 0x10) - (usize)getInt(ptr_memory_main + 0xC) - (usize)getInt(ptr_memory_main + 0x14); // basically what FUN_0029febc does
 
   static int debug_skgstwp = 1;
   static int debug_skgstwp2 = 1;
   if( debug_skgstwp2 && debug_skgstwp == 0 ) {
-    DEBUG_LOG("%i: sceKernelGetSystemTimeWidePatched() ran the SECOND time", getGametime());
+    DEBUG_LOG("%lu: sceKernelGetSystemTimeWidePatched() ran the SECOND time", getGametime());
     debug_skgstwp2 = 0;
   }
   if( debug_skgstwp ) {
-    DEBUG_LOG("%i: sceKernelGetSystemTimeWidePatched() ran the FIRST time", getGametime());
+    DEBUG_LOG("%lu: sceKernelGetSystemTimeWidePatched() ran the FIRST time", getGametime());
 
     /// config read/create & default values
-    DEBUG_LOG("\n> setting menu and cheat defaults.. (plus config)");
+    DEBUG_LOG("> setting menu and cheat defaults.. (plus config)");
     load_defaults(main_menu, menu_size); // to be save
 
 
@@ -3824,7 +3793,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
   /// trigger Stock Button Cheats
   if( key_to_pad ) { // by ugly gamecode patching to make this work (easier than calling func)
-    DEBUG_LOG("%i: key_to_pad = 0x%X", getGametime(), key_to_pad );
+    DEBUG_LOG("%lu: key_to_pad = 0x%lu", getGametime(), key_to_pad );
     setByte(addr_buttoncheat + 0x3, 0x14); //bne
 
     if( key_to_pad != 0x32 ) { // no need to set if R Trigger
@@ -3844,7 +3813,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
 
   /// after teleport with vehicle handler
-  teleportFixForVehicle();
+  SetPlayerPositionFixForVehicle();
 
 
   /// check cheats FUNC_CHECK
@@ -3859,7 +3828,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
       /* if( flag_use_advaconfig ) { // scrapped because config gets too big on PSP to handle :(
       load_config_block(LCS ? "LVEH" : "VVEH", addr_vehiclesworldspawn); // custom spawns from config
       load_config_block(LCS ? "LVCO" : "VVCO", carcolsDAT_base); // custom vehicle colors from config
-      if(LCS) load_config_block(LCS ? "LHND" : "VHND", getInt(ptr_handlingCFG + (LCS ? 0 : gp)) + 0x20); // todo VCS
+      if(LCS) load_config_block(LCS ? "LHND" : "VHND", getInt(ptr_handlingCFG + (LCS ? 0 : gp)) + 0x20); // TODO: VCS
       load_config_block(LCS ? "LPTC" : "VPTC", getInt(ptr_particleCFG + (LCS ? 0 : gp))); // particles
       load_config_block(LCS ? "LPST" : "VPST", getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp)))); // Pedstats
       load_config_block(LCS ? "LWPN" : "VWPN", getInt(getInt(ptr_weaponTable+(LCS?0x0:gp)) + 4)); // Weapon.dat
@@ -3871,13 +3840,6 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   if( gametimer >= menuopendelay )
     applyCheats();
 
-  /// check for and trigger achievements
-  #ifdef ACHIEVEMENTS
-  if( gametimer >= menuopendelay )
-    if( !multiplayer )
-      achievements();
-  #endif
-
   /////////////////////////////////////////////
 
   //sceKernelDcacheWritebackAll();
@@ -3885,207 +3847,6 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
   return cur_micros;
 }
-
-
-#ifdef ACHIEVEMENTS
-
-achievement_pack achievement[] = {
-  {"Well, thats fast!",       0x100,  0 }, // reach 300 kmh in vehicle
-  {"Tsunami",                 0x101,  0 }, // raise water level above value 60
-  {"To Hell and back",        0x102,  0 }, // fall through the hell
-  {"Pest Control",            0x103,  0 }, // throw a teargas
-
-  /// LCS only
-  {"Sorry, out of Order",     0x200,  0 }, // get inside the gta3 savehouse elevator
-  {"Destination Portland",    0x201,  0 }, // fly the dodo all the way to portland
-  {"Back to the future",      0x202,  0 }, // configure a Delorean and reach 88 MPH
-  {"Stargazing",              0x203,  0 }, // Freecam near star observatory at night (23:00 - 3:59)
-
-  /// VCS only
-  {"In The Air Tonight",      0x300,  0 }, // Phil Collins model and on stage
-
-
-  /** Achieveable without Cheat Device (these should be in the standalone Trophy Plugin) *******************************************************
-  {"There are no Easter Eggs up here. Go away",  x,  0,  0 }, // jump against Easteregg Window from Helipad (VCS)
-  {"You picked the wrong house fool",        x,  0,  0 }, // try walk into the wrong savehouse (Eddies Garage LCS) or (OceanView Hotel VCS)
-  {"Ah shit, here we go again.",          x,  0,  0 }, // drive BMX with trailer trash outfit (VCS)
-  **********************************************************************************************************************************************/
-
-}; int achievement_size = (sizeof(achievement)/sizeof(achievement_pack));
-
-
-/////////////////////////////////////
-
-void achievements_reset() {
-  int i;
-  for( i = 0; i < achievement_size; i++ ) { // loop achievements list
-    achievement[i].unlocked = 0; // lock
-    //achievement[i].value = 0; // zero value
-  }
-  closeMenu();
-  setTimedTextbox("Achievements have been reset!", 7.00f);
-}
-
-int achievements_getDone() {
-  int i, counter = 0;
-  for( i = 0; i < achievement_size; i++ ) // loop achievements list
-    if( achievement[i].unlocked )
-      counter++;
-  return counter;
-}
-
-void achievements() {
-  int i;
-
-  /// CHECK ////////////////////////////////////////////////////////////////////////
-  for( i = 0; i < achievement_size; i++ ) { // loop achievements list
-    if( !achievement[i].unlocked ) {
-      switch(achievement[i].id) {
-
-        case 0x100: /// "Speedfreak"
-          if( pcar && getVehicleSpeed(pcar) > 6.00f ) { // 6.00 = ?? kmh
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 0x101: /// "Tsunami"
-          if( ((int)world_waterlevel(FUNC_GET_VALUE, -1, -1, -1) >= 1600) ) { // 1020 = 2.0f, 1153 = 15.3f, 1600 = 60.0f
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 0x102: /// "Welcome back from hell"
-          if( !pcar && (getFloat(pplayer+0x38) <= (LCS ? -80.0f : -237.0f)) && (getFloat(pplayer+(LCS?0x78:0x148)) <= -0.05f ) ) { // below limit and falling check
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 0x103: /// "Pest Control"
-          if( getPedsCurrentWeapon(pplayer) == (LCS ? 14 : 16) && (current_buttons & PSP_CTRL_CIRCLE) ) { //
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-
-        /// LCS only
-        case 0x200: /// "Sorry, out of order"
-          if( LCS && island == 2 && checkCoordinateInsideArea(getFloat(pplayer+0x30), getFloat(pplayer+0x34), getFloat(pplayer+0x38), 103.00f, -484.50f, 16.0f, 2.0f) ) { // make it 3.0f so running near door is enough
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 0x201: /// "Dodomaster"
-          if( LCS && pcar && island == 1 && getVehicleID(pcar) == 0xA4 && isVehicleInAir(pcar) && getFloat(pcar+0x30) >= 800.0f && getFloat(pcar+0x38) >= 60.0f ) { //
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 0x202: /// "Back to the future"
-          if( LCS && pcar_id == 187 && lcs_getVehicleColorBase(pcar) == 13 && lcs_getVehicleColorStripe(pcar) == 0 && ((getVehicleSpeed(pcar) * 100) * 0.621371) >= 88 ) { // V8 Ghost or Deluxo (same ID! :D)
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 0x203: /// "Stargazing"
-          if(
-          #ifdef FREECAM
-          flag_freecam &&
-          #endif
-          island == 3 && (getClockHours() < 4 || getClockHours() >= 23) && checkCoordinateInsideArea(getFloat(global_camera +0x340), getFloat(global_camera +0x344), getFloat(global_camera +0x348), -540.0f, 542.90f, 230.00f, 60.0f) ) { //
-            achievement[i].unlocked = 2; // unlocked
-            //drawString("NOW", ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 222.0f, RED); // for testing
-          } break;
-
-
-        /// VCS only
-        case 0x300: /// "In The Air Tonight"
-          if( VCS && island == 3 && (getPedID(pplayer) == 139 || getPedID(pplayer) == 146)  && checkCoordinateInsideArea(getFloat(pplayer+0x30), getFloat(pplayer+0x34), getFloat(pplayer+0x38), -1574.0f, 1335.0f, -228.0f, 2.0f) ) { //
-            achievement[i].unlocked = 2; // unlocked
-            //drawString("NOW", ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 222.0f, RED); // for testing
-          } break;
-
-
-
-        case 0: ///
-          if( 0 ) { //
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-
-
-        /*
-        case 7: /// "There are no Easter Eggs up here. Go away"
-          if( VCS && !pcar && island == 2 && checkCoordinateInsideArea(getFloat(pplayer+0x30), getFloat(pplayer+0x34), getFloat(pplayer+0x38), -483.0f, 1133.0f, 65.5f, 2.0f) ) { //
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 8: /// "You picked the wrong house fool"
-          if( !pcar && island == 1 && checkCoordinateInsideArea(getFloat(pplayer+0x30), getFloat(pplayer+0x34), getFloat(pplayer+0x38), (LCS ? 889.70f : 228.70f), (LCS ? -308.40f : -1277.90f), (LCS ? 8.70f : 12.00f), 2.0f) ) { // Eddies Garage LCS or OceanView Hotel VCS
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-
-        case 11: /// "Ah shit, here we go again."
-          if( VCS && ((pcar_id == 0xB2) ) && getPedID(pplayer) == 0x9D ) { //
-            achievement[i].unlocked = 2; // unlocked
-          } break;
-        */
-
-
-      }
-    }
-  }
-
-
-  /// DISPLAY //////////////////////////////////////////////////////////////////////
-
-  if( flag_menu_running || isTextboxShowing() ) // don't show achievements when in menu or a textbox is there already!
-    return;
-
-  char buffer[128];
-  char au[] = "Achievement unlocked!";
-  float duration = 7.00f; // duration the textbox should be displayed
-
-  for(i = 0; i < achievement_size; i++) { // loop achievements list
-    if( achievement[i].unlocked == 2 ) { // check for "just unlocked"
-      snprintf(buffer, sizeof(buffer), "~w~%s (%d/%d) ~n~%s", au, achievements_getDone(), achievement_size, achievement[i].title);
-      achievement[i].unlocked = 1; // set "was displayed"
-      goto triggerachievement; // trigger it then!
-    }
-  }
-
-  return;
-
-  static u8 script_achievement_lcs[] = {
-    /// 0399: play_mission_passed_tune 1
-    0x99, 0x03,
-    0x07, // byte
-    0x01, // 1
-
-    /// 010E: add_score $PLAYER_CHAR value 50000 // money
-    0x0E, 0x01,
-    0xCE, 0x18, // $PLAYER_CHAR
-    0x06, // int
-    0x50, 0xC3, 0x00, 0x00, // $50.000
-
-    /// 004E: terminate_this_script
-    0x4E, 0x00
-  };
-
-  static u8 script_achievement_vcs[] = {
-    /// 022B: play_mission_passed_tune 1
-    0x2B, 0x02,
-    0x07, // byte
-    0x01, // 1
-
-    /// 0094: add_score $PLAYER_CHAR value 50000 // money
-    0x94, 0x00,
-    0xD0, 0x0E, // $PLAYER_CHAR
-    0x06, // int
-    0x50, 0xC3, 0x00, 0x00, // $50.000
-
-    /// 0023: terminate_this_script
-    0x23, 0x00
-  };
-
-  triggerachievement:
-    CustomScriptExecute(LCS ? (int)&script_achievement_lcs : (int)&script_achievement_vcs); // make game execute it
-    setTimedTextbox(buffer, duration);
-
-}
-#endif
 
 int (* buttonsToAction)(void *a1);
 int buttonsToActionPatched(void *a1) { // LCS & VCS
@@ -4097,7 +3858,7 @@ int buttonsToActionPatched(void *a1) { // LCS & VCS
 
   static int debug_btap = 1;
   if( debug_btap ) {
-    DEBUG_LOG("%i: buttonsToActionPatched() ran the first time", getGametime() );
+    DEBUG_LOG("%lu: buttonsToActionPatched() ran the first time", getGametime() );
     debug_btap = 0;
   }
 
@@ -4137,18 +3898,18 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
 
   static int debug_cwsrp = 1;
   if( debug_cwsrp ) {
-    DEBUG_LOG("%i: cWorldStream_Render_Patched() ran the first time", getGametime() );
+    DEBUG_LOG("%lu: cWorldStream_Render_Patched() ran the first time", getGametime() );
     debug_cwsrp = 0;
   }
 
   #if GAME_LOGGING
   if( mode == 0 )
-    drawGameLog(); // todo - move to different hooked func
+    drawGameLog(); // TODO: move to different hooked func
   #endif
 
   #ifdef MEMORY
   if( LCS && mode == 0 )
-    drawMemoryUsage(); // todo - move to different hooked func
+    drawMemoryUsage(); // TODO: move to different hooked func
   #endif
 
   if( mode == 0 )
@@ -4194,7 +3955,7 @@ void FUN_002db0c0_patched(int param_1) { // LCS
 int (*_checkCustomTracksReady)(int param_1); // return 1 if there is at least one custom track file in the savegame
 int _checkCustomTracksReady_patched(int param_1) {
   if( flag_customusic > 0 )
-    return 1; // found at least 1 track
+    return true; // found at least 1 track
 
   return _checkCustomTracksReady(param_1);
 }
@@ -4202,10 +3963,10 @@ int _checkCustomTracksReady_patched(int param_1) {
 char *msg1 = NULL;
 char *msg2 = NULL;
 
-void (*Loadscreen)(char * string1, char * string2, char *txdname, unsigned int param_4);
-void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned int param_4) {
+void (*Loadscreen)(char * string1, char * string2, char *txdname, uint32 param_4);
+void Loadscreen_patched(char * string1, char * string2, char *txdname, uint32 param_4) {
   //if( txdname != NULL )
-    //DEBUG_LOG("%i: Loadscreen_patched(%s)", getGametime(), txdname);
+    //DEBUG_LOG("%lu: Loadscreen_patched(%s)", getGametime(), txdname);
 
   /// backup debug messages for use in "DrawLoadingBar_patched"
   msg1 = string1;
@@ -4215,8 +3976,8 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned 
     static int prev = -1;
     int new = -1;
 
-    short whitelist_size = 12;
-    const char *whitelist[] = { "loadsc0", // replace if matches one of these
+    usize whitelist_size = 12;
+    const u8string whitelist[] = { "loadsc0", // replace if matches one of these
                   "loadsc1",
                   "loadsc2",
                   "loadsc3",
@@ -4229,8 +3990,8 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned 
                   "loadsc10", // VCS
                   "loadsc11" }; // VCS
 
-    short lcs_replacers_size = 12;
-    const char *lcs_replacers[] = { "loadsc0", // the replacements to use for LCS
+    usize lcs_replacers_size = 12;
+    const u8string lcs_replacers[] = { "loadsc0", // the replacements to use for LCS
                     "loadsc1",
                     "loadsc2",
                     "loadsc3",
@@ -4243,8 +4004,8 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned 
                     "mpload6",
                     "mpload7" };
 
-    short vcs_replacers_size = 22;
-    const char *vcs_replacers[] = { "loadsc0", // the replacements to use for VCS
+    usize vcs_replacers_size = 22;
+    const u8string vcs_replacers[] = { "loadsc0", // the replacements to use for VCS
                     "loadsc1",
                     "loadsc2",
                     "loadsc3",
@@ -4269,16 +4030,15 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, unsigned 
 
 
     if( txdname != NULL ) { // load new splash (if 0 then the game uses the previously loaded)
-      DEBUG_LOG("%i: Loadscreen_patched() original: '%s'", getGametime(), txdname);
-      int i;
-      for( i = 0; i < whitelist_size; i++ ) {
+      DEBUG_LOG("%lu: Loadscreen_patched() original: '%s'", getGametime(), txdname);
+      for( array_uidx i = 0; i < whitelist_size; i++ ) {
         if( strcmp(whitelist[i], txdname) == 0 ) {
           do {
             new = rand() % (LCS ? lcs_replacers_size : vcs_replacers_size); // decide which to use
-            DEBUG_LOG("%i: Loadscreen_patched() ..random new: %i aka '%s'", getGametime(), new, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
+            DEBUG_LOG("%lu: Loadscreen_patched() ..random new: %i aka '%s'", getGametime(), new, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
           } while( new == prev ); // don't use the same twice (generate new if it happoens to be the same)
           prev = new;
-          DEBUG_LOG("%i: Loadscreen_patched() ..replacing '%s' with '%s'!", getGametime(), txdname, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
+          DEBUG_LOG("%lu: Loadscreen_patched() ..replacing '%s' with '%s'!", getGametime(), txdname, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
           txdname = (char *)(LCS ? lcs_replacers[new] : vcs_replacers[new]); // replace!!
         }
       }
@@ -4292,12 +4052,12 @@ void DrawLoadingBar_patched(float param_1) {
   DrawLoadingBar(param_1);
   if( debug_loadscreens(FUNC_GET_STATUS,-1,-1) ) { // only if CHEAT status is ON
     if( msg1 != NULL ) {
-      if(LCS) drawStringLCS(msg1, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 32.0f, 200.0f, WHITE);
-      if(VCS) drawStringVCS(msg1, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 25.0f,  25.0f, WHITE); // alt. 210.0f (right above bar)
+      if(LCS) drawStringLCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 32.0f, 200.0f, WHITE, msg1);
+      if(VCS) drawStringVCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 25.0f,  25.0f, WHITE, msg1); // alt. 210.0f (right above bar)
     }
     if( msg2 != NULL ) {
-      if(LCS) drawStringLCS(msg2, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 32.0f, 215.0f, WHITE);
-      if(VCS) drawStringVCS(msg2, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 25.0f,  40.0f, WHITE); // alt. 225.0f (right above bar)
+      if(LCS) drawStringLCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 32.0f, 215.0f, WHITE, msg2);
+      if(VCS) drawStringVCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 25.0f,  40.0f, WHITE, msg2); // alt. 225.0f (right above bar)
     }
 
   }
@@ -4314,15 +4074,15 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   #ifdef USERSCRIPTS
   #define CSTGXTS 32 // defined in main
   #define CSTGXTLGT 256 // ...
-  extern unsigned short custom_gxts[CSTGXTS][CSTGXTLGT];
+  extern wchar custom_gxts[CSTGXTS][CSTGXTLGT];
   if( strncmp(string, "CUST_", 5) == 0 ) { // CUST_00, CUST_01, ...
-    USERSCRIPT_LOG("%s", string);
+    USERSCRIPT_LOG(string);
 
     // USERSCRIPT_LOG("%c%c", string[5], string[6]);
     int x = ((string[5] - '0') * 10) + (string[6] - '0'); // sigh..
     // USERSCRIPT_LOG("%i", x);
 
-    USERSCRIPT_LOG("0x%08X", &custom_gxts[x]);
+    USERSCRIPT_LOG("0x%p", &custom_gxts[x]);
     return (int)&custom_gxts[x];
   }
   #endif
@@ -4352,11 +4112,9 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     int cross = (flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
     float crawl = ((ystick < 0.0f) && cross) ? -ystick*0.3f : 0.0f; // only if stick forward & cross pressed
 
-    //char buffer[128]; // commenting this block out will NOT make it work for real hardware ?!? (when it was at other position in file)
-    //snprintf(buffer, sizeof(buffer), "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
-    //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED);
+    //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED, "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
 
-   /** TODO ********
+   /** TODO: ********
     * - make boost static so that player accelerates and keeps some momentum
     * - animation?! FUN_00286f88_CAnimManager_BlendAnimation
     * - camera front is where player should swim to (like player on land)
@@ -4364,7 +4122,7 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     *
    ***/
 
-    /// turn with camera (todo)
+    /// TODO: turn with camera
     //setFloat(pplayer+0x10, getFloat(global_camera + 0xC4));
     //setFloat(pplayer+0x14, getFloat(global_camera + 0xC8));
 
@@ -4412,7 +4170,7 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     //setByte(pplayer + 0xB84,  0x00);
 
     /// set camera to not go below sea level
-    // todo although only nice to have
+    // TODO: although only nice to have
 
     /// blocks falling animation
     //setFloat(pplayer + 0x1A8, 0.0f);
@@ -4425,7 +4183,8 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void user_cheats(int calltype, int keypress, int defaultstatus UNUSED) {
+#ifdef PREVIEW
+void user_cheats(int calltype, int keypress, bool defaultstatus UNUSED) {
   switch( calltype ) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
@@ -4436,9 +4195,10 @@ void user_cheats(int calltype, int keypress, int defaultstatus UNUSED) {
       break;
   }
 }
+#endif
 
 #ifdef USERSCRIPTS
-void user_scripts(int calltype, int keypress, int defaultstatus UNUSED) {
+void user_scripts(int calltype, int keypress, bool defaultstatus UNUSED) {
   switch( calltype ) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
@@ -4478,7 +4238,7 @@ void hexeditpcar() {
 #endif
 
 #ifdef FREECAM
-void freecam(int calltype, int keypress, int defaultstatus UNUSED) {
+void freecam(int calltype, int keypress, bool defaultstatus UNUSED) {
 
   switch( calltype ) {
     case FUNC_CHANGE_VALUE:
@@ -4514,8 +4274,8 @@ void freecam(int calltype, int keypress, int defaultstatus UNUSED) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void *fps_toggle(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *fps_toggle(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -4523,27 +4283,23 @@ void *fps_toggle(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          flag_draw_FPS = status = 0;
-        } else {
-          flag_draw_FPS = status = 1;
-        }
+        flag_draw_FPS = status = !status;
       } break;
 
     case FUNC_TOGGLE_CHEAT:
-      status = flag_draw_FPS = keypress; // keypress reused as on/off boolean
+      flag_draw_FPS = status = keypress; // keypress reused as on/off boolean
       break;
 
     case FUNC_SET:
-      status = flag_draw_FPS = defaultstatus;
+      flag_draw_FPS = status = defaultstatus;
       break;
   }
 
   return NULL;
 }
 
-void *mem_toggle(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *mem_toggle(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -4551,19 +4307,15 @@ void *mem_toggle(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          flag_draw_MEM = status = 0;
-        } else {
-          flag_draw_MEM = status = 1;
-        }
+        flag_draw_MEM = status = !status;
       } break;
 
     case FUNC_TOGGLE_CHEAT:
-      status = flag_draw_MEM = keypress; // keypress reused as on/off boolean
+      flag_draw_MEM = status = keypress; // keypress reused as on/off boolean
       break;
 
     case FUNC_SET:
-      status = flag_draw_MEM = defaultstatus;
+      flag_draw_MEM = status = defaultstatus;
       break;
   }
 
@@ -4571,8 +4323,8 @@ void *mem_toggle(int calltype, int keypress, int defaultstatus) {
 }
 
 
-void *coords_toggle(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *coords_toggle(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -4580,15 +4332,11 @@ void *coords_toggle(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if(status) {
-          flag_draw_COORDS = status = 0;
-        } else {
-          flag_draw_COORDS = status = 1;
-        }
+        flag_draw_COORDS = status = !status;
       } break;
 
     case FUNC_SET:
-      status = flag_draw_COORDS = defaultstatus;
+      flag_draw_COORDS = status = defaultstatus;
       break;
   }
 
@@ -4597,25 +4345,25 @@ void *coords_toggle(int calltype, int keypress, int defaultstatus) {
 
 char speed[16];
 char gear[16];
-void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
-  static int i = 0;
-  static int real = 0;
+void *speedometer_toggle(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  static bool real = false;
+  static uint8 unit = 0; // 0 -> mp/h, 1 -> km/h
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_GET_VALUE:
-      return (int*)i;
+      return (int*)(int)unit;
 
     case FUNC_GET_STRING:
-      return (real ? ( i ? "MP/H (real)" : "KM/H (real)") : ( i ? "MP/H" : "KM/H"));
+      return (real ? ( unit == 0 ? "MP/H (real)" : "KM/H (real)") : ( unit == 0 ? "MP/H" : "KM/H"));
 
     case FUNC_APPLY:
       if( pcar ) {
         /// speed (Example: "ESPRIT" 1.065 (fMaxVelocity) * 180 * 1.2 = 230 km/h as set in beta handling.cfg)  See: https://github.com/guard3/g3DTZ/blob/e22a1a2295fe136e702153aabb391453be9f6305/source/core/HandlingMgr.cpp#L13
-        snprintf(speed, sizeof(speed), (i ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed(pcar) * 180.0f * (real ? 1 : 1.2f) * (i ? 0.621371 : 1)); // og CD used raw speed calculated from moving vector
+        snprintf(speed, sizeof(speed), (unit == 0 ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed() * 180.0f * (real ? 1 : 1.2f) * (unit == 0 ? 1 : 0.621371f)); // og CD used raw speed calculated from moving vector
 
         /// gears
         snprintf(gear, sizeof(speed), _t("Gear: %X"), getVehicleCurrentGear( pcar ) );
@@ -4624,24 +4372,20 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          flag_draw_SPEEDO = status = 0;
-        } else {
-          flag_draw_SPEEDO = status = 1;
-        }
+        flag_draw_SPEEDO = status = !status;
       } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
-        real = 1 - real;
+        real = !status;
       } else if( keypress == PSP_CTRL_LEFT ) { // LEFT
-        i = 0;
+        unit = 0; // mp/h
       } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
-        i = 1;
+        unit = 1; // km/h
       } break;
 
     case FUNC_SET:
-      status = flag_draw_SPEEDO = defaultstatus;
-      if( defaultval >= 0 ) i = defaultval;
-      else i = 0;
-      if( i > 1) i = 0; // fix for bad config value
+      flag_draw_SPEEDO = status = defaultstatus;
+      if( defaultval >= 0 ) unit = defaultval;
+      else unit = 0; // mp/h
+      if( unit > 1 ) unit = 0; // fix for bad config value
       break;
   }
 
@@ -4650,9 +4394,9 @@ void *speedometer_toggle(int calltype, int keypress, int defaultstatus, int defa
 
 
 #ifdef DEBUG
-extern short flag_draw_DBGVALS;
-void *debug_vars(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
+extern bool flag_draw_DBGVALS;
+void *debug_vars(int calltype, int keypress, bool defaultstatus, int defaultval UNUSED) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -4660,11 +4404,7 @@ void *debug_vars(int calltype, int keypress, int defaultstatus, int defaultval) 
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS) { // CROSS
-        if( status ) {
-          flag_draw_DBGVALS = status = 0;
-        } else {
-          flag_draw_DBGVALS = status = 1;
-        }
+        flag_draw_DBGVALS = status = !status;
       }
       break;
 
@@ -4675,164 +4415,114 @@ void *debug_vars(int calltype, int keypress, int defaultstatus, int defaultval) 
 
   return NULL;
 }
-void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultval) {
 
-  char buffer[128];
-  static int status, i = 0; // default position
-  const char *list_names[] = { "General", // 0
-                               "Globals", // 1
-                               "Player",  // 2
-                               "Vehicle", // 3
-                               "tests",   // 4
-                               "5" };     // 5
-  static int list_size = (sizeof(list_names)/sizeof(*list_names))-1;
+  static bool status;
+  static array_uidx i = 0; // default position
+  static const u8string list_names[] = {"General",  // 0
+                                        "Globals",  // 1
+                                        "Player",   // 2
+                                        "Vehicle",  // 3
+                                        "tests",    // 4
+                                        "5"};       // 5
+  
+  static array_size list_size = ARRAY_SIZE(list_names) - 1;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_GET_STRING:
       return (void *)list_names[i];
 
     case FUNC_APPLY:
-      if( flag_menu_running == 0 ) {
+      if( !flag_menu_running ) {
         if( i == 0 ) { // General
-          drawString("General", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
+          drawStringNoTVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "General");
 
-            /// mod_text_addr
-            snprintf(buffer, sizeof(buffer), "mod_text_addr = 0x%08lX", mod_text_addr);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE);
+          /// mod_text_addr
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "mod_text_addr = 0x%08lX", mod_text_addr);
 
-            /// mod_text_size
-            snprintf(buffer, sizeof(buffer), "mod_text_size = 0x%08lX", mod_text_size);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, WHITE);
+          /// mod_text_size
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, WHITE, "mod_text_size = 0x%08lX", mod_text_size);
 
-            /// mod_data_size
-            snprintf(buffer, sizeof(buffer), "mod_data_size = 0x%08lX", mod_data_size);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, WHITE);
+          /// mod_data_size
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, WHITE, "mod_data_size = 0x%08lX", mod_data_size);
 
-            /// Global Pointer Register
-            snprintf(buffer, sizeof(buffer), "$gp = 0x%08X (0x%08lX)", gp, gp-mod_text_addr);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE);
+          /// Global Pointer Register
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE, "$gp = 0x%08X (0x%08lX)", gp, gp-mod_text_addr);
 
+          /// PPSSPP
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, WHITE, "PPSSPP %d", PPSSPP);
 
-            /// PPSSPP
-            snprintf(buffer, sizeof(buffer), "PPSSPP %d", PPSSPP);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, WHITE);
-
-            /// ADRENALINE
-            snprintf(buffer, sizeof(buffer), "ADRENALINE %d", ADRENALINE);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, WHITE);
-
+          /// ADRENALINE
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, WHITE, "ADRENALINE %d", ADRENALINE);
 
         } else if( i == 1 ) { // Globals
-          drawString("Globals", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
+          drawStringNoT(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "Globals");
 
-            /// gametimer
-            snprintf(buffer, sizeof(buffer), "gametimer = %i", gametimer);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, YELLOW);
+          /// gametimer
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, YELLOW, "gametimer = %i", gametimer);
 
-            /// weather globals
-            if( LCS ) snprintf(buffer, sizeof(buffer), "weather: %i, %i, %i", getShort(global_weather),      getShort(global_weather + 0x2),      getShort(global_weather + 0x84) );
-            if( VCS ) snprintf(buffer, sizeof(buffer), "weather: %i, %i, %i", getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp) );
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, YELLOW);
+          /// weather globals
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, YELLOW, "weather: %i, %i, %i",
+            LCS ? (getShort(global_weather), getShort(global_weather + 0x2), getShort(global_weather + 0x84))
+                : (getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp)));
 
-            /// global_currentisland
-            snprintf(buffer, sizeof(buffer), "island = %i", island);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, YELLOW);
+           /// global_currentisland
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, YELLOW, "island = %i", island);
 
-            /// global_systemlanguage
-            snprintf(buffer, sizeof(buffer), "language = %i", language);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, YELLOW);
+          /// global_systemlanguage
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, YELLOW, "language = %i", language);
 
-            /// global_ismultiplayer
-            snprintf(buffer, sizeof(buffer), "multiplayer = %i", multiplayer);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, YELLOW);
+          /// global_ismultiplayer
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, YELLOW, "multiplayer = %i", multiplayer);
 
 
-            //snprintf(buffer, sizeof(buffer), "DAT_0035a288: 0x%X", getInt(mod_text_addr + 0x035a288) );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 70.0f, CYAN);
-            //snprintf(buffer, sizeof(buffer), "DAT_0035a28c: 0x%X", getInt(mod_text_addr + 0x035a28C) );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 90.0f, CYAN);
-            //snprintf(buffer, sizeof(buffer), "DAT_00354b9c: 0x%X (max)", getInt(mod_text_addr + 0x0354b9c) );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 110.0f, CYAN);
-            //snprintf(buffer, sizeof(buffer), "DAT_00354ba0: 0x%X (media max)", getInt(mod_text_addr + 0x0354ba0) );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 130.0f, CYAN);
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 70.0f, CYAN, "DAT_0035a288: 0x%X", getInt(mod_text_addr + 0x035a288));
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 90.0f, CYAN, "DAT_0035a28c: 0x%X", getInt(mod_text_addr + 0x035a28C));
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 110.0f, CYAN, "DAT_00354b9c: 0x%X (max)", getInt(mod_text_addr + 0x0354b9c));
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 130.0f, CYAN, "DAT_00354ba0: 0x%X (media max)", getInt(mod_text_addr + 0x0354ba0);
 
         } else if( i == 2 ) { // pplayer
-          drawString("pplayer", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
+          drawStringNoTVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "pplayer");
 
           if( pplayer > 0 ) {
-            snprintf(buffer, sizeof(buffer), "pplayer = 0x%08X", pplayer); // player ped handle
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE);
-
-            snprintf(buffer, sizeof(buffer), "Mass = %.2f, %.2f", getFloat(pplayer+0xD0), getFloat(pplayer+0xD4));
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, CYAN);
-
-            if( LCS ) snprintf(buffer, sizeof(buffer), "animation: 0x%0X", getByte(pplayer + 0x250) );
-            if( VCS ) snprintf(buffer, sizeof(buffer), "animation: 0x%0X", getByte(pplayer + 0x894) );
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, CYAN);
-
-
-            snprintf(buffer, sizeof(buffer), "health = %.2f", getPedHealth(pplayer) );
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, CYAN);
-
-            snprintf(buffer, sizeof(buffer), "armor = %.2f", getPedArmor(pplayer) );
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, CYAN);
-
-            snprintf(buffer, sizeof(buffer), "facing = %.2f", getPedFacingDirectionInDegree(pplayer) );
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, CYAN);
-
-            snprintf(buffer, sizeof(buffer), "drowning = %d", getPedDrowning(pplayer) );
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, CYAN);
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "pplayer = 0x%08lX", pplayer);
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, CYAN, "Mass = %.2f, %.2f", getFloat(pplayer+0xD0), getFloat(pplayer+0xD4));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, CYAN, "animation: 0x%0X", getByte(pplayer + (LCS ? 0x250 : 0x894)));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, CYAN, "health = %.2f", getPedHealth(pplayer));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, CYAN, "armor = %.2f", getPedArmor(pplayer));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, CYAN, "facing = %.2f", getPedFacingDirectionInDegree(pplayer));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, CYAN, "drowning = %d", getPedDrowning(pplayer));
           }
 
 
         } else if( i == 3 ) { // pcar
-          drawString("pcar", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
+          drawStringNoTVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "pcar");
 
           if( pcar ) {
-            snprintf(buffer, sizeof(buffer), "pcar: 0x%08X", pcar); // player car handle
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE);
-
-            snprintf(buffer, sizeof(buffer), "pcar_id = 0x%02X", pcar_id);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, AZURE);
-
-            snprintf(buffer, sizeof(buffer), "pcar_type = 0x%02X", pcar_type);
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, AZURE);
-
-            snprintf(buffer, sizeof(buffer), "isVehicleInWater = %X", isVehicleInWater(pcar));
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE);
-
-            snprintf(buffer, sizeof(buffer), "isVehicleInAir = %X", isVehicleInAir(pcar));
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, AZURE);
-
-            snprintf(buffer, sizeof(buffer), "isVehicleUpsideDown = %X", isVehicleUpsideDown(pcar) );
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, AZURE);
-
-            snprintf(buffer, sizeof(buffer), "health = %.2f", getVehicleHealth(pcar));
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, AZURE);
-
-            snprintf(buffer, sizeof(buffer), "speed = %.2f", getVehicleSpeed(pcar));
-            drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 160.0f, AZURE);
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "pcar: 0x%08lX", pcar);
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, AZURE, "pcar_id = 0x%02X", pcar_id);
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, AZURE, "pcar_type = 0x%02X", pcar_type);
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE, "isVehicleInWater = %X", isVehicleInWater(pcar));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, AZURE, "isVehicleInAir = %X", isVehicleInAir(pcar));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, AZURE, "isVehicleUpsideDown = %X", isVehicleUpsideDown(pcar));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, AZURE, "health = %.2f", getVehicleHealth(pcar));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 160.0f, AZURE, "speed = %.2f", getVehicleSpeed());
           }
 
 
         } else if( i == 4 ) { // tests
-          drawString("tests", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE );
+          drawStringNoTVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "tests");
 
-            //snprintf(buffer, sizeof(buffer), "TESTVAL1 = 0x%08X -> 0x%08X", TESTVAL1, *(int*)(TESTVAL1+gp) );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 120.0f, WHITE);
-
-            //snprintf(buffer, sizeof(buffer), "TESTVAL1 = 0x%08X", TESTVAL1 );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 120.0f, WHITE);
-            //snprintf(buffer, sizeof(buffer), "TESTVAL2 = 0x%08X", TESTVAL2 );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 140.0f, WHITE);
-            //snprintf(buffer, sizeof(buffer), "TESTVAL3 = 0x%08X", TESTVAL3 );
-            //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 160.0f, WHITE);
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 120.0f, WHITE, "TESTVAL1 = 0x%08X -> 0x%08X", TESTVAL1, *(int*)(TESTVAL1+gp));
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 120.0f, WHITE, "TESTVAL1 = 0x%08X", TESTVAL1);
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 140.0f, WHITE, "TESTVAL2 = 0x%08X", TESTVAL2);
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 160.0f, WHITE, "TESTVAL3 = 0x%08X", TESTVAL3);
 
         } else {
           //error
@@ -4844,9 +4534,11 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS) { // CROSS
         if( status ) {
-          flag_draw_DEBUG = status = 0;
+          flag_draw_DEBUG = false;
+          status = false;
         } else {
-          flag_draw_DEBUG = status = 1;
+          flag_draw_DEBUG = true;
+          status = true;
         }
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0) { // LEFT
@@ -4871,11 +4563,20 @@ void *debug_monitor(int calltype, int keypress, int defaultstatus, int defaultva
 #endif
 
 
+#ifdef LANG
+
+void updateLangStrings()
+{
+  langTableUpdate(currLanguageID);
+}
+
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void *cdr_freezegameinmenu(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *cdr_freezegameinmenu(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   static int state = 0; // merry-go-round to acomplish one-time-apply only
 
   switch( calltype ) {
@@ -4903,12 +4604,8 @@ void *cdr_freezegameinmenu(int calltype, int keypress, int defaultstatus) {
         if( status ) {
           setFreezeGame(OFF);
           state = 0;
-          status = 0;
-          //ini_puts("SETTINGS", "CDR_FREEZEGAMEINMENU", "FALSE", config);
-        } else {
-          status = 1;
-          //ini_puts("SETTINGS", "CDR_FREEZEGAMEINMENU", "TRUE", config);
         }
+        status = !status;
       } break;
     case FUNC_SET:
       status = defaultstatus;
@@ -4921,29 +4618,17 @@ void *cdr_freezegameinmenu(int calltype, int keypress, int defaultstatus) {
 }
 
 
-void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *cdr_allowuiblocking(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          //ini_puts("SETTINGS", "CDR_ALLOWUIBLOCK", "FALSE", config);
-          blockui_disable:
-          flag_ui_blocking = 0;
-          status = 0;
-        } else {
-          //ini_puts("SETTINGS", "CDR_ALLOWUIBLOCK", "TRUE", config);
-          blockui_enable:
-          flag_ui_blocking = 1;
-          status = 1;
-        }
+        flag_ui_blocking = status = !status; 
       } break;
     case FUNC_SET:
-      status = defaultstatus;
-      if( status ) goto blockui_enable;
-      else goto blockui_disable;
+      flag_ui_blocking = status = defaultstatus;
       break;
   }
 
@@ -4951,95 +4636,55 @@ void *cdr_allowuiblocking(int calltype, int keypress, int defaultstatus) {
 }
 
 
-void *cdr_uselegend(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *cdr_uselegend(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          //ini_puts("SETTINGS", "CDR_HIDELEGEND", "FALSE", config);
-          uselegend_disable:
-          flag_use_legend = 1;
-          showoptions = 13;
-          status = 0;
-        } else {
-          //ini_puts("SETTINGS", "CDR_HIDELEGEND", "TRUE", config);
-          uselegend_enable:
-          flag_use_legend = 0;
-          showoptions = 15;
-          status = 1;
-        }
+        flag_use_legend = status;
+        showoptions = status ? 13 : 15;
+        status = !status;
       } break;
     case FUNC_SET:
       status = defaultstatus;
-      if( status )
-        goto uselegend_enable;
-      else goto uselegend_disable;
+      flag_use_legend = !status;
+      showoptions = !status ? 13 : 15;
+      break;
+  }
+  return NULL;
+}
+
+
+void *cdr_alternativefont(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+
+  switch( calltype ) {
+    case FUNC_GET_STATUS: return (int*)status;
+    case FUNC_CHANGE_VALUE:
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        flag_use_cataltfont = status = !status;
+      } break;
+    case FUNC_SET:
+      flag_use_cataltfont = status = defaultstatus;
       break;
   }
 
   return NULL;
 }
 
-
-void *cdr_alternativefont(int calltype, int keypress, int defaultstatus) {
-  static int status;
-
-  switch( calltype ) {
-    case FUNC_GET_STATUS: return (int*)status;
-    case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          //ini_puts("SETTINGS", "CDR_ALTERCATFONT", "FALSE", config);
-          cataltfont_disable:
-          flag_use_cataltfont = 0;
-          status = 0;
-
-        } else {
-          //ini_puts("SETTINGS", "CDR_ALTERCATFONT", "TRUE", config);
-          cataltfont_enable:
-          flag_use_cataltfont = 1;
-          status = 1;
-
-        }
-      } break;
-    case FUNC_SET:
-      status = defaultstatus;
-      if( status )
-        goto cataltfont_enable;
-      else goto cataltfont_disable;
-      break;
-  }
-
-  return NULL;
-}
-
-void *cdr_swapacceleration(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *cdr_swapacceleration(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          swapacceleration_disable:
-          flag_swapxr = 0;
-          status = 0;
-
-        } else {
-          swapacceleration_enable:
-          flag_swapxr = 1;
-          status = 1;
-
-        }
+        flag_swapxr = status = !status;
       } break;
     case FUNC_SET:
-      status = defaultstatus;
-      if( status )
-        goto swapacceleration_enable;
-      else goto swapacceleration_disable;
+      flag_swapxr = status = defaultstatus;
       break;
   }
 
@@ -5047,29 +4692,17 @@ void *cdr_swapacceleration(int calltype, int keypress, int defaultstatus) {
 }
 
 #ifdef CONFIG
-void *cdr_liveconfig(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *cdr_liveconfig(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          liveconfig_disable:
-          flag_use_liveconfig = 0;
-          status = 0;
-
-        } else {
-          liveconfig_enable:
-          flag_use_liveconfig = 1;
-          status = 1;
-
-        }
+        flag_use_liveconfig = status = !status;
       } break;
     case FUNC_SET:
-      status = defaultstatus;
-      if( status ) goto liveconfig_enable;
-      else goto liveconfig_disable;
+      flag_use_liveconfig = status = defaultstatus;
       break;
   }
 
@@ -5077,62 +4710,39 @@ void *cdr_liveconfig(int calltype, int keypress, int defaultstatus) {
 }
 #endif
 
-void *cdr_showpopular(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *cdr_showpopular(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          category_index[CAT_ALIAS] = 0; // hide all CAT_ALIAS menu entries
-          //ini_puts("SETTINGS", "CDR_SHOWCHEATSELECTION", "FALSE", config);
-          status = 0;
-        } else {
-          category_index[CAT_ALIAS] = 1; // unhide all CAT_ALIAS menu entries
-          //ini_puts("SETTINGS", "CDR_SHOWCHEATSELECTION", "TRUE", config);
-          status = 1;
-        }
+        category_index[CAT_ALIAS] = status = !status;
       } break;
     case FUNC_SET:
-      status = category_index[CAT_ALIAS] = defaultstatus;
+      category_index[CAT_ALIAS] = status = defaultstatus;
       break;
   }
 
   return NULL;
 }
 
-void *cdr_collapsecats(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  static int i;
+void *cdr_collapsecats(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        flag_coll_cats = status = !status;
         if( status ) {
-          status = flag_coll_cats = 0;
-          //ini_puts("SETTINGS", "CDR_COLLAPSEABLECATS", "FALSE", config);
-
           collapsecats_disable:
-
-          // re-init category_index array
-          for(i = 0; i < CAT_COUNTER; i++)
-            if( i != CAT_ALIAS ) // exclude "ALIAS cheats"
-              category_index[i] = 1;
-
-          //if( !DEBUG ) //hide debug again if not in debug mode
-          //#ifndef DEBUG
-          //  category_index[CAT_DEBUG] = 0;
-          //#endif
-
-        } else {
-          status = flag_coll_cats = 1;
-          //ini_puts("SETTINGS", "CDR_COLLAPSEABLECATS", "TRUE", config);
+          memset(&category_index, true, CAT_COUNTER);
+          category_index[CAT_ALIAS] = false;
         }
       } break;
     case FUNC_SET:
-      status = flag_coll_cats = defaultstatus;
+      flag_coll_cats = status = defaultstatus;
       if( !status ) goto collapsecats_disable;
       break;
   }
@@ -5140,23 +4750,17 @@ void *cdr_collapsecats(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-void *cdr_autostartmenu(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *cdr_autostartmenu(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          status = flag_menu_start = 0;
-          //ini_puts("SETTINGS", "CDR_AUTOSTARTMENU", "FALSE", config);
-        } else {
-          status = flag_menu_start = 1;
-          //ini_puts("SETTINGS", "CDR_AUTOSTARTMENU", "TRUE", config);
-        }
+        flag_menu_start = status = !status;
       } break;
     case FUNC_SET:
-      status = flag_menu_start = defaultstatus;
+      flag_menu_start = status = defaultstatus;
       break;
   }
 
@@ -5167,9 +4771,9 @@ void *cdr_autostartmenu(int calltype, int keypress, int defaultstatus) {
 
 char langBuf[48];
 
-void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
-  static int lang = 0;
+void *cdr_changelang(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  static LangID langID = LANG_ENGLISH;
 
   switch( calltype ) {
 
@@ -5177,7 +4781,7 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
       return (int*)status;
 
     case FUNC_GET_VALUE:
-      return (int*)lang;
+      return (int*)langID;
 
     case FUNC_GET_STRING:
 
@@ -5188,46 +4792,46 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
       }
 
       // Versions don't match (probably old)
-      if ( strlen(main_file_table->lang_files[lang]->version) != 0 && strcmp(main_file_table->lang_files[lang]->version, VERSION) != 0 ) {
-        snprintf(langBuf, sizeof(langBuf), "%s (%s)", main_file_table->lang_files[lang]->lang_name, main_file_table->lang_files[lang]->version);
+      if ( !STR_EMPTY(main_file_table->lang_files[langID]->version) && strcmp(main_file_table->lang_files[langID]->version, VERSION) != 0 ) {
+        snprintf(langBuf, sizeof(langBuf), "%s (%s)", main_file_table->lang_files[langID]->lang_name, main_file_table->lang_files[langID]->version);
         return (void*)langBuf;
       }
 
-      snprintf(langBuf, sizeof(langBuf), "%s", main_file_table->lang_files[lang]->lang_name);
+      snprintf(langBuf, sizeof(langBuf), "%s", main_file_table->lang_files[langID]->lang_name);
       return (void*)langBuf;
 
     case FUNC_CHANGE_VALUE:
-      if ( keypress == PSP_CTRL_CROSS && currLanguageID != lang ) {
-        langTableUpdate(lang);
-        status = 1;
+      if ( keypress == PSP_CTRL_CROSS && currLanguageID != langID ) {
+        langTableUpdate(langID);
+        status = true;
       }
 
-      else if( keypress == PSP_CTRL_LEFT && lang > 0 && ( main_file_table && main_file_table->size > 1 )) {
-        lang--;
-        status = (currLanguageID == lang);
+      else if( keypress == PSP_CTRL_LEFT && langID > 0 && ( main_file_table && main_file_table->size > 1 )) {
+        langID--;
+        status = (currLanguageID == langID);
       }
 
-      else if ( keypress == PSP_CTRL_RIGHT && main_file_table && lang < main_file_table->size-1 ) {
-        lang++;
-        status = (currLanguageID == lang);
+      else if ( keypress == PSP_CTRL_RIGHT && main_file_table && (usize)langID < main_file_table->size-1 ) {
+        langID++;
+        status = (currLanguageID == langID);
       }
 
 	    else if ( keypress == PSP_CTRL_CIRCLE ) {
-        lang = 0;
-        langTableUpdate(lang);
-        status = 1;
+        langID = LANG_ENGLISH;
+        langTableUpdate(langID);
+        status = true;
       }
       break;
 
     case FUNC_SET:
       status = defaultstatus;
       if ( defaultval >= 0 && defaultval <= LANG_FILES_LIMIT-1 ) {
-        lang = defaultval;
+        langID = defaultval;
       } else {
-        lang = 0;
+        langID = LANG_ENGLISH;
       }
-      currLanguageID = lang;
-      status = 1;
+      currLanguageID = langID;
+      status = true;
       break;
   }
 
@@ -5236,15 +4840,14 @@ void *cdr_changelang(int calltype, int keypress, int defaultstatus, int defaultv
 
 #endif
 
-void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats to default value (values from main_menu_sp)
-  // DEBUG_LOG("%i: load_defaults()", getGametime());
+void load_defaults(const CDRMenuItem *menu_list, usize menu_max) { // set all cheats to default value (values from main_menu_sp)
+  // DEBUG_LOG("%lu: load_defaults()", getGametime());
 
-  void (* func)(int calltype, int keypress, int defaultstatus, int defaultval);
-  for( int i = 0; i < menu_max; i++ ) {
-    func = (void (*)(int calltype, int keypress, int defaultstatus, int defaultval))(menu_list[i].value);
+  for( usize i = 0; i < menu_max; i++ ) {
+    void (* func)(int calltype, int keypress, bool defaultstatus, int defaultval) = (void (*)(int, int, bool, int))(menu_list[i].value);
     if( menu_list[i].conf_id != 0 && menu_list[i].def_stat != -1 ) {
-      DEBUG_LOG("%i: for: '0x%04X'", getGametime(), menu_list[i].conf_id);
-      if (func) func( FUNC_SET, menu_list[i].cat, menu_list[i].def_stat, 0xDEADBEEF); // set def_stat from Menu_pack  -> the cheats have to reset themself to default value
+      DEBUG_LOG("%lu: for: '0x%04X'", getGametime(), menu_list[i].conf_id);
+      if (func) func(FUNC_SET, menu_list[i].cat, menu_list[i].def_stat, 0xDEADBEEF); // set def_stat from CDRMenuItem  -> the cheats have to reset themself to default value
       ///arg2: is keypress but not used by FUNC_SET -> we use it for categories)
       ///arg4: is default_value of cheat but is set inside FUNC_SET if necessary
     }
@@ -5254,14 +4857,13 @@ void load_defaults(const Menu_pack *menu_list, int menu_max) { // set all cheats
 
 
 void exit_game() {
-  INFO_LOG("%i: exit_game()", getGametime());
+  INFO_LOG("%lu: exit_game()", getGametime());
 
-  /// TODO - needs a save_thread still running check probably
-  flag_use_liveconfig = 0; // in case its true
+  /// TODO: needs a save_thread still running check probably
+  flag_use_liveconfig = false; // in case its true
   closeMenu(); // config will not be saved now
 
   free_alloc_mem_cdr();
-
   sceKernelExitGame();
 }
 
@@ -5275,7 +4877,7 @@ void bttncht_givearmor() {
   if( LCS ) activateCheatCode(L, R, CIRCLE, L, R, CROSS, L, R);
   if( VCS ) activateCheatCode(UP, DOWN, LEFT, RIGHT, SQUARE, SQUARE, L, R);
 }
-void bttncht_givemoney() { // int calltype, int keypress, int defaultstatus
+void bttncht_givemoney() { // int calltype, int keypress, bool defaultstatus
 
   /* switch( calltype ) {
     case FUNC_CHANGE_VALUE:
@@ -5343,7 +4945,7 @@ void bttncht_playcredits() {
 /* void bttncht_randomplayer() {
   if( LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, SQUARE, TRIANGLE);
 } */
-void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
+void *bttncht_randomplayer(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval) {
   static int model = -1;
 
   switch( calltype ) {
@@ -5378,7 +4980,7 @@ void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus UNUSED,
         model = -1; // random
 
       } else if( keypress == PSP_CTRL_SQUARE ) {
-        // todo - unstuck player
+        // TODO: unstuck player
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -5391,7 +4993,7 @@ void *bttncht_randomplayer(int calltype, int keypress, int defaultstatus UNUSED,
       break;
 
     case FUNC_SET:
-      if( defaultval >= 0 && defaultval <= 104 ) { // todo
+      if( defaultval >= 0 && defaultval <= 104 ) { // TODO:
         model = defaultval;
     setRandomPedCheat(model);
       } else model = -1;
@@ -5439,12 +5041,12 @@ void bttncht_traffichrome() {
  *
  * Completion:
  *
- * Todo:
+ * TODO:
  *
  * Notes:
  **************************************************************************************************************************************/
-void *gamespeed(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
+void *gamespeed(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
   static float speed = 1.0f; // game default
 
   switch( calltype ) {
@@ -5459,8 +5061,7 @@ void *gamespeed(int calltype, int keypress, int defaultstatus, int defaultval) {
       return (void *)retbuf;
 
     case FUNC_CHECK:
-      if(!status)
-        speed = getGamespeed();
+      if(!status) speed = getGamespeed();
       break;
 
     case FUNC_APPLY:
@@ -5470,17 +5071,17 @@ void *gamespeed(int calltype, int keypress, int defaultstatus, int defaultval) {
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_LEFT && speed > 0.1f ) { // LEFT
         speed -= 0.1f;
-        status = 1;
+        status = true;
 
       } else if ( keypress == PSP_CTRL_RIGHT && speed < 3.9f ) { // RIGHT
         speed += 0.1f;
-        status = 1;
+        status = true;
 
       } else if ( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if ( keypress == PSP_CTRL_CIRCLE ) { // CIRCLE
-        status = 0;
+        status = false;
         setGamespeed(1.0f);
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
@@ -5509,12 +5110,10 @@ void *gamespeed(int calltype, int keypress, int defaultstatus, int defaultval) {
  *
  * Completion:   Working
  *
- * Todo:     /
- *
  * Notes:     Example:   60 / 2 = 30 FPS
  **************************************************************************************************************************************/
-void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
+void *fps_cap(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
   static int i = 2; // 30 FPS (game default)
 
   switch( calltype ) {
@@ -5535,25 +5134,26 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
           if( addr_fpsCap > 0 ) {
             _sh(2, addr_fpsCap);
             clearICacheFor(addr_fpsCap);
+            status = false;
           }
-          status = 0;
-          break;
         } else { // enable
           fpscap_enable:
           if( addr_fpsCap > 0 ) {
             _sh(i, addr_fpsCap);
             clearICacheFor(addr_fpsCap);
+            status = true;
           }
-          status = 1;
-          break;
         }
-      } else if( keypress == PSP_CTRL_LEFT && i < 7 ) { // LEFT
+      } 
+      else if( keypress == PSP_CTRL_LEFT && i < 7 ) { // LEFT
         i++;
-        if( status ) goto fpscap_enable;
-      } else if( keypress == PSP_CTRL_RIGHT && i > 1 ) { // RIGHT
+        if( status ) goto fpscap_enable; // TODO: change this
+      } 
+      else if( keypress == PSP_CTRL_RIGHT && i > 1 ) { // RIGHT
         i--;
-        if( status ) goto fpscap_enable;
-      } else if( keypress == PSP_CTRL_TRIANGLE ) {
+        if( status ) goto fpscap_enable; // TODO: change this
+      } 
+      else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(addr_fpsCap, sizeof(short)); // hour value
@@ -5563,14 +5163,14 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
 
     case FUNC_SET:
       status = defaultstatus;
-      if( defaultval > 0 && defaultval < 60 )
+      if( defaultval >= 1 && defaultval <= 7 )
         i = defaultval;
       else // fix for bad config value
         i = 2;
 
       if( addr_fpsCap != 0 ) {
-        if( status ) goto fpscap_enable;
-        else goto fpscap_disable;
+        if( status ) goto fpscap_enable; // TODO: change this
+        else goto fpscap_disable; // TODO: change this
       }
 
       break;
@@ -5584,14 +5184,14 @@ void *fps_cap(int calltype, int keypress, int defaultstatus, int defaultval) {
  *
  * Completion:   96% :|
  *
- * Todo:     - maybe check in noped game function for pplayer vs pped -> no need for FUNC_APPLY block
+ * TODO:     - maybe check in noped game function for pplayer vs pped -> no need for FUNC_APPLY block
  *
  * Notes:     - Original cheat had 1 more nop'ed memory location though?
  *         - When you are on bike other bike peds can't fall off either!
           -> whole FUNC_APPLY block is only to re-enable checks for traffic bikr peds when you are on foot or on none-bike
  *********************************************************************************************************************************/
-void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *neverfalloffbike(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   static u32 backup = 0;
 
   switch( calltype ) {
@@ -5604,7 +5204,7 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
         _sw(0x00000000, addr_neverFallOffBike_rollback); // don't fall off when rolling backwards
         _sw(0x00000000, addr_neverFallOffBike_hitobj); // don't fall off bike when hitting object
       } else {
-        if( backup != 0) {
+        if( backup != 0 ) {
           _sw(backup, addr_neverFallOffBike_rollback); // fall off when rolling backwards
           _sw(backup, addr_neverFallOffBike_hitobj); // fall off bike when hitting object
         }
@@ -5620,14 +5220,14 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
           if( backup != 0 ) {
             _sw(backup, addr_neverFallOffBike_rollback); // fall off when rolling backwards
             _sw(backup, addr_neverFallOffBike_hitobj); // fall off bike when hitting object
+            status = false;
           }
-          status = 0;
         } else { // enable
           neverfalloffbike_enable:
           if( backup == 0 ) backup = _lw(addr_neverFallOffBike_rollback); // backup jal reference for restoring
           _sw(0x00000000, addr_neverFallOffBike_rollback); // don't fall off when rolling backwards
           _sw(0x00000000, addr_neverFallOffBike_hitobj); // don't fall off bike when hitting object
-          status = 1;
+          status = true;
         }
         clearICacheFor(addr_neverFallOffBike_rollback);
         clearICacheFor(addr_neverFallOffBike_hitobj);
@@ -5635,8 +5235,8 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_SET:
       status = defaultstatus;
-      if( status ) goto neverfalloffbike_enable;
-      else goto neverfalloffbike_disable;
+      if( status ) goto neverfalloffbike_enable; // TODO: change this
+      else goto neverfalloffbike_disable; // TODO: change this
       break;
   }
 
@@ -5648,18 +5248,15 @@ void *neverfalloffbike(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   100% :)
  *
- * Todo:     -
- *        -
- *
- * Notes:     Because vehicles don't like teleportation there is an aditionl fix needed to "calm down" momentum values. see "teleportFixForVehicle()"
+ * Notes:     Because vehicles don't like teleportation there is an aditionl fix needed to "calm down" momentum values. see "SetPlayerPositionFixForVehicle()"
  ******************************************************************************************************************************************************/
-void *teleporter(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
-  static int i = 0;
+void *teleporter(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval) {
+  static array_uidx i = 0;
 
   switch( calltype ) {
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_GET_STRING:
       return (void *)(_t(LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
@@ -5670,11 +5267,11 @@ void *teleporter(int calltype, int keypress, int defaultstatus UNUSED, int defau
 
       } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
         if( LCS && i < lcs_teleportersize ) i++;
-        if( VCS && i < vcs_teleportersize ) i++;
+        else if( VCS && i < vcs_teleportersize ) i++;
 
       } else if ( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( LCS ) teleport(lcs_teleports[i].xval, lcs_teleports[i].yval, lcs_teleports[i].zval);
-        if( VCS ) teleport(vcs_teleports[i].xval, vcs_teleports[i].yval, vcs_teleports[i].zval);
+        const Vector3D *teleport_position = LCS ? &lcs_teleports[i].position : &vcs_teleports[i].position;
+        SetPlayerPosition(teleport_position->x, teleport_position->y, teleport_position->z);
         closeMenu();
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
@@ -5689,7 +5286,7 @@ void *teleporter(int calltype, int keypress, int defaultstatus UNUSED, int defau
       break;
 
     case FUNC_SET:
-      if( defaultval >= 0 && i <= (LCS ? lcs_teleportersize : vcs_teleportersize) )
+      if( defaultval >= 0 && defaultval <= (LCS ? lcs_teleportersize : vcs_teleportersize) )
         i = defaultval;
       else
         i = LCS ? 26 : 27; // default teleport location in list
@@ -5705,9 +5302,6 @@ void *teleporter(int calltype, int keypress, int defaultstatus UNUSED, int defau
 /**  ********************************************************************************************
  *
  * Completion:
- *
- * Todo:     -
- *        -
  *
  * Notes:
 
@@ -5744,16 +5338,16 @@ void *teleporter(int calltype, int keypress, int defaultstatus UNUSED, int defau
 
  ******************************************************************************************************************************************************/
 
-int toValue(char *str) {
+int strToInt(const u8string str) {
   return (int)strtol(str, NULL, 0);
 }
 
-char * readMissionNameFromSCM(int mission_number) {
+u8string readMissionNameFromSCM(int mission_number) {
   static int previous = -1;
-  static char ret[8] = "UNSET";
-  unsigned char buf[256] = "";
-  char valstr[16] = "";
-  int i, missions = 0, offset = 0;
+  static u8char ret[8] = "UNSET";
+  u8char buf[256] = "";
+  u8char valstr[16] = "";
+  int missions = 0, offset = 0;
 
   if( previous == mission_number ) //
     return ret;
@@ -5772,7 +5366,7 @@ char * readMissionNameFromSCM(int mission_number) {
     goto msngetexit;
   } snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address
 
-  offset = toValue(valstr);
+  offset = strToInt(valstr);
   sceIoLseek(fd, offset, SEEK_SET); // got to chunk
   sceIoRead(fd, &buf, 0x10); // read in header
   if( buf[0x8] != 0x02 || buf[0xA] != 0x06 ) { //confirm syntax
@@ -5780,7 +5374,7 @@ char * readMissionNameFromSCM(int mission_number) {
     goto msngetexit;
   } snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X", buf[0xD], buf[0xC], buf[0xB]); // next chunk address
 
-  offset = toValue(valstr);
+  offset = strToInt(valstr);
   sceIoLseek(fd, offset, SEEK_SET); // got to chunk
   sceIoRead(fd, &buf, 0x10); // read in header
   if( buf[0x8] != 0x02 || buf[0xA] != 0x06 ) { // confirm syntax
@@ -5793,7 +5387,7 @@ char * readMissionNameFromSCM(int mission_number) {
   sceIoLseek(fd, offset, SEEK_SET);
   sceIoRead(fd, &buf, 0x4); // read in header
   snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); // next chunk address
-  missions = toValue(valstr);
+  missions = strToInt(valstr);
   //DEBUG_LOG("total missions: %i", missions);
 
 
@@ -5804,22 +5398,22 @@ char * readMissionNameFromSCM(int mission_number) {
 
   /// loop mission offsets
   offset+=0x4; // first offset to mission
-  for( i = 0; i < missions; i++, offset+=0x4 ) {
+  for( array_uidx i = 0; i < missions; i++, offset+=0x4 ) {
     if( i == mission_number ) {
       sceIoLseek(fd, offset, SEEK_SET);
       sceIoRead(fd, &buf, 0x4); // read in header
       snprintf(valstr, sizeof(valstr), "0x%02X%02X%02X%02X", buf[0x3], buf[0x2], buf[0x1], buf[0x0]); //next chunk address
-      //DEBUG_LOG("offset for mission %i: 0x%08X", mission_number, toValue(valstr));
+      //DEBUG_LOG("offset for mission %i: 0x%08X", mission_number, strToInt(valstr));
       break;
     }
   }
 
   /// retrieve thread name if possible
-  offset = toValue(valstr) + 8;
+  offset = strToInt(valstr) + 8;
   sceIoLseek(fd, offset, SEEK_SET);
   sceIoRead(fd, &buf, 256); // read in some script data (256 should be enough)
   snprintf(ret, sizeof(ret), "NONAME");
-  for( i = 0; i < 256; i++ ) { // search the first instructions for name_thread
+  for( int i = 0; i < 256; i++ ) { // search the first instructions for name_thread
     if( buf[i] == (LCS ? 0xA9 : 0x38) && buf[i+1] == (LCS ? 0x03 : 0x02) ) { // name_thread opcode
       snprintf(ret, sizeof(ret), "%s", getString((int)&buf[i+2], 0)); // ugly but I was lazy
       //snprintf(ret, sizeof(ret), "%s", "DONE");
@@ -5833,7 +5427,7 @@ char * readMissionNameFromSCM(int mission_number) {
 }
 
 #ifdef PREVIEW
-void *mission_select(int calltype, int keypress, int defaultstatus, int defaultval) {
+void *mission_select(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval) {
   static int i = 0;
 
   switch( calltype ) {
@@ -5852,7 +5446,7 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
 
       } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
         i++;
-        //todo get missions number
+        // TODO: get missions number
 
       } else if ( keypress == PSP_CTRL_CROSS ) { // CROSS
         /*
@@ -5871,7 +5465,7 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
           //0x38, 0x00, 0xCE, 0x30, 0x01,      ONMISSION = 1   `?
 
 
-        static u8 script_startmission[] = {  // must be static for CustomScriptExecut()!
+        static byte script_startmission[] = {  // must be static for CustomScriptExecut()!
 
           /// load_and_launch_mission_internal
           0x1C, 0x04,
@@ -5880,9 +5474,8 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
 
           /// terminate_this_script
           0x4E, 0x00
-        };
-
-        *(char*)&script_startmission[3] = (char)i;
+        }; *(byte*)&script_startmission[3] = (byte)i;
+        
         if( VCS ) {
           writeShort(&script_startmission[0], 0x0289);
           writeShort(&script_startmission[4], 0x0023);
@@ -5891,7 +5484,7 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
 
         //0289: start_mission 62
         //0023: end_thread
-        /*u8 script_startmission[] = {
+        /*byte script_startmission[] = {
 
           ///load_and_launch_mission_internal
           0x89, 0x02,
@@ -5926,12 +5519,12 @@ void *mission_select(int calltype, int keypress, int defaultstatus, int defaultv
 void mission_selector() {
   closeMenu();
 
-  static u8 script[10];
+  static byte script[10];
   int pos = 0, temp = 0, address = 0;
   int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
   int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
   for(address = script_space; address < script_space + main_size; address++) {
-    if( *(u8*)address == 'L' && *(u8*)(address+1) == 'E' ) { // first because faster
+    if( *(u8char*)address == 'L' && *(u8char*)(address+1) == 'E' ) { // first because faster
       if( strcmp("LEVSKIP", getString(address, 0)) == 0 ) {
         DEBUG_LOG("LEVSKIP found @ 0x%08X in mainscript", address - script_space);
 
@@ -5947,10 +5540,10 @@ void mission_selector() {
         script[pos++] = 0x06;
 
         /// int value / address in main script
-        script[pos++] = *(unsigned char*)address;
-        script[pos++] = *(unsigned char*)(address+1);
-        script[pos++] = *(unsigned char*)(address+2);
-        script[pos++] = *(unsigned char*)(address+3);
+        script[pos++] = *(byte*)address;
+        script[pos++] = *(byte*)(address+1);
+        script[pos++] = *(byte*)(address+2);
+        script[pos++] = *(byte*)(address+3);
 
         CustomScriptExecute((int)&script); // make game execute it
         return;
@@ -5961,7 +5554,7 @@ void mission_selector() {
 }
 
 
-//void *load_building(int calltype, int keypress, int defaultstatus, int defaultval) {
+//void *load_building(int calltype, int keypress, bool defaultstatus, int defaultval) {
 //  static int i = 0;
 
   /*
@@ -6086,16 +5679,16 @@ void mission_selector() {
 
 //    {   32, "Staunton Liftbanner",    1,    -63.00f,  -653.0f,  26.50f,    0.00f,    0.0f,    0.00f,    /* LOREM */  -1,  /* LOREM */    -1   ,  /* NONE */    -1    }, //
 
-/*  }; int lcs_buildingssize = (sizeof(lcs_buildings)/sizeof(buildings_pack))-1;
+/*  }; int lcs_buildingssize = ARRAY_SIZE(lcs_buildings)-1;
 
-  u8 script_swap[] = {
+  byte script_swap[] = {
     ///0635: swap_building
     0x35, 0x06,
     0x07, 0x00, //ID
     0x07, 0x1,  //1 ON / 0 OFF
   };
 
-  u8 script_loadscene[] = {
+  byte script_loadscene[] = {
     ///03D0: load_scene
     0xD0 ,0x03,
     0x09 ,0x00 ,0x00 ,0x00 ,0x00 , //x
@@ -6103,7 +5696,7 @@ void mission_selector() {
     0x09 ,0x00 ,0x00 ,0x00 ,0x00 , //z
   };
 
-  u8 script_swapnearest[] = {
+  byte script_swapnearest[] = {
     ///03BB: swap_nearest_building_model
     0xBB ,0x03,
     0x09 ,0x00 ,0x00 ,0x00 ,0x00 , //x
@@ -6114,7 +5707,7 @@ void mission_selector() {
     0x08 ,0x00 ,0x00,  //to IDE (eg: IZ_VIN = #3888 = 0x0F30)
   };
 
-  u8 script_visibility[] = {
+  byte script_visibility[] = {
     ///0368: set_visibility_of_closest_object_of_type
     0x68 ,0x03,
     0x09 ,0x00 ,0x00 ,0x00 ,0x00 , //x
@@ -6125,7 +5718,7 @@ void mission_selector() {
     0x07 ,0x00,  //visibility 0
   };
 
-  u8 script_terminate[] = {
+  byte script_terminate[] = {
     ///terminate_this_script
     0x4E, 0x00
   };
@@ -6154,7 +5747,7 @@ void mission_selector() {
 
         *(char*)&script_swap[3] = (char)lcs_buildings[i].no;
         *(char*)&script_swap[5] = (char)lcs_buildings[i].value;
-        CustomScriptAdd(script_swap, sizeof(script_swap)/sizeof(script_swap[0]));
+        CustomScriptAdd(script_swap, ARRAY_SIZE(script_swap);
 
         if( lcs_buildings[i].ide_x != 0.0f && lcs_buildings[i].ide_on != -1 ) {
           writeFloat(&script_swapnearest[3], lcs_buildings[i].ide_x);
@@ -6162,16 +5755,16 @@ void mission_selector() {
           writeFloat(&script_swapnearest[13], lcs_buildings[i].ide_z);
           writeShort(&script_swapnearest[21], lcs_buildings[i].ide_off);
           writeShort(&script_swapnearest[24], lcs_buildings[i].ide_on);
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
         }
 
         if( lcs_buildings[i].no == 1 ) { //Callahan Bridge
-          //todo
+          // TODO:
           setTimedTextbox("Todo: Collision swap", 5.00f);
         }
 
         if( lcs_buildings[i].no == 12 ) { //Fort Staunton
-          //todo
+          // TODO:
           setTimedTextbox("Todo: Collision swap", 5.00f);
         }
 
@@ -6182,91 +5775,91 @@ void mission_selector() {
           writeFloat(&script_swapnearest[13], -4.35f);
           writeShort(&script_swapnearest[21], 4045); //#SUBWAYSECTION3_NUL
           writeShort(&script_swapnearest[24], 2102); //#SUBWAYSECTION3
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 271.744f);
           writeFloat(&script_swapnearest[8], -81.072f);
           writeFloat(&script_swapnearest[13], -4.35f);
           writeShort(&script_swapnearest[21], 4050); //#SUBWAYSECTION4_NUL
           writeShort(&script_swapnearest[24], 2157); //#SUBWAYSECTION4
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 267.143f);
           writeFloat(&script_swapnearest[8], -69.786f);
           writeFloat(&script_swapnearest[13], -4.333f);
           writeShort(&script_swapnearest[21], 4044); //#INTERSECTARCH_NUL
           writeShort(&script_swapnearest[24], 2095); //#INTERSECTARCHSS4
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 330.0f);
           writeFloat(&script_swapnearest[8], -74.737f);
           writeFloat(&script_swapnearest[13], -6.365f);
           writeShort(&script_swapnearest[21], 4046); //#JM_SUBSECTION5_NUL
           writeShort(&script_swapnearest[24], 2163); //#JM_SUBWAYSECTION5
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 370.0f);
           writeFloat(&script_swapnearest[8], -65.0f);
           writeFloat(&script_swapnearest[13], -4.35f);
           writeShort(&script_swapnearest[21], 4047); //#SUBWAYSECTION6_NUL
           writeShort(&script_swapnearest[24], 2162); //#SUBWAYSECTION6
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 410.0f);
           writeFloat(&script_swapnearest[8], -65.0f);
           writeFloat(&script_swapnearest[13], -4.35f);
           writeShort(&script_swapnearest[21], 4048); //#SUBWAYSECTION7_NUL
           writeShort(&script_swapnearest[24], 2096); //#SUBWAYSECTION7
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 321.491f);
           writeFloat(&script_swapnearest[8], -144.571f);
           writeFloat(&script_swapnearest[13], -0.757f);
           writeShort(&script_swapnearest[21], 4043); //#SUBWAYSTATION3_NUL
           writeShort(&script_swapnearest[24], 2099); //#SUBWAYSTATION3
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 339.57f);
           writeFloat(&script_swapnearest[8], -163.573f);
           writeFloat(&script_swapnearest[13], -1.418f);
           writeShort(&script_swapnearest[21], 4042); //#RUBBLE1_NUL
           writeShort(&script_swapnearest[24], 2100); //#RUBBLE1
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 365.205f);
           writeFloat(&script_swapnearest[8], -199.129f);
           writeFloat(&script_swapnearest[13], -4.45f);
           writeShort(&script_swapnearest[21], 4041); //#SUBWAYSECTION2_NUL
           writeShort(&script_swapnearest[24], 2093); //#SUBWAYSECTION2
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 348.779f);
           writeFloat(&script_swapnearest[8], -250.0f);
           writeFloat(&script_swapnearest[13], -1.596f);
           writeShort(&script_swapnearest[21], 4040); //#SUB_MIDDLE_NUL
           writeShort(&script_swapnearest[24], 2165); //#SUB_MIDDLE
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 351.078f);
           writeFloat(&script_swapnearest[8], -306.744f);
           writeFloat(&script_swapnearest[13], -4.45f);
           writeShort(&script_swapnearest[21], 4049); //#SUBWAYSECTION1_NUL
           writeShort(&script_swapnearest[24], 2094); //#SUBWAYSECTION1
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 278.364f);
           writeFloat(&script_swapnearest[8], -346.425f);
           writeFloat(&script_swapnearest[13], -0.757f);
           writeShort(&script_swapnearest[21], 4039); //#SUBWAYSTATION1_NUL
           writeShort(&script_swapnearest[24], 2098); //#SUBWAYSTATION1
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
           writeFloat(&script_swapnearest[3], 260.46f);
           writeFloat(&script_swapnearest[8], -355.346f);
           writeFloat(&script_swapnearest[13], -0.861f);
           writeShort(&script_swapnearest[21], 4038); //#RUBBLE2_NUL
           writeShort(&script_swapnearest[24], 2097); //#RUBBLE2
-          CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+          CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
         }
 
@@ -6276,15 +5869,15 @@ void mission_selector() {
           writeFloat(&script_visibility[13], lcs_buildings[i].ide_z);
           writeShort(&script_visibility[21], lcs_buildings[i].ide_lod);
           *(char*)&script_visibility[24] = 0x00; //visibility = 0
-          CustomScriptAdd(script_visibility, sizeof(script_visibility)/sizeof(script_visibility[0]));
+          CustomScriptAdd(script_visibility, ARRAY_SIZE(script_visibility);
         }
 
         writeFloat(&script_loadscene[3], lcs_buildings[i].ide_x);
         writeFloat(&script_loadscene[8], lcs_buildings[i].ide_y);
         writeFloat(&script_loadscene[13], lcs_buildings[i].ide_z);
-        CustomScriptAdd(script_loadscene, sizeof(script_loadscene)/sizeof(script_loadscene[0]));
+        CustomScriptAdd(script_loadscene, ARRAY_SIZE(script_loadscene);
 
-        CustomScriptAdd(script_terminate, sizeof(script_terminate)/sizeof(script_terminate[0]));
+        CustomScriptAdd(script_terminate, ARRAY_SIZE(script_terminate);
 
         CustomScriptExecute((int)&script_terminate); //make game execute it
 
@@ -6299,7 +5892,7 @@ void mission_selector() {
 
         *(char*)&script_swap[3] = (char)lcs_buildings[i].no;
         *(char*)&script_swap[5] = 0x0; //default
-        CustomScriptAdd(script_swap, sizeof(script_swap)/sizeof(script_swap[0]));
+        CustomScriptAdd(script_swap, ARRAY_SIZE(script_swap);
 
 
         writeFloat(&script_swapnearest[3], lcs_buildings[i].ide_x);
@@ -6307,7 +5900,7 @@ void mission_selector() {
         writeFloat(&script_swapnearest[13], lcs_buildings[i].ide_z);
         writeShort(&script_swapnearest[21], lcs_buildings[i].ide_on);
         writeShort(&script_swapnearest[24], lcs_buildings[i].ide_off);
-        CustomScriptAdd(script_swapnearest, sizeof(script_swapnearest)/sizeof(script_swapnearest[0]));
+        CustomScriptAdd(script_swapnearest, ARRAY_SIZE(script_swapnearest);
 
         if( lcs_buildings[i].ide_lod != -1 ) {
           writeFloat(&script_visibility[3], lcs_buildings[i].ide_x);
@@ -6315,15 +5908,15 @@ void mission_selector() {
           writeFloat(&script_visibility[13], lcs_buildings[i].ide_z);
           writeShort(&script_visibility[21], lcs_buildings[i].ide_lod);
           *(char*)&script_visibility[24] = 0x01; //visibility = 1
-          CustomScriptAdd(script_visibility, sizeof(script_visibility)/sizeof(script_visibility[0]));
+          CustomScriptAdd(script_visibility, ARRAY_SIZE(script_visibility);
         }
 
         writeFloat(&script_loadscene[3], lcs_buildings[i].ide_x);
         writeFloat(&script_loadscene[8], lcs_buildings[i].ide_y);
         writeFloat(&script_loadscene[13], lcs_buildings[i].ide_z);
-        CustomScriptAdd(script_loadscene, sizeof(script_loadscene)/sizeof(script_loadscene[0]));
+        CustomScriptAdd(script_loadscene, ARRAY_SIZE(script_loadscene);
 
-        CustomScriptAdd(script_terminate, sizeof(script_terminate)/sizeof(script_terminate[0]));
+        CustomScriptAdd(script_terminate, ARRAY_SIZE(script_terminate);
 
         CustomScriptExecute(0); //make game execute it
 
@@ -6366,12 +5959,10 @@ void mission_selector() {
  *
  * Completion:   100% :D
  *
- * Todo:     -
- *
- * Notes:     Toggleing cheat will automatically write to config.ini!
+ * Notes:     
  **************************************************************************************************************************************/
-void *skip_intros(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *skip_intros(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6379,13 +5970,7 @@ void *skip_intros(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) { // disable
-          //ini_puts("CHEATS", "CHEAT_SkipIntroMovies", "FALSE", config);
-          status = 0;
-        } else { // enable
-          //ini_puts("CHEATS", "CHEAT_SkipIntroMovies", "TRUE", config);
-          status = 1;
-        }
+        status = !status;
       } break;
 
     case FUNC_SET:
@@ -6406,12 +5991,12 @@ void *skip_intros(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     - only do the patching stuff when cheat enabled?
+ * TODO:     - only do the patching stuff when cheat enabled?
  *
  * Notes:     Toggleing cheat will automatically write to config.ini!
  **************************************************************************************************************************************/
-void *debug_loadscreens(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *debug_loadscreens(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6419,13 +6004,7 @@ void *debug_loadscreens(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) { // disable
-          //ini_puts("CHEATS", "CHEAT_DebugLoadscreens", "FALSE", config);
-          status = 0;
-        } else { // enable
-          //ini_puts("CHEATS", "CHEAT_DebugLoadscreens", "TRUE", config);
-          status = 1;
-        }
+        status = !status;
       } break;
 
     case FUNC_SET:
@@ -6441,13 +6020,11 @@ void *debug_loadscreens(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   100%
  *
- * Todo:     -
- *
  * Notes:     VCS's Multiplayer loadscreen are lower quality and look quite bad.
         Furthermore VCS has random loadscreens already. And 12 singleplayer ones btw!! (LCS has 4 hardcoded only!)
  **************************************************************************************************************************************/
-void *random_loadscreens(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *random_loadscreens(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6455,13 +6032,7 @@ void *random_loadscreens(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) { // disable
-          //ini_puts("CHEATS", "CHEAT_RandomLoadscreens", "FALSE", config);
-          status = 0;
-        } else { // enable
-          //ini_puts("CHEATS", "CHEAT_RandomLoadscreens", "TRUE", config);
-          status = 1;
-        }
+        status = !status;
       } break;
 
     case FUNC_SET:
@@ -6477,7 +6048,7 @@ void *random_loadscreens(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  Its continuously removing texture-applying from loaded textures. It works but is ugly solution
  *
- * Todo:  - How to get texture from ID or model ID ?????????
+ * TODO:  - How to get texture from ID or model ID ?????????
  *        - Understand everything better
  *        - VCS has additional AREA files
  *
@@ -6510,8 +6081,9 @@ All LCS:
 
  *
  **************************************************************************************************************************************/
-void *disable_textures(int calltype, int keypress, int defaultstatus) {
-  static int status, offs = 0;
+void *disable_textures(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  uaddr offs = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6522,7 +6094,7 @@ void *disable_textures(int calltype, int keypress, int defaultstatus) {
       /// WRLD textures (from eg: commer.lvz/.img)
       if( LCS ) offs = getInt(getInt(getInt(render) + 0x10)) + 0x4;
       if( VCS ) offs = getInt(getInt(getInt(render+gp) + 0x18)) + 0x4;
-      while( 1 ) { // missing first ptr but whatever
+      while( true ) { // missing first ptr but whatever
         offs += (LCS ? 0x8 : 0xC); // VCS has additional counter Integer
 
         if( getInt(offs) == 0 ) // not visible so not loaded.. nothing here
@@ -6554,7 +6126,7 @@ void *disable_textures(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
@@ -6576,13 +6148,12 @@ void *disable_textures(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  99% :)
  *
- * Todo:  -
- *        - bar is not completely full with such a huge value.. fixable?
+ * TODO:  - bar is not completely full with such a huge value.. fixable?
  *
  * Notes:     /
  **************************************************************************************************************************************/
-void *godmode(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *godmode(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6596,9 +6167,9 @@ void *godmode(int calltype, int keypress, int defaultstatus) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) { // disable
-          setPedHealthAndArmor(pplayer, (float)((u8)getMaxHealthMultiplier()), (float)((u8)getMaxArmorMultiplier()));
-          status = 0;
-        } else status = 1;
+          setPedHealthAndArmor(pplayer, (float)(getMaxHealthMultiplier()), (float)(getMaxArmorMultiplier()));
+        }
+        status = !status;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
@@ -6622,13 +6193,10 @@ void *godmode(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:     /
  **************************************************************************************************************************************/
-void *powerjump(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *powerjump(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6636,7 +6204,7 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_APPLY:
       if( !pcar && flag_menu_running == 0 ) {
-        if( getByte(pplayer+(LCS?0x10A:136)) == 0 ) { // player not touching ground (better check todo?)
+        if( getByte(pplayer+(LCS?0x10A:136)) == 0 ) { // TODO: player not touching ground (better check)
 
           /// calc current speed
           float speed = sqrtf((getFloat(pplayer+(LCS?0x70:0x140)) * getFloat(pplayer+(LCS?0x70:0x140))) + (getFloat(pplayer+(LCS?0x74:0x144)) * getFloat(pplayer+(LCS?0x74:0x144)))); // sqrtf( x^2 + y^2 )
@@ -6660,7 +6228,7 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
       } break;
 
     case FUNC_SET:
@@ -6676,13 +6244,10 @@ void *powerjump(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  100%
  *
- * Todo:  -
- *        -
- *
  * Notes:     VCS is handled differently. Using the same bitflag (which is at 0x1CF btw) unloads the ped?!
  **************************************************************************************************************************************/
-void *invisible(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *invisible(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6694,15 +6259,13 @@ void *invisible(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) { // disable
-          setPedInvisible(pplayer, OFF);
-          status = 0;
-        } else status = 1;
+        status = !status;
+        setPedInvisible(pplayer, status);
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        if( LCS ) hex_marker_addx(pplayer+0x19A, sizeof(char));
-        if( VCS ) hex_marker_addx(pplayer+0x4C, sizeof(short));
+        if( LCS ) hex_marker_addx(pplayer+0x19A, sizeof(byte));
+        if( VCS ) hex_marker_addx(pplayer+0x4C, sizeof(int16));
         hexeditor_create(pplayer + (LCS ? 0x19A : 0x4C), 0, memory_low, memory_high, "> pplayer invisible");
         #endif
       } break;
@@ -6721,13 +6284,10 @@ void *invisible(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *ignored(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *ignored(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6739,15 +6299,13 @@ void *ignored(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) { // disable
-          setPedIgnoredByEveryone(pplayer, OFF);
-          status = 0;
-        } else status = 1;
+        status = !status;
+        setPedIgnoredByEveryone(pplayer, status);
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         int temp = pplayer + (LCS ? 0x82E : 0x90E);
         hex_marker_clear();
-        hex_marker_addx(temp, sizeof(char));
+        hex_marker_addx(temp, sizeof(bool));
         hexeditor_create(temp, 0, memory_low, memory_high, "");
         #endif
       } break;
@@ -6765,14 +6323,11 @@ void *ignored(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *warp_out_water(int calltype, int keypress, int defaultstatus) {
-  static int timer = 0;
-  static int status;
+void *warp_out_water(int calltype, int keypress, bool defaultstatus) {
+  static uint32 timer = 0;
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6787,14 +6342,12 @@ void *warp_out_water(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) { // disable
-          status = 0;
-        } else status = 1;
+        status = !status;
       } /*else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         int temp = pplayer + 0x142;
         hex_marker_clear();
-        hex_marker_addx(temp, sizeof(char));
+        hex_marker_addx(temp, sizeof(bool));
         hexeditor_create(temp, 0, memory_low, memory_high, "");
         #endif
       }*/ break;
@@ -6811,14 +6364,14 @@ void *warp_out_water(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     - VCS.. inWater() doesn't return bool currently and is different for different vehicles
+ * TODO:     - VCS.. inWater() doesn't return bool currently and is different for different vehicles
  *        -
  *
  * Notes:
  **************************************************************************************************************************************/
-void *warp_out_water_veh(int calltype, int keypress, int defaultstatus) {
-  static int timer = 0;
-  static int status;
+void *warp_out_water_veh(int calltype, int keypress, bool defaultstatus) {
+  static uint32 timer = 0;
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6833,9 +6386,7 @@ void *warp_out_water_veh(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) { // disable
-          status = 0;
-        } else status = 1;
+        status = !status;
       } break;
 
     case FUNC_SET:
@@ -6851,7 +6402,7 @@ void *warp_out_water_veh(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   80%
  *
- * Todo:     - when reset -> set to correct ammo value
+ * TODO:     - when reset -> set to correct ammo value
  *        - find function patch method to never loose ammo instead?
  *        - set default
 
@@ -6859,8 +6410,8 @@ void *warp_out_water_veh(int calltype, int keypress, int defaultstatus) {
  *
  * Notes:     /
  **************************************************************************************************************************************/
-void *unlimited_ammo(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *unlimited_ammo(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -6879,8 +6430,8 @@ void *unlimited_ammo(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
-        if(!status) { // reset default values once (these are not the default ones though TODO)
+        status = !status;
+        if(!status) { // TODO: reset default values once (these are not the default ones though)
           setPedAmmoForWeapon(pplayer, WEAPON_GRENADE,   0, 200); // Grenades
           setPedAmmoForWeapon(pplayer, WEAPON_HANDGUN, 100, 200); // Handgun
           setPedAmmoForWeapon(pplayer, WEAPON_SHOTGUN, 100, 200); // Shotgun
@@ -6905,14 +6456,14 @@ void *unlimited_ammo(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   100%
  *
- * Todo:     - jumping fix? maybe disable jumping completely?
+ * TODO:     - jumping fix? maybe disable jumping completely?
  *        -
  *
  * Notes:     setPedMass(pplayer, 70, 100); is default
  **************************************************************************************************************************************/
-void *heavy_player(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  static u32 pplyrbckp = 0;
+void *heavy_player(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  static uaddr pplyrbckp = 0;
   static int vehicleflag = 0;
   static float backup1 = 0;
   static float backup2 = 0;
@@ -6929,11 +6480,11 @@ void *heavy_player(int calltype, int keypress, int defaultstatus) {
         if( backup1 < 10000 ) setPedMass(pplayer, backup1*10000, backup2*10000);
       }
       /// fix for weird vehicle momentum gaining behaviour with high player mass
-      if( getPedsCurrentAnimation(pplayer) == 0x12 && vehicleflag == 0 && backup1 != 0 ) { // disable while entering vehicle
+      if( getPedsCurrentAnimation() == 0x12 && vehicleflag == 0 && backup1 != 0 ) { // disable while entering vehicle
         setPedMass(pplayer, backup1, backup2);
         vehicleflag = 1;
       }
-      if( vehicleflag == 1 && getPedsCurrentAnimation(pplayer) != 0x12 && backup1 != 0 ) {
+      if( vehicleflag == 1 && getPedsCurrentAnimation() != 0x12 && backup1 != 0 ) {
         setPedMass(pplayer, backup1*10000, backup2*10000); // re-enable after vehicle entered
         vehicleflag = 0;
       }
@@ -6953,8 +6504,8 @@ void *heavy_player(int calltype, int keypress, int defaultstatus) {
             setPedMass(pplayer, backup1, backup2);
             backup1 = 0; backup2 = 0; pplyrbckp = 0; vehicleflag = 0;
           }
-          status = 0;
-        } else status = 1;
+          status = false;
+        } else status = true;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -6968,7 +6519,7 @@ void *heavy_player(int calltype, int keypress, int defaultstatus) {
     case FUNC_SET:
       status = defaultstatus;
       if( !status )
-        goto heavyplayer_disable;
+        goto heavyplayer_disable; // TODO: change this
       break;
   }
 
@@ -6980,13 +6531,13 @@ void *heavy_player(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  90 :)
  *
- * Todo:  - fix vehicle fall through water (isVehicleInWater() doesn't work)
+ * TODO:  - fix vehicle fall through water (isVehicleInWater() doesn't work)
  *        - disable when vehicle on roof (isVehicleUpsideDown( pcar ) && !isVehicleInAir( pcar ) )
  *
  * Notes:
  **************************************************************************************************************************************/
-void *heavy_vehicle(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *heavy_vehicle(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   static int lastcar = 0;
 
   switch( calltype ) {
@@ -7016,8 +6567,8 @@ void *heavy_vehicle(int calltype, int keypress, int defaultstatus) {
             setFloat(pcar + 0xD4, getFloat(pcar+0xD4)/1000); // read actual values from handling.dat ??
             lastcar = 0;
           }
-          status = 0;
-        } else status = 1;
+        }
+        status = !status;
       }
       break;
 
@@ -7034,13 +6585,13 @@ void *heavy_vehicle(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     - maybe add delay before reversing
+ * TODO:     - maybe add delay before reversing
  *        -
  *
  * Notes: NOT Handbrake, only normal brake
  **************************************************************************************************************************************/
-void *powerbrake(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *powerbrake(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7056,7 +6607,7 @@ void *powerbrake(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
       }
       break;
 
@@ -7072,15 +6623,11 @@ void *powerbrake(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *nitro(int calltype, int keypress, int defaultstatus) {
-
-  static int status;
-  static int nos_time = 0;
+void *nitro(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  static uint32 nos_time = 0;
   static int exhaust_backup = 0;
   static float thrust = 0.015f;
 
@@ -7094,7 +6641,7 @@ void *nitro(int calltype, int keypress, int defaultstatus) {
       }
 
       if( gametimer < nos_time ) {
-        //drawString("NITRO", ALIGN_CENTER, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 240.0f, 10.0f, RED );
+        //drawStringNoTVargs(ALIGN_CENTER, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 240.0f, 10.0f, RED, "NITRO");
 
         /// backup and set Exhaust Color
         int exhaust_offs = getParticleOffsetFor("EXHAUST_FUMES");
@@ -7138,9 +6685,8 @@ void *nitro(int calltype, int keypress, int defaultstatus) {
           }
           /// Reset Nos Timer
           nos_time = 0;
-
-          status = 0;
-        } else status = 1;
+        }
+        status = !status;
       }
       break;
 
@@ -7157,13 +6703,10 @@ void *nitro(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
+void *rocketboost(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
   static int boost = 0;
   static float thrust = 0.002f;
 
@@ -7194,25 +6737,17 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
 
     case FUNC_CHANGE_VALUE:
 
-      /*if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
-
-      } else*/ if ( keypress == PSP_CTRL_LEFT && boost > 0 ) { // LEFT
+      if ( keypress == PSP_CTRL_LEFT && boost > 0 ) { // LEFT
         boost--;
-        status = 1;
 
       } else if ( keypress == PSP_CTRL_RIGHT && boost < 50 ) { // RIGHT
         boost++;
-        status = 1;
 
       } else if ( keypress == PSP_CTRL_CIRCLE ) { // CIRCLE
         boost = 0;
-        status = 0;
       }
 
-      if( boost == 0 )
-        status = 0;
-
+      status = boost != 0;
       break;
 
     case FUNC_SET:
@@ -7231,14 +6766,10 @@ void *rocketboost(int calltype, int keypress, int defaultstatus, int defaultval)
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes: https://twitter.com/TheAdmiester/status/1571894351579545602
  **************************************************************************************************************************************/
-void *untouchable(int calltype, int keypress, int defaultstatus) {
-  static int status, j;
-  u32 base = 0;
+void *untouchable(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   //static forcemult = 0;
 
   switch( calltype ) {
@@ -7248,22 +6779,21 @@ void *untouchable(int calltype, int keypress, int defaultstatus) {
     case FUNC_APPLY:
 
    /// Tests
-   //snprintf(retbuf, sizeof(retbuf), "forcemult: %f", forcemult );
-     //drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5.0f, 45.0f, WHITE);
+     //drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5.0f, 45.0f, WHITE, "forcemult: %f", forcemult);
 
       /// check if conditions meet
       //if( pcar && /*(pressed_buttons & PSP_CTRL_DOWN) &&*/ flag_menu_running == 0 ) {
 
 
         /// loop all vehicles
-        base = vehicles_base;
-        for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
+        uaddr base = vehicles_base;
+        for( uint32 j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
           if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
             float radius = 15.0f; // in which force should be applied
             float x1 = getFloat(pobj+0x30);
             float y1 = getFloat(pobj+0x34);
             float z1 = getFloat(pobj+0x38);
-        float x2 = getFloat(base+0x30);
+            float x2 = getFloat(base+0x30);
             float y2 = getFloat(base+0x34);
             float z2 = getFloat(base+0x38);
 
@@ -7297,7 +6827,7 @@ void *untouchable(int calltype, int keypress, int defaultstatus) {
       float y2 = getFloat(base+0x34);
       float z2 = getFloat(base+0x38);
       if( checkCoordinateInsideArea(x1, y1, z1, x2, y2, z2, radius) ) { // is in radius
-        // todo
+        // TODO:
       }
       }
     }*/
@@ -7306,7 +6836,7 @@ void *untouchable(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
       }
       break;
 
@@ -7323,14 +6853,11 @@ void *untouchable(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *tank(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  static int toggle = 1;
+void *tank(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  static bool toggle = true;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7342,18 +6869,17 @@ void *tank(int calltype, int keypress, int defaultstatus) {
           break;
 
         TankControl( pcar );
-        if( toggle )
-          BlowupVehiclesInPath( pcar );
+        if( toggle ) BlowupVehiclesInPath( pcar );
 
       }
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
       }
       if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
-        toggle = 1 - toggle;
+        toggle = !toggle;
       }
       break;
 
@@ -7369,13 +6895,10 @@ void *tank(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *driveonwater(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *driveonwater(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7389,7 +6912,7 @@ void *driveonwater(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
       }
       break;
 
@@ -7406,14 +6929,10 @@ void *driveonwater(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *automaticflipover(int calltype, int keypress, int defaultstatus) {
-
-  static int status;
+void *automaticflipover(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7439,7 +6958,7 @@ void *automaticflipover(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
       }
       break;
 
@@ -7459,7 +6978,7 @@ void *automaticflipover(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  100% :D
  *
- * Todo:  - maybe save health and restore (for special vehicles only? -> otherwise dumb idea probably)
+ * TODO:  - maybe save health and restore (for special vehicles only? -> otherwise dumb idea probably)
         -> or read directly from handling
  *        - tanks!
  *        - Maybe Press Circle to visibly repair vehicle like cheat does
@@ -7467,9 +6986,9 @@ void *automaticflipover(int calltype, int keypress, int defaultstatus) {
  *
  * Notes:
  **************************************************************************************************************************************/
-void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  static int lastcar = 0;
+void *indestr_vehicle(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  static uaddr lastcar = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7480,7 +6999,7 @@ void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
         if( lastcar == 0 ) lastcar = pcar;
         setVehicleHealth(pcar, 1000000.0f);
         setVehicleNoPhysicalDamage( pcar );
-        setVehicleRepairTyres(pcar, pcar_type);
+        setVehicleRepairTyres(pcar_type);
 
       } else if( !pcar && lastcar ) { // not in car anymore -> reset old car's stats
         setVehicleHealth(lastcar, 1000.0f); // reset car health
@@ -7493,8 +7012,8 @@ void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
         if( status ) { // reset
           setVehicleHealth(pcar, 1000.0f); // reset car health
           lastcar = 0;
-          status = 0;
-        } else status = 1;
+        }
+        status = !status;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         if( pcar ) {
           #ifdef HEXEDITOR
@@ -7521,13 +7040,11 @@ void *indestr_vehicle(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *lockdoors(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  static int lastcar = 0;
+void *lockdoors(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  static uaddr lastcar = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7536,10 +7053,10 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
     case FUNC_APPLY:
       if( pcar ) { // in vehicle
         if( lastcar == 0 ) lastcar = pcar;
-        setVehicleDoorsLocked(pcar, TRUE);
+        setVehicleDoorsLocked(pcar, true);
 
       } else if( !pcar && lastcar ) { // not in car anymore -> reset
-        setVehicleDoorsLocked(lastcar, FALSE); //reset
+        setVehicleDoorsLocked(lastcar, false); //reset
         lastcar = 0;
       }
       break;
@@ -7548,16 +7065,16 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) { // reset
           if( pcar )
-            setVehicleDoorsLocked(pcar, FALSE); // reset
+            setVehicleDoorsLocked(pcar, false); // reset
           lastcar = 0;
-          status = 0;
-        } else status = 1;
+        }
+        status = !status;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         if( pcar ) {
           #ifdef HEXEDITOR
           int temp = pcar + (LCS ? 0x294 : 0x2A8);
           hex_marker_clear();
-          hex_marker_addx(temp, sizeof(char));
+          hex_marker_addx(temp, sizeof(bool));
           hexeditor_create(temp, 0, memory_low, memory_high, "> vehicle lock doors");
           #endif
         }
@@ -7576,7 +7093,7 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:     - restore default wheel camber value from handling file in memory
+ * TODO:     - restore default wheel camber value from handling file in memory
  *
  * Notes:
 
@@ -7592,13 +7109,13 @@ void *lockdoors(int calltype, int keypress, int defaultstatus) {
       FUN_0020a0e8_ApplyMoveForce
 
  **************************************************************************************************************************************/
-void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
-  static int status = 0;
+void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
+  static bool status = false;
   static int lastcar = 0; // for backup
   static float speed, xyspeed;
   static float wheels; // for backup
   static int hovermation = 2;
-  static int hovermation_time = 0;
+  static uint32 hovermation_time = 0;
   static const wchar_t *delo = L"Delorean";
 
   switch( calltype ) {
@@ -7618,7 +7135,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         } else {
           if( getInt(global_m_pVehicleNameToPrint) == (int)&delo[0] ) { // fix - was delorean before -> do restore stuff
             setInt(global_m_pVehicleNameToPrint, getInt(global_m_pVehicleName)); // restore name to display
-            setVehicleGravityApplies(pcar, TRUE); // restore gravity for vehicle
+            setVehicleGravityApplies(pcar, true); // restore gravity for vehicle
             setVehicleWheelCamber(pcar, wheels); // restore wheels camber to default value
             wheels = 0;
             lastcar = 0;
@@ -7627,7 +7144,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         }
       }
       if( LCS && !pcar && lastcar ) { // not in car anymore -> reset old car's values
-        setVehicleGravityApplies(lastcar, TRUE); // restore gravity for vehicle
+        setVehicleGravityApplies(lastcar, true); // restore gravity for vehicle
         setVehicleWheelCamber(lastcar, wheels); // restore wheels camber to default value
         wheels = 0;
         lastcar = 0;
@@ -7636,7 +7153,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_APPLY:
       if( !pcar && lastcar ) { // not in car anymore -> reset old car's values
-        setVehicleGravityApplies(lastcar, TRUE); // restore gravity for vehicle
+        setVehicleGravityApplies(lastcar, true); // restore gravity for vehicle
         setVehicleWheelCamber(lastcar, wheels);  // restore wheels camber to default value
         wheels = 0;
         lastcar = 0;
@@ -7649,11 +7166,11 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
 
       if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE || pcar_type == VEHICLE_BOAT) ) { // in vehicle!
         /// get speed
-        speed = getVehicleSpeed(pcar);
+        speed = getVehicleSpeed();
         xyspeed = sqrtf((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144)))); // sqrtf( x^2 + y^2 )
 
         /// disable world gravity for vehicle
-        setVehicleGravityApplies(pcar, FALSE);
+        setVehicleGravityApplies(pcar, false);
 
         /// lower wheels slowly
         if( pcar_type == VEHICLE_CAR ) { // car
@@ -7744,42 +7261,19 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
         // LCS 0x90 moving to be applied
         // LCS 0xA0 turning / leaning to be applied
 
-        extern char buffer[256];
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 20.0f, RED, "magicval: %.3f", magicval);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 40.0f, WHITE, "00:  %.2f, %.2f, %.2f", getFloat(pcar+0x0), getFloat(pcar+0x4), getFloat(pcar+0x8));
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 60.0f, WHITE, "10:  %.2f, %.2f, %.2f", getFloat(pcar+0x10), getFloat(pcar+0x14), getFloat(pcar+0x18));
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 80.0f, WHITE, "20:  %.2f, %.2f, %.2f", getFloat(pcar+0x20), getFloat(pcar+0x24), getFloat(pcar+0x28));
 
-        snprintf(buffer, sizeof(buffer), "magicval: %.3f", magicval);
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 20.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 110.0f, WHITE, "70:  %.2f, %.2f, %.2f", getFloat(pcar+0x70), getFloat(pcar+0x74), getFloat(pcar+0x78));
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 130.0f, WHITE, "80:  %.2f, %.2f, %.2f", getFloat(pcar+0x80), getFloat(pcar+0x84), getFloat(pcar+0x88));
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, WHITE, "90:  %.2f, %.2f, %.2f", getFloat(pcar+0x90), getFloat(pcar+0x94), getFloat(pcar+0x98));
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 170.0f, WHITE, "A0:  %.2f, %.2f, %.2f", getFloat(pcar+0xA0), getFloat(pcar+0xA4), getFloat(pcar+0xA8));
 
-        snprintf(buffer, sizeof(buffer), "00:  %.2f, %.2f, %.2f", getFloat(pcar+0x0), getFloat(pcar+0x4), getFloat(pcar+0x8));
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 40.0f, WHITE);
-
-        snprintf(buffer, sizeof(buffer), "10:  %.2f, %.2f, %.2f", getFloat(pcar+0x10), getFloat(pcar+0x14), getFloat(pcar+0x18));
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 60.0f, WHITE);
-
-        snprintf(buffer, sizeof(buffer), "20:  %.2f, %.2f, %.2f", getFloat(pcar+0x20), getFloat(pcar+0x24), getFloat(pcar+0x28));
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 80.0f, WHITE);
-
-
-        snprintf(buffer, sizeof(buffer), "70:  %.2f, %.2f, %.2f", getFloat(pcar+0x70), getFloat(pcar+0x74), getFloat(pcar+0x78));
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 110.0f, WHITE);
-
-        snprintf(buffer, sizeof(buffer), "80:  %.2f, %.2f, %.2f", getFloat(pcar+0x80), getFloat(pcar+0x84), getFloat(pcar+0x88));
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 130.0f, WHITE);
-
-        snprintf(buffer, sizeof(buffer), "90:  %.2f, %.2f, %.2f", getFloat(pcar+0x90), getFloat(pcar+0x94), getFloat(pcar+0x98));
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, WHITE);
-
-        snprintf(buffer, sizeof(buffer), "A0:  %.2f, %.2f, %.2f", getFloat(pcar+0xA0), getFloat(pcar+0xA4), getFloat(pcar+0xA8));
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 170.0f, WHITE);
-
-
-        snprintf(buffer, sizeof(buffer), "speed (0x124): %.3f", speed);
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 190.0f, RED);
-
-        snprintf(buffer, sizeof(buffer), "xyspeed (calced): %.3f", xyspeed );
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 210.0f, RED);
-
-        snprintf(buffer, sizeof(buffer), "xyzspeed (calced): %.3f", xyzspeed );
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 230.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 190.0f, RED, "speed (0x124): %.3f", speed);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 210.0f, RED, "xyspeed (calced): %.3f", xyspeed);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 80.0f, 230.0f, RED, "xyzspeed (calced): %.3f", xyzspeed);
    */
         ///////////////////////////////////////////////////////////////////////////////////////////////
       }
@@ -7789,12 +7283,13 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) {
         if( status ) {
           if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) {
-            setVehicleGravityApplies(pcar, TRUE); // restore gravity for vehicle
+            setVehicleGravityApplies(pcar, true); // restore gravity for vehicle
             setVehicleWheelCamber(pcar, wheels); // restore wheels camber to default value
             wheels = 0;
             lastcar = 0;
-          } status = 0;
-        } else status = 1;
+          }
+        }
+        status = !status;
       }
       break;
 
@@ -7802,7 +7297,7 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
       status = defaultstatus;
 
       if( pplayer > 0 && lastcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) {
-        setVehicleGravityApplies(lastcar, TRUE); // restore gravity for vehicle
+        setVehicleGravityApplies(lastcar, true); // restore gravity for vehicle
         setVehicleWheelCamber(lastcar, wheels);  // restore wheels camber to default value
         wheels = 0;
         lastcar = 0;
@@ -7819,21 +7314,20 @@ void *hover_vehicle(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   99%
  *
- * Todo:  - make PEDs on Bikes fall off dramatically (not casually exit and die)
+ * TODO:  - make PEDs on Bikes fall off dramatically (not casually exit and die)
  *        -
  *
  * Notes:
  **************************************************************************************************************************************/
-void *aim_of_death(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  int ped = 0;
+void *aim_of_death(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_APPLY:
-      ped = getInt(pplayer+(LCS ? 0x6BC : 0x81C));
+      uaddr ped = getInt(pplayer+(LCS ? 0x6BC : 0x81C));
 
       if( ped > 0 ) { // addr of ped aimed at
         setPedHealthAndArmor(ped, 0, 0);
@@ -7842,8 +7336,8 @@ void *aim_of_death(int calltype, int keypress, int defaultstatus) {
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS )
-        status = 1 - status; // CROSS
+      if( keypress == PSP_CTRL_CROSS ) // CROSS
+        status = !status;
       break;
 
     case FUNC_SET:
@@ -7858,9 +7352,6 @@ void *aim_of_death(int calltype, int keypress, int defaultstatus) {
 /** step through wall / teleport one step in players facing direction *******************************************************************
  *
  * Completion:   100% :D
- *
- * Todo:  -
- *        -
  *
  * Notes:     z coordinate is ignored here
  **************************************************************************************************************************************/
@@ -7877,7 +7368,7 @@ void stepthroughwall() {
  *
  * Completion:   95% :|
  *
- * Todo:     - understand value 0x3C10 ?!
+ * TODO:     - understand value 0x3C10 ?!
  *
  * Notes:   LCS US v3.00   ->     0x0020A898: 0x3C053C03 '.<.<' - lui        $a1, 0x3C03
  *          VCS US v1.05   ->     0x00263690: 0x3C053C03 '.<.<' - lui        $a1, 0x3C03
@@ -7891,11 +7382,11 @@ void stepthroughwall() {
       ************************************************************
  *
  **************************************************************************************************************************************/
-static int gravity_reverse = 0;
-short alt_gravity_button_pressed = 0;
+static bool gravity_reverse     = false;
+bool alt_gravity_button_pressed = false;
 
-void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
+void *world_gravity(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
   static float gravity = 1.0f; // 2.0g * 0.008f = 0.016f
   static float val;
   int val2;
@@ -7919,13 +7410,13 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
       val = (gravity * 0.008f);
       val2 = getInt((int)&val) >> 16;
 
-      if( (gravity_reverse && ( current_buttons & PSP_CTRL_UP ) && flag_menu_running == 0) || alt_gravity_button_pressed) { // flag_menu_stop will prevent going up in menu trigger it
+      if( (gravity_reverse && ( current_buttons & PSP_CTRL_UP ) && !flag_menu_running) || alt_gravity_button_pressed) { // flag_menu_stop will prevent going up in menu trigger it
         val2 -= 0x8000; // make negative
       }
       setShort(addr_worldgravity, val2);
 
       clearICacheFor(addr_worldgravity);
-      alt_gravity_button_pressed = 0;
+      alt_gravity_button_pressed = false;
       break;
 
     case FUNC_GET_STRING:
@@ -7934,8 +7425,8 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1;
-        gravity_reverse = 1 - gravity_reverse;
+        status = true;
+        gravity_reverse = !gravity_reverse;
 
       } else if( keypress == PSP_CTRL_CIRCLE ) {
         gravity = 1.0f;
@@ -7946,14 +7437,14 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
         else
           gravity -= 1.0f;
 
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_RIGHT && gravity < 29.0f ) { // RIGHT
         if( gravity <= 4.9f && gravity >= -5.9f )
           gravity += 0.1f;
         else
           gravity += 1.0f;
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -7963,14 +7454,14 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
         #endif
       }
 
-      if( gravity == 1.0f && alt_gravity_button_pressed == 0 ) {
+      if( gravity == 1.0f && !alt_gravity_button_pressed ) {
         setShort(addr_worldgravity, 0x3C03); // reset to default
-        if( gravity_reverse == 0 )
-          status = 0; // disable on default value
+        if( !gravity_reverse )
+          status = false; // disable on default value
       }
 
       if( keypress == 42 ) // for buttonApply() alternate gravity reverse solution
-        status = 1;
+        status = true;
 
       break;
 
@@ -7986,17 +7477,17 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
       } else val = 1.0f;
 
       if( val == 1.0f && !gravity_reverse ) {
-        status = 0;
+        status = false;
 
       } else if( val >= -12.0f && val <= 30.0f ) {
         gravity = val;
-        status = 1;
+        status = true;
 
       } else { // complete reset
         gravity = 1.0f;
         setShort(addr_worldgravity, 0x3C03); // reset to default
-        gravity_reverse = 0;
-        status = 0;
+        gravity_reverse = false;
+        status = false;
       }
       break;
   }
@@ -8008,13 +7499,10 @@ void *world_gravity(int calltype, int keypress, int defaultstatus, int defaultva
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *driveonwalls(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *driveonwalls(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -8022,10 +7510,10 @@ void *driveonwalls(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_APPLY:
       if( pcar ) {
-        setVehicleGravityApplies(pcar, TRUE); // set gravity true
+        setVehicleGravityApplies(pcar, true); // set gravity true
 
         if( getFloat(pcar+0x28) < 0.50 ) { // -0.00 would be on side of car | -1 completely on roof | 1 normal
-          setVehicleGravityApplies(pcar, FALSE); // set gravity false
+          setVehicleGravityApplies(pcar, false); // set gravity false
 
           if( gravity_reverse && (current_buttons & PSP_CTRL_UP) && flag_menu_running == 0 ) { // reverse button from worldgravity cheat is pressed
             setFloat(pcar + (LCS?0x70:0x140),  getFloat(pcar + (LCS?0x70:0x140)) + getFloat(pcar + 0x20) * 0.01 );
@@ -8043,9 +7531,9 @@ void *driveonwalls(int calltype, int keypress, int defaultstatus) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
-          if( pcar ) setVehicleGravityApplies(pcar, TRUE); // restore gravity for vehicle
-          status = 0;
-        } else status = 1;
+          if( pcar ) setVehicleGravityApplies(pcar, true); // restore gravity for vehicle
+        }
+        status = !status;
       }
       break;
 
@@ -8062,16 +7550,14 @@ void *driveonwalls(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   99% :/
  *
- * Todo:     -
- *        - make LCS cheat same as VCS. Copy real color value to pos: 127 and adjust there like in VCS
+ * TODO:  - make LCS cheat same as VCS. Copy real color value to pos: 127 and adjust there like in VCS
  *
  * Notes:     for VCS the full color value is in vehcile_object @ 0x224 & 0x228 while LCS uses presets
  ******************************************************************************************************************************************************/
-void *vehicle_base_color(int calltype, int keypress, int defaultstatus UNUSED) {
-  static char lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
-  static int vcs_color = 0;  // VCS : 0xFFRRGGBB  -> in ram  -> BB GG RR FF   BB GG RR FF
-  static char pos = 2;
-  static unsigned int r, g, b;
+void *vehicle_base_color(int calltype, int keypress, bool defaultstatus UNUSED) {
+  static array_uidx lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
+  static CRGBA vcs_color = COLOR32(0);  // VCS : 0xFFRRGGBB  -> in ram  -> BB GG RR FF   BB GG RR FF
+  static array_idx pos = 2;
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING:
@@ -8079,7 +7565,7 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus UNUSED) {
         if( VCS ) {
           snprintf(retbuf, sizeof(retbuf), pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") :
                           pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") :
-                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), vcs_color.r, vcs_color.g, vcs_color.b);
         }
         return (void *)retbuf;
 
@@ -8093,7 +7579,7 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus UNUSED) {
           #ifdef HEXEDITOR
           int temp = pcar + (LCS ? 0x1F0 : 0x224);
           hex_marker_clear();
-          hex_marker_addx(temp, (LCS ? sizeof(char) : sizeof(int)));
+          hex_marker_addx(temp, (LCS ? sizeof(uint8) : sizeof(int)));
           hexeditor_create(temp, 0, memory_low, memory_high, "> Primary Color");
           #endif
           break;
@@ -8105,20 +7591,16 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus UNUSED) {
             if( pos < 0 ) pos = 2;
             break;
           }
-          r = (vcs_color & 0x000000ff);
-          g = (vcs_color & 0x0000ff00) >> 8;
-          b = (vcs_color & 0x00ff0000) >> 16;
+
           if( keypress == PSP_CTRL_LEFT ) {
-            if( pos == 2 ) if( r > 0x00 ) r--;
-            if( pos == 1 ) if( g > 0x00 ) g--;
-            if( pos == 0 ) if( b > 0x00 ) b--;
-            vcs_color = 0xFF000000 + (b << 16) + (g << 8) + r;
+            if( pos == 2 ) if( vcs_color.r > 0x00 ) vcs_color.r--;
+            if( pos == 1 ) if( vcs_color.g > 0x00 ) vcs_color.g--;
+            if( pos == 0 ) if( vcs_color.b > 0x00 ) vcs_color.b--;
           }
           if( keypress == PSP_CTRL_RIGHT) {
-            if( pos == 2 ) if( r < 0xFF ) r++;
-            if( pos == 1 ) if( g < 0xFF ) g++;
-            if( pos == 0 ) if( b < 0xFF ) b++;
-            vcs_color = 0xFF000000 + (b << 16) + (g << 8) + r;
+            if( pos == 2 ) if( vcs_color.r < 0xFF ) vcs_color.r++;
+            if( pos == 1 ) if( vcs_color.g < 0xFF ) vcs_color.g++;
+            if( pos == 0 ) if( vcs_color.b < 0xFF ) vcs_color.b++;
           }
 
           vcs_setVehicleColorBase(pcar, vcs_color);
@@ -8142,11 +7624,10 @@ void *vehicle_base_color(int calltype, int keypress, int defaultstatus UNUSED) {
   return NULL;
 }
 
-void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus UNUSED) {
-  static char lcs_color = 0; // LCS : 0 to 127        BASE         STRIPE
-  static int vcs_color = 0;  // VCS : 0xFFRRGGBB -> in ram -> BB GG RR FF   BB GG RR FF
-  static char pos = 2;
-  static unsigned int r, g, b;
+void *vehicle_stripe_color(int calltype, int keypress, bool defaultstatus UNUSED) {
+  static array_uidx lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
+  static CRGBA vcs_color = COLOR32(0);  // VCS : 0xFFRRGGBB  -> in ram  -> BB GG RR FF   BB GG RR FF
+  static array_idx pos = 2;
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING:
@@ -8154,7 +7635,7 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus UNUSED)
         if( VCS ) {
           snprintf(retbuf, sizeof(retbuf), pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") :
                           pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") :
-                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), (vcs_color & 0x000000ff), (vcs_color & 0x0000ff00) >> 8, (vcs_color & 0x00ff0000) >> 16);
+                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), vcs_color.r, vcs_color.g, vcs_color.b);
         }
         return (void *)retbuf;
 
@@ -8168,7 +7649,7 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus UNUSED)
           #ifdef HEXEDITOR
           int temp = pcar + (LCS ? 0x1F1 : 0x228);
           hex_marker_clear();
-          hex_marker_addx(temp, (LCS?sizeof(char):sizeof(int)));
+          hex_marker_addx(temp, (LCS?sizeof(uint8):sizeof(int)));
           hexeditor_create(temp, 0, memory_low, memory_high, "> Secondary Color");
           #endif
           break;
@@ -8180,20 +7661,15 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus UNUSED)
             if( pos < 0) pos = 2;
             break;
           }
-          r = (vcs_color & 0x000000ff);
-          g = (vcs_color & 0x0000ff00) >> 8;
-          b = (vcs_color & 0x00ff0000) >> 16;
           if( keypress == PSP_CTRL_LEFT ) {
-            if( pos == 2 ) if( r > 0x00 ) r--;
-            if( pos == 1 ) if( g > 0x00 ) g--;
-            if( pos == 0 ) if( b > 0x00 ) b--;
-            vcs_color = 0xFF000000 + (b << 16) + (g << 8) + r;
+            if( pos == 2 ) if( vcs_color.r > 0x00 ) vcs_color.r--;
+            if( pos == 1 ) if( vcs_color.g > 0x00 ) vcs_color.g--;
+            if( pos == 0 ) if( vcs_color.b > 0x00 ) vcs_color.b--;
           }
           if( keypress == PSP_CTRL_RIGHT ) {
-            if( pos == 2 ) if( r < 0xFF ) r++;
-            if( pos == 1 ) if( g < 0xFF ) g++;
-            if( pos == 0 ) if( b < 0xFF ) b++;
-            vcs_color = 0xFF000000 + (b << 16) + (g << 8) + r;
+            if( pos == 2 ) if( vcs_color.r < 0xFF ) vcs_color.r++;
+            if( pos == 1 ) if( vcs_color.g < 0xFF ) vcs_color.g++;
+            if( pos == 0 ) if( vcs_color.b < 0xFF ) vcs_color.b++;
           }
 
           vcs_setVehicleColorStripe(pcar, vcs_color);
@@ -8223,26 +7699,26 @@ void *vehicle_stripe_color(int calltype, int keypress, int defaultstatus UNUSED)
  *
  * Completion:  99%
  *
- * Todo:     - Checking for weather only checks one (first) global -> it can be "sunny" but with rain effect for example
+ * TODO:     - Checking for weather only checks one (first) global -> it can be "sunny" but with rain effect for example
  *
  * Notes: There are 3 weather values:
           First: Sky Color, Clouds -> global_weather
           Second: Effekt (like rain, fog, snow)
-          Third: next & force weather when set (otherwise 0xFFFF for random cycle, "ReleaseWeather" sets 0xFFFF)
+          Third: next & force weather when set (otherwise 0xFFFF for random cycle, "CWeather_ReleaseWeather" sets 0xFFFF)
  **************************************************************************************************************************************/
-void *world_weather(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
-  static int i = 0;
+void *world_weather(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  static int16 i = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_APPLY:
-      SetWeatherNow(i);
+      CWeather_ForceWeatherNow(i);
       break;
 
     case FUNC_CHECK:
@@ -8256,9 +7732,9 @@ void *world_weather(int calltype, int keypress, int defaultstatus, int defaultva
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status; // switch status
+        status = !status; // switch status
         if( status == 0 )
-          ReleaseWeather();
+          CWeather_ReleaseWeather();
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
@@ -8275,7 +7751,7 @@ void *world_weather(int calltype, int keypress, int defaultstatus, int defaultva
       else i = 0;
 
       if( status == 0 && pplayer > 0 ) // check pplayer so that inital FUNC_SET on boot doesn't call function
-        ReleaseWeather(); // otherwise crashes VCS US on boot! but US only????
+        CWeather_ReleaseWeather(); // otherwise crashes VCS US on boot! but US only????
       break;
   }
 
@@ -8288,13 +7764,10 @@ void *world_weather(int calltype, int keypress, int defaultstatus, int defaultva
  *
  * Completion:  100% :D
  *
- * Todo:  -
- *        -
- *
  * Notes:     global_trafficdensity
  **************************************************************************************************************************************/
-void *traffic_density(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *traffic_density(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -8305,8 +7778,8 @@ void *traffic_density(int calltype, int keypress, int defaultstatus) {
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        status = !status;
         trafficdensity_disable:
         setInt(global_trafficdensity + gp_, 0x3f800000); // float = 1.0
 
@@ -8333,25 +7806,21 @@ void *traffic_density(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *traffic_freeze(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  int j;
-  u32 base;
+void *traffic_freeze(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  uaddr base;
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_APPLY:
       base = vehicles_base;
-      for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
+      for( uint32 j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
         if( base != pcar ) { // ignore player's current vehicle
           setVehicleMakePhysical(base);
-          setPedOrVehicleFreezePosition(base, TRUE); // fully freeze (needs reset)
+          setPedOrVehicleFreezePosition(base, true); // fully freeze (needs reset)
 
           // @ 0x44 -> make 44 82 19 to 44 8A 19 will disable / freeze in place until touched
 
@@ -8360,18 +7829,18 @@ void *traffic_freeze(int calltype, int keypress, int defaultstatus) {
           //setFloat(base+(LCS?0x78:0x148), 0.00f);
 
         } else { // reset when player entered already frozen vehicle
-          setPedOrVehicleFreezePosition(base, FALSE); // reset
+          setPedOrVehicleFreezePosition(base, false); // reset
         }
       }
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
-        if( status == 0 ) {
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        status = !status; 
+        if( !status ) {
           base = vehicles_base;
-          for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
-            setPedOrVehicleFreezePosition(base, FALSE); // reset
+          for( uint32 j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
+            setPedOrVehicleFreezePosition(base, false); // reset
           }
         }
       }
@@ -8389,13 +7858,13 @@ void *traffic_freeze(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  98% :D
  *
- * Todo:  - LCS: avenging angels still spawning
+ * TODO:  - LCS: avenging angels still spawning
  *        -
  *
  * Notes:     global_peddensity
  **************************************************************************************************************************************/
-void *peds_density(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *peds_density(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -8406,8 +7875,8 @@ void *peds_density(int calltype, int keypress, int defaultstatus) {
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        status = !status;
         peddensity_disable:
         setInt(global_peddensity + gp_, 0x3f800000); // float = 1.0
 
@@ -8435,9 +7904,6 @@ void *peds_density(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
   LCS see: int FUN_001541f0_CTheScripts_IsPlayerOnAMission
   VCS see: int FUN_0005f4f8_CTheScripts_IsPlayerOnAMission
@@ -8445,10 +7911,11 @@ void *peds_density(int calltype, int keypress, int defaultstatus) {
   LCS: DAT_00334d7c_ScriptSpace + DAT_0035a48c_OnAMissionFlag
 
  **************************************************************************************************************************************/
-void *onmission(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status, option = 0;
-  static int offsetinspace = 0; // getInt(global_OnAMissionFlag + (LCS ? 0 : gp));
-  static int scriptspace = 0; // getInt(global_ScriptSpace + (LCS ? 0 : gp));
+void *onmission(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  static bool option;
+  static uaddr offsetinspace = 0; // getInt(global_OnAMissionFlag + (LCS ? 0 : gp));
+  static uaddr scriptspace = 0; // getInt(global_ScriptSpace + (LCS ? 0 : gp));
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -8461,7 +7928,7 @@ void *onmission(int calltype, int keypress, int defaultstatus, int defaultval) {
     case FUNC_CHECK:
       offsetinspace = getInt(global_OnAMissionFlag + (LCS ? 0 : gp));
       scriptspace = getInt(global_ScriptSpace + (LCS ? 0 : gp));
-      if( status == 0 && offsetinspace > 0 && isInMemBounds(scriptspace) )
+      if( !status && offsetinspace > 0 && isInMemBounds(scriptspace) )
         option = getByte(scriptspace + offsetinspace);
       break;
 
@@ -8473,23 +7940,23 @@ void *onmission(int calltype, int keypress, int defaultstatus, int defaultval) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+        status = !status; // CROSS
 
       } else if( keypress == PSP_CTRL_LEFT ) { // LEFT
         if( status )
-          option = 1 - option;
+          option = !option;
       } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
         if( status )
-          option = 1 - option;
+          option = !option;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         if( offsetinspace == 0 ) {
-          hex_marker_addx(offsetinspace, sizeof(char));
+          hex_marker_addx(offsetinspace, sizeof(uint8));
           hexeditor_create(offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
         } else if( offsetinspace > 0 && scriptspace > 0 ) {
-          hex_marker_addx(scriptspace + offsetinspace, sizeof(char));
+          hex_marker_addx(scriptspace + offsetinspace, sizeof(uint8));
           hexeditor_create(scriptspace + offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
         }
         #endif
@@ -8502,13 +7969,7 @@ void *onmission(int calltype, int keypress, int defaultstatus, int defaultval) {
 
     case FUNC_SET:
       status = defaultstatus;
-
-      if( defaultval == 0 )
-        option = 0;
-      else if( defaultval == 1 )
-        option = 1;
-      else option = 0;
-
+      option = defaultval;
       break;
   }
 
@@ -8521,13 +7982,10 @@ void *onmission(int calltype, int keypress, int defaultstatus, int defaultval) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *freeze_timers(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *freeze_timers(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -8538,15 +7996,15 @@ void *freeze_timers(int calltype, int keypress, int defaultstatus) {
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        status = !status;
         freezetimers_disable:
         setByte(global_freezetimers, 0); // normal
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_freezetimers, sizeof(char));
+        hex_marker_addx(global_freezetimers, sizeof(bool));
         hexeditor_create(global_freezetimers, 0, memory_low, memory_high, "> freeze timers");
         #endif
       }
@@ -8554,7 +8012,7 @@ void *freeze_timers(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_SET:
       status = defaultstatus;
-      if( !status && global_freezetimers != 0 )
+      if( !status && global_freezetimers )
         goto freezetimers_disable;
       break;
   }
@@ -8568,7 +8026,7 @@ void *freeze_timers(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  90
  *
- * Todo:  - FIst fighters don't count?!
+ * TODO:  - FIst fighters don't count?!
  *        -
  *
  * Notes:
@@ -8587,11 +8045,8 @@ void *freeze_timers(int calltype, int keypress, int defaultstatus) {
  * 0x74C   (byte) number of peds 0xA max
  *
  **************************************************************************************************************************************/
-void *peds_killaiming(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  static int j;
-
-  int base = -1;
+void *peds_killaiming(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   //static char buffer[64];
 
   switch( calltype ) {
@@ -8599,11 +8054,11 @@ void *peds_killaiming(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      base = peds_base;
+      uaddr base = peds_base;
       //snprintf(buffer, sizeof(buffer), "Debug: %i, 0x%08X = 0x%08X", peds_max, base, pobj);
       //setTimedTextbox(buffer, 7.00f);
-      for( j = 0; j < peds_max; j++, base += var_pedobjsize ) {
-        if( (u32)getInt(base+(LCS?0x6BC:0x81C)) == pobj ) { // can be pplayer or pcar -> use pobj
+      for( uint32 j = 0; j < peds_max; j++, base += var_pedobjsize ) {
+        if( (uaddr)getInt(base+(LCS?0x6BC:0x81C)) == pobj ) { // can be pplayer or pcar -> use pobj
           setPedHealthAndArmor(base, 0, 0);
         }
       }
@@ -8611,8 +8066,8 @@ void *peds_killaiming(int calltype, int keypress, int defaultstatus) {
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        status = !status;
 
       }
       break;
@@ -8630,27 +8085,23 @@ void *peds_killaiming(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  - disable all animation as well?
+ * TODO:  - disable all animation as well?
  *        -
  *
  * Notes:
  **************************************************************************************************************************************/
-void *peds_freeze(int calltype, int keypress, int defaultstatus) {
-  static int status;
-  static int j;
-
-  u32 base = 0;
-
+void *peds_freeze(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_APPLY:
       /// freeze
-      base = peds_base;
-      for( j = 0; j < peds_max; j++, base += var_pedobjsize ) {
+      uaddr base = peds_base;
+      for( uint32 j = 0; j < peds_max; j++, base += var_pedobjsize ) {
         if( base != pplayer ) {
-          setPedOrVehicleFreezePosition(base, TRUE);
+          setPedOrVehicleFreezePosition(base, true);
         }
       }
       break;
@@ -8659,14 +8110,14 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) {
         if( status ) {
           /// unfreeze
-          base = peds_base;
-          for(j = 0; j < peds_max; j++, base += var_pedobjsize) {
+          uaddr base = peds_base;
+          for( uint32 j = 0; j < peds_max; j++, base += var_pedobjsize ) {
             if( base != pplayer ) {
-              setPedOrVehicleFreezePosition(base, FALSE);
+              setPedOrVehicleFreezePosition(base, false);
             }
           }
-          status = 0;
-        } else status = 1;
+        }
+        status = !status;
       }
       break;
 
@@ -8684,13 +8135,13 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  - make the text stick to the aiming indicator somehow and not fixed on screen center
+ * TODO:  - make the text stick to the aiming indicator somehow and not fixed on screen center
  *        -
  *
  * Notes:
  **************************************************************************************************************************************/
-/*void *peds_showstats(int calltype, int keypress, int defaultstatus) {
-  static int status;
+/*void *peds_showstats(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   static int j;
 
   int base = -1;
@@ -8712,13 +8163,11 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
           if( curped == base ) {
 
             /// Health
-            snprintf(buffer1, sizeof(buffer1), "%.2f", getPedHealth(base));
-            drawString(buffer1, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 100.0f, (LCS?LCS_HEALTH:VCS_HEALTH) );
+            drawStringNoT(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 100.0f, (LCS?LCS_HEALTH:VCS_HEALTH), "%.2f", getPedHealth(base));
 
             /// Armor
             if( getPedArmor(base) > 0.00f ) {
-              snprintf(buffer2, sizeof(buffer2), "%.2f", getPedArmor(base));
-              drawString(buffer2, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 85.0f, (LCS?LCS_ARMOR:VCS_ARMOR) );
+              drawStringNoT(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 85.0f, (LCS?LCS_ARMOR:VCS_ARMOR), "%.2f", getPedArmor(base));
             }
           }
         }
@@ -8726,8 +8175,8 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        status = !status;
       }
       break;
 
@@ -8746,21 +8195,18 @@ void *peds_freeze(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  100%
  *
- * Todo:  - keep current health when changing multiplier
+ * TODO:  - keep current health when changing multiplier
  *        -
  *
  * Notes:     global_maxhealthmult
  **************************************************************************************************************************************/
 void *max_health(int calltype, int keypress) {
-  static unsigned char healthval;
-  static int status;
+  static uint8 healthval;
+  static bool status;
 
   switch( calltype ) {
-
     case FUNC_GET_STATUS:
-      if( healthval > 0x64 )
-        status = 1;
-      else status = 0;
+      status = healthval > 100;
       return (int*)status;
 
     case FUNC_GET_STRING:
@@ -8769,20 +8215,20 @@ void *max_health(int calltype, int keypress) {
       return (void*)retbuf;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_LEFT && healthval > 0x64 ) {
-        healthval -= 1;
+      if( keypress == PSP_CTRL_LEFT && healthval > 100 ) {
+        healthval--;
         setMaxHealthMultiplier(healthval);
         setPedHealthAndArmor(pplayer, (float)(healthval), -1);
       }
-      if( keypress == PSP_CTRL_RIGHT && healthval < 0xFF ) {
-        healthval += 1;
+      if( keypress == PSP_CTRL_RIGHT && healthval < 255 ) {
+        healthval++;
         setMaxHealthMultiplier(healthval);
         setPedHealthAndArmor(pplayer, (float)(healthval), -1);
       }
       if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_maxhealthmult, sizeof(char));
+        hex_marker_addx(global_maxhealthmult, sizeof(uint8));
         hexeditor_create(global_maxhealthmult, 0, memory_low, memory_high, "> max health multiplier");
         #endif
       }
@@ -8794,21 +8240,19 @@ void *max_health(int calltype, int keypress) {
  *
  * Completion:  100%
  *
- * Todo:  -  keep current armor when changing multiplier
+ * TODO:  -  keep current armor when changing multiplier
  *        -
  *
  * Notes:     global_maxarmormult
  **************************************************************************************************************************************/
 void *max_armor(int calltype, int keypress) {
-  static unsigned char armorval;
-  static int status;
+  static uint8 armorval;
+  static bool status;
 
   switch( calltype ) {
 
     case FUNC_GET_STATUS:
-      if( armorval > 0x64 )
-        status = 1;
-      else status = 0;
+      status = armorval > 100;
       return (int*)status;
 
     case FUNC_GET_STRING:
@@ -8817,20 +8261,20 @@ void *max_armor(int calltype, int keypress) {
       return (void*)retbuf;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_LEFT && armorval > 0x64 ) {
-        armorval -= 1;
+      if( keypress == PSP_CTRL_LEFT && armorval > 100 ) {
+        armorval--;
         setMaxArmorMultiplier(armorval);
         setPedHealthAndArmor(pplayer, -1, (float)armorval);
       }
-      if( keypress == PSP_CTRL_RIGHT && armorval < 0xFF ) {
-        armorval += 1;
+      if( keypress == PSP_CTRL_RIGHT && armorval < 255 ) {
+        armorval++;
         setMaxArmorMultiplier(armorval);
         setPedHealthAndArmor(pplayer, -1, (float)armorval);
       }
       if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_maxhealthmult, sizeof(char));
+        hex_marker_addx(global_maxhealthmult, sizeof(uint8));
         hexeditor_create(global_maxarmormult, 0, memory_low, memory_high, "> max armor multiplier");
         #endif
       }
@@ -8843,46 +8287,45 @@ void *max_armor(int calltype, int keypress) {
  *
  * Completion:
  *
- * Todo:  - Other way to do it: patch FUN_0013f37c_sprinting
+ * TODO:  - Other way to do it: patch FUN_0013f37c_sprinting
  *        -
  *
  * Notes: This is a flag set by the game as reward at some point.
  **************************************************************************************************************************************/
-void *unlimited_sprinting(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_APPLY:
-      setUnlimitedSprintStatus(0x1);
+      setUnlimitedSprintStatus(true);
       //setByte(pplayer+0xbb3, 0x1); //this alone works as well for LCS
       break;
 
     case FUNC_CHECK:
-      if( !status )
-        status = getUnlimitedSprintStatus();
+      if( !status ) status = getUnlimitedSprintStatus();
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           unlimsprint_disable:
-          setUnlimitedSprintStatus(0x0);
-          status = 0;
-        } else status = 1;
+          setUnlimitedSprintStatus(false);
+          status = false;
+        } else status = true;
       }
       if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_unlimtedsprint, sizeof(char));
+        hex_marker_addx(global_unlimtedsprint, sizeof(bool));
         hexeditor_create(global_unlimtedsprint, 0, memory_low, memory_high, "> unlimted sprinting bool");
         #endif
       }
       break;
 
-    case FUNC_SET: // todo - not used currently
+    case FUNC_SET: // TODO: not used currently
       status = defaultstatus;
       if( pplayer > 0 ) { // check if game in playable state
         if( !status )
@@ -8894,40 +8337,40 @@ void *unlimited_sprinting(int calltype, int keypress, int defaultstatus) {
   return NULL;
 }
 
-void *unlimited_swimming(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_APPLY:
-      setUnlimitedSwimStatus(0x1);
+      setUnlimitedSwimStatus(true);
       break;
 
     case FUNC_CHECK:
-      if( !status )
-        status = getUnlimitedSwimStatus();
+      if( !status ) status = getUnlimitedSwimStatus();
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           unlimswim_disable:
-          setUnlimitedSwimStatus(0x0);
-          status = 0;
-        } else status = 1;
+          setUnlimitedSwimStatus(false);
+          status = false;
+        } else status = true;
+        
       }
       if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_unlimtedswim, sizeof(char));
+        hex_marker_addx(global_unlimtedswim, sizeof(bool));
         hexeditor_create(global_unlimtedswim, 0, memory_low, memory_high, "> unlimted swimming bool");
         #endif
       }
       break;
 
-    case FUNC_SET: // todo - not used currently
+    case FUNC_SET: // TODO: not used currently
       status = defaultstatus;
       if( pplayer > 0 ) { // check if game in playable state
         if( !status )
@@ -8945,54 +8388,52 @@ void *unlimited_swimming(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   99%
  *
- * Todo:  -
- *
  * Notes:
  **************************************************************************************************************************************/
-void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status = 0;
-  static int i = 0;
+void *wanted_level(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status = false;
+  static uint8 stars = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)stars;
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), _t("%i Stars (%i max)"), i, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
+      snprintf(retbuf, sizeof(retbuf), _t("%u Stars (%u max)"), stars, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
       return (void*)retbuf;
 
     case FUNC_APPLY:
-      SetWantedLevel(pplayer, i);
+      SetWantedLevel(pplayer, stars);
       break;
 
     case FUNC_CHECK:
       if( !status && pplayer > 0 ) // check current level when cheat deactivated
-        i = getWantedLevel(pplayer);
+        stars = getWantedLevel(pplayer);
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
-        SetMaxWantedLevel(i);
+        SetMaxWantedLevel(stars);
 
-      } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
-        i--;
-        status = 1;
-      } else if( keypress == PSP_CTRL_RIGHT && i < 6 ) { // RIGHT
-        i++;
-        if( i > getByte(global_maxwantedlevel+gp_) )
-          SetMaxWantedLevel(i);
-        status = 1;
+      } else if( keypress == PSP_CTRL_LEFT && stars > 0 ) { // LEFT
+        stars--;
+        status = true;
+      } else if( keypress == PSP_CTRL_RIGHT && stars < 6 ) { // RIGHT
+        stars++;
+        if( stars > getByte(global_maxwantedlevel+gp_) )
+          SetMaxWantedLevel(stars);
+        status = true;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_maxwantedlevel+gp_, sizeof(char));
+        hex_marker_addx(global_maxwantedlevel+gp_, sizeof(uint8));
         hexeditor_create(global_maxwantedlevel+gp_, 0, memory_low, memory_high, "> maximum wanted level possible");
         #endif
       } break;
@@ -9003,10 +8444,10 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
 
       /// set Cheat's default value
       if( defaultval >= 0 && defaultval <= 6 )
-        i = defaultval;
-      else i = 0;
+        stars = defaultval;
+      else stars = 0;
 
-      /// reset maximum level possible to 6 (note: set on gameboot via "menu_setDefaults" but reset by game when game loaded, so fine)
+      /// reset maximum level possible to 6
       if( !status && pplayer > 0 )
         SetMaxWantedLevel(6);
 
@@ -9021,8 +8462,6 @@ void *wanted_level(int calltype, int keypress, int defaultstatus, int defaultval
 /** Wanted level ************************************************************************************
  *
  * Completion:   99%
- *
- * Todo:  -
  *
  * Notes:     LCS
         0x4E0 current direction in rad
@@ -9063,8 +8502,8 @@ void UpdatePosition_patched(u32 handle) {
   UpdatePosition(handle); // then reads the floats and removes from obj again
 }
 
-void *walking_speed(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status = 0;
+void *walking_speed(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status = 0;
   //static float boost = 1.00f; // now global
   static int tval;
 
@@ -9084,19 +8523,19 @@ void *walking_speed(int calltype, int keypress, int defaultstatus, int defaultva
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_CIRCLE ) { // SQUARE
         walkspd_mult = 1.00f;
-        status = 0;
+        status = false;
 
       } else if( keypress == PSP_CTRL_LEFT && walkspd_mult > 0.10f ) { // LEFT
         walkspd_mult-=0.05f;
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_RIGHT && walkspd_mult < 10.00f ) { // RIGHT
         walkspd_mult+=0.05f;
-        status = 1;
+        status = true;
       } break;
 
     case FUNC_SET:
@@ -9112,8 +8551,8 @@ void *walking_speed(int calltype, int keypress, int defaultstatus, int defaultva
 
   return NULL;
 }
-void *pedwalking_speed(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status = 0;
+void *pedwalking_speed(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status = 0;
   //static float boost = 1.00f; // now global
   static int tval;
 
@@ -9132,19 +8571,19 @@ void *pedwalking_speed(int calltype, int keypress, int defaultstatus, int defaul
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_CIRCLE ) { // SQUARE
         pedwalkspd_mult = 1.00f;
-        status = 0;
+        status = false;
 
       } else if( keypress == PSP_CTRL_LEFT && pedwalkspd_mult > 0.10f ) { // LEFT
         pedwalkspd_mult-=0.05f;
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_RIGHT && pedwalkspd_mult < 10.00f ) { // RIGHT
         pedwalkspd_mult+=0.05f;
-        status = 1;
+        status = true;
       } break;
 
     case FUNC_SET:
@@ -9166,23 +8605,23 @@ void *pedwalking_speed(int calltype, int keypress, int defaultstatus, int defaul
  *
  * Completion:   /
  *
- * Todo:  - it works but there must be a native freeze time like in E3 mode
+ * TODO:  - it works but there must be a native freeze time like in E3 mode
  *        - still fucks up weather
  *
  * Notes:     /
  **************************************************************************************************************************************/
-void *world_time(int calltype, int keypress, int defaultstatus, int defaultval UNUSED) {
-  static int status = 0;
-  static char current_hour = 0;
-  static char current_min = 0;
-  static char current_sec = 0;
+void *world_time(int calltype, int keypress, bool defaultstatus, int defaultval UNUSED) {
+  static bool status = 0;
+  static uint8 current_hour = 0;
+  static uint8 current_min  = 0;
+  static uint8 current_sec  = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), "%02i:%02i:%02i", current_hour, current_min, current_sec);
+      snprintf(retbuf, sizeof(retbuf), "%02u:%02u:%02u", current_hour, current_min, current_sec);
       return (void*)retbuf;
 
     case FUNC_APPLY: // because load new game will wipe the high 0xFF -> so continously set AND..
@@ -9202,11 +8641,11 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval U
         if( status ) {
           worldtime_disable:
           setClockFreeze(OFF);
-          status = 0;
+          status = false;
         } else {
           worldtime_enable:
           //setClockFreeze(ON); // FUNC_APPLY will take care now
-          status = 1;
+          status = true;
         }
 
       } else if( keypress == PSP_CTRL_LEFT ) { // LEFT
@@ -9228,9 +8667,9 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval U
         //int gp_tmp = (LCS ? 0 : gp);
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_clockmultiplier + gp_ + 0x4, sizeof(char)); // hour value
-        hex_marker_addx(global_clockmultiplier + gp_ + 0x5, sizeof(char)); // minute value
-        hex_marker_addx(global_clockmultiplier + gp_ + 0x6, sizeof(char)); // second value
+        hex_marker_addx(global_clockmultiplier + gp_ + 0x4, sizeof(uint8)); // hour value
+        hex_marker_addx(global_clockmultiplier + gp_ + 0x5, sizeof(uint8)); // minute value
+        hex_marker_addx(global_clockmultiplier + gp_ + 0x6, sizeof(uint8)); // second value
         hexeditor_create(global_clockmultiplier+ gp_ + 0x4, 0, memory_low, memory_high, "> game clock");
         #endif
       } break;
@@ -9238,9 +8677,8 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval U
     case FUNC_SET:
       status = defaultstatus;
       if( pplayer > 0 ) { // check if game in playable state
-        if( status )
-          goto worldtime_enable;
-        else goto worldtime_disable;
+        if( status ) goto worldtime_enable; // TODO: change this
+        else goto worldtime_disable; // TODO: change this
       } break;
   }
 
@@ -9252,8 +8690,6 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval U
  *
  * Completion:
  *
- * Todo:  -
- *
  * Notes:
  *   global_bridgeState:
  *   0 = is up permanent
@@ -9264,8 +8700,9 @@ void *world_time(int calltype, int keypress, int defaultstatus, int defaultval U
  *   5 = going up
  *   6 = is down permanent
  **************************************************************************************************************************************/
-void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defaultval UNUSED) {
-  static int status, state = 1;
+void *world_liftcontrol(int calltype, int keypress, bool defaultstatus, int defaultval UNUSED) {
+  static bool status;
+  static uint8 state = 1;
   //const char *list_statenames[] = { "up permanently", "up", "descending", "down", "about to ascend", "ascending", "down permanently" };
 
   switch( calltype ) {
@@ -9295,16 +8732,16 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
         if( status ) {
           setInt(global_bridgeState, 3); // to get back into cycle
           SetBridgeState(2);
-          status = 0;
-        } else status = 1;
+        }
+        status = !status;
 
       } else if( keypress == PSP_CTRL_LEFT ) {
         if( status )
-          state = 1 - state;
+          state = !state;
 
       } else if( keypress == PSP_CTRL_RIGHT ) {
         if( status )
-          state = 1 - state;
+          state = !state;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -9329,12 +8766,10 @@ void *world_liftcontrol(int calltype, int keypress, int defaultstatus, int defau
  *
  * Completion:  99%
  *
- * Todo:  -
- *
  * Notes:   might break missions ?!
  **************************************************************************************************************************************/
-void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *world_realtimeclock(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   static ScePspDateTime timetest;
 
   switch( calltype ) {
@@ -9351,18 +8786,16 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
           realtime_disable:
           setClockMultiplier(1000); // default
           setClockFreeze(OFF); // fix (copies back gametimer)
-          status = 0;
-
         } else {
           realtime_enable:
           setClockMultiplier(60000); // real time
-          status = 1;
         }
+        status = !status;
 
       } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
         /// Set PSP SystemTime as Gametime
         sceRtcGetCurrentClockLocalTime(&timetest); // https://github.com/pspdev/pspsdk/blob/master/src/rtc/psprtc.h
-        setClockTime((char)timetest.hour, (char)timetest.minute, (char)timetest.second);
+        setClockTime((uint8)timetest.hour, (uint8)timetest.minute, (uint8)timetest.second);
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         //int gp_tmp = (LCS ? 0 : gp);
@@ -9391,13 +8824,10 @@ void *world_realtimeclock(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:  100 % :)
  *
- * Todo:  -
- *        -
- *
  * Notes:   When CHeats are used two globals (bool & counter) are set and will be saved / loaded from savegame!
  **************************************************************************************************************************************/
-void *no_cheating_warning(int calltype, int keypress, int defaultstatus UNUSED) {
-  static int status;
+void *no_cheating_warning(int calltype, int keypress, bool defaultstatus UNUSED) {
+  static bool status;
   //int gp_tmp = (LCS ? 0 : gp); //to minimize code
 
   switch( calltype ) {
@@ -9411,21 +8841,19 @@ void *no_cheating_warning(int calltype, int keypress, int defaultstatus UNUSED) 
       } else return "";
 
     case FUNC_CHECK:
-      if( getByte(global_cheatusedboolean + gp_) == 1 || getInt(global_cheatusedcounter + gp_) > 0 ) {
-        status = 1;
-      } else status = 0;
+      status = ( getByte(global_cheatusedboolean + gp_) == 1 || getInt(global_cheatusedcounter + gp_) > 0 );
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         setByte(global_cheatusedboolean + gp_, 0);
         setInt(global_cheatusedcounter + gp_, 0);
-        status = 0;
+        status = false;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_cheatusedboolean + gp_, sizeof(char));
+        hex_marker_addx(global_cheatusedboolean + gp_, sizeof(bool));
         hex_marker_addx(global_cheatusedcounter + gp_, sizeof(int));
         hexeditor_create(global_cheatusedboolean+ gp_, 0, memory_low, memory_high, "> cheatcode used boolean (IN THIS PLAY SESSION)");
         #endif
@@ -9442,18 +8870,12 @@ void *no_cheating_warning(int calltype, int keypress, int defaultstatus UNUSED) 
  *
  * Completion:   100%
  *
- * Todo:  -
- *        -
- *
  * Notes:
  ******************************************************************************************************************************************************/
 
-void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status = 0;
-  static unsigned int i = 0; // default radio station
-  static int j;
-
-  u32 base = 0;
+void *traffic_radiostation(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status = 0;
+  static uint32 i = 0; // default radio station
 
   switch( calltype ) {
 
@@ -9468,8 +8890,8 @@ void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int de
       return (void *)retbuf;
 
     case FUNC_APPLY:
-      base = vehicles_base;
-      for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
+      uaddr base = vehicles_base;
+      for( uint32 j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
         if( base != pcar ) { //ignore player's current vehicle
           setVehicleRadioStation(base, i);
         }
@@ -9484,7 +8906,7 @@ void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int de
         if( i < var_radios ) i++;
 
       } else if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status; // switch status
+        status = !status; // switch status
       }
       break;
 
@@ -9507,7 +8929,7 @@ void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int de
  *
  * Completion:   60%
  *
- * Todo:  - VCS: far water level
+ * TODO:  - VCS: far water level
  *        - VCS: reset water areas (0x00 back to 0x80)
  *        - LCS: map border level
  *
@@ -9515,8 +8937,8 @@ void *traffic_radiostation(int calltype, int keypress, int defaultstatus, int de
  *
  * Notes:
  ******************************************************************************************************************************************************/
-void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status = 0;
+void *world_waterlevel(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status = false;
   static float level = 0.00f; // default
   static int onetimeapply = 0; // see FUNC_APPLY, FUNC_SET
 
@@ -9531,7 +8953,7 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
       snprintf(retbuf, sizeof(retbuf), "%.2f", level);
       return (void *)retbuf;
 
-    case FUNC_APPLY: // this is a special case as waterlevel can't be set via config restore because "menu_setDefaults" is executed before water.data is loaded in memory -> ugly fix: on-time-apply in FUNC_APPLY
+    case FUNC_APPLY:
       if( onetimeapply ) {
         setWaterLevel(level);
         onetimeapply = 0;
@@ -9542,24 +8964,21 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
       if( keypress == PSP_CTRL_LEFT && level > -100.00 ) { // LEFT
         level -= 0.1;
         setWaterLevel(level);
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_RIGHT && level < 150.00 ) { // RIGHT
         level += 0.1;
         setWaterLevel(level);
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        if( status ) {
-          resetWaterLevel();
-          status = 0;
-        } else {
-          setWaterLevel(level);
-          status = 1;
-        }
+        if( status ) resetWaterLevel();
+        else setWaterLevel(level);
+
+        status = !status;
 
       } else if( keypress == PSP_CTRL_CIRCLE ) {
-        status = 0;
+        status = false;
         level = LCS ? 0.00f : 6.00f;
         resetWaterLevel();
 
@@ -9580,7 +8999,7 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
         //if(status && pplayer > 0) // only set when game active and cheat on
         //  setWaterLevel(level);
         //else
-          if( status )onetimeapply = 1;
+          if( status ) onetimeapply = 1;
 
       } else {
         level = LCS ? 0.00f : 6.00f; // set default height
@@ -9599,7 +9018,7 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
  *
  * Completion:
  *
- * Todo:  - VCS small waves?! and no higher than 1.00f
+ * TODO:  - VCS small waves?! and no higher than 1.00f
  *
  * Notes: -0.50f == no waves LCS
  *
@@ -9607,8 +9026,8 @@ void *world_waterlevel(int calltype, int keypress, int defaultstatus, int defaul
  * Cloud 0.70  33 33 33 3F
  * Rainy 1.00  00 00 80 3F
  ******************************************************************************************************************************************************/
-void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status = 0;
+void *world_waveheight(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status = false;
   static float level = 0.00f; // default
 
   switch( calltype ) {
@@ -9627,32 +9046,32 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
       break;
 
     case FUNC_CHECK:
-      if( status == 0 ) {
-        ///// patched out before so taken care of here ///////// see 0x00130820 @ LCS US v3
-    setWindClipped(1.0f);
-      if( getWind() <= 1.0)
+      if( !status ) {
+      ///// patched out before so taken care of here ///////// see 0x00130820 @ LCS US v3
+        setWindClipped(1.0f);
+        if( getWind() <= 1.0f )
           setWindClipped(getWind());
-    ////////////////////////////////////////////////////////
-    level = getWind();
+      ////////////////////////////////////////////////////////
+        level = getWind();
       }
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && level > (LCS ? -0.50f : 0.00f) ) { // LEFT
         level -= 0.05f;
-        status = 1;
+        status = true;
         if( LCS && level <= -0.50f ) level = -0.50f; // small fix
         if( VCS && level <= 0.00f ) level = 0.00f; // small fix
 
       } else if( keypress == PSP_CTRL_RIGHT && level < 50.00f ) { // RIGHT
         level += 0.05f;
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status; // switch status
+        status = !status; // switch status
 
       } else if( keypress == PSP_CTRL_CIRCLE ) {
-        status = 0;
+        status = false;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -9678,12 +9097,9 @@ void *world_waveheight(int calltype, int keypress, int defaultstatus, int defaul
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:
  ******************************************************************************************************************************************************/
-void *pickup_spawner(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
+void *pickup_spawner(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval) {
   static int i = 0;
   static float x = 0, y = 0, z = 0;
 
@@ -9740,9 +9156,6 @@ void *pickup_spawner(int calltype, int keypress, int defaultstatus UNUSED, int d
 /*****************************************************************************************************************************************************
  *
  * Completion:
- *
- * Todo:  -
- *        -
  *
  * Notes:
  ******************************************************************************************************************************************************/
@@ -9829,9 +9242,9 @@ char *lcs_playerModels[] = {  // 8 chars max
 }; // VCS via IDE (can even load all peds this way)
 
 /// only special chars for LCS and very experimental
-void *player_model(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
+void *player_model(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval) {
   static int i = 0;
-  static int list_size = ARRAY_SIZE(lcs_playerModels) - 1;
+  static array_size list_size = ARRAY_SIZE(lcs_playerModels) - 1;
   static char buf[16] = "";
 
   switch( calltype ) {
@@ -9851,8 +9264,8 @@ void *player_model(int calltype, int keypress, int defaultstatus UNUSED, int def
           LoadAllModelsNow(0); // LoadAllModelsNow
           RefreshActorSkin(pplayer); // RefreshActorSkin
 
-          /// or via script (for ULUX todo?)
-          /* static u8 script_loadmodel[] = {  // must be static for CustomScriptExecut()!
+          /// TODO: or via script (for ULUX)
+          /* static byte script_loadmodel[] = {  // must be static for CustomScriptExecut()!
             /// load_and_launch_mission_internal
             0x1C, 0x04,
             0x07, // byte
@@ -9894,28 +9307,29 @@ void *player_model(int calltype, int keypress, int defaultstatus UNUSED, int def
  *
  * Completion:   95 %
  *
- * Todo:  -
- *
  * Notes: https://gtaforums.com/topic/993259-the-reason-why-boats-spawn-scheme-works-for-helicopters-and-planes-in-gta-3-and-vc/
  ******************************************************************************************************************************************************/
-void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int defaultval) {
-  static short id = 172; // default
+void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static uint16 id = 172; // default
   static float x = 0, y = 0, z = 0, deg = 0;
 
   //#ifndef DEBUG
-  static unsigned int i = 0;
-  static short blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI ("escape"), AEROPL, DODO ("deaddodo")
-  static short blacklist_vcs[] = { 0x118 }; // AEROPL  (TOPFUN 0xF2 already patched)
+  static uint32 i = 0;
+  static const uint16 blacklist_lcs[] = { 0xC0, 0xC5, 0xC6, 0xC8, 0xC9 }; // FERRY, TRAIN, HELI ("escape"), AEROPL, DODO ("deaddodo")
+  static const uint16 blacklist_vcs[] = { 0x118 }; // AEROPL  (TOPFUN 0xF2 already patched)
+  static const array_size blacklist_lcs_size = ARRAY_SIZE(blacklist_lcs);
+  static const array_size blacklist_vcs_size = ARRAY_SIZE(blacklist_vcs);
+
   //#endif
-  static int status = 0;
+  static bool status = false;
 
 
   #ifdef SPECIAL_VEHICLES
   /// reset to original type after spawn - If not you can no longer enter trains in LCS for example
-  static int typebackup = 0;
+  static bool typebackup = false;
   if( typebackup ) {
 	  setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), typebackup); // set original type
-	  typebackup = 0;
+	  typebackup = false;
   }
   #endif
 
@@ -9928,7 +9342,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
 
     case FUNC_GET_STRING:
       snprintf(retbuf, sizeof(retbuf), "%s", getRealVehicleNameViaID(id));
-      if( retbuf[0] == '\0' ) // some vehicles don't have translations..
+      if( STR_EMPTY(retbuf) ) // some vehicles don't have translations..
         snprintf(retbuf, sizeof(retbuf), "%s", getGxtIdentifierForVehicleViaID(id)); // ..use the GXT identifier-name then
       return (void *)retbuf;
 
@@ -9936,7 +9350,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
       if( keypress == PSP_CTRL_LEFT && id > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
         id--;
         #ifndef SPECIAL_VEHICLES
-        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+        for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) { // skip blacklisted
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id--;
             i = 0;
@@ -9947,7 +9361,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
         #ifndef SPECIAL_VEHICLES
-        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) { // skip blacklisted
+        for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) { // skip blacklisted
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id++;
             i = 0;
@@ -9996,7 +9410,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
           0023: end_thread
           ************************************************************/
 
-          static u8 script_becomevehicle[] = { // must be static for CustomScriptExecut()!
+          static byte script_becomevehicle[] = { // must be static for CustomScriptExecut()!
             /// request_model
             0x4C, 0x02,
             0x08, // type = short
@@ -10088,7 +9502,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
 
           /// if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
           #ifdef SPECIAL_VEHICLES
-          for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
+          for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) {
             if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
               typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
               setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
@@ -10105,7 +9519,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
 
         /// if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
         #ifdef SPECIAL_VEHICLES
-        for( i = 0; i < ((LCS ? sizeof(blacklist_lcs) : sizeof(blacklist_vcs))/sizeof(blacklist_lcs[0])); i++ ) {
+        for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) {
           if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
             setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
@@ -10148,7 +9562,7 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
         0023: terminate_this_script
         ************************************************************/
 
-        static u8 script_spawnvehicle[] = { // must be static for CustomScriptExecut()!
+        static byte script_spawnvehicle[] = { // must be static for CustomScriptExecut()!
           /// request_model
           0x4C, 0x02,
           0x08,     // type = short
@@ -10234,9 +9648,12 @@ void *vehicle_spawner(int calltype, int keypress, int defaultstatus UNUSED, int 
       break;
 
     case FUNC_SET:
-      if( defaultval > 0 )
-        id = defaultval;
-    else id = 172;
+      status = defaultstatus;
+      if( defaultval >= getFirstIdeOfType(MODELINFO_VEHICLE) && defaultval <= getLastIdeOfType(MODELINFO_VEHICLE))
+        id = (uint16)defaultval;
+      else
+        id = 172;
+      
       break;
   }
 
@@ -10261,8 +9678,9 @@ if( no destination icons && pay'n'spray icon is global map visible bool )  ?
 /// vcs races: blue arrows over other cars before destination sphere
 
 void teleport_next_sub() {
-  unsigned int i; 
-  int type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  uint32 i; 
+  int type, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  array_uidx slot;
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsVisible(base) && getMapiconID(base) == 0x00 ) { // && getMapiconColor(base) != 0x00 aka red (exclude targets) good idea?
@@ -10271,18 +9689,18 @@ void teleport_next_sub() {
 
       switch( type ) {
         case 0: // VCS only (Business)
-          // TODO
+          // TODO:
           break;
 
         case 1: // Vehicle
-          if( slot >= 0 && slot <= vehicles_max ) {
+          if( slot <= vehicles_max ) {
             objbase = vehicles_base + (var_vehobjsize * slot);
             if( getVehicleObjectIsActive(objbase) ) {
               if( getVehicleDriverHandle(objbase) == 0 ) { // no driver! teleport to driver seat
                 TaskCharWith(pplayer, 0x12, objbase); // this one only works from apply-loop hooked function AND within another function!!
                 WarpPedIntoVehicle(pplayer, objbase);
               } else { // teleport player on top of vehicle
-                teleport(getFloat(objbase+0x30), getFloat(objbase+0x34), getFloat(objbase+0x38)+2.0f);
+                SetPlayerPosition(getFloat(objbase+0x30), getFloat(objbase+0x34), getFloat(objbase+0x38)+2.0f);
               }
               return;
             } else continue;
@@ -10290,20 +9708,20 @@ void teleport_next_sub() {
           break;
 
         case 2: // Pedestrian
-          if( slot >= 0 && slot <= peds_max ) {
+          if( slot <= peds_max ) {
             objbase = peds_base + (var_pedobjsize * slot);
             if( getPedObjectIsActive(objbase) ) {
-              teleport(getFloat(objbase+0x30), getFloat(objbase+0x34), getFloat(objbase+0x38));
+              SetPlayerPosition(getFloat(objbase+0x30), getFloat(objbase+0x34), getFloat(objbase+0x38));
               return;
             } else continue;
           }
           break;
 
         case 3: // World Object  (can be pickup as well!)
-          if( slot >= 0 && slot <= worldobjs_max ) {
+          if( slot <= worldobjs_max ) {
             objbase = worldobjs_base + (var_wldobjsize * slot);
             if( getWorldObjectIsActive(objbase) ) {
-              teleport(getFloat(objbase+0x30), getFloat(objbase+0x34), getFloat(objbase+0x38)+0.5f);
+              SetPlayerPosition(getFloat(objbase+0x30), getFloat(objbase+0x34), getFloat(objbase+0x38)+0.5f);
               return;
             } else continue;
           }
@@ -10312,7 +9730,7 @@ void teleport_next_sub() {
 
         default: // use coordinates in blip slot
           if( getFloat(base+(LCS ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
-            teleport(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
+            SetPlayerPosition(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
             return;
           }
 
@@ -10323,7 +9741,7 @@ void teleport_next_sub() {
 }
 
 void *teleport_next(int calltype, int keypress) {
-  static int status = 0;
+  static bool status = false;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -10334,11 +9752,11 @@ void *teleport_next(int calltype, int keypress) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1;
+        status = true;
       } break;
 
     case FUNC_APPLY:
-      status = 0; // apply once
+      status = false; // apply once
       teleport_next_sub();
       break;
 
@@ -10349,7 +9767,7 @@ void *teleport_next(int calltype, int keypress) {
 
 
 void teleport_mission() { // gets next mission host location from mapicon
-  unsigned int i;
+  uint32 i;
   int base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
@@ -10359,7 +9777,7 @@ void teleport_mission() { // gets next mission host location from mapicon
 
       if( (LCS && icn >= 31 && icn <= 40) || (VCS && icn >= 0x23 && icn <= 0x2E) ) {
         if( getFloat(base+(LCS ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
-          teleport(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
+          SetPlayerPosition(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
           return;
         }
       }
@@ -10368,14 +9786,15 @@ void teleport_mission() { // gets next mission host location from mapicon
 }
 
 
-/// TODO - get_ground_z_for_3d_coord (opcode: 02D3)
+/// TODO: get_ground_z_for_3d_coord (opcode: 02D3)
 void teleport_marker() {
-  unsigned int i;
+  uint32 i;
   int base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++) {
     if( getMapiconIsActive(base) && getMapiconID(base) == (LCS ? 49 : 0x10) ) {
-      teleport(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), (LCS ? -150.0f : -250.0f)); // z is always 0 for marker sadly -> telep under map will reset player by game on street  TODO find z coordinate like debug build
+      // TODO: find z coordinate like debug build
+      SetPlayerPosition(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), (LCS ? -150.0f : -250.0f)); // z is always 0 for marker sadly -> telep under map will reset player by game on street
       return;
     }
   }
@@ -10390,8 +9809,9 @@ green    green  = Object / !pickup
 
 */
 void kill_all_targets() {
-  unsigned int i;
-  int type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  uint32 i;
+  int type, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  array_uidx slot;
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconID(base) == 0x00 && getMapiconColor(base) == 0x00 ) { // red == target
@@ -10400,19 +9820,19 @@ void kill_all_targets() {
 
       switch( type ) {
         case 1: /// Vehicle
-          if( slot >= 0 && slot <= vehicles_max ) {
+          if( slot <= vehicles_max ) {
             objbase = vehicles_base + (var_vehobjsize * slot);
             if( getVehicleObjectIsActive(objbase) ) {
               setVehicleHealth(objbase, 0.0f);  // to be sure
               makeVehicleExplode(objbase);
-              //alternatively get PED base from seat position and kill (TODO i guess?)
+              // TODO: alternatively get PED base from seat position and kill
               //return;
             } //else continue;
           }
           break;
 
         case 2: /// Pedestrian
-          if( slot >= 0 && slot <= peds_max ) {
+          if( slot <= peds_max ) {
             objbase = peds_base + (var_pedobjsize * slot);
             if( getPedObjectIsActive(objbase) ) {
               setPedHealthAndArmor(objbase, 0.0f, 0.0f);
@@ -10422,7 +9842,7 @@ void kill_all_targets() {
           break;
 
         /* case 3: /// World Object
-          if( slot >= 0 && slot <= worldobjs_max ) {
+          if( slot <= worldobjs_max ) {
             objbase = worldobjs_base + (var_wldobjsize * slot);
             if( getWorldObjectIsActive(objbase) ) {
 
@@ -10438,8 +9858,9 @@ void kill_all_targets() {
 
 
 void freeze_all_targets() {
-  unsigned int i;
-  int type, slot, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  uint32 i;
+  int type, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  array_uidx slot;
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconID(base) == 0x00 && getMapiconColor(base) == 0x00 ) { // red == target
@@ -10448,20 +9869,20 @@ void freeze_all_targets() {
 
       switch( type ) {
         case 1: /// Vehicle
-          if( slot >= 0 && slot <= vehicles_max ) {
+          if( slot <= vehicles_max ) {
             objbase = vehicles_base + (var_vehobjsize * slot);
             if( getVehicleObjectIsActive(objbase) ) {
-              setPedOrVehicleFreezePosition(objbase, TRUE);
+              setPedOrVehicleFreezePosition(objbase, true);
               //return;
             } //else continue;
           }
           break;
 
         case 2: /// Pedestrian
-          if( slot >= 0 && slot <= peds_max ) {
+          if( slot <= peds_max ) {
             objbase = peds_base + (var_pedobjsize * slot);
             if( getPedObjectIsActive(objbase) ) {
-              setPedOrVehicleFreezePosition(objbase, TRUE);
+              setPedOrVehicleFreezePosition(objbase, true);
               //return;
             } //else continue;
           }
@@ -10474,7 +9895,7 @@ void freeze_all_targets() {
 
 
 
-const char *buttonCheatNames[] = {
+static const u8string buttonCheatNames[] = {
   "Spawn selected Vehicle",
   "Toggle Hover Bike & Car",
   "Teleport Destination",
@@ -10497,11 +9918,11 @@ const char *buttonCheatNames[] = {
   //
  };
 
-extern short alt_gravity_button_pressed; // ugly solution for Reverse Gravity
+extern bool alt_gravity_button_pressed; // ugly solution for Reverse Gravity
 
 void buttonApply(int i) { // apply when button hold
   if( i == 10 ) { // Reverse Gravity
-    alt_gravity_button_pressed = 1;
+    alt_gravity_button_pressed = true;
     world_gravity(FUNC_CHANGE_VALUE, 42, 0, 0); // enable cheat
   }
 }
@@ -10529,7 +9950,7 @@ void buttonApplyOnce(int i) { // apply once on button press
     if( pcar ){
       if( getByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8) == (LCS ? 0x1 : 0xB) ) { // custom tracks toggle is ON
         setByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, LCS ? 0x0 : 0xA); // disable custom tracks toggle
-        if( VCS ) setRadioStationNow(0); // re-enable radio playback (todo instead of 0 get last radio station played?)
+        if( VCS ) setRadioStationNow(0); // TODO: re-enable radio playback -> instead of 0 get last radio station played?
       } else {
         setByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, LCS ? 0x1 : 0xB); // enable custom tracks toogle
         setByte(global_radioarea + (LCS ? 0x350 : 0x578), 0x0); // trigger playback
@@ -10547,9 +9968,9 @@ void buttonApplyOnce(int i) { // apply once on button press
 
   } else if( i == 9 ) { // crouch
     if( !pcar && ((current_buttons & PSP_CTRL_RTRIGGER) == 0) ) { // R-Trigger is fix for manual aiming
-      if( isPedCrouching(pplayer) )
+      if( isPedCrouching() )
         TaskUnDuck(pplayer, 0x1);
-      else TaskDuck(pplayer);
+      else TaskDuck();
     }
 
   } else if( i == 10 ) {
@@ -10566,8 +9987,7 @@ void buttonApplyOnce(int i) { // apply once on button press
     }
 
   } else if( i == 13 ) { // Impulse
-    int j;
-    u32 base;
+    uaddr base;
     float radius = 50.0f; // in which force should be applied
     float x1 = getFloat(pobj+0x30);
     float y1 = getFloat(pobj+0x34);
@@ -10575,7 +9995,7 @@ void buttonApplyOnce(int i) { // apply once on button press
 
     /// Vehicles
     base = vehicles_base;
-    for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
+    for( uint32 j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
       if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
       float x2 = getFloat(base+0x30);
       float y2 = getFloat(base+0x34);
@@ -10626,7 +10046,7 @@ void buttonApplyOnce(int i) { // apply once on button press
     float y2 = getFloat(base+0x34);
     float z2 = getFloat(base+0x38);
     if( checkCoordinateInsideArea(x1, y1, z1, x2, y2, z2, radius) ) { // is in radius
-      // make physical! todo
+      // TODO: make physical!
 
       float distance = distanceBetweenCoordinates3d(x1, y1, z1, x2, y2, z2);
       float forcemult = distance * 30.0f / radius; // the lower the faster
@@ -10647,20 +10067,21 @@ void buttonApplyOnce(int i) { // apply once on button press
 
   } else if( i == 15 ) { // lock vehicle doors
     if( pcar )
-      setVehicleDoorsLocked(pcar, TRUE);
+      setVehicleDoorsLocked(pcar, true);
 
   } else if( i == 16 ) { // unlock vehicle doors
     if( pcar )
-      setVehicleDoorsLocked(pcar, FALSE);
+      setVehicleDoorsLocked(pcar, false);
 
   } else if( i == 17 ) {
-    setTimedTextbox("TODO", 3.0f);
+    setTimedTextbox("TODO", 3.0f); // TODO:
   }
 }
 
-void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status, i = 10; // default position
-  static int list_size = ARRAY_SIZE(buttonCheatNames) - 1;
+void *up_button(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  int i = 10; // default position
+  static array_size list_size = ARRAY_SIZE(buttonCheatNames) - 1;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -10683,7 +10104,7 @@ void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
@@ -10705,9 +10126,10 @@ void *up_button(int calltype, int keypress, int defaultstatus, int defaultval) {
   return NULL;
 }
 
-void *down_button(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status, i = 9; // default position
-  static int list_size = ARRAY_SIZE(buttonCheatNames) - 1;
+void *down_button(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  int i = 9; // default position
+  static array_size list_size = ARRAY_SIZE(buttonCheatNames) - 1;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -10730,7 +10152,7 @@ void *down_button(int calltype, int keypress, int defaultstatus, int defaultval)
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0) { // LEFT
         i--;
@@ -10755,20 +10177,21 @@ void *down_button(int calltype, int keypress, int defaultstatus, int defaultval)
 
 
 
-void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status, i = 0; // default position
-  const char *list_names[] = { "kill instantly",    // 0
-                               "replenish Health",  // 1
-                               "freeze position",   // 2
-                               "unfreeze position", // 3
-                               "unload now",        // 4
-                               #ifdef HEXEDITOR
-                               "open in HexEditor", // 5
-                               #endif
-                             };
+void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  int i = 0; // default position
+  static const u8string list_names[] = {"kill instantly",    // 0
+                                        "replenish Health",  // 1
+                                        "freeze position",   // 2
+                                        "unfreeze position", // 3
+                                        "unload now",        // 4
+                                        #ifdef HEXEDITOR
+                                        "open in HexEditor", // 5
+                                        #endif
+                                        };
 
-  static int list_size = ARRAY_SIZE(list_names) - 1;
-  static int addr;
+  static array_size list_size = ARRAY_SIZE(list_names) - 1;
+  static uaddr addr;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -10790,10 +10213,10 @@ void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaul
           setPedHealthAndArmor(addr, 100.0f, 100.0f);
 
         } else if( i == 2 ) { // 2
-          setPedOrVehicleFreezePosition(addr, TRUE);
+          setPedOrVehicleFreezePosition(addr, true);
 
         } else if( i == 3 ) { // 3
-          setPedOrVehicleFreezePosition(addr, FALSE);
+          setPedOrVehicleFreezePosition(addr, false);
 
         } else if( i == 4 ) { // 4
           if( LCS ) setPedFlagToUnload(addr);
@@ -10820,7 +10243,7 @@ void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaul
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
@@ -10842,26 +10265,27 @@ void *touch_pedestrian(int calltype, int keypress, int defaultstatus, int defaul
   return NULL;
 }
 
-void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status, i = 0; // default position
-  const char *list_names[] = { "make it float away",     // 0
-                               "set it on fire",         // 1
-                               "make it explode",        // 2
-                               "unload it",              // 3
-                               "lock the doors",         // 4
-                               "unlock the doors",       // 5
-                               "freeze position",        // 6
-                               "unfreeze position",      // 7
-                               "enter as passenger",     // 8
-                               "make peds exit",         // 9
-                               "warp into as spectator", // 10
-                               "warp into as driver",    // 11
-                               #ifdef HEXEDITOR
-                               "open in HexEditor",      // 12
-                               #endif
-                             };
-  static int list_size = ARRAY_SIZE(list_names) - 1;
-  static int addr;
+void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  int i = 0; // default position
+  static const u8string list_names[] = {"make it float away",     // 0
+                                        "set it on fire",         // 1
+                                        "make it explode",        // 2
+                                        "unload it",              // 3
+                                        "lock the doors",         // 4
+                                        "unlock the doors",       // 5
+                                        "freeze position",        // 6
+                                        "unfreeze position",      // 7
+                                        "enter as passenger",     // 8
+                                        "make peds exit",         // 9
+                                        "warp into as spectator", // 10
+                                        "warp into as driver",    // 11
+                                        #ifdef HEXEDITOR
+                                        "open in HexEditor",      // 12
+                                        #endif
+                                        };
+  static array_size list_size = ARRAY_SIZE(list_names) - 1;
+  static uaddr addr;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -10877,7 +10301,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
       addr = getObjectsTouchedObjectAddress(pobj);
       if( getTypeFromAddress(addr) == VEHICLE ) {
         if( i == 0 ) { // make it float away
-          setVehicleGravityApplies(addr, FALSE); // gravity off
+          setVehicleGravityApplies(addr, false); // gravity off
 
         } else if( i == 1 ) { // set it on fire
           setVehicleHealth(addr, 0.0f); // zero health
@@ -10893,16 +10317,16 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
             setFloat(addr+0x38, -250.0f); // move map bottom limit to make game take care of it automatically
           }
         } else if( i == 4 ) { // lock the doors
-          setVehicleDoorsLocked(addr, TRUE);
+          setVehicleDoorsLocked(addr, true);
 
         } else if( i == 5 ) { // unlock the doors
-          setVehicleDoorsLocked(addr, FALSE);
+          setVehicleDoorsLocked(addr, false);
 
         } else if( i == 6 ) { // freeze position
-          setPedOrVehicleFreezePosition(addr, TRUE);
+          setPedOrVehicleFreezePosition(addr, true);
 
         } else if( i == 7 ) { // unfreeze position
-          setPedOrVehicleFreezePosition(addr, FALSE);
+          setPedOrVehicleFreezePosition(addr, false);
 
         } else if( i == 8 ) { // enter as passenger
           if( !pcar )
@@ -10944,7 +10368,7 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
@@ -10966,16 +10390,17 @@ void *touch_vehicle(int calltype, int keypress, int defaultstatus, int defaultva
   return NULL;
 }
 
-void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status, i = 0; // default position
-  const char *list_names[] = { "unload it",
-                               #ifdef HEXEDITOR
-                               "open in HexEditor"
-                               #endif
-                             };
+void *touch_object(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  int i = 0; // default position
+  static const u8string list_names[] = {"unload it",
+                                        #ifdef HEXEDITOR
+                                        "open in HexEditor"
+                                        #endif
+                                        };
 
-  static int list_size = ARRAY_SIZE(list_names);
-  static int addr;
+  static array_size list_size = ARRAY_SIZE(list_names);
+  static uaddr addr;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -11006,7 +10431,7 @@ void *touch_object(int calltype, int keypress, int defaultstatus, int defaultval
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
@@ -11040,8 +10465,9 @@ mark OBJECTS on radar
  - players vehicle(s)
  -
 ****/
-void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status, j = 0, i = 0; // default position
+void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  int j = 0, i = 0; // default position
   static int res = 0;
 
   switch( calltype ) {
@@ -11078,22 +10504,22 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     case FUNC_APPLY:
       removeAllCustomMapIcons(); // remove all custom created ones
       if( j == 0 ) { // pickups
-        createCustomMapIconsForPickupsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id), 0, 4); //3 is white, 4 is yellow
+        createCustomMapIconsForPickupsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id), 0, COLOR32(4)); //3 is white, 4 is yellow
 
-      } else if( j == 1 ) { // weapons in range
-        //drawString("todo - weapons in range", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
+      } else if( j == 1 ) { // TODO: weapons in range
+        //drawStringNoTvarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE, "todo - weapons in range");
         res = createCustomMapIconsForWeaponsInRange(150.0f);
 
-      } else if( j == 2 ) { // stunt jumps
-        //drawString("todo - stunt jumps", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
+      } else if( j == 2 ) { // TODO: stunt jumps
+        //drawStringNoTvarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE, "todo - stunt jumps");
         //createCustomMapIconsForUSJs();
 
-      } else if( j == 3 ) { // baloons
-        //drawString("todo - baloons", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
+      } else if( j == 3 ) { // TODO: balloons
+        //drawStringNoTvarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE, "todo - balloons");
         //createCustomMapIconsForBaloons();
 
-      } else if( j == 4 ) { // player's vehicles
-        //drawString("todo - player's vehicles", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
+      } else if( j == 4 ) { // TODO: player's vehicles
+        //drawStringNoTvarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE, "todo - player's vehicles");
         //createCustomMapIconsForPlayersVehicles();
 
       }
@@ -11101,7 +10527,7 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
         removeAllCustomMapIcons();
 
       } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
@@ -11116,7 +10542,7 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
         if( j == 0 && i > 0) // pickups
           i--;
         //removeAllCustomMapIcons();
-      } else if( keypress == PSP_CTRL_RIGHT /* && i < todo*/ ) { // RIGHT
+      } else if( keypress == PSP_CTRL_RIGHT /* && i < something */ ) { // TODO: 
         if( j == 0 && i < (LCS ? lcs_pickupsize : vcs_pickupsize) ) // pickups
           i++;
         //removeAllCustomMapIcons();
@@ -11126,7 +10552,7 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
     case FUNC_SET:
       status = defaultstatus;
       j = 0;
-      if( defaultval >= 0  ) // todo < value check
+      if( defaultval >= 0  ) // TODO: something < value check
         j = defaultval;
       break;
   }
@@ -11140,12 +10566,10 @@ void *markonmap(int calltype, int keypress, int defaultstatus, int defaultval) {
  *
  * Completion:
  *
- * Todo:  -
- *
  * Notes:   global_camera
  **************************************************************************************************************************************/
-void *camera_centered(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *camera_centered(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -11158,7 +10582,7 @@ void *camera_centered(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -11182,13 +10606,11 @@ void *camera_centered(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *
  * Notes:
  ******************************************************************************************************************************************************/
 
-void *fieldofview(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status = 0;
+void *fieldofview(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status = false;
   static float fov = 70.00f; // default
 
   switch( calltype ) {
@@ -11204,8 +10626,7 @@ void *fieldofview(int calltype, int keypress, int defaultstatus, int defaultval)
       return (void *)retbuf;
 
     case FUNC_CHECK:
-      if( !status )
-        fov = getFieldOfView();
+      if( !status ) fov = getFieldOfView();
       break;
 
     case FUNC_APPLY:
@@ -11214,18 +10635,18 @@ void *fieldofview(int calltype, int keypress, int defaultstatus, int defaultval)
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && fov > 10.00 ) { // LEFT
-        fov -= 1.0;
-        status = 1;
+        fov -= 1.0f;
+        status = true;
 
       } else if( keypress == PSP_CTRL_RIGHT && fov < 140.00 ) { // RIGHT
-        fov += 1.0;
-        status = 1;
+        fov += 1.0f;
+        status = true;
 
       } else if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_CIRCLE ) { // CIRCLE
-        status = 0;
+        status = false;
         setFieldOfView(70.0f);
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
@@ -11249,8 +10670,8 @@ void *fieldofview(int calltype, int keypress, int defaultstatus, int defaultval)
 }
 
 
-void *camera_topdown(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *camera_topdown(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -11269,7 +10690,7 @@ void *camera_topdown(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status;
+        status = !status;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -11298,13 +10719,10 @@ void *camera_topdown(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *        -
- *
  * Notes:   developer flag -> spawns at debug area on "new game" & Multiplayer can be started without enough players
  **************************************************************************************************************************************/
-void *dev_flag(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *dev_flag(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -11315,12 +10733,11 @@ void *dev_flag(int calltype, int keypress, int defaultstatus) {
         if( status ) {
           devflag_disable:
           setByte(global_developerflag + (LCS ? 0 : gp), 0);
-          status = 0;
         } else {
           devflag_enable:
           setByte(global_developerflag + (LCS ? 0 : gp), 1);
-          status = 1;
         }
+        status = !status;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
@@ -11336,7 +10753,6 @@ void *dev_flag(int calltype, int keypress, int defaultstatus) {
         if( status )  //&& pplayer > 0
           goto devflag_enable;
         else {
-          status = 0;
           if( pplayer > 0 ) // dev flag is off on game boot and doesn't need to be set! only when triggered by player while playing, right?!
             goto devflag_disable;
         }
@@ -11354,8 +10770,6 @@ void *dev_flag(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:
  *
- * Todo:  -
- *
  * Notes:
  ******************************************************************************************************************************************************/
 void gather_helper(int base, float x, float y, float z) {
@@ -11371,11 +10785,10 @@ void gather_helper(int base, float x, float y, float z) {
   setFloat(base+(LCS?0x74:0x144), -y_obj);
   setFloat(base+(LCS?0x78:0x148), -z_obj);
 }
-void *gather_spell(int calltype, int keypress, int defaultstatus) {
-  static int status = 0;
+void *gather_spell(int calltype, int keypress, bool defaultstatus) {
+  static bool status = false;
 
   float x, y, z;
-  int j = 0;
 
   switch( calltype ) {
 
@@ -11389,8 +10802,8 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
       z = getFloat(pobj+0x38) + 6.00f;
 
       /// Vehicles
-      u32 base = vehicles_base;
-      for( j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
+      uaddr base = vehicles_base;
+      for( uint32 j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
         if( getVehicleObjectIsActive(base) && base != pcar ) { // ignore player's current vehicle
           setVehicleMakePhysical(base);
           gather_helper(base, x, y, z);
@@ -11398,13 +10811,13 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
       }
       /// Pedestrians
       base = peds_base;
-      for( j = 0; j < peds_max; j++, base += var_pedobjsize )
+      for( uint32 j = 0; j < peds_max; j++, base += var_pedobjsize )
         if( getPedObjectIsActive(base) && base != pplayer ) // ignore player
           gather_helper(base, x, y, z);
 
       /// World Objects
       base = worldobjs_base;
-      for( j = 0; j < worldobjs_max; j++, base += var_wldobjsize )
+      for( uint32 j = 0; j < worldobjs_max; j++, base += var_wldobjsize )
         if( getWorldObjectIsActive(base) )
           gather_helper(base, x, y, z);
 
@@ -11412,7 +10825,7 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status;
+        status = !status;
       }
       break;
 
@@ -11429,12 +10842,12 @@ void *gather_spell(int calltype, int keypress, int defaultstatus) {
  *
  * Completion:   100%
  *
- * Todo:
+ * TODO:
  *
  * Notes:
  **************************************************************************************************************************************/
-void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
+void *bmxjumpheight(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
   static float mult = 1.0f;
   static float defval = 0.06f; // game default (EU v1.03 at least)
 
@@ -11460,18 +10873,18 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_LEFT && mult > 1.0f ) { // LEFT
         mult -= 0.5f;
-        status = 1;
+        status = true;
 
       } else if ( keypress == PSP_CTRL_RIGHT && mult < 20.0f ) { // RIGHT
         mult += 0.5f;
-        status = 1;
+        status = true;
 
       //} else if ( keypress == PSP_CTRL_CROSS ) { // CROSS
-        //status = 1 - status;
+        //status = !status;
         //if( !status ) mult = 1.0f;
 
       } else if ( keypress == PSP_CTRL_CIRCLE ) { // CIRCLE
-        status = 0;
+        status = false;
         mult = 1.0f;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
@@ -11483,7 +10896,7 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
       }
 
       if( mult <= 1.0f ) {
-        status = 0;
+        status = false;
         mult = 1.0f; // default
       }
 
@@ -11497,7 +10910,7 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
         mult = (float)((float)(defaultval)/10.0f);
       }
       if( mult == 1.0f )
-        status = 0;
+        status = false;
       break;
   }
 
@@ -11513,25 +10926,25 @@ void *bmxjumpheight(int calltype, int keypress, int defaultstatus, int defaultva
  *
  * Completion:   100%
  *
- * Todo:
+ * TODO:
  *
  * Notes:
  **************************************************************************************************************************************/
-void *policechaseheli(int calltype, int keypress, int defaultstatus, int defaultval) {
-  static int status;
-  static int pos = 1;
+void *policechaseheli(int calltype, int keypress, bool defaultstatus, int defaultval UNUSED) {
+  static bool status;
+  static array_uidx pos = 1;
                 //  0 Dis  1 Def  2+ Customs....
-  const short list_value_lcs[] = { 0x00,  0xD7, 0xD3, 0xD5, 0xD6, 0xD7, 0xD8 };
-  const short list_value_vcs[] = { 0x00, 0x105, 0xAD, 0xBC, 0xBD, 0xD5, 0x104, 0x105, 0x106, 0x107, 0x113 };
-  static int list_size_lcs = (sizeof(list_value_lcs)/sizeof(*list_value_lcs))-1;
-  static int list_size_vcs = (sizeof(list_value_vcs)/sizeof(*list_value_vcs))-1;
+  const uint16 list_value_lcs[] = { 0x00,  0xD7, 0xD3, 0xD5, 0xD6, 0xD7, 0xD8 };
+  const uint16 list_value_vcs[] = { 0x00, 0x105, 0xAD, 0xBC, 0xBD, 0xD5, 0x104, 0x105, 0x106, 0x107, 0x113 };
+  static array_size list_size_lcs = ARRAY_SIZE(list_value_lcs) - 1;
+  static array_size list_size_vcs = ARRAY_SIZE(list_value_vcs) - 1;;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)pos;
+      return (int*)(int)pos;
 
     case FUNC_APPLY:
       break;
@@ -11540,23 +10953,28 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
       break;
 
     case FUNC_GET_STRING:
-      if( pos == 0 ) snprintf(retbuf, sizeof(retbuf), "%s", "Disabled");
-      else snprintf(retbuf, sizeof(retbuf), "%s", LCS ? getGxtIdentifierForVehicleViaID(list_value_lcs[pos]) : getRealVehicleNameViaID(list_value_vcs[pos])); // LCS doesn't have translations for all vehicles so we use the GXT name here
-      if( pos == 1 ) snprintf(retbuf, sizeof(retbuf), "%s%s", retbuf, " (default)");
+      if( pos == 0 )
+      {
+        strcpy(retbuf, "Disabled");
+        return (void*)retbuf;
+      }
+      strcpy(retbuf, LCS ? getGxtIdentifierForVehicleViaID(list_value_lcs[pos]) : getRealVehicleNameViaID(list_value_vcs[pos])); // LCS doesn't have translations for all vehicles so we use the GXT name here
+      if( pos == 1 ) strcat(retbuf, " (default)");
+      
       return (void*)retbuf;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CIRCLE) { // CIRCLE
-        status = 0; // switch status
+        status = false; // switch status
         pos = 1; // default id
 
       } else if( keypress == PSP_CTRL_LEFT && pos > 0 ) { // LEFT
         pos--;
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_RIGHT && pos < (LCS ? list_size_lcs : list_size_vcs) ) { // RIGHT
         pos++;
-        status = 1;
+        status = true;
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) { // RIGHT
         #ifdef HEXEDITOR
@@ -11567,7 +10985,7 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
       }
 
       if( pos == 1 )
-        status = 0;
+        status = false;
 
       setPoliceChaseHeliModel(LCS ? list_value_lcs[pos] : list_value_vcs[pos]);
       RequestModel(LCS ? list_value_lcs[pos] : list_value_vcs[pos], 1);
@@ -11578,7 +10996,7 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
       status = defaultstatus;
       //pos = defaultval;
       if( pos == 1 )
-        status = 0;
+        status = false;
       break;
 
   }
@@ -11592,13 +11010,13 @@ void *policechaseheli(int calltype, int keypress, int defaultstatus, int default
  *
  * Completion:
  *
- * Todo:
+ * TODO:
  *
  *
  * Notes: all logic is inside the hooked functions
  **************************************************************************************************************************************/
-void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultval UNUSED) {
-  static int status = 0;
+void *fake_swimming(int calltype, int keypress, bool defaultstatus, int defaultval UNUSED) {
+  static bool status = false;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -11620,7 +11038,7 @@ void *fake_swimming(int calltype, int keypress, int defaultstatus, int defaultva
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status;
+        status = !status;
       }
       break;
 
@@ -11670,8 +11088,8 @@ void test_func() { //for testing only
 
   ///  VCS: Backup water level areas
   /*DEBUG_LOG("Water: ");
-  int i, j, startofwater = getInt(LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
-  for( i = startofwater, j = 0; i < startofwater+0x5000; i += 0x01, j++ ) //set water everywhere
+  int startofwater = getInt(LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
+  for( int i = startofwater, j = 0; i < startofwater+0x5000; i += 0x01, j++ ) //set water everywhere
     if( *(unsigned char*)i == 0x80 )
       DEBUG_LOG("0x%X, ", j);
   setTimedTextbox("done", 5);*/
@@ -11699,7 +11117,7 @@ void test_func() { //for testing only
   ********************/
 
 
-  static u8 script[] = {  // must be static for CustomScriptExecut()!
+  static byte script[] = {  // must be static for CustomScriptExecut()!
 
     /// PLAY_END_OF_GAME_TUNE
     //0x44, 0x04,
@@ -11769,14 +11187,12 @@ struct node *head = NULL;
 
 void print_list() {
     struct node *current = head;
-  char string[256];
 
     while(current != NULL) {
-        //printf("%d\n", current->val);
-    snprintf(string, sizeof(string), "Gametime: %d", current->time);
-    drawString(string, ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 40.0f, WHITE);
+      //printf("%d\n", current->val);
+      drawStringNoT(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 40.0f, WHITE, "Gametime: %d", current->time);
 
-        current = current->next;
+      current = current->next;
     }
 }
 
@@ -11845,11 +11261,11 @@ int searchlist(int key){
    struct node *temp = head;
    while(temp != NULL) {
       if(temp->time == key) {
-         return 1;
+         return true;
       }
       temp=temp->next;
    }
-   return 0;
+   return false;
 }
 int getsize(){
    int counter = 0;
@@ -11863,8 +11279,8 @@ int getsize(){
 */
 
 
-void *test_switch(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *test_switch(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
 
   /*static int ret;
   static float x;
@@ -11879,10 +11295,10 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      drawString("test_switch() is ON", ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE );
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE, "test_switch() is ON");
 
-      //snprintf(retbuf, sizeof(retbuf), "Test: 0x%08X & %d = 0x%08X", global_mp_parameters, 2, global_mp_parameters & 2); // DAT_0037d768 & 2
-      //drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5.0f, 45.0f, WHITE);
+      // DAT_0037d768 & 2
+      //drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5.0f, 45.0f, WHITE, "Test: 0x%08X & %d = 0x%08X", global_mp_parameters, 2, global_mp_parameters & 2);
 
       //memset(&stack[0], 0, sizeof(stack));
 
@@ -11891,9 +11307,7 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
       z = getFloat(pplayer+0x38);
       ret = FUN_000bc6d4_checkForGround(&x,auStack48,&iStack16,'\x01','\0','\0',0,0,0,0,'\0');
 
-      snprintf(retbuf, sizeof(retbuf), "ret: %i, 0x%08X -> 0x%08X 0x%08X", ret, auStack48, &iStack16);
-
-      drawString(retbuf, 0, 1.0f, 1.0f, 0, 18.0f, 15.0f, 0xCCCCCCCC); */
+      drawStringNoT(0, 1.0f, 1.0f, 0, 18.0f, 15.0f, 0xCCCCCCCC, "ret: %i, 0x%08X -> 0x%08X 0x%08X", ret, auStack48, &iStack16); */
 
 
       /*setInt(addr_vehiclesworldspawn, 0xAC);  // vehicle id
@@ -11940,7 +11354,7 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+        status = !status; // CROSS
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
@@ -11970,8 +11384,8 @@ void *test_switch(int calltype, int keypress, int defaultstatus) {
 }
 
 
-void *mp_test(int calltype, int keypress, int defaultstatus) {
-  static int status;
+void *mp_test(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
   float x, y;
 
   switch( calltype ) {
@@ -11982,8 +11396,7 @@ void *mp_test(int calltype, int keypress, int defaultstatus) {
 
       x = 5.0f, y = 40.0f;
 
-      snprintf(retbuf, sizeof(retbuf), "Game Type: %d", getInt(global_mp_parameters+0x14));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
+      drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "Game Type: %d", getInt(global_mp_parameters+0x14));
       /* 0 = Liberty City Survivor
        * 1 = Street Rage
        * 2 = Protection Racket
@@ -11991,43 +11404,26 @@ void *mp_test(int calltype, int keypress, int defaultstatus) {
        * ....
        */
 
-
-      snprintf(retbuf, sizeof(retbuf), "Location: %d", getInt(global_mp_parameters+0x18));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
+      drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "Location: %d", getInt(global_mp_parameters+0x18));
       /* 0 = Portland
        * 1 = Staunton
        * 2 = Shoreside
        */
 
-      snprintf(retbuf, sizeof(retbuf), "ScoreLimit: %d", getInt(global_mp_parameters+0x1C));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
+      drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "ScoreLimit: %d", getInt(global_mp_parameters+0x1C));
+      drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "TimeLimit: %d", getInt(global_mp_parameters+0x20));
+      //drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "Team Game: %d", getByte(global_mp_parameters + 2));
+      //drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "Powerup On: %d", getByte(global_mp_parameters + 1));
+      //drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "RacePowerup: %d", getByte(global_mp_parameters + 4));
+      //drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "Race Revr: %d", getByte(global_mp_parameters + 0x10));
 
-      snprintf(retbuf, sizeof(retbuf), "TimeLimit: %d", getInt(global_mp_parameters+0x20));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
-
-
-      /*snprintf(retbuf, sizeof(retbuf), "Team Game: %d", getByte(global_mp_parameters + 2));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
-
-      snprintf(retbuf, sizeof(retbuf), "Powerup On: %d", getByte(global_mp_parameters + 1));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
-
-
-      snprintf(retbuf, sizeof(retbuf), "RacePowerup: %d", getByte(global_mp_parameters + 4));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
-
-      snprintf(retbuf, sizeof(retbuf), "Race Revr: %d", getByte(global_mp_parameters + 0x10));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
-      */
-
-      snprintf(retbuf, sizeof(retbuf), "Skip Cut Scene: %d", getByte(global_mp_parameters + 0x38));
-      drawString(retbuf, ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE);
+      drawString(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x, y+=15.0f, WHITE, "Skip Cut Scene: %d", getByte(global_mp_parameters + 0x38));
 
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {
-        status = 1 - status; // CROSS
+        status = !status; // CROSS
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         //if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
@@ -12041,10 +11437,22 @@ void *mp_test(int calltype, int keypress, int defaultstatus) {
 
     case FUNC_SET:
       status = defaultstatus;
-      //status = 1;
       break;
   }
 
   return NULL;
 }
+void (*FUN_000B0A18)(uaddr data);
+void FUN_000B0A18_Patched(uaddr data)
+{
+  FUN_000B0A18(data);
 
+  DEBUG_LOG("Data: 0x%08X", data);
+
+  const uint32 CClock_ms_nMillisecondsPerGameMinute_default = 1000;
+
+  // Overwriting saved ms_nMillisecondsPerGameMinute to the default value as some cheats (time freeze, realtime clock) can change it
+  // and gta idiotically saves it, breaking the save for non-cheaters
+  DEBUG_LOG("Overwriting CClock::ms_nMillisecondsPerGameMinute on save to %lu", CClock_ms_nMillisecondsPerGameMinute_default);
+  setInt(data + 0x14, CClock_ms_nMillisecondsPerGameMinute_default);
+}

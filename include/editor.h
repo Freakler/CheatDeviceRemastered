@@ -1,24 +1,30 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #ifndef __EDITOR_H__
 #define __EDITOR_H__
 
+#include "mctypes.h"
 
 enum {
   HEX, // 0
@@ -56,16 +62,14 @@ enum {
 };
 
 typedef struct {
-  const char *name;
-  const char *postfix;
-  const short address;
-  const char edit_bool; // can be edited in editor (if false it will be greyed out, only for info)
-  const char type;
-  const char precision; // float accuracy after dot / bitflag position
+  const u8string name;
+  const u8string postfix;
+  const uaddr addr_offset;
+  const bool edit_bool; // can be edited in editor (if false it will be greyed out, only for info)
+  const uint8 type;
+  const uint8 precision; // float accuracy after dot / bitflag position
   void *value;
-  const float steps;
-  //int min;
-  //int max;
+  const float step;
 } Editor_pack;
 
 
@@ -85,50 +89,50 @@ extern const Editor_pack vcs_ide_cars_menu[];
 extern const Editor_pack vcs_ide_ped_menu[];
 
 
-void *editor_garage(int calltype, int value);
-void *editor_stats(int calltype, int value);
-void *editor_vehicolors(int calltype, int value);
-void *editor_pedobj(int calltype, int value);
-void *editor_vehicleobj(int calltype, int value);
-void *editor_worldobj(int calltype, int value);
-void *editor_businessobj(int calltype, int value);
-void *editor_pickups(int calltype, int value);
-void *editor_mapicons(int calltype, int value);
-void *editor_vehspawns(int calltype, int value);
-void *editor_empire(int calltype, int value);
+extern void *editor_garage(int calltype, int value);
+extern void *editor_stats(int calltype, int value);
+extern void *editor_vehicolors(int calltype, int value);
+extern void *editor_pedobj(int calltype, int value);
+extern void *editor_vehicleobj(int calltype, int value);
+extern void *editor_worldobj(int calltype, int value);
+extern void *editor_businessobj(int calltype, int value);
+extern void *editor_pickups(int calltype, int value);
+extern void *editor_mapicons(int calltype, int value);
+extern void *editor_vehspawns(int calltype, int value);
+extern void *editor_empire(int calltype, int value);
 
-void *editor_ide(int calltype, int value);
+extern void *editor_ide(int calltype, int value);
 
-void *editor_buildingsipl(int calltype, int value);
-void *editor_treadablesipl(int calltype, int value);
-void *editor_dummysipl(int calltype, int value);
-void *editor_carcolsdat(int calltype, int value);
-void *editor_pedcolsdat(int calltype, int value);
-void *editor_handlingcfg(int calltype, int value);
-void *editor_particlecfg(int calltype, int value);
-void *editor_pedstatsdat(int calltype, int value);
-void *editor_weapondat(int calltype, int value);
-void *editor_timecycdat(int calltype, int value);
+extern void *editor_buildingsipl(int calltype, int value);
+extern void *editor_treadablesipl(int calltype, int value);
+extern void *editor_dummysipl(int calltype, int value);
+extern void *editor_carcolsdat(int calltype, int value);
+extern void *editor_pedcolsdat(int calltype, int value);
+extern void *editor_handlingcfg(int calltype, int value);
+extern void *editor_particlecfg(int calltype, int value);
+extern void *editor_pedstatsdat(int calltype, int value);
+extern void *editor_weapondat(int calltype, int value);
+extern void *editor_timecycdat(int calltype, int value);
 
 
 /// editor helper functions
-void *garage_vehicle(int calltype, int keypress, int base_address, int address);
-void *radiostation(int calltype, int keypress, int base_address, int address);
-void *mapicon_name(int calltype, int keypress, int base_address, int address);
-void *mapicon_color(int calltype, int keypress, int base_address, int address);
-void *mapicon_type(int calltype, int keypress, int base_address, int address);
-void *mapicon_slot(int calltype, int keypress, int base_address, int address);
-void *vehicle_enginetype(int calltype, int keypress, int base_address, int address);
-void *vehicle_lights_front(int calltype, int keypress, int base_address, int address);
-void *vehicle_lights_rear(int calltype, int keypress, int base_address, int address);
-void *vehicle_transtype(int calltype, int keypress, int base_address, int address);
-void *handling_flag(int calltype, int keypress, int base_address, int address, int arg);
-void *model_flag(int calltype, int keypress, int base_address, int address, int arg);
+extern void *garage_vehicle(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *radiostation(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *mapicon_name(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *mapicon_color(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *mapicon_type(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *mapicon_slot(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *vehicle_enginetype(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *vehicle_lights_front(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *vehicle_lights_rear(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *vehicle_transtype(int calltype, int keypress, uaddr base_address, uaddr address);
+extern void *handling_flag(int calltype, int keypress, uaddr base_address, uaddr address, int arg);
+extern void *model_flag(int calltype, int keypress, uaddr base_address, uaddr address, int arg);
 
-void *empire_owner(int calltype, int keypress, int base_address, int address, int steps, int block);
-void *empire_type(int calltype, int keypress, int base_address, int address, int steps, int block);
-void *empire_state(int calltype, int keypress, int base_address, int address, int steps, int block);
-void *empire_scale(int calltype, int keypress, int base_address, int address, int steps, int block);
-void *empire_condition(int calltype, int keypress, int base_address, int address, int steps, int block);
-void *empire_damage(int calltype, int keypress, int base_address, int address, int steps, int block);
+extern void *empire_owner(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block);
+extern void *empire_type(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block);
+extern void *empire_state(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block);
+extern void *empire_scale(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block);
+extern void *empire_condition(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block);
+extern void *empire_damage(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block);
 #endif

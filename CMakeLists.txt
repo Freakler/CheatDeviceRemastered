@@ -16,6 +16,7 @@ set(PROJECT_AUTHOR "Freakler")
 add_definitions(-DNDEBUG -DINI_READONLY)
 
 add_subdirectory(lib/minIni-PSP)
+add_subdirectory(lib/StoriesRWSDK)
 add_subdirectory(src)
 
 add_prx_module(${PROJECT_NAME} ${MAIN_SOURCES})
@@ -53,10 +54,15 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -Wall
   -Wextra
   -Werror
+
+  -Wno-unused-function
+  -Wno-unused-const-variable
+  -Wno-unused-parameter
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   minIni
+  StoriesRWSDK
   ansic
   pspsystemctrl_user
   pspctrl

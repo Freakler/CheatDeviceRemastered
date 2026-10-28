@@ -1,19 +1,24 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #include <pspsdk.h>
@@ -43,106 +48,107 @@
 #include "logs.h"
 #include "putils.h"
 #include "minIni.h"
+#include "mctypes.h"
 
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
 
 /// settings
-const int menuopendelay = 2000;  // wait ~2 seconds before showing menu & applying after spawning
-const short showoptions = 12;    // the number of options / lines that should be displayed at once
+const uint32 menuopendelay = 2 * 1000;  // wait ~2 seconds before showing menu & applying after spawning
+uint16 showoptions = 12;    // the number of options / lines that should be displayed at once
 static const float row_spacing = 15.0f; // pixels between rows
-static const u32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
-static const u32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
-static const char welcomemsg[] = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
+static const uint32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
+static const uint32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
+static const u8string welcomemsg = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
 
-#ifndef LITE
-static const char memwarning[] = "~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!";
+#if !LITE
+static const u8string memwarning = "~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!";
 #endif
 
-const char *basefolder  = "ms0:/PSP/PLUGINS/cheatdevice_remastered/";
+const u8string basefolder  = "ms0:/PSP/PLUGINS/cheatdevice_remastered/";
 
 #ifdef CONFIG
-static const char file_config[] = "cheatdevice_remastered.cfg";
+static const u8string file_config = "cheatdevice_remastered.cfg";
 #endif
 
 #ifdef NAMERESOLV
-static const char file_names_lcs[] = "cheatdevice_names_lcs.ini";
-static const char file_names_vcs[] = "cheatdevice_names_vcs.ini";
+static const u8string file_names_lcs = "cheatdevice_names_lcs.ini";
+static const u8string file_names_vcs = "cheatdevice_names_vcs.ini";
 #endif
 
 #ifdef USERSCRIPTS
-static const char folder_scripts[] = "SCRIPTS/"; // inside basefolder
+static const u8string folder_scripts = "SCRIPTS/"; // inside basefolder
 #endif
 
 #ifdef PREVIEW
-static const char folder_cheats[] = "CHEATS/"; // inside basefolder
-// static const char folder_textures[] = "TEXTURES/"; // inside basefolder
+static const u8string folder_cheats = "CHEATS/"; // inside basefolder
+// static const u8string folder_textures = "TEXTURES/"; // inside basefolder
 #endif
 
 #ifdef LANG
-const char folder_translations[] = "TRANSLATIONS/"; // inside basefolder
+const u8string folder_translations = "TRANSLATIONS/"; // inside basefolder
 #endif
 
 
 /// flags (shouldn't be set here)
-short flag_menu_start     = 0; // menu will be started automatically like the original (2 for don't-eat-keys mode)
-short flag_menu_show      = 0; // menu is allowed to be openend / shown boolean (don't set here)
-short flag_menu_running   = 0; // menu is currently running boolean (don't set here)
-short flag_keys_disable   = 0; // keys should be menu exlusive (set by button-open-combo, don't set here)
-short flag_coll_cats      = 0; // makes categories become collapseable
-short flag_ui_blocking    = 0; // block UI elements like map & hud for a cleaner look when menu is displayed
-short flag_use_legend     = 0; // display the legend box on the bottom of the screen
-short flag_use_cataltfont = 0; // makes categories use a different font to make them stick out
-short flag_use_liveconfig = 0; // config will be written to everytime the menu is closed (#ifdef CONFIG)
-short flag_draw_FPS       = 0; // draw FPS counter bool
-short flag_draw_MEM       = 0; // draw memory usage (main free)
-short flag_draw_DEBUG     = 0; // draw Debug monitor bool
-short flag_draw_DBGVALS   = 0; // draw Debug values bool
-short flag_draw_COORDS    = 0; // draw player coordinates bool
-short flag_draw_SPEEDO    = 0; // draw speedometer and gear monitor bool
-short flag_draw_welcomsg  = 0; // lets the welcome message appear after spawning the first time
-short flag_draw_memwarn   = 0; // displays a low memory warning message when running low
-short flag_customusic     = 0; // number of custom tracks found for custom music cheat
-short flag_hudwashidden   = 0; // keeps track of previously hidden HUD (for re-enabling if necessary)
-short flag_mapwashidden   = 0; // keeps track of previously hidden MAP (for re-enabling if necessary)
-short flag_swapxr         = 0; // swap acceleration in special cheats (to match gta_remastered's X and R swap)
+uint8 flag_menu_start    = 0;     // menu will be started automatically like the original (2 for don't-eat-keys mode)
+bool flag_menu_show      = false; // menu is allowed to be openend / shown boolean (don't set here)
+bool flag_menu_running   = false; // menu is currently running boolean (don't set here)
+bool flag_keys_disable   = false; // keys should be menu exlusive (set by button-open-combo, don't set here)
+bool flag_coll_cats      = false; // makes categories become collapseable
+bool flag_ui_blocking    = false; // block UI elements like map & hud for a cleaner look when menu is displayed
+bool flag_use_legend     = false; // display the legend box on the bottom of the screen
+bool flag_use_cataltfont = false; // makes categories use a different font to make them stick out
+bool flag_use_liveconfig = false; // config will be written to everytime the menu is closed (#ifdef CONFIG)
+bool flag_draw_FPS       = false; // draw FPS counter bool
+bool flag_draw_MEM       = false; // draw memory usage (main free)
+bool flag_draw_DEBUG     = false; // draw Debug monitor bool
+bool flag_draw_DBGVALS   = false; // draw Debug values bool
+bool flag_draw_COORDS    = false; // draw player coordinates bool
+bool flag_draw_SPEEDO    = false; // draw speedometer and gear monitor bool
+bool flag_draw_welcomsg  = false; // lets the welcome message appear after spawning the first time
+bool flag_draw_memwarn   = false; // displays a low memory warning message when running low
+uint8 flag_customusic    = 0;     // number of custom tracks found for custom music cheat
+bool flag_hudwashidden   = false; // keeps track of previously hidden HUD (for re-enabling if necessary)
+bool flag_mapwashidden   = false; // keeps track of previously hidden MAP (for re-enabling if necessary)
+bool flag_swapxr         = false; // swap acceleration in special cheats (to match gta_remastered's X and R swap)
 
 
 /// color definitions
-u32 COLOR_TEMP;
-static const u32 COLOR_TEXT         = WHITE;
-static const u32 COLOR_CURSOR       = CHDVC_MAGENTA - 0x77000000; // add alpha
-static const u32 COLOR_TITLE        = WHITE;
-static const u32 COLOR_CATEGORY     = WHITE;
+CRGBA COLOR_TEMP;
+static const CRGBA COLOR_TEXT         = WHITE;
+static const CRGBA COLOR_CURSOR       = COLOR32(0xFF5C00A2 - 0x77000000); // add alpha
+static const CRGBA COLOR_TITLE        = WHITE;
+static const CRGBA COLOR_CATEGORY     = WHITE;
 
 #ifdef DEBUG
-// static const u32 COLOR_DEBUG        = RED;
+// static const CRGBA COLOR_DEBUG        = RED;
 #endif
 
-static const u32 COLOR_VALUE        = CHDVC_GREEN;
-static const u32 COLOR_CHEAT_ON     = CHDVC_YELLOW;
-static u32 COLOR_CHEAT_OFF          = 0; // set later because different for LCS/VCS
-static const u32 COLOR_BACKGROUND   = ALPHABLACK;
-static const u32 COLOR_SCROLLBAR    = CHDVC_MAGENTA - 0x33000000; // add alpha
-static const u32 COLOR_FREECAM      = ORANGERED;
-static const u32 COLOR_USERCHEATS   = DARKGREEN;
+static const CRGBA COLOR_VALUE        = CHDVC_GREEN;
+static const CRGBA COLOR_CHEAT_ON     = CHDVC_YELLOW;
+static       CRGBA COLOR_CHEAT_OFF    = COLOR32(0); // set later because different for LCS/VCS
+static const CRGBA COLOR_BACKGROUND   = ALPHABLACK;
+static const CRGBA COLOR_SCROLLBAR    = COLOR32(0xFF5C00A2 - 0x33000000); // add alpha
+static const CRGBA COLOR_FREECAM      = ORANGERED;
+static const CRGBA COLOR_USERCHEATS   = DARKGREEN;
 
 #ifdef SAVEDITOR
-// static const u32 COLOR_SAVEDITOR    = VIOLET;
+// static const CRGBA COLOR_SAVEDITOR    = VIOLET;
 #endif
 
 
 #ifdef HEXEDITOR
-static const u32 COLOR_HEX_MARKER   = CHDVC_MAGENTA - 0x77000000; // add alpha
-static const u32 COLOR_HEX          = CHDVC_AZURE;
+static const CRGBA COLOR_HEX          = CHDVC_AZURE;
+static const CRGBA COLOR_HEX_MARKER     = COLOR_CURSOR; // add alpha
 #endif
 
 #ifdef EDITORS
-static const u32 COLOR_EDITOR       = GREEN;
+static const CRGBA COLOR_EDITOR       = GREEN;
 #endif
 
-static const u32 COLOR_FILES        = LIGHTBLUE;
-static const u32 COLOR_UIBORDER     = BLACK;
-static const u32 COLOR_UIBACKGROUND = ALPHABLACK;
+static const CRGBA COLOR_FILES        = LIGHTBLUE;
+static const CRGBA COLOR_UIBORDER     = BLACK;
+static const CRGBA COLOR_UIBACKGROUND = ALPHABLACK;
 
 
 /// textscales (initial values)
@@ -154,352 +160,379 @@ float SIZE_HEXEDIT= 1.00f;
 
 
 /// more globals
-u32 mod_text_addr;
-u32 mod_text_size;
-u32 mod_data_size;
+uaddr mod_text_addr;
+usize mod_text_size;
+usize mod_data_size;
 
-register int gp asm("gp");
+register uaddr gp __asm__("gp");
 
 static STMOD_HANDLER previous;
 
-int ADRENALINE = 0, PPSSPP = 0, LCS = 0, VCS = 0;
+bool ADRENALINE = false;
+bool PPSSPP     = false;
+bool LCS        = false;
+bool VCS        = false;
 
-char buffer[256];
+u8char buffer[256];
 
 #ifdef CONFIG
-char config[128];
+u8char config[128];
 #endif
 
-char category_index[CAT_COUNTER]; // 1 = visible/expanded/enabled (init by module_start & taken care of by menu_setDefaults)
+bool category_index[CAT_COUNTER] = {[0 ... CAT_COUNTER-1] = true}; // true = visible/expanded/enabled (init by module_start)
 
 SceCtrlData pad;
 int hold_n = 0;
-u32 old_buttons = 0, current_buttons = 0, pressed_buttons = 0, hold_buttons = 0, lx, ly, rx, ry;
+uint32 old_buttons = 0, current_buttons = 0, pressed_buttons = 0, hold_buttons = 0, lx, ly, rx, ry;
 float xstick, ystick, xstick_, ystick_;
 
-int hex_adr = -1; // mem address for HexEditor
+uaddr hex_adr = 0; // mem address for HexEditor
 
 
 /// some externs
-extern u32 memory_low;
-extern u32 memory_high;
-extern u32 pplayer;
-extern u32 pcar;
-extern u32 pobj;
-extern int multiplayer;
-extern char speed[];
-extern char gear[];
-extern char *lcs_garagenames[];
-extern char *vcs_garagenames[];
-extern int pcar_id;
+extern uaddr memory_low;
+extern uaddr memory_high;
+extern uaddr pplayer;
+extern uaddr pcar;
+extern uaddr pobj;
+extern bool multiplayer;
+extern u8char speed[];
+extern u8char gear[];
+extern u8string lcs_garagenames[];
+extern u8string vcs_garagenames[];
+extern uint16 pcar_id;
 extern float fps;
-extern int memory_main_free;
-extern const char *weather_lcs[];
-extern const char *weather_vcs[];
+extern usize memory_main_free;
+extern const u8string weather_lcs[];
+extern const u8string weather_vcs[];
 
 
 /// main menu //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const Menu_pack main_menu[] = {
+const CDRMenuItem main_menu[] = {
 
   /// char *path                        cat           type               LC      VC      SP      MP     conf_id  def_stat  void *value        char *msg1                          char *msg2                              char *desc
 
   // // DEBUG // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
   #ifdef DEBUG
-  {"Debug Monitor:"                   , CAT_DEBUG   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F00 , OFF , debug_monitor        , ""                                 , ""                                   , "" },
-  {"Display vars"                     , CAT_DEBUG   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F01 , ON  , debug_vars           , ""                                 , ""                                   , "" },
+  {"Debug Monitor:"                   , CAT_DEBUG   , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1F00 , OFF , debug_monitor        , ""                                 , ""                                   , "" },
+  {"Display vars"                     , CAT_DEBUG   , MENU_SWITCH      , true  , true  , true  , true  , 0x1F01 , ON  , debug_vars           , ""                                 , ""                                   , "" },
   #ifdef LANG
-  {"Update Language Strings"          , CAT_DEBUG   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , langTableUpdate      , "CROSS: Reset"                     , ""                                   , "Update Menu Language" },  // arg / index though?!
+  {"Update Language Strings"          , CAT_DEBUG   , MENU_FUNCTION    , true  , true  , true  , true  , 0      , -1  , updateLangStrings    , "CROSS: Reset"                     , ""                                   , "Update Menu Language" },  // arg / index though?!
   #endif
-  {"- - - - - - - - - - - - - - - - -", CAT_DEBUG   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
-  {""                                 , CAT_DEBUG   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"- - - - - - - - - - - - - - - - -", CAT_DEBUG   , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {""                                 , CAT_DEBUG   , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   #endif
 
 
   // // WORK IN PROGRESS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-  #ifdef ACHIEVEMENTS
-  {"Reset Achievements"               , CAT_WIP     , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x164B , -1  , achievements_reset   , ""                                 , ""                                   , "" },
-  {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
-  #endif
-
   #ifdef PREVIEW
-  {"Wave height:"                     , CAT_WIP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A4A , OFF , world_waveheight     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust height"          , "Adjust the oceans wave height."},
-  {"Police Heli:"                     , CAT_WIP     , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F63 , OFF , policechaseheli      , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust"                 , "" },
-  {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
-  {"test_func()"                      , CAT_WIP     , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , test_func            , "CROSS: Execute"                   , ""                                   , "" },
-  {"test_switch()"                    , CAT_WIP     , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , test_switch          , "CROSS: Enable/Disable Cheat"      , ""                                   , "" },
-  {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
-  {"Hex Editor"                       , CAT_ALIAS   , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditor            , "CROSS: Open HexEditor"            , ""                                   , "" },
-  {"User Cheats"                      , CAT_WIP     , MENU_CDR_USER    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , user_cheats          , "CROSS: "                          , "TRIANGLE: "                         , "" },
-  {"User Scripts"                     , CAT_WIP     , MENU_CDR_USCM    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , user_scripts         , "CROSS: "                          , "TRIANGLE: "                         , "" },
-  {"Start Mission: "                  , CAT_WIP     , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1EF4 , -1  , mission_select       , "CROSS: Start Mission"             , ""                                   , "" },
-  {"- - - - - - - - - - - - - - - - -", CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
-  {""                                 , CAT_WIP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Wave height:"                     , CAT_WIP     , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1A4A , OFF , world_waveheight     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust height"          , "Adjust the oceans wave height."},
+  {"Police Heli:"                     , CAT_WIP     , MENU_VALUE       , true  , true  , true  , true  , 0x1F63 , OFF , policechaseheli      , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust"                 , "" },
+  {""                                 , CAT_WIP     , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"test_func()"                      , CAT_WIP     , MENU_FUNCTION    , true  , true  , true  , true  , 0      , -1  , test_func            , "CROSS: Execute"                   , ""                                   , "" },
+  {"test_switch()"                    , CAT_WIP     , MENU_SWITCH      , true  , true  , true  , true  , 0      , -1  , test_switch          , "CROSS: Enable/Disable Cheat"      , ""                                   , "" },
+  {""                                 , CAT_WIP     , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Hex Editor"                       , CAT_ALIAS   , MENU_CDR_HEX     , true  , true  , true  , true  , 0      , -1  , hexeditor            , "CROSS: Open HexEditor"            , ""                                   , "" },
+  {"User Cheats"                      , CAT_WIP     , MENU_CDR_USER    , true  , true  , true  , true  , 0      , -1  , user_cheats          , "CROSS: "                          , "TRIANGLE: "                         , "" },
+  {"User Scripts"                     , CAT_WIP     , MENU_CDR_USCM    , true  , true  , true  , true  , 0      , -1  , user_scripts         , "CROSS: "                          , "TRIANGLE: "                         , "" },
+  {"Start Mission: "                  , CAT_WIP     , MENU_VALUE       , true  , true  , true  , false , 0x1EF4 , -1  , mission_select       , "CROSS: Start Mission"             , ""                                   , "" },
+  {"- - - - - - - - - - - - - - - - -", CAT_WIP     , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {""                                 , CAT_WIP     , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   #endif
 
   // // ALIAS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
-  {"Infinite Health & Armor"          , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
-  {"Wanted Level:"                    , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current level as max"   , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
-  {"Time:"                            , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , world_time           , "CROSS: Freeze/Unfreeze time"      , "LEFT/RIGHT: Adjust hour"            , "Adjust the Worlds time and freeze it completely." },
-  {"Weather:"                         , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , world_weather        , "CROSS: Lock/Unlock weather"       , "LEFT/RIGHT: Select weather"         , "Adjust and lock the Weather so it won't ever change again." },
-  {"Vehicle Spawner:"                 , CAT_ALIAS   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , vehicle_spawner      , "CROSS/SQUARE: Spawn Vehicle"      , "LEFT/RIGHT: Adjust"                 , "Spawns selected Vehicle in front of you." },
-  {"Teleport:"                        , CAT_ALIAS   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , teleporter           , "CROSS: Teleport to location"      , "LEFT/RIGHT: Select Location"        , "Teleport yourself to a preset location on the map." },
-  {"Hover Bike & Car"                 , CAT_ALIAS   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hover_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle hovers and can fly like a hovercraft." },
-  {"Button Up:"                       , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , up_button            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
-  {"Button Down:"                     , CAT_ALIAS   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , down_button          , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
-  {""                                 , CAT_ALIAS   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Infinite Health & Armor"          , CAT_ALIAS   , MENU_SWITCH      , true  , true  , true  , true  , 0      , -1  , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
+  {"Wanted Level:"                    , CAT_ALIAS   , MENU_VALSWITCH   , true  , true  , true  , false , 0      , -1  , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current level as max"   , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
+  {"Time:"                            , CAT_ALIAS   , MENU_VALSWITCH   , true  , true  , true  , true  , 0      , -1  , world_time           , "CROSS: Freeze/Unfreeze time"      , "LEFT/RIGHT: Adjust hour"            , "Adjust the Worlds time and freeze it completely." },
+  {"Weather:"                         , CAT_ALIAS   , MENU_VALSWITCH   , true  , true  , true  , true  , 0      , -1  , world_weather        , "CROSS: Lock/Unlock weather"       , "LEFT/RIGHT: Select weather"         , "Adjust and lock the Weather so it won't ever change again." },
+  {"Vehicle Spawner:"                 , CAT_ALIAS   , MENU_VALUE       , true  , true  , true  , false , 0      , -1  , vehicle_spawner      , "CROSS/SQUARE: Spawn Vehicle"      , "LEFT/RIGHT: Adjust"                 , "Spawns selected Vehicle in front of you." },
+  {"Teleport:"                        , CAT_ALIAS   , MENU_VALUE       , true  , true  , true  , true  , 0      , -1  , teleporter           , "CROSS: Teleport to location"      , "LEFT/RIGHT: Select Location"        , "Teleport yourself to a preset location on the map." },
+  {"Hover Bike & Car"                 , CAT_ALIAS   , MENU_SWITCH      , true  , true  , true  , true  , 0      , -1  , hover_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle hovers and can fly like a hovercraft." },
+  {"Button Up:"                       , CAT_ALIAS   , MENU_VALSWITCH   , true  , true  , true  , false , 0      , -1  , up_button            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
+  {"Button Down:"                     , CAT_ALIAS   , MENU_VALSWITCH   , true  , true  , true  , false , 0      , -1  , down_button          , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
+  {""                                 , CAT_ALIAS   , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
   // // CHEATS // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-  {"Player"                           , CAT_PLAYER  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x245F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"Infinite Health & Armor"          , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A93 , OFF , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
-  {"Unlimited Ammo & No reloading"    , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AB , OFF , unlimited_ammo       , "CROSS: Enable/Disable Cheat"      , ""                                   , "All your Weapons have unlimited ammunition and no reloading needed." },
-  {"Unlimited sprinting"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x11E0 , -1  , unlimited_sprinting  , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from sprinting ever again." },
-  {"Unlimited swimming"               , CAT_PLAYER  , MENU_SWITCH      , FALSE , TRUE  , TRUE  , FALSE , 0x11E1 , -1  , unlimited_swimming   , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from swimming ever again." },
-  {"Walking Speed:"                   , CAT_PLAYER  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x192C , OFF , walking_speed        , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust your speed of walking, sprinting etc" },
-  {"Invisible"                        , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1D18 , OFF , invisible            , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are invisible but can still be attacked." },
-  {"Ignored by everyone"              , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x155A , OFF , ignored              , "CROSS: Enable/Disable Cheat"      , ""                                   , "Everyone including police and mission enemys will ignore you." },
-  {"Wanted Level:"                    , CAT_PLAYER  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x19DF , OFF , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current level as max"   , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
-  {"Heavy Player"                     , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1F3B , OFF , heavy_player         , "CROSS: Enable/Disable Cheat"      , ""                                   , "You can push cars by running against them but are to heavy to jump!" },
-  {"Aim of Death"                     , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1BBC , OFF , aim_of_death         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Aiming down at a target will instantly kill it." },
-  {"Warp out of Water automatically"  , CAT_PLAYER  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x1A48 , OFF , warp_out_water       , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
-  {"Model:"                           , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1C87 , OFF , player_model         , "CROSS: Change now"                , "LEFT/RIGHT: Select model"           , "Change the actor skin / model. Beware: May break the game!" },
-  {"Maximum Health:"                  , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1D7D , -1  , max_health           , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra health! ('Health Plus')" },
-  {"Maximum Armor:"                   , CAT_PLAYER  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x178E , -1  , max_armor            , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
-  {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E4A , OFF , powerjump            , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
+  {"Player"                           , CAT_PLAYER  , MENU_CATEGORY    , true  , true  , true  , true  , 0x245F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Infinite Health & Armor"          , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x1A93 , OFF , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
+  {"Unlimited Ammo & No reloading"    , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x18AB , OFF , unlimited_ammo       , "CROSS: Enable/Disable Cheat"      , ""                                   , "All your Weapons have unlimited ammunition and no reloading needed." },
+  {"Unlimited sprinting"              , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x11E0 , -1  , unlimited_sprinting  , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from sprinting ever again." },
+  {"Unlimited swimming"               , CAT_PLAYER  , MENU_SWITCH      , false , true  , true  , false , 0x11E1 , -1  , unlimited_swimming   , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from swimming ever again." },
+  {"Walking Speed:"                   , CAT_PLAYER  , MENU_VALSWITCH   , true  , true  , true  , false , 0x192C , OFF , walking_speed        , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust your speed of walking, sprinting etc" },
+  {"Invisible"                        , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x1D18 , OFF , invisible            , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are invisible but can still be attacked." },
+  {"Ignored by everyone"              , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x155A , OFF , ignored              , "CROSS: Enable/Disable Cheat"      , ""                                   , "Everyone including police and mission enemys will ignore you." },
+  {"Wanted Level:"                    , CAT_PLAYER  , MENU_VALSWITCH   , true  , true  , true  , false , 0x19DF , OFF , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current level as max"   , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
+  {"Heavy Player"                     , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x1F3B , OFF , heavy_player         , "CROSS: Enable/Disable Cheat"      , ""                                   , "You can push cars by running against them but are to heavy to jump!" },
+  {"Aim of Death"                     , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x1BBC , OFF , aim_of_death         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Aiming down at a target will instantly kill it." },
+  {"Warp out of Water automatically"  , CAT_PLAYER  , MENU_SWITCH      , true  , false , true  , true  , 0x1A48 , OFF , warp_out_water       , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
+  {"Model:"                           , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x1C87 , OFF , player_model         , "CROSS: Change now"                , "LEFT/RIGHT: Select model"           , "Change the actor skin / model. Beware: May break the game!" },
+  {"Maximum Health:"                  , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x1D7D , -1  , max_health           , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra health! ('Health Plus')" },
+  {"Maximum Armor:"                   , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x178E , -1  , max_armor            , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
+  {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x1E4A , OFF , powerjump            , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
   #ifdef SWIM
-  {"Swimming"                         , CAT_PLAYER  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning. Experimental though!"},
+  {"Swimming"                         , CAT_PLAYER  , MENU_SWITCH      , true  , false , true  , true  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning. Experimental though!"},
   #endif
-  {""                                 , CAT_PLAYER  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {""                                 , CAT_PLAYER  , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Current Vehicle"                  , CAT_VEHICL  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x258B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"Hover Bike & Car"                 , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A4C , OFF , hover_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle hovers and can fly like a hovercraft." },
-  {"Indestructible Vehicle"           , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1F53 , OFF , indestr_vehicle      , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle is immune to explosions, gunshots, fire etc.." },
-  {"Lock Doors when inside"           , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x14AB , OFF , lockdoors            , "CROSS: Enable/Disable Cheat"      , ""                                   , "As soon as you enter a vehicle with doors they will be locked." },
-  {"Never fall off Bike"              , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x188D , OFF , neverfalloffbike     , "CROSS: Enable/Disable Cheat"      , ""                                   , "Never fall off your bike when rolling backwards or hitting objects." },
-  {"Power Brake"                      , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1EBD , OFF , powerbrake           , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hitting the brakes will make your vehicle stop immediately." },
-  {"Primary Color:"                   , CAT_VEHICL  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x15D1 , -1  , vehicle_base_color   , "CROSS: Select Red/Green/Blue"     , "LEFT/RIGHT: Adjust color value"     , "Adjust your current vehicles primary color!" },
-  {"Secondary Color:"                 , CAT_VEHICL  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x19AC , -1  , vehicle_stripe_color , "CROSS: Select Red/Green/Blue"     , "LEFT/RIGHT: Adjust color value"     , "Adjust your current vehicles secondary color!" },
-  {"Heavy Vehicle"                    , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18D4 , OFF , heavy_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You can easily push other cars and world objects." },
-  {"Automatic Flip Over"              , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E07 , OFF , automaticflipover    , "CROSS: Enable/Disable Cheat"      , ""                                   , "Never end up stuck on your roof ever again." },
-  {"Drive on walls"                   , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x165A , OFF , driveonwalls         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Drive on walls! Good luck, its tricky ;)" },
-  {"N.O.S boost"                      , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x19A9 , OFF , nitro                , "CROSS: Enable/Disable Cheat"      , ""                                   , "Press O to activate a 2 sec Nitro Boost for your vehicle." },
-  {"Rocket boost:"                    , CAT_VEHICL  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x19A8 , OFF , rocketboost          , "LEFT/RIGHT: Adjust multiplier"    , "CIRCLE: Disable and reset"          , "Continuous additional boost to your vehicle forward speed." },
-  {"Behave like Tank"                 , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x1489 , OFF , tank                 , "CROSS: Enable/Disable Cheat"      , "SQUARE: Toggle explode on touch"    , "Press O to fire cannon and make vehicles explode when run into!" },
-  {"Warp out of Water automatically"  , CAT_VEHICL  , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x1A49 , OFF , warp_out_water_veh   , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
-  {"Cars drive on Water"              , CAT_VEHICL  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x15F7 , OFF , driveonwater         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your car can drive on water." },
-  {""                                 , CAT_VEHICL  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Current Vehicle"                  , CAT_VEHICL  , MENU_CATEGORY    , true  , true  , true  , true  , 0x258B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Hover Bike & Car"                 , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x1A4C , OFF , hover_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle hovers and can fly like a hovercraft." },
+  {"Indestructible Vehicle"           , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x1F53 , OFF , indestr_vehicle      , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your vehicle is immune to explosions, gunshots, fire etc.." },
+  {"Lock Doors when inside"           , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x14AB , OFF , lockdoors            , "CROSS: Enable/Disable Cheat"      , ""                                   , "As soon as you enter a vehicle with doors they will be locked." },
+  {"Never fall off Bike"              , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x188D , OFF , neverfalloffbike     , "CROSS: Enable/Disable Cheat"      , ""                                   , "Never fall off your bike when rolling backwards or hitting objects." },
+  {"Power Brake"                      , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x1EBD , OFF , powerbrake           , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hitting the brakes will make your vehicle stop immediately." },
+  {"Primary Color:"                   , CAT_VEHICL  , MENU_VALUE       , true  , true  , true  , false , 0x15D1 , -1  , vehicle_base_color   , "CROSS: Select Red/Green/Blue"     , "LEFT/RIGHT: Adjust color value"     , "Adjust your current vehicles primary color!" },
+  {"Secondary Color:"                 , CAT_VEHICL  , MENU_VALUE       , true  , true  , true  , false , 0x19AC , -1  , vehicle_stripe_color , "CROSS: Select Red/Green/Blue"     , "LEFT/RIGHT: Adjust color value"     , "Adjust your current vehicles secondary color!" },
+  {"Heavy Vehicle"                    , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x18D4 , OFF , heavy_vehicle        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You can easily push other cars and world objects." },
+  {"Automatic Flip Over"              , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x1E07 , OFF , automaticflipover    , "CROSS: Enable/Disable Cheat"      , ""                                   , "Never end up stuck on your roof ever again." },
+  {"Drive on walls"                   , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x165A , OFF , driveonwalls         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Drive on walls! Good luck, its tricky ;)" },
+  {"N.O.S boost"                      , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x19A9 , OFF , nitro                , "CROSS: Enable/Disable Cheat"      , ""                                   , "Press O to activate a 2 sec Nitro Boost for your vehicle." },
+  {"Rocket boost:"                    , CAT_VEHICL  , MENU_VALUE       , true  , true  , true  , true  , 0x19A8 , OFF , rocketboost          , "LEFT/RIGHT: Adjust multiplier"    , "CIRCLE: Disable and reset"          , "Continuous additional boost to your vehicle forward speed." },
+  {"Behave like Tank"                 , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , false , 0x1489 , OFF , tank                 , "CROSS: Enable/Disable Cheat"      , "SQUARE: Toggle explode on touch"    , "Press O to fire cannon and make vehicles explode when run into!" },
+  {"Warp out of Water automatically"  , CAT_VEHICL  , MENU_SWITCH      , true  , false , true  , true  , 0x1A49 , OFF , warp_out_water_veh   , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
+  {"Cars drive on Water"              , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , false , 0x15F7 , OFF , driveonwater         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your car can drive on water." },
+  {""                                 , CAT_VEHICL  , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Teleporting"                      , CAT_TELEP   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2B73 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"Teleport:"                        , CAT_TELEP   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x18FA , OFF , teleporter           , "CROSS: Teleport to location"      , "LEFT/RIGHT: Select Location"        , "Teleport yourself to a preset location on the map." },
-  {"Teleport near marker"             , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1647 , -1  , teleport_marker      , "CROSS: Teleport"                  , ""                                   , "Teleport near the custom marker" },
-  {"Step Through Wall"                , CAT_TELEP   , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0x195A , -1  , stepthroughwall      , "CROSS: Teleport one step forward" , ""                                   , "With this you can easily step through walls get inside buildings etc" },
-  {""                                 , CAT_TELEP   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Teleporting"                      , CAT_TELEP   , MENU_CATEGORY    , true  , true  , true  , true  , 0x2B73 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Teleport:"                        , CAT_TELEP   , MENU_VALUE       , true  , true  , true  , true  , 0x18FA , OFF , teleporter           , "CROSS: Teleport to location"      , "LEFT/RIGHT: Select Location"        , "Teleport yourself to a preset location on the map." },
+  {"Teleport near marker"             , CAT_TELEP   , MENU_FUNCTION    , true  , true  , true  , false , 0x1647 , -1  , teleport_marker      , "CROSS: Teleport"                  , ""                                   , "Teleport near the custom marker" },
+  {"Step Through Wall"                , CAT_TELEP   , MENU_FUNCTION    , true  , true  , true  , true  , 0x195A , -1  , stepthroughwall      , "CROSS: Teleport one step forward" , ""                                   , "With this you can easily step through walls get inside buildings etc" },
+  {""                                 , CAT_TELEP   , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Vehicles"                         , CAT_TRFFIC  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x215F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
-  {"Disable Traffic"                  , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x198C , OFF , traffic_density      , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely disable the worlds traffic! (Parked vehicles still appear)"  },
-  {"Freeze Traffic"                   , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x17EC , OFF , traffic_freeze       , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely freeze the worlds vehicles except your own!"  },
-  {"Touch Vehicle to:"                , CAT_TRFFIC  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1EC4 , OFF , touch_vehicle        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Decide what should happen with a vehicle as soon as you touch." },
-  {"Default RadioStation:"            , CAT_TRFFIC  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1B98 , OFF , traffic_radiostation , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Select Station"         , "Select a Radio Station that will be played when entering a vehicle."  },
-  {"BMX Jump Height:"                 , CAT_TRFFIC  , MENU_VALUE       , FALSE , TRUE  , TRUE  , TRUE  , 0x1BDE , OFF , bmxjumpheight        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust multiplier"      , "Adjust the BMXs jump height." },
-  {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x15D3 , OFF , untouchable          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Vehicles wont be able to get near you and will be pushed back." },
-  {""                                 , CAT_TRFFIC  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Vehicles"                         , CAT_TRFFIC  , MENU_CATEGORY    , true  , true  , true  , true  , 0x215F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Disable Traffic"                  , CAT_TRFFIC  , MENU_SWITCH      , true  , true  , true  , false , 0x198C , OFF , traffic_density      , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely disable the worlds traffic! (Parked vehicles still appear)"  },
+  {"Freeze Traffic"                   , CAT_TRFFIC  , MENU_SWITCH      , true  , true  , true  , false , 0x17EC , OFF , traffic_freeze       , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely freeze the worlds vehicles except your own!"  },
+  {"Touch Vehicle to:"                , CAT_TRFFIC  , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1EC4 , OFF , touch_vehicle        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Decide what should happen with a vehicle as soon as you touch." },
+  {"Default RadioStation:"            , CAT_TRFFIC  , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1B98 , OFF , traffic_radiostation , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Select Station"         , "Select a Radio Station that will be played when entering a vehicle."  },
+  {"BMX Jump Height:"                 , CAT_TRFFIC  , MENU_VALUE       , false , true  , true  , true  , 0x1BDE , OFF , bmxjumpheight        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust multiplier"      , "Adjust the BMXs jump height." },
+  {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , true  , true  , true  , true  , 0x15D3 , OFF , untouchable          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Vehicles wont be able to get near you and will be pushed back." },
+  {""                                 , CAT_TRFFIC  , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Pedestrians"                      , CAT_PEDS    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x28A4 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
-  {"Disable Peds"                     , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1770 , OFF , peds_density         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely disable Pedestrians! (special ones might still appear)"  },
-  {"Freeze Peds"                      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x191C , OFF , peds_freeze          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Freeze Pedestrians current positions in the world."  },
-  {"Touch Ped to:"                    , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x14BA , OFF , touch_pedestrian     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Decide what should happen with a Ped as soon as you touch it." },
-  {"Kill everyone aiming at you"      , CAT_PEDS    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1611 , OFF , peds_killaiming      , "CROSS: Enable/Disable Cheat"      , ""                                   , "Everyone aiming at you will be killed instantly!"  },
-  {"Ped Walking Speed:"               , CAT_PEDS    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x191A , OFF , pedwalking_speed     , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust the Pedestrians walking and sprinting speed." },
-  {""                                 , CAT_PEDS    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Pedestrians"                      , CAT_PEDS    , MENU_CATEGORY    , true  , true  , true  , true  , 0x28A4 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Disable Peds"                     , CAT_PEDS    , MENU_SWITCH      , true  , true  , true  , true  , 0x1770 , OFF , peds_density         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Completely disable Pedestrians! (special ones might still appear)"  },
+  {"Freeze Peds"                      , CAT_PEDS    , MENU_SWITCH      , true  , true  , true  , false , 0x191C , OFF , peds_freeze          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Freeze Pedestrians current positions in the world."  },
+  {"Touch Ped to:"                    , CAT_PEDS    , MENU_VALSWITCH   , true  , true  , true  , false , 0x14BA , OFF , touch_pedestrian     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Decide what should happen with a Ped as soon as you touch it." },
+  {"Kill everyone aiming at you"      , CAT_PEDS    , MENU_SWITCH      , true  , true  , true  , true  , 0x1611 , OFF , peds_killaiming      , "CROSS: Enable/Disable Cheat"      , ""                                   , "Everyone aiming at you will be killed instantly!"  },
+  {"Ped Walking Speed:"               , CAT_PEDS    , MENU_VALSWITCH   , true  , true  , true  , false , 0x191A , OFF , pedwalking_speed     , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust the Pedestrians walking and sprinting speed." },
+  {""                                 , CAT_PEDS    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Missions"                         , CAT_MISSON  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x235B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
-  {"Mission Selector"                 , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1F98 , -1  , mission_selector     , "CROSS: Open Menu"                 , ""                                   , "Use the build-in level-skip menu to start missions." },
-  {"Force OnMission bool:"            , CAT_MISSON  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x17B5 , OFF , onmission            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Control OnMission check. Handle with care!"  },
-  {"Freeze Mission Timers"            , CAT_MISSON  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x16EE , OFF , freeze_timers        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Freeze side missions on screen timers."  },
-  {"Kill / destroy all targets"       , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x18BC , -1  , kill_all_targets     , "CROSS: Execute Order 66"          , ""                                   , "Kill all Targets marked red!" },
-  {"Freeze all targets"               , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1C56 , -1  , freeze_all_targets   , "CROSS: Freeze Targets"            , ""                                   , "Freeze all Targets marked red!" },
-  {"Teleport to next Objective"       , CAT_MISSON  , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1762 , -1  , teleport_next        , "CROSS: Teleport"                  , ""                                   , "Teleport to next marked destination, target or object" },
-  {"Teleport to next Mission"         , CAT_MISSON  , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1799 , -1  , teleport_mission     , "CROSS: Teleport"                  , ""                                   , "Teleport to next Story-Mission marker." },
-  {""                                 , CAT_MISSON  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Missions"                         , CAT_MISSON  , MENU_CATEGORY    , true  , true  , true  , false , 0x235B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Mission Selector"                 , CAT_MISSON  , MENU_FUNCTION    , true  , true  , true  , false , 0x1F98 , -1  , mission_selector     , "CROSS: Open Menu"                 , ""                                   , "Use the build-in level-skip menu to start missions." },
+  {"Force OnMission bool:"            , CAT_MISSON  , MENU_VALSWITCH   , true  , true  , true  , false , 0x17B5 , OFF , onmission            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Control OnMission check. Handle with care!"  },
+  {"Freeze Mission Timers"            , CAT_MISSON  , MENU_SWITCH      , true  , true  , true  , false , 0x16EE , OFF , freeze_timers        , "CROSS: Enable/Disable Cheat"      , ""                                   , "Freeze side missions on screen timers."  },
+  {"Kill / destroy all targets"       , CAT_MISSON  , MENU_FUNCTION    , true  , true  , true  , false , 0x18BC , -1  , kill_all_targets     , "CROSS: Execute Order 66"          , ""                                   , "Kill all Targets marked red!" },
+  {"Freeze all targets"               , CAT_MISSON  , MENU_FUNCTION    , true  , true  , true  , false , 0x1C56 , -1  , freeze_all_targets   , "CROSS: Freeze Targets"            , ""                                   , "Freeze all Targets marked red!" },
+  {"Teleport to next Objective"       , CAT_MISSON  , MENU_VALUE       , true  , true  , true  , false , 0x1762 , -1  , teleport_next        , "CROSS: Teleport"                  , ""                                   , "Teleport to next marked destination, target or object" },
+  {"Teleport to next Mission"         , CAT_MISSON  , MENU_FUNCTION    , true  , true  , true  , false , 0x1799 , -1  , teleport_mission     , "CROSS: Teleport"                  , ""                                   , "Teleport to next Story-Mission marker." },
+  {""                                 , CAT_MISSON  , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Map"                              , CAT_MAP     , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2A11 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
-  {"Mark on Map:"                     , CAT_MAP     , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x165F , OFF , markonmap            , "CROSS: Enable/Disable Cheat"      , "SQUARE: Cycle options"              , "Select what should be displayed on the map and radar." },
-  {""                                 , CAT_MAP     , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Map"                              , CAT_MAP     , MENU_CATEGORY    , true  , true  , true  , false , 0x2A11 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Mark on Map:"                     , CAT_MAP     , MENU_VALSWITCH   , true  , true  , true  , false , 0x165F , OFF , markonmap            , "CROSS: Enable/Disable Cheat"      , "SQUARE: Cycle options"              , "Select what should be displayed on the map and radar." },
+  {""                                 , CAT_MAP     , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Camera"                           , CAT_CAMERA  , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x254B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
-  {"Classic TopDown view"             , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1458 , OFF , camera_topdown       , "CROSS: Enable/Disable Cheat"      , ""                                   , "Experience the classic top-down camera angle!" },
-  {"Always Centered behind Vehicle"   , CAT_CAMERA  , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1A3C , OFF , camera_centered      , "CROSS: Enable/Disable Cheat"      , ""                                   , "The camera will always be centered behind a vehicle." },
-  {"FOV:"                             , CAT_CAMERA  , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DC7 , OFF , fieldofview          , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust the Field of View for a better viewing angle." },
-  {""                                 , CAT_CAMERA  , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Camera"                           , CAT_CAMERA  , MENU_CATEGORY    , true  , true  , true  , true  , 0x254B , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Classic TopDown view"             , CAT_CAMERA  , MENU_SWITCH      , true  , true  , true  , true  , 0x1458 , OFF , camera_topdown       , "CROSS: Enable/Disable Cheat"      , ""                                   , "Experience the classic top-down camera angle!" },
+  {"Always Centered behind Vehicle"   , CAT_CAMERA  , MENU_SWITCH      , true  , true  , true  , true  , 0x1A3C , OFF , camera_centered      , "CROSS: Enable/Disable Cheat"      , ""                                   , "The camera will always be centered behind a vehicle." },
+  {"FOV:"                             , CAT_CAMERA  , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1DC7 , OFF , fieldofview          , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust the Field of View for a better viewing angle." },
+  {""                                 , CAT_CAMERA  , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Button Cheats"                    , CAT_STCKCHT , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , FALSE , 0x2E5F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
-  {"Give Health"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x19CA , -1  , bttncht_givehealth   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Give Armor"                       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1874 , -1  , bttncht_givearmor    , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Give 250k Dollars"                , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x198F , -1  , bttncht_givemoney    , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Weaponset 1"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1AC1 , -1  , bttncht_weaponset1   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Weaponset 2"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x16AC , -1  , bttncht_weaponset2   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Weaponset 3"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x17EB , -1  , bttncht_weaponset3   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Spawn Rhino"                      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x122B , -1  , bttncht_spawnrhino   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Cars drive on Water"              , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x187A , -1  , bttncht_carsonwater  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Blow up all nearby Vehicles"      , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x138D , -1  , bttncht_blowupcars   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Change Player Model to:"          , CAT_STCKCHT , MENU_VALUE       , TRUE  , FALSE , TRUE  , FALSE , 0x1D45 , OFF , bttncht_randomplayer , "CROSS: Trigger Stock Cheat"       , "LEFT/RIGHT: Adjust model"           , ""  },
-  {"Perfect Traction & Jumping"       , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1654 , -1  , bttncht_perftraction , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Unlock 100% Multiplayer"          , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1D80 , -1  , bttncht_unlockmult100, "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Bubble Heads"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x146A , -1  , bttncht_bubblehead   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Play Credits"                     , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , FALSE , TRUE  , FALSE , 0x187C , -1  , bttncht_playcredits  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Peds have Weapons"                , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x195C , -1  , bttncht_pedsweapons  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Peds attack you"                  , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x135C , -1  , bttncht_pedsattack   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Peds Riot"                        , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1C71 , -1  , bttncht_pedsriot     , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Aggressive Drivers"               , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x15F3 , -1  , bttncht_agrodrivers  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {"Chrome Vehicles"                  , CAT_STCKCHT , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , FALSE , 0x1E4C , -1  , bttncht_traffichrome , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
-  {""                                 , CAT_STCKCHT , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Button Cheats"                    , CAT_STCKCHT , MENU_CATEGORY    , true  , true  , true  , false , 0x2E5F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
+  {"Give Health"                      , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x19CA , -1  , bttncht_givehealth   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Give Armor"                       , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x1874 , -1  , bttncht_givearmor    , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Give 250k Dollars"                , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x198F , -1  , bttncht_givemoney    , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Weaponset 1"                      , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x1AC1 , -1  , bttncht_weaponset1   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Weaponset 2"                      , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x16AC , -1  , bttncht_weaponset2   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Weaponset 3"                      , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x17EB , -1  , bttncht_weaponset3   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Spawn Rhino"                      , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x122B , -1  , bttncht_spawnrhino   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Cars drive on Water"              , CAT_STCKCHT , MENU_FUNCTION    , true  , false , true  , false , 0x187A , -1  , bttncht_carsonwater  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Blow up all nearby Vehicles"      , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x138D , -1  , bttncht_blowupcars   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Change Player Model to:"          , CAT_STCKCHT , MENU_VALUE       , true  , false , true  , false , 0x1D45 , OFF , bttncht_randomplayer , "CROSS: Trigger Stock Cheat"       , "LEFT/RIGHT: Adjust model"           , ""  },
+  {"Perfect Traction & Jumping"       , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x1654 , -1  , bttncht_perftraction , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Unlock 100% Multiplayer"          , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x1D80 , -1  , bttncht_unlockmult100, "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Bubble Heads"                     , CAT_STCKCHT , MENU_FUNCTION    , true  , false , true  , false , 0x146A , -1  , bttncht_bubblehead   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Play Credits"                     , CAT_STCKCHT , MENU_FUNCTION    , true  , false , true  , false , 0x187C , -1  , bttncht_playcredits  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Peds have Weapons"                , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x195C , -1  , bttncht_pedsweapons  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Peds attack you"                  , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x135C , -1  , bttncht_pedsattack   , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Peds Riot"                        , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x1C71 , -1  , bttncht_pedsriot     , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Aggressive Drivers"               , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x15F3 , -1  , bttncht_agrodrivers  , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {"Chrome Vehicles"                  , CAT_STCKCHT , MENU_FUNCTION    , true  , true  , true  , false , 0x1E4C , -1  , bttncht_traffichrome , "CROSS: Trigger Stock Cheat"       , ""                                   , ""  },
+  {""                                 , CAT_STCKCHT , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"World"                            , CAT_WORLD   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x280A , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"Time:"                            , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x18AC , OFF , world_time           , "CROSS: Freeze/Unfreeze time"      , "LEFT/RIGHT: Adjust hour"            , "Adjust the Worlds time and freeze it completely." },
-  {"Realtime Clock"                   , CAT_WORLD   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x19C1 , OFF , world_realtimeclock  , "CROSS: Enable/Disable Cheat"      , "SQUARE: Sync with System time"      , "A day will last 24 real hours!" },
-  {"Weather:"                         , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E2F , OFF , world_weather        , "CROSS: Lock/Unlock weather"       , "LEFT/RIGHT: Select weather"         , "Adjust and lock the Weather so it won't ever change again."},
-  {"Water Level:"                     , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x173A , OFF , world_waterlevel     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust height"          , "Adjust the oceans water level height."},
-  {"Gravity:"                         , CAT_WORLD   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x115C , OFF , world_gravity        , "CROSS: Reverse-button On/Off"     , "LEFT/RIGHT: Adjust gravity"         , "Adjust gravity intensity and hold 'UP' button in-game to reverse it!" },
-  {"Touch Object to:"                 , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x142B , OFF , touch_object         , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Decide what should happen to a world object when touching it." },
-  {"Staunton Bridge Lift is:"         , CAT_WORLD   , MENU_VALSWITCH   , TRUE  , FALSE , TRUE  , TRUE  , 0x18CA , OFF , world_liftcontrol    , "CROSS: Force position"            , "LEFT/RIGHT: Adjust option"          , "Change & force Staunton Bridge's Lift position to a selected position." },
-  {""                                 , CAT_WORLD   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"World"                            , CAT_WORLD   , MENU_CATEGORY    , true  , true  , true  , true  , 0x280A , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Time:"                            , CAT_WORLD   , MENU_VALSWITCH   , true  , true  , true  , true  , 0x18AC , OFF , world_time           , "CROSS: Freeze/Unfreeze time"      , "LEFT/RIGHT: Adjust hour"            , "Adjust the Worlds time and freeze it completely." },
+  {"Realtime Clock"                   , CAT_WORLD   , MENU_SWITCH      , true  , true  , true  , false , 0x19C1 , OFF , world_realtimeclock  , "CROSS: Enable/Disable Cheat"      , "SQUARE: Sync with System time"      , "A day will last 24 real hours!" },
+  {"Weather:"                         , CAT_WORLD   , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1E2F , OFF , world_weather        , "CROSS: Lock/Unlock weather"       , "LEFT/RIGHT: Select weather"         , "Adjust and lock the Weather so it won't ever change again."},
+  {"Water Level:"                     , CAT_WORLD   , MENU_VALSWITCH   , true  , true  , true  , true  , 0x173A , OFF , world_waterlevel     , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust height"          , "Adjust the oceans water level height."},
+  {"Gravity:"                         , CAT_WORLD   , MENU_VALUE       , true  , true  , true  , true  , 0x115C , OFF , world_gravity        , "CROSS: Reverse-button On/Off"     , "LEFT/RIGHT: Adjust gravity"         , "Adjust gravity intensity and hold 'UP' button in-game to reverse it!" },
+  {"Touch Object to:"                 , CAT_WORLD   , MENU_VALSWITCH   , true  , true  , true  , false , 0x142B , OFF , touch_object         , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Decide what should happen to a world object when touching it." },
+  {"Staunton Bridge Lift is:"         , CAT_WORLD   , MENU_VALSWITCH   , true  , false , true  , true  , 0x18CA , OFF , world_liftcontrol    , "CROSS: Force position"            , "LEFT/RIGHT: Adjust option"          , "Change & force Staunton Bridge's Lift position to a selected position." },
+  {""                                 , CAT_WORLD   , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Miscellaneous"                    , CAT_MISC    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2847 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"Button Up:"                       , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x1620 , OFF , up_button            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
-  {"Button Down:"                     , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , FALSE , 0x176A , OFF , down_button          , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
-  {"Pickup Spawner:"                  , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x1501 , OFF , pickup_spawner       , "CROSS: Create one-time pickup"    , "SQUARE: Create reappearing"         , "Spawns selected Pickup in front of you." },
-  {"Vehicle Spawner:"                 , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0x18FF , OFF , vehicle_spawner      , "CROSS/SQUARE: Spawn Vehicle"      , "LEFT/RIGHT: Adjust"                 , "Spawns selected Vehicle in front of you." },
-  {"Reset Button Cheats history"      , CAT_MISC    , MENU_VALUE       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , no_cheating_warning  , "CROSS: Reset"                     , ""                                   , "Remove all evidence of stock Cheats ever being used. Safe saving!" },
-  {"Vehicle Speedometer:"             , CAT_MISC    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1507 , OFF , speedometer_toggle   , "CROSS: Toggle Speedometer"        , "SQUARE: Switch calculation"         , "Display a Speed'O'Meter when inside a Vehicle to monitor speed." },
-  {"Display FPS"                      , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179A , OFF , fps_toggle           , "CROSS: Toggle Display"            , ""                                   , "Display the Games' Frames Per Second" },
-  {"Display Memory Usage"             , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x179B , OFF , mem_toggle           , "CROSS: Toggle Display"            , ""                                   , "Display the Games' free main memory" },
-  {"Display Coordinates"              , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1814 , OFF , coords_toggle        , "CROSS: Toggle Coordinates"        , ""                                   , "Display your current xyz coordinates in the world." },
-  {"Gather Spell"                     , CAT_MISC    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1E35 , OFF , gather_spell         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Gather everything!! (There will be LAG.. but its worth it!)"  },
-  {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Miscellaneous"                    , CAT_MISC    , MENU_CATEGORY    , true  , true  , true  , true  , 0x2847 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Button Up:"                       , CAT_MISC    , MENU_VALSWITCH   , true  , true  , true  , false , 0x1620 , OFF , up_button            , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
+  {"Button Down:"                     , CAT_MISC    , MENU_VALSWITCH   , true  , true  , true  , false , 0x176A , OFF , down_button          , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Select a Cheat to quick toggle via button when in-game!" },
+  {"Pickup Spawner:"                  , CAT_MISC    , MENU_VALUE       , true  , true  , true  , false , 0x1501 , OFF , pickup_spawner       , "CROSS: Create one-time pickup"    , "SQUARE: Create reappearing"         , "Spawns selected Pickup in front of you." },
+  {"Vehicle Spawner:"                 , CAT_MISC    , MENU_VALUE       , true  , true  , true  , false , 0x18FF , OFF , vehicle_spawner      , "CROSS/SQUARE: Spawn Vehicle"      , "LEFT/RIGHT: Adjust"                 , "Spawns selected Vehicle in front of you." },
+  {"Reset Button Cheats history"      , CAT_MISC    , MENU_VALUE       , true  , true  , true  , false , 0      , -1  , no_cheating_warning  , "CROSS: Reset"                     , ""                                   , "Remove all evidence of stock Cheats ever being used. Safe saving!" },
+  {"Vehicle Speedometer:"             , CAT_MISC    , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1507 , OFF , speedometer_toggle   , "CROSS: Toggle Speedometer"        , "SQUARE: Switch calculation"         , "Display a Speed'O'Meter when inside a Vehicle to monitor speed." },
+  {"Display FPS"                      , CAT_MISC    , MENU_SWITCH      , true  , true  , true  , true  , 0x179A , OFF , fps_toggle           , "CROSS: Toggle Display"            , ""                                   , "Display the Games' Frames Per Second" },
+  {"Display Memory Usage"             , CAT_MISC    , MENU_SWITCH      , true  , true  , true  , true  , 0x179B , OFF , mem_toggle           , "CROSS: Toggle Display"            , ""                                   , "Display the Games' free main memory" },
+  {"Display Coordinates"              , CAT_MISC    , MENU_SWITCH      , true  , true  , true  , true  , 0x1814 , OFF , coords_toggle        , "CROSS: Toggle Coordinates"        , ""                                   , "Display your current xyz coordinates in the world." },
+  {"Gather Spell"                     , CAT_MISC    , MENU_SWITCH      , true  , true  , true  , true  , 0x1E35 , OFF , gather_spell         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Gather everything!! (There will be LAG.. but its worth it!)"  },
+  {""                                 , CAT_DUMMY   , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Multiplayer"                      , CAT_MULTI   , MENU_CATEGORY    , TRUE  , TRUE  , FALSE , TRUE  , 0x2D2A , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"test"                             , CAT_MULTI   , MENU_SWITCH      , TRUE  , TRUE  , FALSE , TRUE  , 0x181C , OFF , mp_test              , "CROSS: Enable/Disable Cheat"      , ""                                   , "" },
-  {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , FALSE , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Multiplayer"                      , CAT_MULTI   , MENU_CATEGORY    , true  , true  , false , true  , 0x2D2A , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"test"                             , CAT_MULTI   , MENU_SWITCH      , true  , true  , false , true  , 0x181C , OFF , mp_test              , "CROSS: Enable/Disable Cheat"      , ""                                   , "" },
+  {""                                 , CAT_DUMMY   , MENU_DUMMY       , true  , true  , false , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Game Options"                     , CAT_GAME    , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x2542 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
-  {"Developer Flag"                   , CAT_GAME    , MENU_SWITCH      , TRUE  , FALSE , TRUE  , TRUE  , 0x14C0 , OFF , dev_flag             , "CROSS: Enable/Disable Cheat"      , ""                                   , "Spawn at Debug area on New Game & Start Multiplayer alone" },
-  {"Gamespeed:"                       , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x1965 , OFF , gamespeed            , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust the games speed." },
+  {"Game Options"                     , CAT_GAME    , MENU_CATEGORY    , true  , true  , true  , true  , 0x2542 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"Developer Flag"                   , CAT_GAME    , MENU_SWITCH      , true  , false , true  , true  , 0x14C0 , OFF , dev_flag             , "CROSS: Enable/Disable Cheat"      , ""                                   , "Spawn at Debug area on New Game & Start Multiplayer alone" },
+  {"Gamespeed:"                       , CAT_GAME    , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1965 , OFF , gamespeed            , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust the games speed." },
   #ifdef CONFIG
-  {"Skip Intro Movies"                , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x1DD1 , OFF , skip_intros          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Skip Rockstar Logo and Intro Movie when starting the game." },
+  {"Skip Intro Movies"                , CAT_GAME    , MENU_SWITCH      , true  , true  , true  , true  , 0x1DD1 , OFF , skip_intros          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Skip Rockstar Logo and Intro Movie when starting the game." },
   #endif
-  {"Debug Messages on Loadscreen"     , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x184C , OFF , debug_loadscreens    , "CROSS: Enable/Disable"            , ""                                   , "Re-enable some of Rockstars debug messages on the Loadscreen." },
-  {"Random Loadscreens"               , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x18D3 , OFF , random_loadscreens   , "CROSS: Enable/Disable"            , ""                                   , "Real random Loadscreens including Multiplayer ones!" },
-  {"Disable World Textures"           , CAT_GAME    , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x17CF , OFF , disable_textures     , "CROSS: Enable/Disable"            , ""                                   , "Stop World Textures from being applied to models." },
-  {"Limit FPS to:"                    , CAT_GAME    , MENU_VALSWITCH   , TRUE  , TRUE  , TRUE  , TRUE  , 0x16F0 , OFF , fps_cap              , "CROSS: Toggle FPS Limit"          , ""                                   , "Limit the Games' Frames Per Second and enable 60 FPS!" },
-  {""                                 , CAT_GAME    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Debug Messages on Loadscreen"     , CAT_GAME    , MENU_SWITCH      , true  , true  , true  , true  , 0x184C , OFF , debug_loadscreens    , "CROSS: Enable/Disable"            , ""                                   , "Re-enable some of Rockstars debug messages on the Loadscreen." },
+  {"Random Loadscreens"               , CAT_GAME    , MENU_SWITCH      , true  , true  , true  , true  , 0x18D3 , OFF , random_loadscreens   , "CROSS: Enable/Disable"            , ""                                   , "Real random Loadscreens including Multiplayer ones!" },
+  {"Disable World Textures"           , CAT_GAME    , MENU_SWITCH      , true  , true  , true  , true  , 0x17CF , OFF , disable_textures     , "CROSS: Enable/Disable"            , ""                                   , "Stop World Textures from being applied to models." },
+  {"Limit FPS to:"                    , CAT_GAME    , MENU_VALSWITCH   , true  , true  , true  , true  , 0x16F0 , OFF , fps_cap              , "CROSS: Toggle FPS Limit"          , ""                                   , "Limit the Games' Frames Per Second and enable 60 FPS!" },
+  {""                                 , CAT_GAME    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"CheatDevice Options"              , CAT_CHDEV   , MENU_CATEGORY    , TRUE  , TRUE  , TRUE  , TRUE  , 0x285E , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
+  {"CheatDevice Options"              , CAT_CHDEV   , MENU_CATEGORY    , true  , true  , true  , true  , 0x285E , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
   #ifdef CONFIG
-  {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS: Enable/Disable"            , ""                                   , "Enabling will automatically start the CheatDevice after spawning." },
-  {"Autosave Settings to Config"      , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3E81 , OFF , cdr_liveconfig       , "CROSS: Enable/Disable"            , ""                                   , "All settings will be auto-saved to config when closing the menu." },
+  {"Autostart CheatDevice Menu"       , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x38F4 , OFF , cdr_autostartmenu    , "CROSS: Enable/Disable"            , ""                                   , "Enabling will automatically start the CheatDevice after spawning." },
+  {"Autosave Settings to Config"      , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x3E81 , OFF , cdr_liveconfig       , "CROSS: Enable/Disable"            , ""                                   , "All settings will be auto-saved to config when closing the menu." },
   #endif
-  {"Collapsible Categories"           , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365A , ON  , cdr_collapsecats     , "CROSS: Enable/Disable"            , ""                                   , "Choose between collapsible or always expanded categories." },
-  {"Show popular cheats on top"       , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3C42 , ON  , cdr_showpopular      , "CROSS: Enable/Disable"            , ""                                   , "Enabling will show a preset selection of popular Cheats on top." },
-  {"Hide some UserInterfaces in Menu" , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3881 , ON  , cdr_allowuiblocking  , "CROSS: Enable/Disable"            , ""                                   , "Allow Games's UserInterface elements to be blocked in some menus etc" },
-  {"Freeze Game when in Menu"         , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , FALSE , 0x3F9E , OFF , cdr_freezegameinmenu , "CROSS: Enable/Disable"            , ""                                   , "Freeze the Game when the CheatDevice Menu is in use." },
-  {"Hide Button Legend & Info"        , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x365B , OFF , cdr_uselegend        , "CROSS: Enable/Disable"            , ""                                   , "Hide the button legend allowing for more space and menu displayed!" },
-  {"Alternative font for Categories"  , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x3846 , OFF , cdr_alternativefont  , "CROSS: Enable/Disable"            , ""                                   , "Use an alternative font for categories just like the main menu does." },
-  {"Swap X with R for acceleration"   , CAT_CHDEV   , MENU_SWITCH      , TRUE  , TRUE  , TRUE  , TRUE  , 0x7F92 , OFF , cdr_swapacceleration , "CROSS: Enable/Disable"            , ""                                   , "Activate this if you use gta_remastered's X and R swapped controls." },
+  {"Collapsible Categories"           , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x365A , ON  , cdr_collapsecats     , "CROSS: Enable/Disable"            , ""                                   , "Choose between collapsible or always expanded categories." },
+  {"Show popular cheats on top"       , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x3C42 , ON  , cdr_showpopular      , "CROSS: Enable/Disable"            , ""                                   , "Enabling will show a preset selection of popular Cheats on top." },
+  {"Hide some UserInterfaces in Menu" , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x3881 , ON  , cdr_allowuiblocking  , "CROSS: Enable/Disable"            , ""                                   , "Allow Games's UserInterface elements to be blocked in some menus etc" },
+  {"Freeze Game when in Menu"         , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , false , 0x3F9E , OFF , cdr_freezegameinmenu , "CROSS: Enable/Disable"            , ""                                   , "Freeze the Game when the CheatDevice Menu is in use." },
+  {"Hide Button Legend & Info"        , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x365B , OFF , cdr_uselegend        , "CROSS: Enable/Disable"            , ""                                   , "Hide the button legend allowing for more space and menu displayed!" },
+  {"Alternative font for Categories"  , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x3846 , OFF , cdr_alternativefont  , "CROSS: Enable/Disable"            , ""                                   , "Use an alternative font for categories just like the main menu does." },
+  {"Swap X with R for acceleration"   , CAT_CHDEV   , MENU_SWITCH      , true  , true  , true  , true  , 0x7F92 , OFF , cdr_swapacceleration , "CROSS: Enable/Disable"            , ""                                   , "Activate this if you use gta_remastered's X and R swapped controls." },
 
   #ifdef LANG
-  {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , TRUE  , TRUE  , TRUE  , TRUE  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Translate CDR to your native language!"}, // Description will be automatically generated when LANG is enabled
+  {"Menu Language:"                   , CAT_CHDEV   , MENU_VALUE       , true  , true  , true  , true  , 0x1FB9 , OFF , cdr_changelang       , "CROSS: Change Menu Language"      , "LEFT/RIGHT: Select Language"        , "Translate CDR to your native language!"}, // Description will be automatically generated when LANG is enabled
   #endif
 
-  {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {""                                 , CAT_MAIN    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
   #ifdef USERSCRIPTS
-  {"User Scripts"                     , CAT_MAIN    , MENU_CDR_USCM    , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , user_scripts         , "CROSS: Open UserScripts"          , "TRIANGLE: Open Location"            , "Basic GTA Scripting Language Interpreter. See Readme on how to use" },
-  {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , FALSE , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"User Scripts"                     , CAT_MAIN    , MENU_CDR_USCM    , true  , true  , true  , false , 0      , -1  , user_scripts         , "CROSS: Open UserScripts"          , "TRIANGLE: Open Location"            , "Basic GTA Scripting Language Interpreter. See Readme on how to use" },
+  {""                                 , CAT_MAIN    , MENU_DUMMY       , true  , true  , true  , false , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   #endif
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
   #ifdef HEXEDITOR
-  {"Hex Editor"                       , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditor            , "CROSS: Open HexEditor"            , ""                                   , "A fully fledged HexEditor to directly monitor and work in memory!" },
-  {"Hex Edit 'pplayer'"               , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditpplayer       , "CROSS: Open HexEditor"            , ""                                   , "Open Object in Hex Editor" },
-  {"Hex Edit 'pcar'"                  , CAT_MAIN    , MENU_CDR_HEX     , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , hexeditpcar          , "CROSS: Open HexEditor"            , ""                                   , "Open Object in Hex Editor" },
-  {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Hex Editor"                       , CAT_MAIN    , MENU_CDR_HEX     , true  , true  , true  , true  , 0      , -1  , hexeditor            , "CROSS: Open HexEditor"            , ""                                   , "A fully fledged HexEditor to directly monitor and work in memory!" },
+  {"Hex Edit 'pplayer'"               , CAT_MAIN    , MENU_CDR_HEX     , true  , true  , true  , true  , 0      , -1  , hexeditpplayer       , "CROSS: Open HexEditor"            , ""                                   , "Open Object in Hex Editor" },
+  {"Hex Edit 'pcar'"                  , CAT_MAIN    , MENU_CDR_HEX     , true  , true  , true  , true  , 0      , -1  , hexeditpcar          , "CROSS: Open HexEditor"            , ""                                   , "Open Object in Hex Editor" },
+  {""                                 , CAT_MAIN    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   #endif
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
   #ifdef FREECAM
-  {"Free Camera"                      , CAT_MAIN    , MENU_CDR_FREECAM , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , freecam              , "CROSS: Free Camera Mode"          , "TRIANGLE: Open in HexEditor"        , "Unbind the camera to freely explore the world!" },
-  {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Free Camera"                      , CAT_MAIN    , MENU_CDR_FREECAM , true  , true  , true  , true  , 0      , -1  , freecam              , "CROSS: Free Camera Mode"          , "TRIANGLE: Open in HexEditor"        , "Unbind the camera to freely explore the world!" },
+  {""                                 , CAT_MAIN    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   #endif
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
   #ifdef EDITORS
-  {"People Objects Editor"            , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D7E , -1  , editor_pedobj        , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian objects" },
-  {"Vehicle Objects Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x46AA , -1  , editor_vehicleobj    , "CROSS: Open Editor"               , ""                                   , "Edit Vehicle objects" },
-  {"World Objects Editor"             , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x48AB , -1  , editor_worldobj      , "CROSS: Open Editor"               , ""                                   , "Edit World objects" },
-//{"Business Objects Editor"          , CAT_MAIN    , MENU_CDR_EDITOR  , FALSE , TRUE  , TRUE  , TRUE  , 0x4EF2 , -1  , editor_businessobj   , "CROSS: Open Editor"               , ""                                   , "Edit Business objects" },
-  {"Pickups Editor"                   , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4DD7 , -1  , editor_pickups       , "CROSS: Open Editor"               , ""                                   , "Edit Pickups objects" },
-  {"Mapicons Editor"                  , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , TRUE  , 0x4814 , -1  , editor_mapicons      , "CROSS: Open Editor"               , ""                                   , "Edit Mapicon objects" },
-  {"Parked Vehicles Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x47F1 , -1  , editor_vehspawns     , "CROSS: Open Editor"               , ""                                   , "Edit the parked world vehicles values and create new spawns." },
-  {"Garage Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , TRUE  , TRUE  , TRUE  , FALSE , 0x4D66 , -1  , editor_garage        , "CROSS: Open Editor"               , ""                                   , "Edit your stored Garage Vehicles. Garage must be closed!" },
-  {"Empire Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , FALSE , TRUE  , TRUE  , FALSE , 0x7B96 , -1  , editor_empire        , "CROSS: Open Editor"               , ""                                   , "Edit your Empire Locations" },
-  {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"People Objects Editor"            , CAT_MAIN    , MENU_CDR_EDITOR  , true  , true  , true  , true  , 0x4D7E , -1  , editor_pedobj        , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian objects" },
+  {"Vehicle Objects Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , true  , true  , true  , true  , 0x46AA , -1  , editor_vehicleobj    , "CROSS: Open Editor"               , ""                                   , "Edit Vehicle objects" },
+  {"World Objects Editor"             , CAT_MAIN    , MENU_CDR_EDITOR  , true  , true  , true  , true  , 0x48AB , -1  , editor_worldobj      , "CROSS: Open Editor"               , ""                                   , "Edit World objects" },
+//{"Business Objects Editor"          , CAT_MAIN    , MENU_CDR_EDITOR  , false , true  , true  , true  , 0x4EF2 , -1  , editor_businessobj   , "CROSS: Open Editor"               , ""                                   , "Edit Business objects" },
+  {"Pickups Editor"                   , CAT_MAIN    , MENU_CDR_EDITOR  , true  , true  , true  , true  , 0x4DD7 , -1  , editor_pickups       , "CROSS: Open Editor"               , ""                                   , "Edit Pickups objects" },
+  {"Mapicons Editor"                  , CAT_MAIN    , MENU_CDR_EDITOR  , true  , true  , true  , true  , 0x4814 , -1  , editor_mapicons      , "CROSS: Open Editor"               , ""                                   , "Edit Mapicon objects" },
+  {"Parked Vehicles Editor"           , CAT_MAIN    , MENU_CDR_EDITOR  , true  , true  , true  , false , 0x47F1 , -1  , editor_vehspawns     , "CROSS: Open Editor"               , ""                                   , "Edit the parked world vehicles values and create new spawns." },
+  {"Garage Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , true  , true  , true  , false , 0x4D66 , -1  , editor_garage        , "CROSS: Open Editor"               , ""                                   , "Edit your stored Garage Vehicles. Garage must be closed!" },
+  {"Empire Editor"                    , CAT_MAIN    , MENU_CDR_EDITOR  , false , true  , true  , false , 0x7B96 , -1  , editor_empire        , "CROSS: Open Editor"               , ""                                   , "Edit your Empire Locations" },
+  {""                                 , CAT_MAIN    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-  {"IDEs"                             , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x437E , -1  , editor_ide           , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemDefinitions' of Peds, Vehicles, Objects, etc..." },
-  {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"IDEs"                             , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x437E , -1  , editor_ide           , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemDefinitions' of Peds, Vehicles, Objects, etc..." },
+  {""                                 , CAT_MAIN    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
-  {"Buildings.ipl"                    , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x45AB , -1  , editor_buildingsipl  , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Buildings" },
-  {"Treadables.ipl"                   , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , FALSE , TRUE  , TRUE  , 0x44D7 , -1  , editor_treadablesipl , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Roads, Grounds etc" },
-  {"Dummys.ipl"                       , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4D78 , -1  , editor_dummysipl     , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Doors, Objects etc" },
-  {"Carcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x411E , -1  , editor_carcolsdat    , "CROSS: Open Editor"               , ""                                   , "Edit Vehicle color presets." },
-  {"Pedcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , FALSE , TRUE  , TRUE  , TRUE  , 0x465F , -1  , editor_pedcolsdat    , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian color presets." },
-  {"Handling.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4632 , -1  , editor_handlingcfg   , "CROSS: Open Editor"               , ""                                   , "Adjust a Vehicles' handling behavior." },
-  {"Particle.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4624 , -1  , editor_particlecfg   , "CROSS: Open Editor"               , ""                                   , "Adjust particle color, behaviour, timings etc" },
-  {"Pedstats.dat"                     , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4DB4 , -1  , editor_pedstatsdat   , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian's behaviour, abilities and statistics." },
-  {"Weapon.dat"                       , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x41A2 , -1  , editor_weapondat     , "CROSS: Open Editor"               , ""                                   , "Edit Weapon's behaviour, abilities and animations." },
-  {"Timecyc.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , TRUE  , TRUE  , TRUE  , TRUE  , 0x4143 , -1  , editor_timecycdat    , "CROSS: Open Editor"               , ""                                   , "Edit World's colors per hour and weather" },
-  {""                                 , CAT_MAIN    , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Buildings.ipl"                    , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x45AB , -1  , editor_buildingsipl  , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Buildings" },
+  {"Treadables.ipl"                   , CAT_MAIN    , MENU_CDR_FILES   , true  , false , true  , true  , 0x44D7 , -1  , editor_treadablesipl , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Roads, Grounds etc" },
+  {"Dummys.ipl"                       , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x4D78 , -1  , editor_dummysipl     , "CROSS: Open Editor"               , ""                                   , "Edit 'ItemPlacement' of Doors, Objects etc" },
+  {"Carcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x411E , -1  , editor_carcolsdat    , "CROSS: Open Editor"               , ""                                   , "Edit Vehicle color presets." },
+  {"Pedcols.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , false , true  , true  , true  , 0x465F , -1  , editor_pedcolsdat    , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian color presets." },
+  {"Handling.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x4632 , -1  , editor_handlingcfg   , "CROSS: Open Editor"               , ""                                   , "Adjust a Vehicles' handling behavior." },
+  {"Particle.cfg"                     , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x4624 , -1  , editor_particlecfg   , "CROSS: Open Editor"               , ""                                   , "Adjust particle color, behaviour, timings etc" },
+  {"Pedstats.dat"                     , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x4DB4 , -1  , editor_pedstatsdat   , "CROSS: Open Editor"               , ""                                   , "Edit Pedestrian's behaviour, abilities and statistics." },
+  {"Weapon.dat"                       , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x41A2 , -1  , editor_weapondat     , "CROSS: Open Editor"               , ""                                   , "Edit Weapon's behaviour, abilities and animations." },
+  {"Timecyc.dat"                      , CAT_MAIN    , MENU_CDR_FILES   , true  , true  , true  , true  , 0x4143 , -1  , editor_timecycdat    , "CROSS: Open Editor"               , ""                                   , "Edit World's colors per hour and weather" },
+  {""                                 , CAT_MAIN    , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
   #endif
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
   #ifdef CONFIG
-  {"Save Settings to Config"          , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , save_config          , "CROSS: Save settings to config"   , ""                                   , "Save your current preferences to the config file." },
-  {"Load Settings from Config"        , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_config          , "CROSS: Reload config"             , ""                                   , "Load custom saved settings from the config file." },
+  {"Save Settings to Config"          , CAT_MAIN    , MENU_CONFIG      , true  , true  , true  , true  , 0      , -1  , save_config          , "CROSS: Save settings to config"   , ""                                   , "Save your current preferences to the config file." },
+  {"Load Settings from Config"        , CAT_MAIN    , MENU_CONFIG      , true  , true  , true  , true  , 0      , -1  , load_config          , "CROSS: Reload config"             , ""                                   , "Load custom saved settings from the config file." },
   #endif
-  {"Restore default Settings"         , CAT_MAIN    , MENU_CONFIG      , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , load_defaults        , "CROSS: Reset cheats to default"   , ""                                   , "Reset all menu cheats to their default disabled values." },
+  {"Restore default Settings"         , CAT_MAIN    , MENU_CONFIG      , true  , true  , true  , true  , 0      , -1  , load_defaults        , "CROSS: Reset cheats to default"   , ""                                   , "Reset all menu cheats to their default disabled values." },
 
-  {""                                 , CAT_DUMMY   , MENU_DUMMY       , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
-  {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , TRUE  , TRUE  , TRUE  , TRUE  , 0      , -1  , exit_game            , "CROSS: Exit game"                 , ""                                   , "Exit the game and return to the main menu." },
+  {""                                 , CAT_DUMMY   , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
+  {"Exit Game"                        , CAT_MAIN    , MENU_FUNCTION    , true  , true  , true  , true  , 0      , -1  , exit_game            , "CROSS: Exit game"                 , ""                                   , "Exit the game and return to the main menu." },
 
   {"",0,0,-1,-1,-1,-1,-1,-1,NULL,NULL,NULL,NULL}
-}; const int menu_size = ARRAY_SIZE(main_menu) - 1;
+}; const array_size menu_size = ARRAY_SIZE(main_menu) - 1;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void drawLegendBox(int rows, u32 color) {
+void drawLegendBox(int rows, CRGBA color) {
   drawBox(15.0f, 266.0f - (rows * 12.0f), 450.0f, 4.0f + (rows * 12.0f), color);
 }
 
-void drawLegendMessage(const char *str, int side, int pos, u32 color) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
-  drawString(str, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, side ? 240.0f : 20.0f, 256.0f - (pos * 12.0f), color);
+void drawLegendMessageNoTVarg(int side, int pos, CRGBA color, u8string str) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
+  drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, side ? 240.0f : 20.0f, 256.0f - (pos * 12.0f), color, str);
+}
+
+void drawLegendMessageNoT(int side, int pos, CRGBA color, u8string str, ...) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
+  
+  u8char finalstr[MAX_TEXT_SIZE];
+  va_list args;
+  va_start(args, str);
+  vsnprintf(finalstr, MAX_TEXT_SIZE, str, args);
+  va_end(args);
+
+  drawLegendMessageNoTVarg(side, pos, color, finalstr);
+}
+
+// side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
+void drawLegendMessageNoVarg(int side, int pos, CRGBA color, u8string str)
+{
+  drawLegendMessageNoTVarg(side, pos, color, _t(str));
+}
+
+// side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
+void drawLegendMessage(int side, int pos, CRGBA color, u8string str, ...)
+{
+  str = _t(str);
+
+  u8char finalstr[MAX_TEXT_SIZE];
+  va_list args;
+  va_start(args, str);
+  vsnprintf(finalstr, MAX_TEXT_SIZE, str, args);
+  va_end(args);
+
+  drawLegendMessageNoTVarg(side, pos, color, finalstr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 #if defined(PREVIEW) || defined(USERSCRIPTS)
-char filename[64];
-
 #define META_DESC_SIZE 90  // max length
 #define META_DATE_SIZE 32  // max length
 #define META_CATG_SIZE 32  // max length
@@ -541,7 +574,7 @@ int usercheat_selected_val; // selected option in values number
 int usercheat_top;          // the values option on top when there are more options than usercheat_showoptions
 int usercheat_draw_lower;   // some have no data in slots -> those can be disabled here
 
-int usercheat_waittime = 0;    // for faster scrolling (delay until meta data will be read)
+uint32 usercheat_waittime = 0;    // for faster scrolling (delay until meta data will be read)
 int usercheat_waitdelay = 400; // 1000 is about 1 sec
 
 int readtxtneeded = 1;    // if 1 force txt read
@@ -554,11 +587,11 @@ int usercheat_dirno = 0;  // current no of txt file in folder
 #define CHEATNAMELGT 60   // max name length of cheat
 #define CHEATLINELGT 256  // max line length in txt
 
-char cheatnames[CHEATSPERTXT][CHEATNAMELGT]; // cheat names in current txt
+u8char cheatnames[CHEATSPERTXT][CHEATNAMELGT]; // cheat names in current txt
 
 
-int usercheats_create() {
-  DEBUG_LOG("%i: usercheats_create()", getGametime());
+void usercheats_create() {
+  DEBUG_LOG("%lu: usercheats_create()", getGametime());
 
   resetMeta(); // because used for other scripts too
 
@@ -574,20 +607,17 @@ int usercheats_create() {
   readfolderneeded = 1; // now
 
   flag_usercheats = 1;  // only set here!
-  return 0;
 }
 
-int usercheats_draw() {
-  int i;
+void usercheats_draw() {
   float x, y;
-  char local_buff[256];
-  char buffer_top[128]; // top option
-  char buffer_top2[16]; // top option right
+  char local_buff[512];
+  u8char filename[64];
 
   snprintf(buffer, sizeof(buffer), "%s%s%s/", basefolder, folder_cheats, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
 
   /// draw title
-  drawString("User Cheats", ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
+  drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS, "User Cheats");
 
   /// read in filename, extension & total files
   if( readfolderneeded ) {
@@ -599,10 +629,10 @@ int usercheats_draw() {
     if( fd >= 0 ) {
       while( (sceIoDread(fd, &d_dir) > 0) )  {
         if( FIO_SO_ISDIR(d_dir.d_stat.st_attr) || FIO_S_ISDIR(d_dir.d_stat.st_mode) ) { // handle sub dirs
-          if( d_dir.d_name[0] == '.' )
+          if( STR_STARTSWITH_CHAR(d_dir.d_name, '.') )
             continue;
         } else {
-          if( d_dir.d_name[0] == '.' )
+          if( STR_STARTSWITH_CHAR(d_dir.d_name, '.') )
             continue;
           if( cur_dirno == usercheat_dirno ) { // this is the selected file
             strcpy(filename, d_dir.d_name); // save filename
@@ -613,17 +643,15 @@ int usercheats_draw() {
       sceIoDclose(fd);
 
     } else { // no cheats folder
-      drawString("No user cheats folder found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT);
-      snprintf(local_buff, sizeof(local_buff), "Create '%s' and place usercheat there", buffer);
-      drawString(local_buff, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT);
-      return -1;
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT, "No user cheats folder found!");
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT, "Create '%s' and place usercheat there", buffer);
+      return;
     }
 
     if( cur_dirno <= 0 ) { // folder found but empty
-      drawString("No user cheat files found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT);
-      snprintf(local_buff, sizeof(local_buff), "Place usercheat files to '%s'", buffer);
-      drawString(local_buff, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT);
-      return -1;
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - usercheat_row_spacing, COLOR_TEXT, "No user cheat files found!");
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + usercheat_row_spacing, COLOR_TEXT, "Place usercheat files to '%s'", buffer);
+      return;
     }
     readfolderneeded = 0;
   }
@@ -639,15 +667,8 @@ int usercheats_draw() {
   drawUiBox(x-5.0f, y-2.0f, 410.0f, flag_use_legend ? 194.0f : 224.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
 
   /// draw the top menu
-  snprintf(buffer_top, sizeof(buffer_top), "File: %s", filename);
-  snprintf(buffer_top2, sizeof(buffer_top2), "%d of %d", usercheat_dirno+1, cur_dirno);
-  if(usercheat_selector == 1) { // cursor in top menu (txt select)
-    drawString(buffer_top, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_ON);
-    drawString(buffer_top2, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+400.0f, y, COLOR_CHEAT_ON);
-  } else { // cursor in lower menu (cheat select)
-    drawString(buffer_top, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CATEGORY);
-    drawString(buffer_top2, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+400.0f, y, COLOR_CATEGORY);
-  }
+  drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, usercheat_selector ? COLOR_CHEAT_ON : COLOR_CATEGORY, "File: %s", filename);
+  drawString(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+400.0f, y, usercheat_selector ? COLOR_CHEAT_ON : COLOR_CATEGORY, "%d of %d", usercheat_dirno+1, cur_dirno);
 
   /// error checks of selected file
   if( stringEndsWith(filename, ".txt") ) { // check for txt
@@ -675,7 +696,7 @@ int usercheats_draw() {
             ++linehandle;
 
           /// check #
-          if( linehandle[0] == '#' ) { // check first char is #
+          if( STR_STARTSWITH_CHAR(linehandle, '#') ) { // check first char is #
 
             /// check "#cheat"
             linehandle = strstr(linehandle, "#cheat");
@@ -788,7 +809,7 @@ int usercheats_draw() {
       } else {
         usercheat_selector = 1; // jump cursor back to top menu
         usercheat_draw_lower = 0;
-        drawString("Could not open file!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+        drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT, "Could not open file!");
         readfolderneeded = 1; // re-trigger folder read
         //usercheat_dirno = 0; // reset to first found
       }
@@ -797,17 +818,17 @@ int usercheats_draw() {
 
     if( usercheat_waittime > 0 && usercheat_options <= 0) { // in delay window
       usercheat_draw_lower = 0;
-      drawString("Loading..", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT, "Loading...");
 
     } else if( usercheat_options <= 0 ) {
       usercheat_draw_lower = 0;
-      drawString("No cheats found in this file", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT, "No cheats found in this file");
     }
 
   } else {
     usercheat_selector = 1; // jump cursor back to top menu
     usercheat_draw_lower = 0;
-    drawString("Not a usercheat file!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
+    drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT, "Not a usercheat file!");
   }
 
 
@@ -837,31 +858,29 @@ int usercheats_draw() {
     if ( usercheat_selected_val < usercheat_top ) // for scrolling up with selection
       usercheat_top = usercheat_selected_val;
 
-    for( i = usercheat_top; i < usercheat_showoptions + usercheat_top; i++, y += usercheat_row_spacing ) {
+    for( int i = usercheat_top; i < usercheat_showoptions + usercheat_top; i++, y += usercheat_row_spacing ) {
 
       ///draw number
       #ifdef DEBUG
       if( flag_draw_DBGVALS ) {
-        snprintf(buffer, sizeof(buffer), "%d", i+1);
-        drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED);
+        drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED, "%d", i+1);
       }
       #endif
 
       /// draw cursor
       if ( i == usercheat_selected_val && usercheat_selector == 0) {
-        drawBox(x-5.0f, y, 410.0f, 16.0f, COLOR_CURSOR); // float x, float y, float width, float height, u32 color
+        drawBox(x-5.0f, y, 410.0f, 16.0f, COLOR_CURSOR); // float x, float y, float width, float height, CRGBA color
       }
 
       /// draw cheat name
-      if( 0 ) { // if cheat "ON" or "OFF" - TODO obviously
+      if( false ) { // TODO: detect if cheat "ON" or "OFF"
         COLOR_TEMP = COLOR_CHEAT_ON;
-        drawString("ON", ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+24.0f, y, COLOR_TEMP);
+        drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+24.0f, y, COLOR_TEMP, "ON");
       } else {
         COLOR_TEMP = COLOR_CHEAT_OFF;
-        drawString("OFF", ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+24.0f, y, COLOR_TEMP);
+        drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+24.0f, y, COLOR_TEMP, "OFF");
       }
-      snprintf(buffer, sizeof(buffer), "%s", cheatnames[i]);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+30.0f, y, COLOR_TEMP);
+      drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+30.0f, y, COLOR_TEMP, cheatnames[i]);
     }
 
   }
@@ -869,30 +888,15 @@ int usercheats_draw() {
 
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {
-    snprintf(buffer, sizeof(buffer), "usercheat_dirno = %d", usercheat_dirno );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 60.0f, RED);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 60.0f, RED, "usercheat_dirno = %d", usercheat_dirno);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 80.0f, RED, "cur_dirno = %d", cur_dirno);
 
-    snprintf(buffer, sizeof(buffer), "cur_dirno = %d", cur_dirno );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 80.0f, RED);
-
-
-    snprintf(buffer, sizeof(buffer), "usercheat_selector = %d", usercheat_selector );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "usercheat_top = %d", usercheat_top );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 140.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "usercheat_selected_val = %i", usercheat_selected_val );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 160.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "usercheat_options = %i", usercheat_options );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 180.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "usercheat_showoptions = %i", usercheat_showoptions );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "usercheat_draw_lower = %i", usercheat_draw_lower );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED, "usercheat_selector = %d", usercheat_selector);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 140.0f, RED, "usercheat_top = %d", usercheat_top);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 160.0f, RED, "usercheat_selected_val = %i", usercheat_selected_val);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 180.0f, RED, "usercheat_options = %i", usercheat_options);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED, "usercheat_showoptions = %i", usercheat_showoptions);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "usercheat_draw_lower = %i", usercheat_draw_lower);
   }
   #endif
 
@@ -902,36 +906,25 @@ int usercheats_draw() {
     drawLegendBox(3, COLOR_BACKGROUND);
 
     if( usercheat_selector == 1 ) { // cursor in top menu (txt select)
-      drawLegendMessage("L+UP/DOWN: Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage("UP/DOWN: Navigate Menu",      1, 2, COLOR_TEXT); // right side, first row
-      drawLegendMessage("LEFT/RIGHT: Navigate files",  0, 1, COLOR_TEXT); // left side, second row
-      drawLegendMessage("TRIANGLE: Open in Editor",    1, 1, COLOR_TEXT); // right side, second row
-      drawLegendMessage("CROSS: Enable/Disable Cheat", 0, 0, COLOR_TEXT); // left side, third row
-      drawLegendMessage("CIRCLE: Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
+      drawLegendMessageNoVarg(0, 2, COLOR_TEXT, "L+UP/DOWN: Toggle Menu"); // left side, first row
+      drawLegendMessageNoVarg(1, 2, COLOR_TEXT, "UP/DOWN: Navigate Menu"); // right side, first row
+      drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "LEFT/RIGHT: Navigate files"); // left side, second row
+      drawLegendMessageNoVarg(1, 1, COLOR_TEXT, "TRIANGLE: Open in Editor"); // right side, second row
+      drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "CROSS: Enable/Disable Cheat"); // left side, third row
+      drawLegendMessageNoVarg(1, 0, COLOR_TEXT, "CIRCLE: Exit to Menu"); // right side, third row
 
     } else { /// draw Cheat data instead
-      snprintf(buffer, sizeof(buffer), "Author: %s", meta_author );
-      drawLegendMessage(buffer, 0, 2, COLOR_TEXT); // left side, first row
-
-      snprintf(buffer, sizeof(buffer), "Version: %s", meta_version );
-      drawLegendMessage(buffer, 1, 2, COLOR_TEXT); // right side, first row
-
-      snprintf(buffer, sizeof(buffer), "Category: %s", meta_category );
-      drawLegendMessage(buffer, 0, 1, COLOR_TEXT); // left side, second row
-
-      snprintf(buffer, sizeof(buffer), "Date: %s", meta_date );
-      drawLegendMessage(buffer, 1, 1, COLOR_TEXT); // right side, second row
-
-      snprintf(buffer, sizeof(buffer), "Description: %s", meta_description );
-      drawLegendMessage(buffer, 0, 0, COLOR_TEXT); // left side, third row
+      drawLegendMessage(0, 2, COLOR_TEXT, "Author: %s", meta_author); // left side, first row
+      drawLegendMessage(1, 2, COLOR_TEXT, "Version: %s", meta_version); // right side, first row
+      drawLegendMessage(0, 1, COLOR_TEXT, "Category: %s", meta_category); // left side, second row
+      drawLegendMessage(1, 1, COLOR_TEXT, "Date: %s", meta_date); // right side, second row
+      drawLegendMessage(0, 0, COLOR_TEXT, "Description: %s", meta_description); // left side, third row
     }
 
   }
-
-  return 0;
 }
 
-int usercheats_ctrl() {
+void usercheats_ctrl() {
   if( usercheat_selector ) { // cursor in top menu (txt select)
 
     if( hold_buttons & PSP_CTRL_DOWN ) {
@@ -971,7 +964,7 @@ int usercheats_ctrl() {
       if( usercheat_selected_val <= 0 ) {
         if( usercheat_toptions )
           usercheat_selector = 1; // switch to top menu
-      } else usercheat_selected_val -= 1;
+      } else usercheat_selected_val--;
 
       if( usercheat_top > 1 ) { // scroll
         if( usercheat_selected_val == 1 )
@@ -988,7 +981,7 @@ int usercheats_ctrl() {
         if( usercheat_selected_val >= usercheat_options-1 )
           usercheat_selected_val = usercheat_options-1; // selection = 0;
         else
-          usercheat_selected_val += 1;
+          usercheat_selected_val++;
 
         usercheat_top = usercheat_selected_val;
 
@@ -997,7 +990,7 @@ int usercheats_ctrl() {
           usercheat_selected_val = usercheat_options-1; // selection = 0;
 
         else {
-          usercheat_selected_val += 1;
+          usercheat_selected_val++;
 
           if( usercheat_top + usercheat_showoptions < usercheat_options ) { // scroll
             if( usercheat_selected_val >= usercheat_top + usercheat_showoptions-1 )
@@ -1041,8 +1034,6 @@ int usercheats_ctrl() {
 
   if( pressed_buttons & PSP_CTRL_CIRCLE ) // exit
     flag_usercheats = 0;
-
-  return 0;
 }
 #endif
 
@@ -1055,22 +1046,22 @@ int usercheats_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef USERSCRIPTS
-short flag_userscripts = 0;
+static bool flag_userscripts = false;
 
-float userscript_row_spacing = 15.0f; // pixels between rows
+static const float userscript_row_spacing = 15.0f; // pixels between rows
 
 int userscript_toptions;     // top menu lines
 int userscript_options;      // available cheats in txt (set later)
-int userscript_showoptions;  // the number of value rows that should be displayed at once (0 to 2 possible)
+usize userscript_showoptions;  // the number of value rows that should be displayed at once (0 to 2 possible)
 int userscript_selector;     // cursor in top menu bool
-int userscript_selected_val; // selected option in values number
-int userscript_top;          // the values option on top when there are more options than usercheat_showoptions
-int userscript_draw_lower;   // some have no data in slots -> those can be disabled here
+usize userscript_selected_val; // selected option in values number
+usize userscript_top;          // the values option on top when there are more options than usercheat_showoptions
+bool userscript_draw_lower;   // some have no data in slots -> those can be disabled here
 
-int userscript_waittime = 0;   // for faster scrolling (delay until meta data will be read)
-int userscript_waitdelay = 400; // 1000 is about 1 sec
+uint32 userscript_waittime = 0;   // for faster scrolling (delay until meta data will be read)
+uint32 userscript_waitdelay = 400; // 1000 is about 1 sec
 
-int userscript_readtxtneeded = 1; // if 1
+bool userscript_readtxtneeded = true; // if 1
 //int userscript_readfolderneeded = 1; // if 1 filename of current txt will be read + total files
 
 char currentfile[64]; // current txt
@@ -1084,7 +1075,7 @@ char script_workfldr[512]; // into this one
 #define CSTGXTS 32    // max custom strings possible (ALSO CHANGE IN cheats.c!!)
 #define CSTGXTLGT 256 // max custom string length (ALSO CHANGE IN cheats.c!!)
 
-unsigned short custom_gxts[CSTGXTS][CSTGXTLGT];
+wchar custom_gxts[CSTGXTS][CSTGXTLGT];
 
 #define SCRIPT_SIZE 16384   // maximum script size
 
@@ -1092,52 +1083,44 @@ unsigned short custom_gxts[CSTGXTS][CSTGXTLGT];
 #define MAX_LABEL_LENGTH 32 // max length of a Label
 
 static userscript_entry* userscript_currentdir_scripts = NULL; // Array where scripts / folders file info is stored
-static int userscript_cd_scripts_count = 0;     // Number of scripts / folder in array
-static int currentdir_files_folders_count = 0;  // Files & Folders count on current dir
+static usize userscript_cd_scripts_count = 0;     // Number of scripts / folder in array
+static usize currentdir_files_folders_count = 0;  // Files & Folders count on current dir
 
-static const char* userscript_valid_extensions[] = { ".txt", ".sc" }; // Valid extensions for userscripts
-static const int userscript_valid_extensions_num = ARRAY_SIZE(userscript_valid_extensions) - 1;
+static const u8string userscript_valid_extensions[] = { ".txt", ".sc" }; // Valid extensions for userscripts
+static const array_size userscript_valid_extensions_num = ARRAY_SIZE(userscript_valid_extensions);
 
 // Checks file extension to see if it is a valid userscript file
-static int is_file_userscript(const char* path)
+static bool is_file_userscript(const u8string path)
 {
-  if ( !path || *path == '\0' ) return 0;
+  if ( STR_NULL(path) || STR_EMPTY(path) ) return false;
 
-  int i;
-  for (i = 0; i < userscript_valid_extensions_num; i++)
+  for (array_uidx i = 0; i < userscript_valid_extensions_num; i++)
   {
-    if ( stringEndsWith(path, userscript_valid_extensions[i]) ) return 1;
+    if ( stringEndsWith(path, userscript_valid_extensions[i]) ) return true;
   }
 
-  return 0;
+  return false;
 }
 
-int free_userscripts_array()
+void free_userscripts_array()
 {
-  if ( !userscript_currentdir_scripts ) return 0;
+  if ( !userscript_currentdir_scripts ) return;
 
-  int i;
-
-  for (i = 0; i < userscript_cd_scripts_count; i++)
+  for (array_uidx i = 0; i < userscript_cd_scripts_count; i++)
   {
     userscript_entry* uscript = &userscript_currentdir_scripts[i];
     if ( !uscript ) continue;
 
     // If name was allocated, free it
-    if ( uscript->path )
-    {
-      free(uscript->path);
-    }
+    if ( uscript->path ) free(uscript->path);
   }
 
   // Free allocated array
   free(userscript_currentdir_scripts);
   userscript_currentdir_scripts = NULL;
-
-  return 0;
 }
 
-static int userscripts_update_array()
+static void userscripts_update_array()
 {
   // If there's mem allocated, free it before allocating again
   if (userscript_currentdir_scripts) free_userscripts_array();
@@ -1146,12 +1129,10 @@ static int userscripts_update_array()
 
   // Check if there are files & folders to store
   if ( userscript_cd_scripts_count == 0 )
-  {
-    return 0;
-  }
+    return;
   
   userscript_currentdir_scripts = (userscript_entry *)malloc(sizeof(userscript_entry) * userscript_cd_scripts_count);
-  if ( !userscript_currentdir_scripts ) return -1;
+  if ( !userscript_currentdir_scripts ) return;
 
   // Open current dir
   SceUID dir = sceIoDopen(script_workfldr);
@@ -1159,18 +1140,18 @@ static int userscripts_update_array()
   {
     free(userscript_currentdir_scripts);
     userscript_currentdir_scripts = NULL;
-    return -1;
+    return;
   }
 
   SceIoDirent dirent;
   memset(&dirent, 0, sizeof(SceIoDirent));
 
-  int i = 0;
+  array_uidx i = 0;
 
   // While we can read from dir
   while ( i < userscript_cd_scripts_count && sceIoDread(dir, &dirent) > 0 ) {
 
-    if (dirent.d_name[0] == '.') continue; // Skip "." entries
+    if ( STR_STARTSWITH_CHAR(dirent.d_name, '.') ) continue; // Skip "." entries
 
     userscript_entry* uscript = &userscript_currentdir_scripts[i];
 
@@ -1193,70 +1174,63 @@ static int userscripts_update_array()
   }
 
   sceIoDclose(dir);
-  return 0;
 }
 
 
-int userscripts_create() {
-  DEBUG_LOG("%i: userscript_create()", getGametime());
+void userscripts_create() {
+  DEBUG_LOG("%lu: userscript_create()", getGametime());
 
   resetMeta(); // because used for other cheats too
 
   userscript_toptions = 0;   // always 0 for now
   userscript_selector = 0;   // cursor in txt selector (top menu) by default
-  userscript_draw_lower = 0; // disable drawing of lower menu by default
+  userscript_draw_lower = false; // disable drawing of lower menu by default
   userscript_options = 0;
   userscript_showoptions = (flag_use_legend ? 12 : 14) - userscript_toptions;
   userscript_selected_val = 0;
   userscript_top = 0;
 
-  userscript_readtxtneeded = 1; // now
+  userscript_readtxtneeded = true; // now
   //userscript_readfolderneeded = 1; // now
 
-  snprintf(script_workfldr, sizeof(script_workfldr), "%s%s%s/%s%s", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs, (script_subfldrs[0] == 0x00) ? "" : "/");
+  snprintf(script_workfldr, sizeof(script_workfldr), "%s%s%s/%s%s", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs, ( STR_EMPTY(script_subfldrs) ) ? "" : "/");
   userscripts_update_array();
 
-  flag_userscripts = 1; // only set here!
-
-  return 0;
+  flag_userscripts = true; // only set here!
 }
 
-static int userscripts_draw() { // this is the worst code and I'm not proud of it
-
-  int i;
+static void userscripts_draw() { // this is the worst code and I'm not proud of it
   float x, y;
-  char buffer[1024];
+  u8char buffer[1024];
+  u8char filename[64];
 
   /// draw title
-  drawString(_t("User Scripts"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS);
+  drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS, "User Scripts");
 
   x = 40.0f; // horizontal menu start
   y = 35.0f; // vertical menu start
 
   /// draw folder
-  if( script_subfldrs[0] != 0x00 ) {
-    snprintf(buffer, sizeof(buffer), "%s/", script_subfldrs);
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 410.0f+x-5.0f, 7.0f, COLOR_TEXT);
+  if( !STR_EMPTY(script_subfldrs) ) {
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 410.0f+x-5.0f, 7.0f, COLOR_TEXT, "%s/", script_subfldrs);
   }
 
     // no longer needed as we auto-create the path and folder
     /* if( userscript_options == 0x80010002 ) { // no folder (doesn't work like this anymore since + countFolder... anyways)
-      drawString("No user scripts folder found!", ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT);
-      snprintf(buffer, sizeof(buffer), "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"));
-      drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
-      return -1; // no cheats folder
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT, "No user scripts folder found!");
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"));
+      return FUNC_ERROR; // no cheats folder
     } */
 
     if( userscript_cd_scripts_count == 0 ) { // folder found but empty
-      drawString(_t("No UserScript files found!"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
-      snprintf(buffer, sizeof(buffer), _t("Place User Scripts to '%s%s%s/'"), basefolder, folder_scripts, LCS ? "LCS" : "VCS");
-      drawString(buffer, ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
-      return -1; // no cheats folder
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT, "No UserScript files found!");
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Place User Scripts to '%s%s%s/'", basefolder, folder_scripts, LCS ? "LCS" : "VCS");
+      return; // no cheats folder
     }
     else if ( !userscript_currentdir_scripts ) { // No memory???
-      drawString(_t("Well... this shouldn't have happened (the PSP has ran out of memory)"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT);
-      drawString(_t("Report this screen to the developers (please)"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT);
-      return -1;
+      drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT, "Well... this shouldn't have happened (the PSP has ran out of memory)");
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Report this screen to the developers (please)");
+      return;
     }
 
   /// draw UI
@@ -1266,7 +1240,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
 
   if( userscript_cd_scripts_count > 0 )
-    userscript_draw_lower = 1;
+    userscript_draw_lower = true;
 
   userscript_showoptions = (flag_use_legend ? 12 : 14) - userscript_toptions; // reset
 
@@ -1296,7 +1270,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
     if ( userscript_selected_val < userscript_top )
       userscript_top = userscript_selected_val;  // for scrolling up with selection
 
-    for(i = userscript_top; i < userscript_showoptions + userscript_top; i++, y += userscript_row_spacing)
+    for(array_uidx i = userscript_top; i < userscript_showoptions + userscript_top; i++, y += userscript_row_spacing)
     {
       // Don't do anything if nothing was allocated
       if ( !userscript_currentdir_scripts || !userscript_currentdir_scripts[i].path ) break;
@@ -1309,8 +1283,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
       #ifdef DEBUG
       if( flag_draw_DBGVALS ) {
         ///draw number
-        snprintf(buffer, sizeof(buffer), "%d", i+1);
-        drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED);
+        drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-10.0f, y+2.0f, RED, "%d", i+1);
       }
       #endif
 
@@ -1320,7 +1293,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
         currentdir_files_folders_count = files_folders_count;
 
         /// draw cursor
-        drawBox(x-5.0f, y, 410.0f, 16.0f, COLOR_CURSOR); // float x, float y, float width, float height, u32 color
+        drawBox(x-5.0f, y, 410.0f, 16.0f, COLOR_CURSOR); // float x, float y, float width, float height, CRGBA color
       }
 
       /// draw name
@@ -1344,8 +1317,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
       } else
         filename[strlen(filename)-getExtensionLength(filename)] = '\0'; // remove extension from displayed name
 
-      snprintf(buffer, sizeof(buffer), "%s", filename);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP, filename);
     }
   }
 
@@ -1375,7 +1347,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
             ++linehandle;
 
           /// check comment
-          if( (linehandle[0] == '/' && linehandle[1] == '/') || linehandle[0] == '#' ) { // check first char is #
+          if( (linehandle[0] == '/' && linehandle[1] == '/') || STR_STARTSWITH_CHAR(linehandle, '#') ) { // check first char is #
 
             /// skip all comment slashes
             while( (*linehandle == '/') || (*linehandle == '#') )
@@ -1437,7 +1409,7 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
         //snprintf(meta_description, sizeof(meta_description), "time = %i", getGametime());
 
         sceIoClose(file);
-        userscript_readtxtneeded = 0;
+        userscript_readtxtneeded = false;
 
       } else { //could not open file
         //userscript_readfolderneeded = 1; // re-trigger folder read
@@ -1450,46 +1422,22 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
 
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {
-    snprintf(buffer, sizeof(buffer), "countFilesInFolder = %d", countFilesInFolder(script_workfldr) );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 30.0f, RED);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 30.0f, RED, "countFilesInFolder = %d", countFilesInFolder(script_workfldr));
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 40.0f, RED, "countFoldersInFolder = %d", countFoldersInFolder(script_workfldr));
 
-    snprintf(buffer, sizeof(buffer), "countFoldersInFolder = %d", countFoldersInFolder(script_workfldr) );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 40.0f, RED);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 55.0f, RED, "userscript_waittime = %d", userscript_waittime);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 70.0f, RED, "gametime = %d", getGametime());
 
+    // drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED, "counter = %d", counter);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 140.0f, RED, "userscript_top = %d", userscript_top);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 160.0f, RED, "userscript_selected_val = %i", userscript_selected_val);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 180.0f, RED, "userscript_cd_scripts_count = %i", userscript_cd_scripts_count);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED, "userscript_showoptions = %i", userscript_showoptions);
 
-    snprintf(buffer, sizeof(buffer), "userscript_waittime = %d", userscript_waittime );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 55.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "gametime = %d", getGametime() );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 70.0f, RED);
-
-
-    // snprintf(buffer, sizeof(buffer), "counter = %d", counter );
-    // drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 120.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "userscript_top = %d", userscript_top );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 140.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "userscript_selected_val = %i", userscript_selected_val );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 160.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "userscript_cd_scripts_count = %i", userscript_cd_scripts_count );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 180.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "userscript_showoptions = %i", userscript_showoptions );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED);
-
-    //snprintf(buffer, sizeof(buffer), "userscript_draw_lower = %i", userscript_draw_lower );
-    //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "scripts_folder = %s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS")); // "../SCRIPTS/xCS/"
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "script_workfldr = %s", script_workfldr );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 235.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "currentfile = %s", currentfile );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 250.0f, RED);
+    // drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "userscript_draw_lower = %i", userscript_draw_lower);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "scripts_folder = %s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"));
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 235.0f, RED, "script_workfldr = %s", script_workfldr);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 250.0f, RED, "currentfile = %s", currentfile);
   }
   #endif
 
@@ -1499,62 +1447,51 @@ static int userscripts_draw() { // this is the worst code and I'm not proud of i
     drawLegendBox(3, COLOR_BACKGROUND);
 
     /// draw button legend
-    //drawLegendMessage("L+UP/DOWN: Toggle Menu",      0, 2, COLOR_TEXT); // left side, first row
-    //drawLegendMessage("UP/DOWN: Navigate Menu",      1, 2, COLOR_TEXT); // right side, first row
-    //drawLegendMessage("LEFT/RIGHT: Navigate files",  0, 1, COLOR_TEXT); // left side, second row
-    //drawLegendMessage("TRIANGLE: Open in Editor",    1, 1, COLOR_TEXT); // right side, second row
-    //drawLegendMessage("CROSS: Enable/Disable Cheat", 0, 0, COLOR_TEXT); // left side, third row
-    //drawLegendMessage("CIRCLE: Exit to Menu",        1, 0, COLOR_TEXT); // right side, third row
+    //drawLegendMessageNoVarg(0, 2, COLOR_TEXT, "L+UP/DOWN: Toggle Menu"); // left side, first row
+    //drawLegendMessageNoVarg(1, 2, COLOR_TEXT, "UP/DOWN: Navigate Menu"); // right side, first row
+    //drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "LEFT/RIGHT: Navigate files"); // left side, second row
+    //drawLegendMessageNoVarg(1, 1, COLOR_TEXT, "TRIANGLE: Open in Editor"); // right side, second row
+    //drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "CROSS: Enable/Disable Cheat"); // left side, third row
+    //drawLegendMessageNoVarg(1, 0, COLOR_TEXT, "CIRCLE: Exit to Menu"); // right side, third row
 
 
     /// draw data instead
-    //drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 10.0f, RED);
+    //drawStringNoTVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 10.0f, RED, buffer);
     if( FIO_SO_ISREG(userscript_currentdir_scripts[userscript_selected_val].attr) ) { // its a file
       if( is_file_userscript(currentfile) ) { // and its a txt
-        snprintf(buffer, sizeof(buffer), _t("Author: %s"), meta_author );
-        drawLegendMessage(buffer, 0, 2, COLOR_TEXT); // left side, first row
+        drawLegendMessage(0, 2, COLOR_TEXT, "Author: %s", meta_author); // left side, first row
+        drawLegendMessage(1, 2, COLOR_TEXT, "Version: %s", meta_version); // right side, first row
+        drawLegendMessage(0, 1, COLOR_TEXT, "Category: %s", meta_category); // left side, second row
+        drawLegendMessage(1, 1, COLOR_TEXT, "Date: %s", meta_date); // right side, second row
+        drawLegendMessage(0, 0, COLOR_TEXT, "Description: %s", meta_description); // left side, third row
 
-        snprintf(buffer, sizeof(buffer), _t("Version: %s"), meta_version );
-        drawLegendMessage(buffer, 1, 2, COLOR_TEXT); // right side, first row
-
-        snprintf(buffer, sizeof(buffer), _t("Category: %s"), meta_category );
-        drawLegendMessage(buffer, 0, 1, COLOR_TEXT); // left side, second row
-
-        snprintf(buffer, sizeof(buffer), _t("Date: %s"), meta_date );
-        drawLegendMessage(buffer, 1, 1, COLOR_TEXT); // right side, second row
-
-        snprintf(buffer, sizeof(buffer), _t("Description: %s"), meta_description );
-        drawLegendMessage(buffer, 0, 0, COLOR_TEXT); // left side, third row
-
-      } else drawLegendMessage(_t("This is not a valid UserScript file!"), 0, 2, COLOR_TEXT); // left side, first row
+      } else drawLegendMessageNoVarg(0, 2, COLOR_TEXT, "This is not a valid UserScript file!"); // left side, first row
 
     } else { //its a folder
       if( currentdir_files_folders_count > 0 ) {
-        drawLegendMessage(_t("CROSS: Enter Folder"),    1, 2, COLOR_TEXT); // right side, first row
-        drawLegendMessage(_t("TRIANGLE: Leave Folder"), 1, 1, COLOR_TEXT); // right side, second row
-        drawLegendMessage(_t("CIRCLE: Exit to Menu"),   1, 0, COLOR_TEXT); // right side, third row
+        drawLegendMessageNoVarg(1, 2, COLOR_TEXT, "CROSS: Enter Folder"); // right side, first row
+        drawLegendMessageNoVarg(1, 1, COLOR_TEXT, "TRIANGLE: Leave Folder"); // right side, second row
+        drawLegendMessageNoVarg(1, 0, COLOR_TEXT, "CIRCLE: Exit to Menu"); // right side, third row
 
       } else {
-        drawLegendMessage(_t("This folder is empty!"),  0, 2, COLOR_TEXT); // left side, first row
+        drawLegendMessageNoVarg(0, 2, COLOR_TEXT, "This folder is empty!"); // left side, first row
       }
     }
   }
-
-  return 0;
 }
 
 extern int isdigit(int x);
-static int userscripts_ctrl() {
+static void userscripts_ctrl() {
   if( hold_buttons & PSP_CTRL_UP ) {
     if( userscript_selected_val <= 0 ) {
-    } else userscript_selected_val -= 1;
+    } else userscript_selected_val--;
 
     if( userscript_top > 1 ) { // scroll
       if( userscript_selected_val == 1 )
         userscript_top--;
     }
 
-    //userscript_readtxtneeded = 1; // instant!
+    //userscript_readtxtneeded = true; // instant!
     userscript_waittime = getGametime() + userscript_waitdelay;
     resetMeta();
   }
@@ -1564,7 +1501,7 @@ static int userscripts_ctrl() {
       if( userscript_selected_val >= userscript_cd_scripts_count-1 )
         userscript_selected_val = userscript_cd_scripts_count-1; // selection = 0;
       else
-        userscript_selected_val += 1;
+        userscript_selected_val++;
 
       userscript_top = userscript_selected_val;
 
@@ -1573,7 +1510,7 @@ static int userscripts_ctrl() {
         userscript_selected_val = userscript_cd_scripts_count-1; // selection = 0;
 
       else {
-        userscript_selected_val += 1;
+        userscript_selected_val++;
 
         if( userscript_top + userscript_showoptions < userscript_cd_scripts_count ) { // scroll
           if( userscript_selected_val >= userscript_top + userscript_showoptions-1 )
@@ -1586,7 +1523,7 @@ static int userscripts_ctrl() {
       }
     }
 
-    // userscript_readtxtneeded = 1;
+    // userscript_readtxtneeded = true;
     userscript_waittime = getGametime() + userscript_waitdelay; // about 0.5 sec
     resetMeta();
   }
@@ -1596,8 +1533,7 @@ static int userscripts_ctrl() {
     if( strcmp(buffer, script_workfldr) != 0 || script_subfldrs[0] != 0x00) { // we are not yet back in root..
 
       /// remove last folder from working path string
-      int i;
-      for(i = strlen(script_subfldrs); i >= 0; i--) {
+      for(int i = (int)strlen(script_subfldrs); i >= 0; i--) {
         if( script_subfldrs[i] == '/' ) {
           script_subfldrs[i] = 0x00;
           break;
@@ -1631,7 +1567,7 @@ static int userscripts_ctrl() {
         userscript_selected_val = 0;
         userscript_top = 0;
 
-        return 0;
+        return;
       }
 
       /***************************************************************
@@ -1648,7 +1584,7 @@ static int userscripts_ctrl() {
       if( is_file_userscript(currentfile) ) {
         closeMenu();
 
-        USERSCRIPT_LOG("UserScript: %s\n", currentfile);
+        USERSCRIPT_LOG("UserScript: %s", currentfile);
 
         // // // // // // // SETTINGS // // // // // // // // // // // // //
         extern int global_MainScriptSize;
@@ -1670,7 +1606,7 @@ static int userscripts_ctrl() {
         //DEBUG_LOG("roff: 0x%08X", roff);
 
         /// physical address where script will be placed
-        int addr = getInt(global_ScriptSpace + (LCS ? 0 : gp)) + roff;
+        uaddr addr = (uaddr)getInt(global_ScriptSpace + (LCS ? 0 : gp)) + roff;
         //DEBUG_LOG("addr: 0x%08X", addr);
 
 
@@ -1683,26 +1619,25 @@ static int userscripts_ctrl() {
 
           CustomScriptClear(addr, SCRIPT_SIZE); // zero script area in ScriptSpace
 
-          unsigned int i;
           int j, k;
           int opcode = -1;
-          u8 script[SCRIPT_SIZE]; // todo size
-          for(i = 0; i < SCRIPT_SIZE; i++) // poorly memset
+          byte script[SCRIPT_SIZE]; // TODO: size
+          for(array_uidx i = 0; i < SCRIPT_SIZE; i++) // poorly memset
             script[i] = 0;
 
-          unsigned int pos = 0, line = 0;
+          uint32 pos = 0, line = 0;
           int tempint;
           float tempflt;
           char tempbuf[16];
           char readbuf[SCRIPTLINELGT]; // SCRIPTLINELGT is max line length
 
           char label_ch_arr[SUPPORT_LABEL][MAX_LABEL_LENGTH];
-          for(i = 0; i < SUPPORT_LABEL; i++) // poorly memset label_ch_arr
+          for(array_uidx i = 0; i < SUPPORT_LABEL; i++) // poorly memset label_ch_arr
             label_ch_arr[i][0] = 0;
           int label_pos_arr[SUPPORT_LABEL] = {0};
           int label_pos_cur = 0;
           char unk_label[SUPPORT_LABEL][MAX_LABEL_LENGTH]; // save unknown labels (placeholder = placeholderbase + array offset)
-          for(i = 0; i < SUPPORT_LABEL; i++) // poorly memset unk_label
+          for(array_uidx i = 0; i < SUPPORT_LABEL; i++) // poorly memset unk_label
             unk_label[i][0] = 0;
           int unk_label_pos_cur = 0;
           int lastif = -1, opcodessinceif = -1;
@@ -1741,11 +1676,11 @@ static int userscripts_ctrl() {
               snprintf(buffer, sizeof(buffer), _t("~r~Error: Script exceeds currently supported size! Sorry"));
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
-              goto scripterror_exit;
+              return;
             }
 
             /// clean string
-            for(i = 0; i < SCRIPTLINELGT-1; i++) {
+            for(array_uidx i = 0; i < SCRIPTLINELGT-1; i++) {
 
               /// replace tabs
               if( readbuf[i] == '\t' )
@@ -1796,7 +1731,7 @@ static int userscripts_ctrl() {
 
                     USERSCRIPT_LOG("arg_%i: '%s'", counter, token);
 
-                    if( token[strlen(token)-1] == ')' ) { // "x(y,z)" eg.: $3922(38@,10)
+                    if( STR_ENDSWITH_CHAR(token, ')') ) { // "x(y,z)" eg.: $3922(38@,10)
 
                       /******
                       0@    -> 6C
@@ -1816,7 +1751,7 @@ static int userscripts_ctrl() {
                       ...
                       ********/
 
-                      for( i = 0; i < strlen(token); i++ ) {
+                      for( array_uidx i = 0; i < strlen(token); i++ ) {
                         if( token[i] == '(' ) token[i] = ' ';
                         if( token[i] == ')' ) token[i] = 0;
                         if( token[i] == ',' ) token[i] = ' ';
@@ -1828,30 +1763,30 @@ static int userscripts_ctrl() {
                       while( utoken != NULL ) { // walk through other sub tokens
                         //DEBUG_LOG("utoken '%s'", utoken);
 
-                        if( utoken[strlen(utoken)-1] == '@' ) { // "..@" local variable (eg: 0@ 1@ 2@)
+                        if( STR_ENDSWITH_CHAR(utoken, '@') ) { // "..@" local variable (eg: 0@ 1@ 2@)
 
-                          utoken[strlen(utoken)-1] = 0; // remove the @
+                          utoken[strlen(utoken)-1] = '\0'; // remove the @
                           tempint = strtol(utoken, NULL, 0); // convert
 
                           if( subcounter == 0 ) { // OUTSIDE  X@( , )
-                            script[pos++] = (u8)tempint + (LCS ? 0x6C : 0x6D); // because 0@ is 0xC (for LCS)
+                            script[pos++] = (byte)tempint + (LCS ? 0x6C : 0x6D); // because 0@ is 0xC (for LCS)
                           } else { // INSIDE  (X@, )
-                            script[pos++] = (u8)tempint;
+                            script[pos++] = (byte)tempint;
                           }
 
-                        } else if( utoken[0] == '$' ) { // "$..." global variables (eg: $4028)
+                        } else if( STR_STARTSWITH_CHAR(utoken, '$') ) { // "$..." global variables (eg: $4028)
                           utoken++; // remove the $
                           tempint = strtol(utoken, NULL, 0); // convert
 
-                          int adr = (int)&tempint; //fugly
+                          uaddr adr = (int)&tempint; //fugly
 
                           //eg LCS: $1414  -> 0x0586 -> EB 86 in script
-                          script[pos++] = (*(unsigned char*)(adr+1)) + 0xE6; // vcs todo
-                          script[pos++] = *(unsigned char*)adr; //
+                          script[pos++] = (*(byte*)(adr+1)) + 0xE6; // TODO: vcs
+                          script[pos++] = *(byte*)adr; //
 
                         } else { //must be simple int then
                           tempint = strtol(utoken, NULL, 0); // convert
-                          script[pos++] = (u8)tempint;
+                          script[pos++] = (byte)tempint;
                         }
 
                         subcounter++;
@@ -1861,9 +1796,9 @@ static int userscripts_ctrl() {
                       //snprintf(buffer, sizeof(buffer), "~r~Error: '%s' in line %i not yet supported!", token, line);
                       //setTimedTextbox(buffer, 7.00f); //
                       //sceIoClose(file);
-                      //goto scripterror_exit;
+                      //return;
 
-                    } else if( token[0] == '$' ) { // "$...." global variables (eg: $4028, $PLAYER_CHAR)
+                    } else if( STR_STARTSWITH_CHAR(token, '$') ) { // "$...." global variables (eg: $4028, $PLAYER_CHAR)
 
                       /** LCS *** (PSP) *******************
                       533=PLAYER_SKIN    0x215  -> 0x15CE
@@ -1883,10 +1818,10 @@ static int userscripts_ctrl() {
                       500          0x1F4  -> 0xF4CE  CE F4
                       ************************************/
                       token++; //remove the $
-                      if( token[0] == '_')
+                      if( STR_STARTSWITH_CHAR(token, '_') )
                         token++;
 
-                      int adr = 0;
+                      uaddr adr = 0;
 
                       if( strcmp(token, "PLAYER_SKIN") == 0 ) { // LCS only
                         tempint = 533;
@@ -1912,21 +1847,21 @@ static int userscripts_ctrl() {
                       adr = (int)&tempint; //fugly
 
                       //eg LCS: $500  -> 0x01F4  -> 0xF4CD in script
-                      script[pos++] = (*(unsigned char*)(adr+1)) + (LCS ? 0xCC : 0xCD);  // 0x01 + 0xCD = 0xCE
-                      script[pos++] = *(unsigned char*)adr;                // 0xF4
+                      script[pos++] = (*(byte*)(adr+1)) + (LCS ? 0xCC : 0xCD);  // 0x01 + 0xCD = 0xCE
+                      script[pos++] = *(byte*)adr;                // 0xF4
 
 
-                    } else if ( token[0] == '#' ) { //"#...."  alias
+                    } else if ( STR_STARTSWITH_CHAR(token, '#') ) { //"#...."  alias
 
-                      /// TODO
+                      /// TODO:
                       //eg: " 024C: request_model #SCRIPT_SALCHAIR "
 
                       snprintf(buffer, sizeof(buffer), _t("~r~Error: '%s' in line %i not yet supported!"), token, line);
                       setTimedTextbox(buffer, 7.00f); //
                       sceIoClose(file);
-                      goto scripterror_exit;
+                      return;
 
-                    } else if ( token[0] == '@' ) { // "@....." (eg: @RAYS4_15305 )
+                    } else if ( STR_STARTSWITH_CHAR(token, '@') ) { // "@....." (eg: @RAYS4_15305 )
                       token++; // remove the @
 
                       //DEBUG_LOG("Label = '%s'", token);
@@ -1936,13 +1871,14 @@ static int userscripts_ctrl() {
                           snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
                           setTimedTextbox(buffer, 7.00f); //
                           sceIoClose(file);
-                          goto scripterror_exit;
+                          return;
                         }
 
-                      int adr = 0, tempint = 0;
+                      uaddr adr = 0;
+                      int tempint = 0;
 
                       /// if already in saved label array
-                      for(i = 0; i < SUPPORT_LABEL; i++) { // loop saved labels
+                      for(array_uidx i = 0; i < SUPPORT_LABEL; i++) { // loop saved labels
                         if ( strcmp(label_ch_arr[i], token) == 0) {
                           //tempint = 0 - label_pos_arr[i];   // write saved address from array (old.. negative offset like mission script works)
                           tempint = roff + label_pos_arr[i];   // write saved address from array
@@ -1952,11 +1888,11 @@ static int userscripts_ctrl() {
                       if( tempint == 0 ) { // not found
 
                         /// check if this is a script name in MAIN maybe //////////////////// experimental ////////////////
-                        int address = 0;
-                        int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
-                        int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+                        uaddr address = 0;
+                        usize main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
+                        uaddr script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
                         for(address = script_space; address < script_space + main_size; address++) {
-                          if( *(u8*)address == token[0] && *(u8*)(address+1) == token[1] ) { // first because faster
+                          if( *(byte*)address == token[0] && *(byte*)(address+1) == token[1] ) { // first because faster
                             //DEBUG_LOG("'%s' vs '%s'", token, getString(address, 0));
                             if( strcmp(token, getString(address, 0)) == 0 ) {
                               USERSCRIPT_LOG("string '%s' found @ 0x%08X in mainscript", token, address - script_space);
@@ -1974,7 +1910,7 @@ static int userscripts_ctrl() {
 
                         /// check if label already in unknown array maybe
                         int in_unk_arr = 0;
-                        for(i = 0; i < SUPPORT_LABEL; i++) { // loop unknown labels
+                        for(array_uidx i = 0; i < SUPPORT_LABEL; i++) { // loop unknown labels
                           if ( strcmp(unk_label[i], token) == 0) {
                             in_unk_arr = 1;
                             tempint = placeholder + i; // overwrite placeholder position
@@ -1997,12 +1933,12 @@ static int userscripts_ctrl() {
 
                         /// write to script
                         script[pos++] = 0x06; // integer (4 Bytes)
-                        script[pos++] = *(unsigned char*)adr;
-                        script[pos++] = *(unsigned char*)(adr+1);
-                        script[pos++] = *(unsigned char*)(adr+2);
-                        script[pos++] = *(unsigned char*)(adr+3);
+                        script[pos++] = *(byte*)adr;
+                        script[pos++] = *(byte*)(adr+1);
+                        script[pos++] = *(byte*)(adr+2);
+                        script[pos++] = *(byte*)(adr+3);
 
-                    } else if( token[strlen(token)-1] == '@' ) { // "....@" local variable (eg: 0@ 1@ 2@ ... decimal!)
+                    } else if( STR_ENDSWITH_CHAR(token, '@') ) { // "....@" local variable (eg: 0@ 1@ 2@ ... decimal!)
 
                       /** LCS ***
                       0x0C = 0@
@@ -2010,18 +1946,18 @@ static int userscripts_ctrl() {
                       0x0E = 2@
                       ...
                       ***********/
-                      token[strlen(token)-1] = 0; // remove the @
+                      token[strlen(token)-1] = '\0'; // remove the @
                       tempint = strtol(token, NULL, 0); // convert
                       script[pos++] = tempint + (LCS ? 0xC : 0xD); // because 0@ is 0xC (for LCS)
 
 
-                    } else if( token[0] == '\'' ) { // "'xyz'" string
+                    } else if( STR_STARTSWITH_CHAR(token, '\'') ) { // "'xyz'" string
                       token++; // remove ' at the beginning
 
                       char identifier[CSTGXTLGT]; // the games GXT String OR full Custom Text
                       memset(identifier, 0, sizeof(identifier)); // clear
 
-                      if( token[strlen(token)-1] != '\'' ) { // fugly incoming again
+                      if( !STR_ENDSWITH_CHAR(token, '\'') ) { // custom text can span multiple tokens
                         snprintf(identifier, sizeof(identifier), "%s ", token);
                         token = strtok_r(saveptr, "\'", &saveptr); // custom text can have whitespaces.
                         strncat(identifier, token, strlen(token));
@@ -2030,7 +1966,7 @@ static int userscripts_ctrl() {
 
                       USERSCRIPT_LOG("String found: '%s'", identifier);
 
-                      extern u32 ptr_gxtloadadr;
+                      extern uaddr ptr_gxtloadadr;
                       if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) ) { // not found in GXT
                         USERSCRIPT_LOG("not found in GXT.."); // could be custom string or special string at this point
 
@@ -2067,12 +2003,12 @@ static int userscripts_ctrl() {
 
                             /// save string as ushort in array
                             int ctr = 0;
-                            memset(custom_gxts[customtextcounter], 0, CSTGXTLGT * sizeof(unsigned short));
+                            memset(custom_gxts[customtextcounter], 0, CSTGXTLGT * sizeof(wchar));
                             while(identifier[ctr] != 0x00) {
                               custom_gxts[customtextcounter][ctr] = identifier[ctr];
                               ctr++;
                             }
-                            USERSCRIPT_LOG("-> custom string! %d (location 0x%08X)", customtextcounter, &custom_gxts[customtextcounter]);
+                            USERSCRIPT_LOG("-> custom string! %d (location %p)", customtextcounter, &custom_gxts[customtextcounter]);
 
                             /// replace token with CUSTOM GXT LABEL
                             snprintf(identifier, sizeof(identifier), "CUST_%02d", customtextcounter); // see cheats.c (name has to match obviously)
@@ -2082,7 +2018,7 @@ static int userscripts_ctrl() {
                             snprintf(buffer, sizeof(buffer), _t("~r~Error: Custom strings limit of %i reached."), CSTGXTS);
                             setTimedTextbox(buffer, 7.00f); //
                             sceIoClose(file);
-                            goto scripterror_exit;
+                            return;
                           }
                         }
                       }
@@ -2099,7 +2035,7 @@ static int userscripts_ctrl() {
                           snprintf(buffer, sizeof(buffer), _t("~r~Error: String '%s' in line %i too long!"), identifier, line);
                           setTimedTextbox(buffer, 7.00f);
                           sceIoClose(file);
-                          goto scripterror_exit;
+                          return;
                         }
                       }
                       if( LCS ) {
@@ -2112,8 +2048,8 @@ static int userscripts_ctrl() {
                       }
 
 
-                    } else if( isdigit((unsigned char)token[0]) || isdigit((unsigned char)token[1]) ) { /// "number"
-                      int adr = 0;
+                    } else if( isdigit((uchar)token[0]) || isdigit((uchar)token[1]) ) { /// "number"
+                      uaddr adr = 0;
 
                       /****************************************
                       01  0             int
@@ -2133,27 +2069,27 @@ static int userscripts_ctrl() {
                       if(strstr(token, ".") != NULL) {
                         tempflt = (float)atof(token); // convert
                         adr = (int)&tempflt; // fugly more
-                        if( *(unsigned char*)(adr) != 0 ) { // 4 Bytes needed
+                        if( *(byte*)(adr) != 0 ) { // 4 Bytes needed
                           script[pos++] = 0x09; //
-                          script[pos++] = *(unsigned char*)adr;
-                          script[pos++] = *(unsigned char*)(adr+1);
-                          script[pos++] = *(unsigned char*)(adr+2);
-                          script[pos++] = *(unsigned char*)(adr+3);
+                          script[pos++] = *(byte*)adr;
+                          script[pos++] = *(byte*)(adr+1);
+                          script[pos++] = *(byte*)(adr+2);
+                          script[pos++] = *(byte*)(adr+3);
 
-                        } else if( *(unsigned char*)(adr+1) != 0 ) { // 3 Bytes needed
+                        } else if( *(byte*)(adr+1) != 0 ) { // 3 Bytes needed
                           script[pos++] = 0x05; //
-                          script[pos++] = *(unsigned char*)(adr+1);
-                          script[pos++] = *(unsigned char*)(adr+2);
-                          script[pos++] = *(unsigned char*)(adr+3);
+                          script[pos++] = *(byte*)(adr+1);
+                          script[pos++] = *(byte*)(adr+2);
+                          script[pos++] = *(byte*)(adr+3);
 
-                        } else if( *(unsigned char*)(adr+2) != 0 ) { // 2 Bytes needed
+                        } else if( *(byte*)(adr+2) != 0 ) { // 2 Bytes needed
                           script[pos++] = 0x04; //
-                          script[pos++] = *(unsigned char*)(adr+2);
-                          script[pos++] = *(unsigned char*)(adr+3);
+                          script[pos++] = *(byte*)(adr+2);
+                          script[pos++] = *(byte*)(adr+3);
 
-                        } else if( *(unsigned char*)(adr+3) != 0 ) { // 1 Byte needed
+                        } else if( *(byte*)(adr+3) != 0 ) { // 1 Byte needed
                           script[pos++] = 0x03;
-                          script[pos++] = *(unsigned char*)(adr+3);
+                          script[pos++] = *(byte*)(adr+3);
 
                         } else {  //0 Byte needed because value is 0.0
                           script[pos++] = 0x02;
@@ -2167,14 +2103,14 @@ static int userscripts_ctrl() {
 
                         /// special case
                         if( isfuncall > 0 ) { // no identifier (like 08 for int XX XX) for 3 first args in function call opcodes
-                          script[pos++] = (u8)tempint;
+                          script[pos++] = (byte)tempint;
                           isfuncall--;
 
                         /// normal
                         } else {
                           adr = (int)&tempint; // fugly
 
-                          ///most common hardcoded for now (TODO!)
+                          /// TODO: most common hardcoded for now
                           if( tempint == 0 ) {
                             script[pos++] = 0x01;
                           } else if( tempint == 1 ) {
@@ -2202,22 +2138,22 @@ static int userscripts_ctrl() {
                             0319: set_total_unique_jumps_to -1000 // 19 03 08 18 FC
                             ******************************************************************/
 
-                            /// TODO!
-                            //if( *(unsigned char*)(adr+2) != 0 ) { //4 Bytes needed
+                            /// TODO: !!!
+                            //if( *(byte*)(adr+2) != 0 ) { //4 Bytes needed
                               script[pos++] = 0x06; //
-                              script[pos++] = *(unsigned char*)adr;
-                              script[pos++] = *(unsigned char*)(adr+1);
-                              script[pos++] = *(unsigned char*)(adr+2);
-                              script[pos++] = *(unsigned char*)(adr+3);
+                              script[pos++] = *(byte*)adr;
+                              script[pos++] = *(byte*)(adr+1);
+                              script[pos++] = *(byte*)(adr+2);
+                              script[pos++] = *(byte*)(adr+3);
 
-                            /*} else if( *(unsigned char*)(adr+1) != 0 ) { //2 Bytes needed
+                            /*} else if( *(byte*)(adr+1) != 0 ) { //2 Bytes needed
                               script[pos++] = 0x08; //
-                              script[pos++] = *(unsigned char*)adr;
-                              script[pos++] = *(unsigned char*)(adr+1);
+                              script[pos++] = *(byte*)adr;
+                              script[pos++] = *(byte*)(adr+1);
 
-                            } else if( *(unsigned char*)adr != 0 ) { //1 Byte needed        eg 172 = 0xAC but sanny uses 08 ?
+                            } else if( *(byte*)adr != 0 ) { //1 Byte needed        eg 172 = 0xAC but sanny uses 08 ?
                               script[pos++] = 0x07; //
-                              script[pos++] = *(unsigned char*)adr;
+                              script[pos++] = *(byte*)adr;
 
                             } else { //1 Byte needed
                               script[pos++] = 0x01; //0 Byte needed because value is 0
@@ -2267,7 +2203,7 @@ static int userscripts_ctrl() {
                         }
                       }
 
-                      // more? todo!
+                      // TODO: more?
 
                     }
                   } else {
@@ -2319,7 +2255,7 @@ static int userscripts_ctrl() {
 
               USERSCRIPT_LOG("--------------------------------------");
 
-            } else if( linehandle[0] == ':') { // label (eg ":DONS4_12258")
+            } else if( STR_STARTSWITH_CHAR(linehandle, ':') ) { // label (eg ":DONS4_12258")
               linehandle++; // skip the ":"
 
               char *token = strtok(strtok(linehandle, "  "), " "); // get rid of whitespace and tabs
@@ -2329,7 +2265,7 @@ static int userscripts_ctrl() {
                 snprintf(buffer, sizeof(buffer), _t("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
                 setTimedTextbox(buffer, 7.00f); //
                 sceIoClose(file);
-                goto scripterror_exit;
+                return;
               }
 
 
@@ -2340,7 +2276,7 @@ static int userscripts_ctrl() {
                   snprintf(buffer, sizeof(buffer), _t("~r~Error: Found already used label '%s' in line %i?"), token, line);
                   setTimedTextbox(buffer, 7.00f); //
                   sceIoClose(file);
-                  goto scripterror_exit;
+                  return;
                 }
 
               }
@@ -2360,7 +2296,7 @@ static int userscripts_ctrl() {
 
 
             /// the following can only happen when opcode is missing (write Opcodes in Sanny is disabled)
-            } else if( linehandle[0] == '$') { // variable assign opcode (eg "$544 = -144.4412")
+            } else if( STR_STARTSWITH_CHAR(linehandle, '$') ) { // variable assign opcode (eg "$544 = -144.4412")
 
               // enable Write Opcodes in Sanny
               // 04 00   DB E7   07 01   //$4071 = 1
@@ -2368,7 +2304,7 @@ static int userscripts_ctrl() {
               snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $...
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
-              goto scripterror_exit;
+              return;
 
 
             } else if( linehandle[strlen(linehandle)-1] == '@' ) { // calculation opcode (eg "78@ == 1")
@@ -2379,7 +2315,7 @@ static int userscripts_ctrl() {
               snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $...
               setTimedTextbox(buffer, 7.00f); //
               sceIoClose(file);
-              goto scripterror_exit;
+              return;
 
 
             } else {
@@ -2391,33 +2327,33 @@ static int userscripts_ctrl() {
 
 
               //can be (eg: 33@ = 1)
-                //TODO
+                // TODO:
 
                 /*snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); //$...
                 setTimedTextbox(buffer, 7.00f); //
                 sceIoClose(file);
-                goto scripterror_exit;*/
+                return;*/
 
 
               /// but also custom calls.. (this was a test, works for PS2 scm but not PSP)
-              /*if( linehandle[0] == '!' ) {
+              /*if( STR_STARTSWITH_CHAR(linehandle, '!') ) {
                 linehandle++;
 
                 ///patch the debug menu scroll for LCS
                 if( LCS && strcmp(linehandle, "patchDBGMENU") == 0 ) {
 
 
-                  int address = 0;
+                  uaddr address = 0;
                   int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
                   int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
                   for(address = script_space; address < script_space + main_size; address++) {
-                    if( *(u8*)(address) == 0x4D &&
-                      *(u8*)(address+15) == 0x0F &&
-                      *(u8*)(address+31) == 0x07 &&
-                      *(u8*)(address+52) == 0x0F ) {
+                    if( *(byte*)(address) == 0x4D &&
+                      *(byte*)(address+15) == 0x0F &&
+                      *(byte*)(address+31) == 0x07 &&
+                      *(byte*)(address+52) == 0x0F ) {
 
-                      // *(u8*)(address+10) = 0x08;
-                      // *(u8*)(address+0x24) = 0x08;
+                      // *(byte*)(address+10) = 0x08;
+                      // *(byte*)(address+0x24) = 0x08;
 
 
                       DEBUG_LOG("found @ 0x%08X in mainscript", address - script_space);
@@ -2439,35 +2375,35 @@ static int userscripts_ctrl() {
           sceIoClose(file);
 
 
-          USERSCRIPT_LOG("\nLABELs: %i/%i", label_pos_cur, SUPPORT_LABEL);
-          for( i = 0; i < SUPPORT_LABEL; i++ ) {
+          USERSCRIPT_LOG("LABELs: %i/%i", label_pos_cur, SUPPORT_LABEL);
+          for( array_uidx i = 0; i < SUPPORT_LABEL; i++ ) {
             if( strlen(label_ch_arr[i]) == 0 ) break;
             ///USERSCRIPT_LOG("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], 0 - label_pos_arr[i]); // negative offsets in mission script
             USERSCRIPT_LOG("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], roff + label_pos_arr[i]); // now positive jump offest
           }
-          USERSCRIPT_LOG("\nUNKNOWN LABELs: %i/%i", unk_label_pos_cur, SUPPORT_LABEL);
-          for( i = 0; i < SUPPORT_LABEL; i++ ) {
+          USERSCRIPT_LOG("UNKNOWN LABELs: %i/%i", unk_label_pos_cur, SUPPORT_LABEL);
+          for( array_uidx i = 0; i < SUPPORT_LABEL; i++ ) {
             if( strlen(unk_label[i]) == 0 ) break;
             USERSCRIPT_LOG("unk_label[%i]: '%s' (0x%08X)", i, unk_label[i], placeholder + i);
           }
 
 
           /// now fix placeholder for jumps
-          for(i = 0; i < pos - 4; i++) { // loop script
+          for(array_uidx i = 0; i < pos - 4; i++) { // loop script
 
             if( script[i] == 0x06) { // int with 4 Bytes
 
               for(j = 0; j < unk_label_pos_cur; j++) { // loop unknown labels array
 
                 int tempint = placeholder + j;
-                int adr = (int)&tempint; // fugly
+                uaddr adr = (uaddr)&tempint; // fugly
 
-                if( (script[i+1] == *(unsigned char*)adr) &&
-                  (script[i+2] == *(unsigned char*)(adr+1)) &&
-                  (script[i+3] == *(unsigned char*)(adr+2)) &&
-                  (script[i+4] == *(unsigned char*)(adr+3)) ) {
+                if( (script[i+1] == *(byte*)adr) &&
+                    (script[i+2] == *(byte*)(adr+1)) &&
+                    (script[i+3] == *(byte*)(adr+2)) &&
+                    (script[i+4] == *(byte*)(adr+3)) ) {
 
-                  USERSCRIPT_LOG("\nfound placeholder at script position %i", i);
+                  USERSCRIPT_LOG("found placeholder at script position %i", i);
 
                   /// replace placeholder
                   for(k = 0; k < label_pos_cur; k++ ) { // loop found labels array
@@ -2481,10 +2417,10 @@ static int userscripts_ctrl() {
                       tempint = roff + label_pos_arr[k];
                       adr = (int)&tempint; //more fugly
 
-                      script[i+1] = *(unsigned char*)adr;
-                      script[i+2] = *(unsigned char*)(adr+1);
-                      script[i+3] = *(unsigned char*)(adr+2);
-                      script[i+4] = *(unsigned char*)(adr+3);
+                      script[i+1] = *(byte*)adr;
+                      script[i+2] = *(byte*)(adr+1);
+                      script[i+3] = *(byte*)(adr+2);
+                      script[i+4] = *(byte*)(adr+3);
                       break;
                     }
                   }
@@ -2493,7 +2429,7 @@ static int userscripts_ctrl() {
                   if( tempint == placeholder + j ) { // if tempint not overwriten (ugly)
                     snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' not found?!!"), unk_label[j]);
                     setTimedTextbox(buffer, 7.00f); //
-                    goto scripterror_exit;
+                    return;
                   }
                   i += 4;
                   break;
@@ -2502,7 +2438,7 @@ static int userscripts_ctrl() {
             }
           }
 
-          USERSCRIPT_LOG("\nscript size: %i/%i", pos, SCRIPT_SIZE);
+          USERSCRIPT_LOG("script size: %lu/%u", pos, SCRIPT_SIZE);
 
           CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
 
@@ -2510,7 +2446,7 @@ static int userscripts_ctrl() {
           // memset(&tempbuffffff, 0, sizeof(tempbuffffff));
           // for( i = 0; i < (pos < 2048 ? pos : 2048); i++ )
           //   snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
-          // USERSCRIPT_LOG("\nSCRIPT:%s\n\n", tempbuffffff);
+          // USERSCRIPT_LOG("SCRIPT: %s", tempbuffffff);
 
           CustomScriptExecute(addr);
         }
@@ -2525,17 +2461,10 @@ static int userscripts_ctrl() {
 
     if( pressed_buttons & PSP_CTRL_CIRCLE ) { // exit
       free_userscripts_array();
-      flag_userscripts = 0;
+      flag_userscripts = false;
     }
-
-  scripterror_exit:
-  return 0;
 }
 #endif
-
-
-
-
 
 /********************************************************************************************************
 *
@@ -2544,59 +2473,58 @@ static int userscripts_ctrl() {
 *********************************************************************************************************/
 #ifdef EDITORS
 
-static short flag_editor = 0;
-static char editor_titlebuffer[64];
+static uint16 flag_editor = 0;
+static u8char editor_titlebuffer[64];
 static const Editor_pack *editor_curmenu;
 
-static int editor_menumode  = 0;
-static int editor_toptions  = 0;
-static u32 editor_firstobj  = 0; // first object
-static u32 editor_lastobj   = 0; // last object
-static int editor_blocksize = 0; // size of object
-static int editor_blocks    = 0; // blocks available
+static uint8 editor_menumode      = 0;
+static array_size editor_toptions = 0;
+static uaddr editor_firstobj      = 0; // first object
+static uaddr editor_lastobj       = 0; // last object
+static usize editor_blocksize     = 0; // size of object
+static array_size editor_blocks   = 0; // blocks available
 
 /// editor position(s) saved globally (init with 0)
-int editor_pedobj_current        = 0;
-int editor_vehicleobj_current    = 0;
-int editor_worldobj_current      = 0;
-//int editor_businessobj_current   = 0;
-int editor_pickup_current        = 0;
-int editor_mapicon_current       = 0;
-int editor_vehiclespawn_current  = 0;
-int editor_garage_current        = 0;
-int editor_empire_current        = 0;
-int editor_garageslot_current    = 0;
-int editor_vehicle_current       = 0; // used for multiple
-int editor_buildingsIPL_current  = 0;
-int editor_treadablesIPL_current = 0;
-int editor_dummysIPL_current     = 0;
-int editor_carcolsDAT_current    = 0;
-int editor_pedcolsDAT_current    = 0;
-int editor_particleCFG_current   = 0;
-int editor_pedstatsDAT_current   = 0;
-int editor_weaponDAT_current     = 0;
-int editor_timecycDAT_current    = 0;
-int editor_ide_current           = 0; // 453 = LCS: "plnt_pipepart01" aka ocean-pipe
-static int editor_temp_blocksize        = 0; // special
+array_uidx editor_pedobj_current        = 0;
+array_uidx editor_vehicleobj_current    = 0;
+array_uidx editor_worldobj_current      = 0;
+array_uidx editor_businessobj_current   = 0;
+array_uidx editor_pickup_current        = 0;
+array_uidx editor_mapicon_current       = 0;
+array_uidx editor_vehiclespawn_current  = 0;
+array_uidx editor_garage_current        = 0;
+array_uidx editor_empire_current        = 0;
+array_uidx editor_garageslot_current    = 0;
+array_uidx editor_vehicle_current       = 0; // used for multiple
+array_uidx editor_buildingsIPL_current  = 0;
+array_uidx editor_treadablesIPL_current = 0;
+array_uidx editor_dummysIPL_current     = 0;
+array_uidx editor_carcolsDAT_current    = 0;
+array_uidx editor_pedcolsDAT_current    = 0;
+array_uidx editor_particleCFG_current   = 0;
+array_uidx editor_pedstatsDAT_current   = 0;
+array_uidx editor_weaponDAT_current     = 0;
+array_uidx editor_timecycDAT_current    = 0;
+array_uidx editor_ide_current           = 0; // 453 = LCS: "plnt_pipepart01" aka ocean-pipe
+static usize editor_temp_blocksize      = 0; // special
 
-static int editor_wasused = 0; // if > 0 at least one value was changed
+static uint32 editor_wasused = 0; // if > 0 at least one value was changed
 
 static const float editor_row_spacing = 15.f; // pixels between rows
 
-static int editor_block_current;
-static u32 editor_base_adr;
-static int editor_options;       // available options (set later)
-static int editor_showoptions;   // the number of value rows that should be displayed at once (0 to 2 possible)
+static array_uidx editor_block_current;
+static uaddr editor_base_adr;
+static usize editor_options;       // available options (set later)
+static usize editor_showoptions;   // the number of value rows that should be displayed at once (0 to 2 possible)
 static int editor_draw_lower;    // some have no data in slots -> those can be disabled here
 static int editor_selector;      // is 1 if cursor in topmenu --- 0 when in values
-static int editor_selection_top; // selected topmenu option
-static int editor_selection_val; // selected option in values number
-static int editor_top;           // the values option on top when there are more options than editor_showoptions
+static uint32 editor_selection_top; // selected topmenu option
+static uint32 editor_selection_val; // selected option in values number
+static usize editor_top;           // the values option on top when there are more options than editor_showoptions
 static int editor_cur_type;      // value type
 static int editor_trigger;       // triggers something like teleporting for pickups / set current car for vehicle editors etc
 
-static int waittime = 0;
-
+static uint32 waittime = 0;
 
 static void optionAdjust() {
   editor_options = 0;
@@ -2609,8 +2537,8 @@ static void optionAdjust() {
     editor_showoptions = editor_options; // adjust editor_showoptions (there can't be more "editor_showoptions" than "editor_options" itself)
 }
 
-int editor_create(int mode, int toptions, const char *editortitle, const Editor_pack *editor_menu, int first_obj, int block_size, int blocks) {
-  DEBUG_LOG("%i: editor_create() ..'%s'", getGametime(), editortitle);
+void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const Editor_pack *editor_menu, uaddr first_obj, usize block_size, usize blocks) {
+  DEBUG_LOG("%lu: editor_create() ..'%s'", getGametime(), editortitle);
 
   snprintf(editor_titlebuffer, sizeof(editor_titlebuffer), "Editor - %s", _t(editortitle));
 
@@ -2634,26 +2562,24 @@ int editor_create(int mode, int toptions, const char *editortitle, const Editor_
   optionAdjust();
 
   flag_editor = 1; // only set here!
-
-  return 0;
 }
 
-static int editor_draw() {
+static void editor_draw() {
   char buffer[128];
   char buffer_top0[128]; // top option
   char buffer_top1[128]; // top option 2
 
-  void *(* func)(int calltype, int keypress, int base_address, int address, int steps);
+  void *(* func)(int calltype, int keypress, uaddr base_address, uaddr address, int steps);
   const char *val;
 
   /// color sample box
   float box_w = 200.0f;
   float box_h = 40.0f;
-  u32 cur_color = 0;
+  CRGBA cur_color = COLOR32(0);
 
 
   /// draw title
-  drawString(editor_titlebuffer, ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_EDITOR);
+  drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_EDITOR, editor_titlebuffer);
 
   /// draw the upper Menu
   float x = 40.0f; // horizontal menu start
@@ -2674,11 +2600,10 @@ static int editor_draw() {
       editor_block_current = editor_pedobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPedObjectIsActive(editor_base_adr) ) {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPedID(editor_base_adr)); // block menu(getPedModelByID was replaced)
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime));
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPedID(editor_base_adr), _t("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
         editor_draw_lower = 1; // there is a PED here
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks); // block menu
         editor_draw_lower = 0;  // no active PED -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2689,17 +2614,17 @@ static int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleObjectIsActive(editor_base_adr) ){
         // snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getVehicleID(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
-        // if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
+        // if( STR_EMPTY(buffer_top1) ) // some vehicles don't have translations..
         //   snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
 
-        char *vehicle_name = getRealVehicleNameViaID(getVehicleID(editor_base_adr));
+        u8string vehicle_name = getRealVehicleNameViaID(getVehicleID(editor_base_adr));
         if ( !vehicle_name || !(*vehicle_name) ) vehicle_name = getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr));
 
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %i/%i      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr), _t("Name"), vehicle_name); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr), _t("Name"), vehicle_name); // block menu
 
         editor_draw_lower = 1; // there is a Vehicle here
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
         editor_draw_lower = 0; // no active Vehicle here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2709,11 +2634,10 @@ static int editor_draw() {
       editor_block_current = editor_worldobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58)); // block menu
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); // block menu
         editor_draw_lower = 1; // there is a obj here
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2723,10 +2647,10 @@ static int editor_draw() {
       editor_block_current = editor_businessobj_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i    %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu
         editor_draw_lower = 1; // there is a obj here
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
         editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2736,11 +2660,10 @@ static int editor_draw() {
       editor_block_current = editor_pickup_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPickupIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPickupID(editor_base_adr)); // block menu
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPickupID(editor_base_adr), _t("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
         editor_draw_lower = 1;
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2752,14 +2675,13 @@ static int editor_draw() {
       if( getMapiconIsActive(editor_base_adr) ){
         if( getMapiconID(editor_base_adr) == 0 ) // objective (destination, enemy, etc)
         {
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); //block menu
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Type"), getMapiconTypeName(editor_base_adr) ); //block menu
+          snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %s   %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)), _t("Type"), getMapiconTypeName(editor_base_adr) ); //block menu
         }
         else
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %s"), _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu
+          snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu
         editor_draw_lower = 1;
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2773,11 +2695,11 @@ static int editor_draw() {
       // garage doesn't use editor_block_current but 2 globals directly
       editor_base_adr = editor_firstobj + (editor_garage_current * editor_blocksize * 4) + (editor_garageslot_current * editor_blocksize); // calc base address
 
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i"), _t("Slot"), editor_garageslot_current+1 );
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %i", _t("Slot"), editor_garageslot_current+1 );
       if( getGarageVehicleSlotIsActive(editor_base_adr) ){ // vehicle id for detecting if slot is used
         ///print vehicle name
         /*snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getShort(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
-        if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
+        if( STR_EMPTY(buffer_top1) ) // some vehicles don't have translations..
           snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getShort(editor_base_adr))); // ..use the GXT identifier-name then
         snprintf(buffer_top0, sizeof(buffer_top0), "%s     '%s'", buffer_top0, buffer_top1);*/
         editor_draw_lower = 1; // allowed
@@ -2787,28 +2709,25 @@ static int editor_draw() {
         editor_selector = 1; // don't allow going to down_menu
       }
 
-      snprintf(buffer_top1, sizeof(buffer_top1), _t("%s: %s"), _t("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
+      snprintf(buffer_top1, sizeof(buffer_top1), "%s: %s", _t("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
       break;
 
     case EDITOR_VEHWORLDSPAWNS:
       editor_block_current = editor_vehiclespawn_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleWorldSpawnSlotIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getInt(editor_base_adr)); // block menu
+        u8string vehicle_name = getRealVehicleNameViaID(getInt(editor_base_adr));
+        if ( STR_EMPTY(vehicle_name) ) vehicle_name = getGxtIdentifierForVehicleViaID(getInt(editor_base_adr)); // some vehicles don't have translations ..use the GXT identifier-name then
 
-        ///add vehicle name
-        snprintf(buffer_top1, sizeof(buffer_top1), "%s", getRealVehicleNameViaID(getInt(editor_base_adr))); // buffer_top1 kurz zweckentfremden!
-        if( buffer_top1[0] == '\0' ) // some vehicles don't have translations..
-          snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getInt(editor_base_adr))); // ..use the GXT identifier-name then
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), buffer_top1);
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getInt(editor_base_adr), _t("Name"), vehicle_name);
 
         ///add custom created indicator
         if( isCustomParkedVehicleSpawnViaSlot(editor_block_current) )
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    (%s)"), buffer_top0, _t("custom"));
+          strcat(buffer_top0, " (custom)");
 
         editor_draw_lower = 1;
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2816,11 +2735,9 @@ static int editor_draw() {
 
     case EDITOR_EMPIRE:
       editor_block_current = editor_empire_current;
-      editor_base_adr = editor_firstobj + (editor_block_current * 4); // calc base address
-      if( 1 ) { //
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Business"), editor_block_current+1, editor_blocks); // block menu
-        editor_draw_lower = 1;
-      }
+      editor_base_adr = editor_firstobj + (editor_block_current * 4); // calc base address //
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Business"), editor_block_current+1, editor_blocks); // block menu
+      editor_draw_lower = 1;
       break;
 
 
@@ -2831,7 +2748,7 @@ static int editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
 
       if( getInt(editor_base_adr) ){ // there is a pointer here
-        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %i/%i      %s: '%s'   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: '%s'   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu
         editor_draw_lower = 1;
 
         editor_base_adr = getInt(editor_base_adr);
@@ -2854,7 +2771,7 @@ static int editor_draw() {
         optionAdjust(); // "re-adjust"
 
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
         editor_temp_blocksize = 0x4; // size of pointer
@@ -2865,22 +2782,21 @@ static int editor_draw() {
     case EDITOR_HANDLINGCFG: // multiple vehicles share the same handling slot!
         editor_block_current = editor_vehicle_current;
 
-        if( editor_block_current < getFirstIdeOfType(MODELINFO_VEHICLE) )
-          editor_block_current = getFirstIdeOfType(MODELINFO_VEHICLE);
+        if( editor_block_current < (uint32)getFirstIdeOfType(MODELINFO_VEHICLE) )
+          editor_block_current = (uint32)getFirstIdeOfType(MODELINFO_VEHICLE);
 
-        if( editor_block_current > getLastIdeOfType(MODELINFO_VEHICLE) )
-          editor_block_current = getLastIdeOfType(MODELINFO_VEHICLE);
+        if( editor_block_current > (uint32)getLastIdeOfType(MODELINFO_VEHICLE) )
+          editor_block_current = (uint32)getLastIdeOfType(MODELINFO_VEHICLE);
 
         editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
 
         if( getInt(editor_base_adr) && getByte( getInt(editor_base_adr) + 0x10 ) == MODELINFO_VEHICLE ) { // there is a pointer here AND its vehicle type
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i    %s: %s"), _t("ID"), editor_block_current, _t("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current));
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s    %s: %s"), buffer_top0, _t("Name"), getRealVehicleNameViaID(editor_block_current)); // fix
-          editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // todo (var_handlingcfgslotsize)
+          snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u    %s: %s    %s: %s", _t("ID"), editor_block_current, _t("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current), _t("Name"), getRealVehicleNameViaID(editor_block_current));
+          editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // TODO: (var_handlingcfgslotsize)
           editor_base_adr = getAddressOfHandlingSlotForID(editor_block_current);
           editor_draw_lower = 1;
         } else {
-          snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks ); // block menu
+          snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks ); // block menu
           editor_draw_lower = 0; // not allowed to draw lower menu
           editor_selector = 1; // don't allow going to down_menu
           editor_temp_blocksize = 0x4; // back to size of pointer
@@ -2892,11 +2808,10 @@ static int editor_draw() {
       editor_block_current = editor_buildingsIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58)); //block menu
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
         editor_draw_lower = 1;
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2906,11 +2821,10 @@ static int editor_draw() {
       editor_block_current = editor_treadablesIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58)); //block menu
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
         editor_draw_lower = 1;
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2920,11 +2834,10 @@ static int editor_draw() {
       editor_block_current = editor_dummysIPL_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58)); //block menu
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
         editor_draw_lower = 1;
       } else {
-        snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1 ); // block menu
+        snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
         editor_draw_lower = 0; // not allowed to draw lower menu
         editor_selector = 1; // don't allow going to down_menu
       }
@@ -2933,16 +2846,16 @@ static int editor_draw() {
     case EDITOR_CARCOLSDAT:
       editor_block_current = editor_carcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Color"), editor_block_current, editor_blocks-1); // block menu
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Color"), editor_block_current, editor_blocks-1); // block menu
       editor_draw_lower = 1;
 
       /// draw color box
-      if( LCS ) cur_color = getInt(editor_base_adr);
+      if( LCS ) cur_color.color32 = getInt(editor_base_adr);
       if( VCS ) {
-        cur_color = getByte(editor_base_adr);
-        cur_color += getByte(editor_base_adr+0x1) * 0x100;
-        cur_color += getByte(editor_base_adr+0x2) * 0x10000;
-        cur_color += 0xFF000000; // add alpha
+        cur_color.color32 = getByte(editor_base_adr);
+        cur_color.color32 += getByte(editor_base_adr+0x1) * 0x100;
+        cur_color.color32 += getByte(editor_base_adr+0x2) * 0x10000;
+        cur_color.a = 255; // add alpha
       }
       drawBox((SCREEN_WIDTH/2) - (box_w/2), 200.0f-box_h, box_w, box_h, cur_color); // x, y, width, height, color
       break;
@@ -2950,47 +2863,48 @@ static int editor_draw() {
     case EDITOR_PEDCOLSDAT: //VCS only
       editor_block_current = editor_pedcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("Color"), editor_block_current, editor_blocks-1); // block menu
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Color"), editor_block_current, editor_blocks-1); // block menu
       editor_draw_lower = 1;
 
       /// draw color box
-      cur_color = getByte(editor_base_adr);
-      cur_color += getByte(editor_base_adr+0x1) * 0x100;
-      cur_color += getByte(editor_base_adr+0x2) * 0x10000;
-      cur_color += 0xFF000000; // add alpha
+      cur_color.color32 = getByte(editor_base_adr);
+      cur_color.color32 += getByte(editor_base_adr+0x1) * 0x100;
+      cur_color.color32 += getByte(editor_base_adr+0x2) * 0x10000;
+      cur_color.a = 255; // add alpha
       drawBox((SCREEN_WIDTH/2) - (box_w/2), 200.0f-box_h, box_w, box_h, cur_color); // x, y, width, height, color
       break;
 
     case EDITOR_PARTICLECFG:
       editor_block_current = editor_particleCFG_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1); // block menu
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1); // block menu
       editor_draw_lower = 1;
       break;
 
     case EDITOR_PEDSTATSDAT:
       editor_block_current = editor_pedstatsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i"), _t("No."), editor_block_current, editor_blocks-1); // block menu
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1); // block menu
       editor_draw_lower = 1;
       break;
 
     case EDITOR_WEAPONDAT:
       editor_block_current = editor_weaponDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %i/%i      %s: %i"), _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x60)); //block menu
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s   %s: %s"), buffer_top0, _t("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x60), _t("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu
       editor_draw_lower = 1;
       break;
 
   case EDITOR_TIMECYCDAT:
       editor_block_current = editor_timecycDAT_current;
-    int weather = editor_block_current / 24;
-    int time = editor_block_current % 24;
-    editor_base_adr = editor_firstobj + (8 * time) + weather;
-      snprintf(buffer_top0, sizeof(buffer_top0), _t("%s: %s   %s: %02i:00"), _t("Weather"), _t( LCS ? weather_lcs[weather] : weather_vcs[weather] ), _t("Time"), time); //block menu
+      int weather = editor_block_current / 24;
+      int time = editor_block_current % 24;
+      editor_base_adr = editor_firstobj + (8 * time) + weather;
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %s   %s: %02i:00", _t("Weather"), _t( LCS ? weather_lcs[weather] : weather_vcs[weather] ), _t("Time"), time); //block menu
       editor_draw_lower = 1;
-    editor_temp_blocksize = 0x2bf0; // LCS & VCS! todo?
+
+      // LCS & VCS!
+      editor_temp_blocksize = 0x2bf0; // TODO: ???
       break;
 
     default: break;
@@ -3002,28 +2916,28 @@ static int editor_draw() {
   if( editor_selector == 1 ) { // in topmenu
     if ( editor_selection_top == 0 ) {
       if( editor_toptions == 1 ) {
-        drawString(buffer_top0, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_ON);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_ON, buffer_top0);
       }
       if( editor_toptions == 2 ) {
-        drawString(buffer_top1, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF);
-        drawString(buffer_top0, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+editor_row_spacing, COLOR_CHEAT_ON);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF, buffer_top1);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+editor_row_spacing, COLOR_CHEAT_ON, buffer_top0);
       }
 
     } else {
       if( editor_toptions == 1 ) {
-        drawString(buffer_top0, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF, buffer_top0);
       }
       if( editor_toptions == 2 ) {
-        drawString(buffer_top1, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_ON);
-        drawString(buffer_top0, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+editor_row_spacing, COLOR_CHEAT_OFF);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_ON, buffer_top1);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+editor_row_spacing, COLOR_CHEAT_OFF, buffer_top0);
       }
     }
   } else {
     if( editor_toptions == 1 )
-      drawString(buffer_top0, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF, buffer_top0);
     if( editor_toptions == 2 ) {
-      drawString(buffer_top1, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF);
-      drawString(buffer_top0, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+editor_row_spacing, COLOR_CHEAT_OFF);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_CHEAT_OFF, buffer_top1);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+editor_row_spacing, COLOR_CHEAT_OFF, buffer_top0);
     }
   }
 
@@ -3053,53 +2967,52 @@ static int editor_draw() {
       editor_top = editor_selection_val;  // for scrolling up with selection
 
     /// work
-    for(int i=editor_top; i < editor_showoptions+editor_top; i++, y += editor_row_spacing) {
+    for(uint32 i=editor_top; i < editor_showoptions+editor_top; i++, y += editor_row_spacing) {
       if ( i == editor_selection_val && editor_selector == 0) {
         COLOR_TEMP = COLOR_CHEAT_ON;
         editor_cur_type = editor_curmenu[editor_selection_val].type;
       } else {
         COLOR_TEMP = COLOR_CHEAT_OFF;
-        if( editor_curmenu[i].edit_bool == FALSE )
+        if( !editor_curmenu[i].edit_bool )
           COLOR_TEMP = LGREY; // COLOR_TEXT;
         if( editor_curmenu[i].type == TYPE_DUMMY )
           COLOR_TEMP = COLOR_TEXT;
 
         if( i == editor_top && editor_curmenu[i-1].name != NULL ) // lower alpha for first row if not first menu entry
-          COLOR_TEMP = COLOR_TEMP - 0x55000000;
+          COLOR_TEMP.a -= 0x55;
 
         if( i == editor_showoptions+editor_top-1 && editor_curmenu[i+1].name != NULL ) // lower alpha for last row if not last menu entry
-          COLOR_TEMP = COLOR_TEMP - 0x55000000;
+          COLOR_TEMP.a -= 0x55;
       }
 
       #ifdef DEBUG
       if( flag_draw_DBGVALS ) {
         ///draw offset
         if( editor_curmenu[i].type != TYPE_DUMMY ) {
-          snprintf(buffer, sizeof(buffer), "0x%X", editor_curmenu[i].address );
-          drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-5.0f, y+2.0f, RED);
+          drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, x-5.0f, y+2.0f, RED, "0x%X", editor_curmenu[i].addr_offset);
         }
       }
       #endif
 
       ///Name selected
-      drawString(_t(editor_curmenu[i].name), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP, (u8string)editor_curmenu[i].name);
 
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything
         func = editor_curmenu[i].value;
-        val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].address+editor_base_adr, (int)editor_curmenu[i].steps);
+        val = func(FUNC_GET_STRING, 0, editor_base_adr, editor_curmenu[i].addr_offset+editor_base_adr, (int)editor_curmenu[i].step);
         snprintf(buffer, sizeof(buffer), "%s%s", val, editor_curmenu[i].postfix );
 
       } else { // plain value editing
-        int adr = editor_curmenu[i].address+editor_base_adr;
+        uaddr adr = editor_curmenu[i].addr_offset+editor_base_adr;
         char pre = editor_curmenu[i].precision;
-        const char* fix = editor_curmenu[i].postfix;
+        const u8string fix = editor_curmenu[i].postfix;
         switch( editor_curmenu[i].type ) {
           case TYPE_BYTE:
-            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%02X%s", *(unsigned char*)(adr), fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%02X%s", *(byte*)(adr), fix);
             break;
 
           case TYPE_BYTE_AS_FLT:
-            snprintf(buffer, sizeof(buffer), "%.*f%s", pre, (float)(*(unsigned char*)(adr)) / 10, fix); // used in timecycle for example
+            snprintf(buffer, sizeof(buffer), "%.*f%s", pre, (float)(*(byte*)(adr)) / 10, fix); // used in timecycle for example
             break;
 
           case TYPE_SHORT:
@@ -3115,53 +3028,48 @@ static int editor_draw() {
             break;
 
           case TYPE_BOOL:
-            /*if( *(unsigned char*)(adr) == editor_curmenu[i].max ) { // max must be the true value
-              snprintf(buffer, sizeof(buffer), "TRUE");
-            } else if(*(unsigned char*)(adr) == editor_curmenu[i].min ) { // min must be the false value
-              snprintf(buffer, sizeof(buffer), "FALSE");
+            /*if( *(bool*)(adr) == editor_curmenu[i].max ) { // max must be the true value
+              snprintf(buffer, sizeof(buffer), "true");
+            } else if(*(bool*)(adr) == editor_curmenu[i].min ) { // min must be the false value
+              snprintf(buffer, sizeof(buffer), "false");
             } else snprintf(buffer, sizeof(buffer), "ERROR");*/
-      if( *(unsigned char*)(adr) == 1 ) {
-              snprintf(buffer, sizeof(buffer), _t("TRUE"));
-            } else if(*(unsigned char*)(adr) == 0 ) {
-              snprintf(buffer, sizeof(buffer), _t("FALSE"));
-            } else snprintf(buffer, sizeof(buffer), _t("ERROR"));
+            if( *(bool*)(adr) ) {
+              snprintf(buffer, sizeof(buffer), _t("true"));
+            } else {
+              snprintf(buffer, sizeof(buffer), _t("false"));
+            }
             break;
 
           case TYPE_BIT:
-            if( *(char*)(adr) & (1 << pre) ) {
-              snprintf(buffer, sizeof(buffer), _t("TRUE")); // bit is set
-            } else snprintf(buffer, sizeof(buffer), _t("FALSE"));
+            if( *(uint8*)(adr) & (1 << pre) ) {
+              snprintf(buffer, sizeof(buffer), _t("true")); // bit is set
+            } else snprintf(buffer, sizeof(buffer), _t("false"));
             break;
 
           case TYPE_NIBBLE_LOW:  // eg: 0xE6  -> 6  0110
-            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) & 0xF, fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(uint8*)(adr) & 0xF, fix);
             break;
 
           case TYPE_NIBBLE_HIGH: // eg: 0xE6  -> E  1110
-            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(unsigned char*)(adr) >> 4, fix);
+            snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%X%s", *(uint8*)(adr) >> 4, fix);
             break;
 
           case TYPE_STRING:
-            snprintf(buffer, sizeof(buffer), "'");
             buffer[0] = '\'';
-            // for( str_pos = 0; str_pos < pre && getByte(adr+str_pos) != 0x00; str_pos++ ) {
-            //   snprintf(buffer, sizeof(buffer), "%s%c", buffer, *(char*)(adr+str_pos));
-            // } snprintf(buffer, sizeof(buffer), "%s'%s", buffer, fix);
-
-            int str_pos = 0;
+            array_uidx str_pos = 0;
             for ( ; str_pos < pre && getByte(adr+str_pos) != 0x00; str_pos++ )
             {
-              buffer[str_pos+1] = *(char*)(adr+str_pos);
+              buffer[str_pos+1] = *(u8char*)(adr+str_pos);
             } buffer[str_pos+1] = '\''; buffer[str_pos+2] = '\0';
             break;
 
           case TYPE_DUMMY:
-            snprintf(buffer, sizeof(buffer), "%s", fix);
+            strcpy(buffer, fix);
             break;
         }
       }
 
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 440.0f, y, COLOR_TEMP); // align right!!
+      drawStringNoTVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 440.0f, y, COLOR_TEMP, buffer); // align right!!
 
       if(!editor_toptions) // no top menu so this is a small fix to fill the ui box nicer
         y += 1.0f;
@@ -3172,9 +3080,11 @@ static int editor_draw() {
 
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
-      case EDITOR_GARAGE: // on VCS the vehicles are loaded into the garage on spawn!!!!! (TODO - can this be checked elsewhere?)
-        drawString(_t("No vehicle found or garage open!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
-        if( VCS ) drawString(_t("Info: Vehicles are loaded on spawn! Open & close garage once."), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT);
+      case EDITOR_GARAGE:
+        // on VCS the vehicles are loaded into the garage on spawn!!!!!
+        // TODO: can this be checked elsewhere?
+        drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT, "No vehicle found or garage open!");
+        if( VCS ) drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT, "Info: Vehicles are loaded on spawn! Open & close garage once.");
         break;
 
       case EDITOR_PEDOBJ:
@@ -3188,11 +3098,11 @@ static int editor_draw() {
       case EDITOR_DUMMYSIPL:
       case EDITOR_MAPICONS:
       case EDITOR_HANDLINGCFG:
-        drawString(_t("No active object in this slot!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT, "No active object in this slot!");
         break;
 
       case EDITOR_IDE:
-        drawString(_t("No IDE here!"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT);
+        drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT, "No IDE here!");
         break;
 
       default: break;
@@ -3205,32 +3115,15 @@ static int editor_draw() {
 
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {
-    snprintf(buffer, sizeof(buffer), "editor_block_current = %d", editor_block_current );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 60.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_selector = %d", editor_selector );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 80.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_top = %d", editor_top );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 100.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_selection_top = %d", editor_selection_top );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 120.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_base_adr = 0x%08X", editor_base_adr );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 140.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_wasused = %i", editor_wasused );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_selection_val = %i", editor_selection_val );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 180.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_options = %i", editor_options );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 200.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "editor_toptions = %i", editor_toptions );
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 220.0f, RED);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 60.0f, RED, "editor_block_current = %d", editor_block_current);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 80.0f, RED, "editor_selector = %d", editor_selector);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 100.0f, RED, "editor_top = %d", editor_top);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 120.0f, RED, "editor_selection_top = %d", editor_selection_top);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 140.0f, RED, "editor_base_adr = 0x%08lX", editor_base_adr);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED, "editor_wasused = %i", editor_wasused);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 180.0f, RED, "editor_selection_val = %i", editor_selection_val);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 200.0f, RED, "editor_options = %i", editor_options);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 220.0f, RED, "editor_toptions = %i", editor_toptions);
   }
   #endif
 
@@ -3240,17 +3133,17 @@ static int editor_draw() {
     drawLegendBox(2, COLOR_BACKGROUND); // only 2 lines in small legend mode
 
     /* if( !flag_small_legend) {
-      drawLegendMessage("UP/DOWN: Select Entry", 0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage("LEFT/RIGHT: Change Value", 1, 2, COLOR_TEXT); // right side, first row
+      drawLegendMessageNoVarg(0, 2, COLOR_TEXT, "UP/DOWN: Select Entry"); // left side, first row
+      drawLegendMessageNoVarg(1, 2, COLOR_TEXT, "LEFT/RIGHT: Change Value"); // right side, first row
     } */
 
     //+//+// OPTION //+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//
     if( editor_menumode == EDITOR_VEHICLEOBJ ) {
       if( editor_selector && pcar && editor_base_adr != pcar ) {
-        drawLegendMessage(_t("SELECT: Current Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Current Vehicle"); // left side, third row
       }
       if(editor_selector && !pcar && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {
-        drawLegendMessage(_t("SELECT: Touched Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Touched Vehicle"); // left side, third row
       }
 
       if( editor_selector
@@ -3258,13 +3151,13 @@ static int editor_draw() {
         && getShort(editor_base_adr+0x62) != -1 //
         && getInt(editor_base_adr+0x1C) == 0    //
         && editor_base_adr != pcar ) {          // no need to teleport to own coordinates
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
 
     }
     if( editor_menumode == EDITOR_PEDOBJ  ) {
       if( editor_selector && pplayer && editor_base_adr != pplayer ) {
-        drawLegendMessage(_t("SELECT: Player Object"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Player Object"); // left side, third row
       }
 
       if( editor_selector
@@ -3272,96 +3165,92 @@ static int editor_draw() {
         && getInt(editor_base_adr+0x40) != 0      //
         && getByte(editor_base_adr+0x43) == 0x09  //
         && editor_base_adr != pplayer ) {         // no need to teleport to own coordinates
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_GARAGE  ) {
       if(editor_selector && getShort(editor_base_adr) != 0 && getFloat(editor_base_adr+0x4) != 0.0f) { // detect saved vehicle
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
       if( editor_selector && getShort(editor_base_adr) == 0 && editor_garageslot_current == 0 ) {
-        drawLegendMessage(_t("SELECT: Generate Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Generate Vehicle"); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WORLDOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f && getWorldObjectIsActive(editor_base_adr) ) {
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {
-        drawLegendMessage(_t("SELECT: Touched Object"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Touched Object"); // left side, third row
       }
     }
   /*if( editor_menumode == EDITOR_BUSINESSOBJ  ) {
       if( editor_selector && getFloat(editor_base_adr+0x30) != 0.0f ) {
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
     }*/
 	if( editor_menumode == EDITOR_EMPIRE  ) {
       if( editor_selector ) {
-        drawLegendMessage(_t("SELECT: Toggle Visible Damage"), 0, 0, COLOR_TEXT); // left side, first row
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Toggle Visible Damage"); // left side, first row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_PICKUPS  ) {
       if( editor_selector && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) {
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_MAPICONS  ) {
       if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_HANDLINGCFG  ) {
       if( editor_selector && pcar && pcar_id != editor_vehicle_current) {
-        drawLegendMessage(_t("SELECT: Set current vehicle"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SELECT: Set current vehicle"); // left side, second row
       }
     }
     if( editor_menumode == EDITOR_VEHWORLDSPAWNS  ) {
       if( editor_selector && getFloat(editor_base_adr+(0xC)) != 0 ) {
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
       if( editor_selector && pcar) {
-        drawLegendMessage(_t("SELECT: Overwrite Vehicle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Overwrite Vehicle"); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_BUILDINGSIPL || editor_menumode == EDITOR_TREADABLESIPL || editor_menumode == EDITOR_DUMMYSIPL ) {
       if( editor_selector && getFloat(editor_base_adr+(0x38)) != 0 ) {
-        drawLegendMessage(_t("SQUARE: Teleport there"), 0, 1, COLOR_TEXT); // left side, second row
+        drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
 
       if( editor_selector && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj ) {
-        drawLegendMessage(_t("SELECT: Touched Entity"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Touched Entity"); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_WEAPONDAT  ) {
       if( editor_selector ) {
-        drawLegendMessage(_t("SELECT: Current Weapon"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Current Weapon"); // left side, third row
       }
     }
     if( editor_menumode == EDITOR_TIMECYCDAT  ) {
       if( editor_selector ) {
-        drawLegendMessage(_t("SELECT: Current Cycle"), 0, 0, COLOR_TEXT); // left side, third row
+        drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SELECT: Current Cycle"); // left side, third row
       }
     }
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+////+//+//+//+//+/+//+//+//+//+//+//+//+//
     #ifdef HEXEDITOR
-    if( editor_curmenu[editor_selection_val].address >= 0) {
-      drawLegendMessage(_t("TRIANGLE: Open in HexEditor"), 1, 1, COLOR_TEXT); // right side, second row
-    }
+    drawLegendMessageNoVarg(1, 1, COLOR_TEXT, "TRIANGLE: Open in HexEditor"); // right side, second row
     #endif
-    drawLegendMessage(_t("CIRCLE: Exit to Menu"), 1, 0, COLOR_TEXT); // right side, third row
+    drawLegendMessageNoVarg(1, 0, COLOR_TEXT, "CIRCLE: Exit to Menu"); // right side, third row
   }
-
-  return 0;
 }
 
-static int editor_ctrl() {
+static void editor_ctrl() {
   #ifdef HEXEDITOR
   int editor_mode = 0; // default
   #endif
 
-  void (* func)(int calltype, int keypress, int base_address, int address, int steps, int block);
+  void (* func)(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block);
   static int keypress;
 
   if( editor_selector ) { // top menu
@@ -3370,14 +3259,14 @@ static int editor_ctrl() {
       if( editor_selection_top <= 0 ) {
         if(editor_draw_lower) editor_selector = 0; // switch to values
         editor_selection_top = 0; // to be sure
-      } else editor_selection_top -= 1;
+      } else editor_selection_top--;
     }
 
     if( hold_buttons & PSP_CTRL_UP ) {
       if( editor_toptions > 1 ) {
         if ( editor_selection_top >= 1 ) {
           editor_selection_top = 1;
-        } else editor_selection_top += 1;
+        } else editor_selection_top++;
       }
     }
 
@@ -3420,7 +3309,7 @@ static int editor_ctrl() {
     if( pressed_buttons & PSP_CTRL_SELECT ) {
       //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
       if( (editor_menumode == EDITOR_PEDOBJ) && pplayer && editor_base_adr != pplayer ) {
-        u32 tadr;
+        uaddr tadr;
         int pos = 0;
         for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize ) {
           if( tadr == pplayer )
@@ -3430,7 +3319,7 @@ static int editor_ctrl() {
 
       if( editor_menumode == EDITOR_VEHICLEOBJ ) {
         if( pcar && editor_base_adr != pcar ) { // inside car & its not yet selected
-          u32 tadr;
+          uaddr tadr;
           int pos = 0;
           for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize) {
             if( tadr == pcar )
@@ -3438,7 +3327,7 @@ static int editor_ctrl() {
           }
         }
         if( !pcar && editor_base_adr != getObjectsTouchedObjectAddress(pobj) && getObjectsTouchedObjectAddress(pobj) >= editor_firstobj && getObjectsTouchedObjectAddress(pobj) <= editor_lastobj) { //
-          u32 tadr;
+          uaddr tadr;
           int pos = 0;
           for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize) {
             if( tadr == getObjectsTouchedObjectAddress(pobj) )
@@ -3448,7 +3337,7 @@ static int editor_ctrl() {
       }
 
       if( ((editor_menumode == EDITOR_WORLDOBJ) || (editor_menumode == EDITOR_BUILDINGSIPL)) && getObjectsTouchedObjectAddress(pobj) != 0 ) {
-        u32 tadr;
+        uaddr tadr;
         int pos = 0;
         for( tadr = editor_firstobj; tadr <= editor_lastobj; pos++, tadr += editor_blocksize ) {
           if( tadr == getObjectsTouchedObjectAddress(pobj) )
@@ -3470,13 +3359,13 @@ static int editor_ctrl() {
       }
 
       if( editor_menumode == EDITOR_EMPIRE ) {
-		static u8 empire_script_damage[] = { // must be static for CustomScriptExecut()!
-            0x63, 0x04, 0x07, 0x00, 0x07, 0x00, // 0463: set_empire_visual_damage 0@ flag 0
-			0x23, 0x00 // 0023: terminate_this_script
-		};
-		empire_script_damage[3] = editor_empire_current;
-		empire_script_damage[5] = 1 - empire_script_damage[5];
-		CustomScriptExecute((int)&empire_script_damage); // make game execute it
+		    static byte empire_script_damage[] = { // must be static for CustomScriptExecut()!
+          0x63, 0x04, 0x07, 0x00, 0x07, 0x00, // 0463: set_empire_visual_damage 0@ flag 0
+			    0x23, 0x00 // 0023: terminate_this_script
+		    };
+        empire_script_damage[3] = editor_empire_current;
+        empire_script_damage[5] = !empire_script_damage[5];
+        CustomScriptExecute((int)&empire_script_damage); // make game execute it
       }
 
       if( editor_menumode == EDITOR_GARAGE && getShort(editor_base_adr) == 0 && editor_garageslot_current == 0 ) {
@@ -3553,10 +3442,7 @@ static int editor_ctrl() {
       if( hold_buttons & PSP_CTRL_UP ) {
         if( editor_selection_val <= 0 ) {
           if( editor_toptions ) editor_selector = 1; // switch to top menu
-        } else editor_selection_val -= 1;
-
-        while( editor_curmenu[editor_selection_val].address == -1 && editor_selection_val > 0) //skip dummys
-          editor_selection_val -= 1;
+        } else editor_selection_val--;
 
         if ( editor_top > 1 ) { // scroll
           if ( editor_selection_val == 1 ) editor_top--;
@@ -3569,7 +3455,7 @@ static int editor_ctrl() {
           if( editor_selection_val >= editor_options-1 )
             editor_selection_val = editor_options-1; // selection = 0;
           else
-            editor_selection_val += 1;
+            editor_selection_val++;
 
           editor_top = editor_selection_val;
 
@@ -3578,10 +3464,7 @@ static int editor_ctrl() {
             editor_selection_val = editor_options-1; // selection = 0;
 
           else {
-            editor_selection_val += 1;
-
-            while( editor_curmenu[editor_selection_val].address == -1 ) // skip dummys
-              editor_selection_val += 1;
+            editor_selection_val++;
 
             if ( editor_top + editor_showoptions < editor_options ) { // scroll
               if ( editor_selection_val >= editor_top+editor_showoptions-1 )
@@ -3597,7 +3480,7 @@ static int editor_ctrl() {
 
 
       /// left right depending on value editing or function (if allowed)
-      if( editor_curmenu[editor_selection_val].edit_bool == TRUE ) {
+      if( editor_curmenu[editor_selection_val].edit_bool ) {
 
         if( editor_curmenu[editor_selection_val].value != 0 ) {
           keypress = 0;
@@ -3605,60 +3488,60 @@ static int editor_ctrl() {
             keypress = PSP_CTRL_LEFT;
           if( hold_buttons & PSP_CTRL_RIGHT )
             keypress = PSP_CTRL_RIGHT;
-          func = (void (*)(int calltype, int keypress, int base_address, int address, int steps, int block))(editor_curmenu[editor_selection_val].value);
-          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].address+editor_base_adr, (int)editor_curmenu[editor_selection_val].steps, editor_block_current);
+          func = (void (*)(int calltype, int keypress, uaddr base_address, uaddr address, int steps, int block))(editor_curmenu[editor_selection_val].value);
+          func(FUNC_CHANGE_VALUE, keypress, editor_base_adr, editor_curmenu[editor_selection_val].addr_offset+editor_base_adr, (int)editor_curmenu[editor_selection_val].step, editor_block_current);
           editor_wasused++;
 
         } else {
 
           char c, c_new;
-          int adr = editor_curmenu[editor_selection_val].address+editor_base_adr;
-          char pre = editor_curmenu[editor_selection_val].precision;
+          uaddr adr = editor_curmenu[editor_selection_val].addr_offset+editor_base_adr;
+          uint8 pre = editor_curmenu[editor_selection_val].precision;
 
           if( (current_buttons & PSP_CTRL_RTRIGGER) == 0 ) { // not R Trigger
             if( hold_buttons & PSP_CTRL_LEFT ) {
               switch( editor_cur_type ) {
                 case TYPE_BYTE: case TYPE_BYTE_AS_FLT:
-                  *(char*)(adr)-=editor_curmenu[editor_selection_val].steps;
+                  *(byte*)(adr)-=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_SHORT:
-                  *(short*)(adr)-=editor_curmenu[editor_selection_val].steps;
+                  *(short*)(adr)-=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_INTEGER:
-                  *(int*)(adr)-=editor_curmenu[editor_selection_val].steps;
+                  *(int*)(adr)-=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_FLOAT:
-                  *(float*)(adr)-=editor_curmenu[editor_selection_val].steps;
+                  *(float*)(adr)-=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_BIT:
-                  if( *(char*)(adr) & (1 << pre) ) { // BIT TRUE
-                    *(char*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
-                  } else { // BIT FALSE
-                    *(char*)(adr) |= (1 << pre); // flip bit ON at index .precision
+                  if( *(uint8*)(adr) & (1 << pre) ) { // BIT true
+                    *(uint8*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
+                  } else { // BIT false
+                    *(uint8*)(adr) |= (1 << pre); // flip bit ON at index .precision
                   }
                   break;
 
                 case TYPE_BOOL:
-                  *(char*)(adr) = 1 - *(char*)(adr);
+                  *(bool*)(adr) = !(*(bool*)(adr));
                   break;
 
                 case TYPE_NIBBLE_LOW: // eg: 0xE6 & 0xF    -> 0x6    = 0x 0000 0110
                   c = getByte(adr);
                   if( (c & 0xF) > 0 ) { //0x6 > 0x0
-                    c_new = (c & 0xF) - editor_curmenu[editor_selection_val].steps;
-                    *(char*)(adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
+                    c_new = (c & 0xF) - editor_curmenu[editor_selection_val].step;
+                    *(uint8*)(adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
                   }
                   break;
 
                 case TYPE_NIBBLE_HIGH: // eg: 0xE6 >> 4    -> 0xE    = 0x 0000 1110
-                  c = getByte(editor_curmenu[editor_selection_val].address+editor_base_adr);
+                  c = getByte(editor_curmenu[editor_selection_val].addr_offset+editor_base_adr);
                   if( ((c >> 4) & 0xF) > 0 ) { //0xE6 -> 0x?E -> 0x0E    >     0x0
-                     c_new = (c >> 4) - editor_curmenu[editor_selection_val].steps;
-                     *(char*)(adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
+                     c_new = (c >> 4) - editor_curmenu[editor_selection_val].step;
+                     *(uint8*)(adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
                   }
                   break;
               }
@@ -3668,46 +3551,46 @@ static int editor_ctrl() {
             if( hold_buttons & PSP_CTRL_RIGHT ) {
               switch( editor_cur_type ) {
                 case TYPE_BYTE: case TYPE_BYTE_AS_FLT:
-                  *(char*)(adr)+=editor_curmenu[editor_selection_val].steps;
+                  *(byte*)(adr)+=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_SHORT:
-                  *(short*)(adr)+=editor_curmenu[editor_selection_val].steps;
+                  *(short*)(adr)+=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_INTEGER:
-                  *(int*)(adr)+=editor_curmenu[editor_selection_val].steps;
+                  *(int*)(adr)+=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_FLOAT:
-                  *(float*)(adr)+=editor_curmenu[editor_selection_val].steps;
+                  *(float*)(adr)+=editor_curmenu[editor_selection_val].step;
                   break;
 
                 case TYPE_BIT:
-                  if( *(char*)(adr) & (1 << pre) ) { // BIT TRUE
-                    *(char*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
-                  } else { //BIT FALSE
-                    *(char*)(adr) |= (1 << pre); // flip bit ON at index .precision
+                  if( *(uint8*)(adr) & (1 << pre) ) { // BIT true
+                    *(uint8*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
+                  } else { //BIT false
+                    *(uint8*)(adr) |= (1 << pre); // flip bit ON at index .precision
                   }
                   break;
 
                 case TYPE_BOOL:
-                  *(char*)(adr) = 1 - *(char*)(adr);
-          break;
+                  *(bool*)(adr) = !(*(bool*)(adr));
+                  break;
 
                 case TYPE_NIBBLE_LOW: // eg: 0xE6 & 0xF    -> 0x6    = 0x 0000 0110
                   c = getByte(adr);
                   if( (c & 0xF) < 0xF ) { //0x6 < 0xF
-                    c_new = (c & 0xF) + editor_curmenu[editor_selection_val].steps;
-                    *(char*)(adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
+                    c_new = (c & 0xF) + editor_curmenu[editor_selection_val].step;
+                    *(uint8*)(adr) = (c & 0xF0) | (c_new & 0xF); // write low quartet
                   }
                   break;
 
                 case TYPE_NIBBLE_HIGH: // eg: 0xE6 >> 4    -> 0xE    = 0x 0000 1110
                   c = getByte(adr);
                   if( ((c >> 4) & 0xF) < 0xF ) { // 0xE6 -> 0x?E -> 0x0E    <     0xF
-                     c_new = (c >> 4) + editor_curmenu[editor_selection_val].steps;
-                     *(char*)(adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
+                     c_new = (c >> 4) + editor_curmenu[editor_selection_val].step;
+                     *(uint8*)(adr) = (c & 0x0F) | ((c_new & 0xF) << 4); // write high quartet
                   }
                   break;
               }
@@ -3719,15 +3602,15 @@ static int editor_ctrl() {
           if( hold_buttons & PSP_CTRL_CROSS ) {
             switch( editor_cur_type ) {
               case TYPE_BOOL:
-                *(unsigned char*)(adr) = 1 - *(unsigned char*)(adr);
+                *(bool*)(adr) = !(*(bool*)(adr));
                 editor_wasused++;
                 break;
 
               case TYPE_BIT:
-                if( *(char*)(adr) & (1 << pre) ) { // BIT TRUE
-                  *(char*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
-                } else { // BIT FALSE
-                  *(char*)(adr) |= (1 << pre); // flip bit ON at index .precision
+                if( *(uint8*)(adr) & (1 << pre) ) { // BIT true
+                  *(uint8*)(adr) &= ~(1 << pre); // flip bit OFF at index .precision
+                } else { // BIT false
+                  *(uint8*)(adr) |= (1 << pre); // flip bit ON at index .precision
                 }
                 editor_wasused++;
                 break;
@@ -3804,7 +3687,7 @@ static int editor_ctrl() {
   }
 
   #ifdef HEXEDITOR
-  if( pressed_buttons & PSP_CTRL_TRIANGLE && editor_curmenu[editor_selection_val].address >= 0 ) {
+  if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE:
@@ -3812,35 +3695,35 @@ static int editor_ctrl() {
         break;
 
       case EDITOR_PEDOBJ:
-        snprintf(buffer, sizeof(buffer), "Pedestrian Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedestrian Object %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_VEHICLEOBJ:
-        snprintf(buffer, sizeof(buffer), "Vehicle Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Vehicle Object %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_WORLDOBJ:
-        snprintf(buffer, sizeof(buffer), "World Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "World Object %u/%u", editor_block_current+1, editor_blocks);
         break;
 
     /*case EDITOR_BUSINESSOBJ:
-        snprintf(buffer, sizeof(buffer), "Business Object %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Business Object %u/%u", editor_block_current+1, editor_blocks);
         break;**/
 
       case EDITOR_PICKUPS:
-        snprintf(buffer, sizeof(buffer), "Pickup %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pickup %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_MAPICONS:
-        snprintf(buffer, sizeof(buffer), "Mapicon %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Mapicon %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_VEHWORLDSPAWNS:
-        snprintf(buffer, sizeof(buffer), "Parked Vehicle Spawn %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Parked Vehicle Spawn %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_EMPIRE:
-        snprintf(buffer, sizeof(buffer), "Empire %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Empire %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       /// /// /// /// ///
@@ -3853,45 +3736,45 @@ static int editor_ctrl() {
         break;
 
       case EDITOR_BUILDINGSIPL:
-        snprintf(buffer, sizeof(buffer), "Buildings.ipl %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Buildings.ipl %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_TREADABLESIPL:
-        snprintf(buffer, sizeof(buffer), "Treadables.ipl %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Treadables.ipl %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_DUMMYSIPL:
-        snprintf(buffer, sizeof(buffer), "Dummys.ipl %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Dummys.ipl %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_CARCOLSDAT:
-        snprintf(buffer, sizeof(buffer), "Carcols.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Carcols.dat %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_PEDCOLSDAT:
-        snprintf(buffer, sizeof(buffer), "Pedcols.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedcols.dat %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_IDE:
         //editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); //hex to ptr instead
         //editor_temp_blocksize = 0x4;
-        snprintf(buffer, sizeof(buffer), "IDEs %i/%i", editor_block_current, editor_blocks-1);
+        snprintf(buffer, sizeof(buffer), "IDEs %u/%u", editor_block_current, editor_blocks-1);
         break;
 
       case EDITOR_PARTICLECFG:
-        snprintf(buffer, sizeof(buffer), "Particle.cfg %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Particle.cfg %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_PEDSTATSDAT:
-        snprintf(buffer, sizeof(buffer), "Pedstats.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Pedstats.dat %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_WEAPONDAT:
-        snprintf(buffer, sizeof(buffer), "Weapon.dat %i/%i", editor_block_current+1, editor_blocks);
+        snprintf(buffer, sizeof(buffer), "Weapon.dat %u/%u", editor_block_current+1, editor_blocks);
         break;
 
       case EDITOR_TIMECYCDAT:
-        snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02i:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
+        snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02u:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
         break;
 
       default:
@@ -3916,13 +3799,13 @@ static int editor_ctrl() {
           markerlength = 4;
           break;
       }
-      hex_marker_addx(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].address), markerlength);
+      hex_marker_addx(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].addr_offset), markerlength);
     }
 
     if( editor_menumode == EDITOR_IDE || editor_menumode == EDITOR_HANDLINGCFG || editor_menumode == EDITOR_TIMECYCDAT ) {
-      hexeditor_create(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].address), editor_mode, editor_base_adr, editor_base_adr + editor_temp_blocksize, buffer);
+      hexeditor_create(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].addr_offset), editor_mode, editor_base_adr, editor_base_adr + editor_temp_blocksize, buffer);
     } else {
-      hexeditor_create(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].address), editor_mode, editor_base_adr, editor_base_adr + editor_blocksize, buffer);
+      hexeditor_create(editor_base_adr + (editor_selector ? 0 : editor_curmenu[editor_selection_val].addr_offset), editor_mode, editor_base_adr, editor_base_adr + editor_blocksize, buffer);
     }
   }
   #endif
@@ -3933,7 +3816,7 @@ static int editor_ctrl() {
     case EDITOR_PEDOBJ:
       editor_pedobj_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+0.5f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+0.5f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -3943,7 +3826,7 @@ static int editor_ctrl() {
     case EDITOR_VEHICLEOBJ:
       editor_vehicleobj_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -3952,7 +3835,7 @@ static int editor_ctrl() {
     case EDITOR_WORLDOBJ:
       editor_worldobj_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -3970,7 +3853,7 @@ static int editor_ctrl() {
     case EDITOR_PICKUPS:
       editor_pickup_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr), getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8) + 1.00f);
+        SetPlayerPosition(getFloat(editor_base_adr), getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8) + 1.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -3979,42 +3862,41 @@ static int editor_ctrl() {
     case EDITOR_MAPICONS:
       editor_mapicon_current = editor_block_current;
       if( editor_trigger ) {
-        int slot = getMapiconLinkedObjectSlotNumber(editor_base_adr);
-        int base = -1;
+        array_uidx slot = getMapiconLinkedObjectSlotNumber(editor_base_adr);
 
-        extern int vehicles_base;
-        extern int vehicles_max;
-        extern int peds_base;
-        extern int peds_max;
-        extern int worldobjs_base;
-        extern int worldobjs_max;
-        extern u32 var_pedobjsize;
-        extern u32 var_vehobjsize;
-        extern u32 var_wldobjsize;
+        extern uaddr vehicles_base;
+        extern usize vehicles_max;
+        extern uaddr peds_base;
+        extern usize peds_max;
+        extern uaddr worldobjs_base;
+        extern usize worldobjs_max;
+        extern usize var_pedobjsize;
+        extern usize var_vehobjsize;
+        extern usize var_wldobjsize;
 
         if( getMapiconType(editor_base_adr) == 1 ) { // use coordinates from VEHICLE object via slot number
-          if( slot >= 0 && slot <= vehicles_max ) {
-            base = vehicles_base + (var_vehobjsize * slot);
+          if( slot <= vehicles_max ) {
+            uaddr base = vehicles_base + (var_vehobjsize * slot);
             if( getVehicleObjectIsActive(base) )
-              teleport(getFloat(base+0x30), getFloat(base+0x34), getFloat(base+0x38)+2.0f);
+              SetPlayerPosition(getFloat(base+0x30), getFloat(base+0x34), getFloat(base+0x38)+2.0f);
           }
 
         } else if( getMapiconType(editor_base_adr) == 2 ) { // use coordinates from PEDESTRIAN object via slot number
-          if( slot >= 0 && slot <= peds_max ) {
-            base = peds_base + (var_pedobjsize * slot);
+          if( slot <= peds_max ) {
+            uaddr base = peds_base + (var_pedobjsize * slot);
             if( getPedObjectIsActive(base) )
-              teleport(getFloat(base+0x30), getFloat(base+0x34), getFloat(base+0x38)+0.5f);
+              SetPlayerPosition(getFloat(base+0x30), getFloat(base+0x34), getFloat(base+0x38)+0.5f);
           }
 
         } else if( getMapiconType(editor_base_adr) == 3 ) { // use coordinates from WORLD object via slot number
-          if( slot >= 0 && slot <= worldobjs_max ) {
-            base = worldobjs_base + (var_wldobjsize * slot);
+          if( slot <= worldobjs_max ) {
+            uaddr base = worldobjs_base + (var_wldobjsize * slot);
             if( getWorldObjectIsActive(base) )
-              teleport(getFloat(base+0x30), getFloat(base+0x34), getFloat(base+0x38)+0.5f);
+              SetPlayerPosition(getFloat(base+0x30), getFloat(base+0x34), getFloat(base+0x38)+0.5f);
           }
 
         } else { // use coordinates in blip slot
-          teleport(getFloat(editor_base_adr+(LCS ? 0xC : 0x10)), getFloat(editor_base_adr+(LCS ? 0x10 : 0x14)), getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) + 2.00f);
+          SetPlayerPosition(getFloat(editor_base_adr+(LCS ? 0xC : 0x10)), getFloat(editor_base_adr+(LCS ? 0x10 : 0x14)), getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) + 2.00f);
         }
         //closeMenu(); // close menugetFloat(editor_base_adr+)
         editor_trigger = 0;
@@ -4024,7 +3906,7 @@ static int editor_ctrl() {
     case EDITOR_GARAGE:
       //editor_garageslot_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8), getFloat(editor_base_adr+0xC)+2.00f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8), getFloat(editor_base_adr+0xC)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -4048,7 +3930,7 @@ static int editor_ctrl() {
     case EDITOR_VEHWORLDSPAWNS:
       editor_vehiclespawn_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8), getFloat(editor_base_adr+0xC)+2.00f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x4), getFloat(editor_base_adr+0x8), getFloat(editor_base_adr+0xC)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -4057,20 +3939,20 @@ static int editor_ctrl() {
     case EDITOR_EMPIRE:
       editor_empire_current = editor_block_current;
       if( editor_trigger ) {
-        static u8 empire_script_teleport[] = { // must be static for CustomScriptExecut()!
-			0x04, 0x00, 0x0D, 0x07, 0x0C,  // 0004: 0@ = 12 // (int)
-			0x65, 0x04, 0x0D, 0x0E, 0x0F, 0x10, // 0465: get_empire_coords 0@ store_to 1@ 2@ 3@
-			0x6C, 0x04, 0x0D, 0x11, // 046C: get_empire_heading 0@ store_to 4@
-			0x44, 0x00, 0xD0, 0x0E, 0x0E, 0x0F, 0x10, // 0044: set_char_coordinates $PLAYER_CHAR to 1@ 2@ 3@
-			0xCF, 0x00, 0xD0, 0x0E, 0x11, // 00CF: set_char_heading $PLAYER_CHAR to 4@
-			0xEE, 0x02, 0xD0, 0x0E, 0x01, 0x04, 0x90, 0xC1, 0x01, 0x0E, 0x0F, 0x10,  // 02EE: get_offset_from_char_in_world_coords $PLAYER_CHAR offset 0 -18.0 0 store_to 1@ 2@ 3@ // 18 meters behind player
-			0x44, 0x00, 0xD0, 0x0E, 0x0E, 0x0F, 0x10, //0044: set_char_coordinates $PLAYER_CHAR to 1@ 2@ 3@ // adjust
-			0xCF, 0x00, 0xD0, 0x0E, 0x11, // 00CF: set_char_heading $PLAYER_CHAR to 4@
-			0x21, 0x02, // 0221: set_camera_behind_player
-			0x23, 0x00 // 0023: terminate_this_script
-		};
-		empire_script_teleport[4] = editor_empire_current;
-		CustomScriptExecute((int)&empire_script_teleport); // make game execute it
+        static byte empire_script_teleport[] = { // must be static for CustomScriptExecut()!
+          0x04, 0x00, 0x0D, 0x07, 0x0C,  // 0004: 0@ = 12 // (int)
+          0x65, 0x04, 0x0D, 0x0E, 0x0F, 0x10, // 0465: get_empire_coords 0@ store_to 1@ 2@ 3@
+          0x6C, 0x04, 0x0D, 0x11, // 046C: get_empire_heading 0@ store_to 4@
+          0x44, 0x00, 0xD0, 0x0E, 0x0E, 0x0F, 0x10, // 0044: set_char_coordinates $PLAYER_CHAR to 1@ 2@ 3@
+          0xCF, 0x00, 0xD0, 0x0E, 0x11, // 00CF: set_char_heading $PLAYER_CHAR to 4@
+          0xEE, 0x02, 0xD0, 0x0E, 0x01, 0x04, 0x90, 0xC1, 0x01, 0x0E, 0x0F, 0x10,  // 02EE: get_offset_from_char_in_world_coords $PLAYER_CHAR offset 0 -18.0 0 store_to 1@ 2@ 3@ // 18 meters behind player
+          0x44, 0x00, 0xD0, 0x0E, 0x0E, 0x0F, 0x10, //0044: set_char_coordinates $PLAYER_CHAR to 1@ 2@ 3@ // adjust
+          0xCF, 0x00, 0xD0, 0x0E, 0x11, // 00CF: set_char_heading $PLAYER_CHAR to 4@
+          0x21, 0x02, // 0221: set_camera_behind_player
+          0x23, 0x00 // 0023: terminate_this_script
+		    };
+        empire_script_teleport[4] = editor_empire_current;
+        CustomScriptExecute((int)&empire_script_teleport); // make game execute it
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -4079,7 +3961,7 @@ static int editor_ctrl() {
     case EDITOR_BUILDINGSIPL:
       editor_buildingsIPL_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -4087,7 +3969,7 @@ static int editor_ctrl() {
     case EDITOR_TREADABLESIPL:
       editor_treadablesIPL_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -4095,7 +3977,7 @@ static int editor_ctrl() {
     case EDITOR_DUMMYSIPL:
       editor_dummysIPL_current = editor_block_current;
       if( editor_trigger ) {
-        teleport(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
+        SetPlayerPosition(getFloat(editor_base_adr+0x30), getFloat(editor_base_adr+0x34), getFloat(editor_base_adr+0x38)+2.00f);
         //closeMenu(); // close menu
         editor_trigger = 0;
       }
@@ -4139,8 +4021,6 @@ static int editor_ctrl() {
 
   if( pressed_buttons & PSP_CTRL_CIRCLE )
     flag_editor = 0;
-
-  return 0;
 }
 #endif
 
@@ -4162,11 +4042,11 @@ static float cam_coord_x2, cam_coord_y2, cam_coord_z2;
 static float radius, inclination, azimuth;
 static float movespeed = 0.40, turnspeed = 0.05;
 static int printinfo = 1;
-static int protofix = 0, protofix2 = 0; // todo make dynamic?!
-extern u32 global_camera;
+static int protofix = 0, protofix2 = 0; // TODO: make dynamic?!
+extern uaddr global_camera;
 
-int freecam_create() {
-  DEBUG_LOG("%i: freecam_create()", getGametime());
+void freecam_create() {
+  DEBUG_LOG("%lu: freecam_create()", getGametime());
 
   if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) // ULUX v0.02 & ULUS v1.02
     protofix = -0x10;
@@ -4178,10 +4058,9 @@ int freecam_create() {
   printinfo = 1;
   setByte(pplayer + (LCS ? 0x560 : 0x550) + protofix2, 1); // unbind camera from player
   setFloat(global_camera + (LCS ? 0xCC : 0x798), 4.0f); // unbind camera from vehicle (by setting camera mode to "4")
-  return 0;
 }
 
-static int freecam_draw() {
+static void freecam_draw() {
   float player_x = getFloat(pplayer+0x30);
   float player_y = getFloat(pplayer+0x34);
   float player_z = getFloat(pplayer+0x38);
@@ -4231,7 +4110,7 @@ static int freecam_draw() {
   cam_coord_y2 = radius * cosf(inclination) * sinf(azimuth); // y2  needs fix
   cam_coord_z2 = radius * sinf(inclination);                // z2  OK
 
-  /// ugly quick fix TODO
+  /// TODO: ugly quick fix
   if( back_x1 > 0.00 && back_y1 > 0.00 ) { // direction 1
     cam_coord_x2 = -cam_coord_x2;
     cam_coord_y2 = -cam_coord_y2;
@@ -4327,87 +4206,64 @@ static int freecam_draw() {
   /////////////////////////////////////////////////////////////////////////////////////
 
   if( pressed_buttons & PSP_CTRL_SELECT ) {
-    teleport(camera_x, camera_y, camera_z);
+    SetPlayerPosition(camera_x, camera_y, camera_z);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////
 
   if( printinfo ) {
 
-    drawString(_t("Free Camera"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM);
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_FREECAM, "Free Camera");
 
-    drawString(_t("Player position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT);
-    snprintf(buffer, sizeof(buffer), "x: %.2f", player_x);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "y: %.2f", player_y);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 70.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "z: %.2f", player_z);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE);
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, COLOR_TEXT, "Player position:");
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 55.0f, COLOR_VALUE, "x: %.2f", player_x);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 70.0f, COLOR_VALUE, "y: %.2f", player_y);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 85.0f, COLOR_VALUE, "z: %.2f", player_z);
 
 
-    drawString(_t("Camera position:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT);
-    snprintf(buffer, sizeof(buffer), "x: %.2f", camera_x);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "y: %.2f", camera_y);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "z: %.2f", camera_z);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 165.0f, COLOR_VALUE);
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, COLOR_TEXT, "Camera position:");
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 135.0f, COLOR_VALUE, "x: %.2f", camera_x);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 150.0f, COLOR_VALUE, "y: %.2f", camera_y);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 165.0f, COLOR_VALUE, "z: %.2f", camera_z);
 
 
-    /*snprintf(buffer, sizeof(buffer), "cam_coord_x1 = %.2f", cam_coord_x1); //D0
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 20.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "cam_coord_y1 = %.2f", cam_coord_y1); //D4
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 40.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "cam_coord_z1 = %.2f", cam_coord_z1); //D8
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 60.0f, COLOR_VALUE);
+    /*
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 20.0f, COLOR_VALUE, "cam_coord_x1 = %.2f", cam_coord_x1);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 40.0f, COLOR_VALUE, "cam_coord_y1 = %.2f", cam_coord_y1);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 60.0f, COLOR_VALUE, "cam_coord_z1 = %.2f", cam_coord_z1);
 
-    snprintf(buffer, sizeof(buffer), "cam_coord_x2 = %.2f", cam_coord_x2); //E8
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 90.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "cam_coord_y2 = %.2f", cam_coord_y2); //EC
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 110.0f, COLOR_VALUE);
-    snprintf(buffer, sizeof(buffer), "cam_coord_z2 = %.2f", cam_coord_z2); //F0
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 90.0f, COLOR_VALUE, "cam_coord_x2 = %.2f", cam_coord_x2);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 110.0f, COLOR_VALUE, "cam_coord_y2 = %.2f", cam_coord_y2);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE, "cam_coord_z2 = %.2f", cam_coord_z2);
     */
 
-    snprintf(buffer, sizeof(buffer), _t("cutscene: %X"), getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)) );
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY);
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY, "cutscene: %X", getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)));
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY, "camera: %X", getByte( global_camera + (LCS ? 0x64+protofix : 0x816)));
 
-    snprintf(buffer, sizeof(buffer), _t("camera: %X"), getByte( global_camera + (LCS ? 0x64+protofix : 0x816)) );
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY);
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, GREY, "FOV: %.2f", fov);
 
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 125.0f, GREY, "movespeed: %.2f", movespeed);
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, GREY, "turnspeed: %.3f", turnspeed);
 
-    snprintf(buffer, sizeof(buffer), _t("FOV: %.2f"), fov);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, GREY);
-
-    snprintf(buffer, sizeof(buffer), _t("movespeed: %.2f"), movespeed);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 125.0f, GREY);
-    snprintf(buffer, sizeof(buffer), _t("turnspeed: %.3f"), turnspeed);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, GREY);
-
-    snprintf(buffer, sizeof(buffer), _t("radius: %.2f"), radius);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 170.0f, GREY);
-    snprintf(buffer, sizeof(buffer), _t("inclination: %.2f"), inclination);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 185.0f, GREY);
-    snprintf(buffer, sizeof(buffer), _t("azimuth: %.2f"), azimuth);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 200.0f, GREY);
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 170.0f, GREY, "radius: %.2f", radius);
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 185.0f, GREY, "inclination: %.2f", inclination);
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 200.0f, GREY, "azimuth: %.2f", azimuth);
 
 
     if( flag_use_legend ) {
       drawLegendBox(3, COLOR_BACKGROUND);
-      drawLegendMessage(_t("D-PAD: Move Camera position"),    0, 2, COLOR_TEXT); // left side, first row
-      drawLegendMessage(_t("TRIANGLE: Show/Hide text"),       1, 2, COLOR_TEXT); // right side, first row
-      drawLegendMessage(_t("CROSS + D-PAD: Turn Camera"),     0, 1, COLOR_TEXT); // left side, second row
-      drawLegendMessage(_t("L/R (+ CROSS): Adjust Speed(s)"), 1, 1, COLOR_TEXT); // right side, second row
-      drawLegendMessage(_t("SQUARE + D-PAD: Height & FOV"),   0, 0, COLOR_TEXT); // left side, third row
-      drawLegendMessage(_t("CIRCLE: Exit to Menu"),           1, 0, COLOR_TEXT); // right side, third row
+      drawLegendMessageNoVarg(0, 2, COLOR_TEXT, "D-PAD: Move Camera position"); // left side, first row
+      drawLegendMessageNoVarg(1, 2, COLOR_TEXT, "TRIANGLE: Show/Hide text"); // right side, first row
+      drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "CROSS + D-PAD: Turn Camera"); // left side, second row
+      drawLegendMessageNoVarg(1, 1, COLOR_TEXT, "L/R (+ CROSS): Adjust Speed(s)"); // right side, second row
+      drawLegendMessageNoVarg(0, 0, COLOR_TEXT, "SQUARE + D-PAD: Height & FOV"); // left side, third row
+      drawLegendMessageNoVarg(1, 0, COLOR_TEXT, "CIRCLE: Exit to Menu"); // right side, third row
     }
   }
-
-  return 0;
 }
 
-static int freecam_ctrl() {
-
+static void freecam_ctrl()
+{
   if( pressed_buttons & PSP_CTRL_CIRCLE ) {
     flag_freecam = 0;
     setByte(pplayer + (LCS ? 0x560 : 0x550) + protofix2, 0); // rebind camera to player
@@ -4415,10 +4271,8 @@ static int freecam_ctrl() {
   }
 
   if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
-    printinfo = 1 - printinfo;
+    printinfo = !printinfo;
   }
-
-  return 0;
 }
 #endif
 
@@ -4430,119 +4284,102 @@ static int freecam_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef HEXEDITOR
-static short flag_address = 0;
-static u32 tempaddress = 0; // stores the temp address which may or may not be hex_addr later
-static u32 addresspos = -1;  // position of cursor to digit to be adjusted
+static bool flag_address = false;
+static uaddr tempaddress = 0; // stores the temp address which may or may not be hex_addr later
+static array_uidx addresspos = 0;  // position of cursor to digit to be adjusted
 
 #define ADR_HISTORY_SIZE 32
-static int adr_history[ADR_HISTORY_SIZE];
-static int history_position = 0;
+static uaddr adr_history[ADR_HISTORY_SIZE];
+static array_uidx history_position = 0;
 
-static void add_adr_to_history(int address) { // new addresses added to beginning.. rest shifted
-  int i;
+static void add_adr_to_history(uaddr address) { // new addresses added to beginning.. rest shifted
   if( address != adr_history[0] ) { // only add address if its not the first already
-    for( i = ADR_HISTORY_SIZE-1; i > 0; i-- ) {
+    for( array_uidx i = ADR_HISTORY_SIZE-1; i > 0; i-- ) {
       adr_history[i] = adr_history[i-1];
     } adr_history[0] = address;
   }
-  //remove duplicates when shifting ? todo?
+  // TODO: remove duplicates when shifting ?
 }
 
-int address_create() {
-  DEBUG_LOG("%i: address_create()", getGametime());
+void address_create() {
+  DEBUG_LOG("%lu", getGametime());
 
-  flag_address = 1; // only set here!
+  flag_address = true; // only set here!
   addresspos = 0;
   tempaddress = hex_adr;
-  return 0;
 }
 
-static int address_draw() {
+static void address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
 
-  drawString(_t("Enter Address"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE);
+  drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE, "Enter Address");
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
 
   /// draw physical address
-  unsigned int i = 0, x = 320, y = 130, temp = tempaddress; // x = 290
-  drawString(_t("Physical:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT);
+  uint32 i = 0, x = 320, y = 130, temp = tempaddress; // x = 290
+  drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, COLOR_TEXT, "Physical:");
   while( temp ) {
-    snprintf(buffer, sizeof(buffer), "%X", temp % 0x10);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, COLOR_TEXT);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, COLOR_TEXT, "%X", temp % 0x10);
     if( i == addresspos ) { //cursor
-      drawString("v", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, COLOR_TEXT);
-      drawString("^", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+1, y+15, COLOR_TEXT);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, COLOR_TEXT, "v");
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+1, y+15, COLOR_TEXT, "^");
     } temp /= 0x10; i++;
-  } drawString("0x 0", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=30), (float)y, COLOR_TEXT);
+  } drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=30), (float)y, COLOR_TEXT, "0x 0");
 
 
   /// draw text_addr depending address
   if( tempaddress > mod_text_addr ) {
     i = 0, x = 320, y += 45, temp = tempaddress - mod_text_addr;
-    drawString("text_addr:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, YELLOW);
+    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, YELLOW, "text_addr:");
     while( temp ) {
-      snprintf(buffer, sizeof(buffer), "%X", temp % 0x10);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, YELLOW);
+      drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, YELLOW, "%X", temp % 0x10);
       if( i == addresspos ) { // cursor
-        drawString("v", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, YELLOW);
-        drawString("^", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+1, y+15, YELLOW);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, YELLOW, "v");
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+1, y+15, YELLOW, "^");
       } temp /= 0x10; i++;
-    } drawString("0x", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=20), (float)y, YELLOW);
+    } drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=20), (float)y, YELLOW, "0x");
   }
 
 
   /// draw $gp depending address
   if( VCS ) {
     i = 0, x = 320, y += 45, temp = tempaddress - gp;
-    drawString(_t("To $gp:"), ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE);
+    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE, "To $gp:");
     while( temp ) {
-      snprintf(buffer, sizeof(buffer), "%X", temp % 0x10);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, ORANGE);
+      drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, ORANGE, "%X", temp % 0x10);
       if( i == addresspos ) { // cursor
-        drawString("v", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, ORANGE);
-        drawString("^", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+1, y+15, ORANGE);
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+2, y-15, ORANGE, "v");
+        drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+1, y+15, ORANGE, "^");
       } temp /= 0x10; i++;
-    } drawString("0x", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=20), (float)y, ORANGE);
+    } drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=20), (float)y, ORANGE, "0x");
   }
 
 
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {
     /// draw info
-    snprintf(buffer, sizeof(buffer), "addresspos = %i", addresspos);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "phy: 0x%08X", tempaddress);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "mod: 0x%08lX", tempaddress - mod_text_addr);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 160.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "$gp: 0x%08X", tempaddress  - gp);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 180.0f, RED);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, RED, "addresspos = %lu", addresspos);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, RED, "phy: 0x%08lX", tempaddress);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 160.0f, RED, "mod: 0x%08lX", tempaddress - mod_text_addr);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 180.0f, RED, "$gp: 0x%08lX", tempaddress  - gp);
 
 
     /// draw history
     y = 20.0f;
-    snprintf(buffer, sizeof(buffer), "ADR_HISTORY_SIZE = %i", ADR_HISTORY_SIZE);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, y+=15, RED);
-    snprintf(buffer, sizeof(buffer), "history_position = %i", history_position);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, y+=15, RED);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, y+=15, RED, "ADR_HISTORY_SIZE = %i", ADR_HISTORY_SIZE);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, y+=15, RED, "history_position = %i", history_position);
     for( i = 0; i < ADR_HISTORY_SIZE && i < 12 && adr_history[i] != 0; i++ ) { // max of about 12
-      snprintf(buffer, sizeof(buffer), "%i - 0x%08X", i, adr_history[i]);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 30.0f, y+=15, RED);
+      drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 30.0f, y+=15, RED, "%i - 0x%08X", i, adr_history[i]);
     }
   }
   #endif
 
-  //drawString("CROSS: Open Address", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 100.0f, 200.0f, COLOR_TEXT);
-  //drawString("CIRCLE: Abort", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 300.0f, 200.0f, COLOR_TEXT);
-
-  return 0;
+  //drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 100.0f, 200.0f, COLOR_TEXT, "CROSS: Open Address");
+  //drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 300.0f, 200.0f, COLOR_TEXT, "CIRCLE: Abort");
 }
 
-static int address_ctrl() {
+static void address_ctrl() {
   if( hold_buttons & PSP_CTRL_LEFT ) {
     if( addresspos < 6 )
       addresspos++;
@@ -4573,7 +4410,7 @@ static int address_ctrl() {
   }
 
   if( pressed_buttons & PSP_CTRL_SELECT ) { // ultra secret backdoor lul
-    //category_index[CAT_DEBUG] = DEBUG = 1 - DEBUG; // outdated - but works for 1.0e and below ;)
+    //category_index[CAT_DEBUG] = DEBUG = !DEBUG; // outdated - but works for 1.0e and below ;)
   }
 
   if( pressed_buttons & PSP_CTRL_LTRIGGER ) {
@@ -4589,7 +4426,7 @@ static int address_ctrl() {
   }
 
   if( pressed_buttons & PSP_CTRL_CROSS ) {
-    flag_address = 0;
+    flag_address = false;
     history_position = 0;
     add_adr_to_history(tempaddress);
     hex_adr = tempaddress;
@@ -4597,10 +4434,8 @@ static int address_ctrl() {
   }
   if( pressed_buttons & PSP_CTRL_CIRCLE ) {
     history_position = 0;
-    flag_address = 0;
+    flag_address = false;
   }
-
-  return 0;
 }
 
 
@@ -4611,38 +4446,34 @@ static int address_ctrl() {
 * Edit Byte for HexEditor
 *
 *********************************************************************************************************/
-static short flag_editbyte = 0;
-static unsigned char editbyte_current = -1;
-static unsigned char editbyte_pos = -1;
+static bool flag_editbyte     = false;
+static byte editbyte_current  = 0;
+static uint8 editbyte_pos     = 0;
 
-static int editbyte_create() {
-  flag_editbyte = 1; // only set here!
+static void editbyte_create() {
+  flag_editbyte = true; // only set here!
   editbyte_current = getByte(hex_adr);
   editbyte_pos = 1;
-  return 0;
 }
 
-static int editbyte_draw() {
+static void editbyte_draw() {
   drawUiBox(180.0f, 97.0f, 120.0f, 22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
   drawUiBox(180.0f, 97.0f, 120.0f, 75.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
 
-  drawString(_t("Edit Byte"), ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 100.0f, COLOR_TITLE);
+  drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 100.0f, COLOR_TITLE, "Edit Byte");
 
   int x = 225, y = 140;
 
-  snprintf(buffer, sizeof(buffer), "0x%02X", editbyte_current);
-  drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)x, (float)y, COLOR_TEXT);
+  drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)x, (float)y, COLOR_TEXT, "0x%02X", editbyte_current);
 
   if( LCS ) // graphical fix
     x += 2;
 
-  drawString("v", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+(editbyte_pos*10)+14, y-15, COLOR_TEXT);
-  drawString("^", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+(editbyte_pos*10)+14, y+15, COLOR_TEXT);
-
-  return 0;
+  drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+(editbyte_pos*10)+14, y-15, COLOR_TEXT, "v");
+  drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+(editbyte_pos*10)+14, y+15, COLOR_TEXT, "^");
 }
 
-static int editbyte_ctrl() {
+static void editbyte_ctrl() {
   if( hold_buttons & PSP_CTRL_LEFT ) editbyte_pos = 0;
   if( hold_buttons & PSP_CTRL_RIGHT ) editbyte_pos = 1;
 
@@ -4669,16 +4500,12 @@ static int editbyte_ctrl() {
   if( pressed_buttons & PSP_CTRL_CROSS ) {
     setByte(hex_adr, editbyte_current);
     clearICacheFor(hex_adr); // for PPSSPP
-    flag_editbyte = 0;
+    flag_editbyte = false;
   }
   if( pressed_buttons & PSP_CTRL_CIRCLE ) {
-    flag_editbyte = 0;
+    flag_editbyte = false;
   }
-
-  return 0;
 }
-
-
 
 
 /********************************************************************************************************
@@ -4690,24 +4517,24 @@ static int editbyte_ctrl() {
 * TODO: mode 1 with address higher than low bound and not ending with 0x....0
 *
 *********************************************************************************************************/
-static short flag_hexeditor = 0;
+static bool flag_hexeditor = false;
 
 /// settings
-static const int hexeditor_maxlines   = 14;      // the maximum number of lines that can be displayed - considering max text possible by the game is 512 we are pretty maxed out already
-static const int hexeditor_colordelay = 3 * 1000 * 1000; // delay for changed value color (3 seconds)
+static const usize hexeditor_maxlines   = 14;      // the maximum number of lines that can be displayed - considering max text possible by the game is 512 we are pretty maxed out already
+static const usize hexeditor_colordelay = 3 * 1000 * 1000; // delay for changed value color (3 seconds)
 
 /// set & used by functions
-static int hexeditor_mode;      // 0 = use full memory location, 1 = start from 0x00000000 ( = lower bound)
-static u32 hexeditor_lowbound;  // lowest memory address allowed to be displayed
-static u32 hexeditor_highbound; // highest memory address allowed to be displayed
-static char hexeditor_infobuffer[64];            // holds the additional string info of location displayed next to Headline
-static unsigned char hexeditor_memory[14][0x10]; // copy of displayed hex memory for comparison [lines][colums]
-static unsigned int hexeditor_memtime[14][0x10];          // holds the time of hex value for color stuff [lines][colums]
-static int hexeditor_lines;   // current number of lines that are displayed
-static u32 hexeditor_address; // the addresses displayed on the left on mode 0 (actual memory address)
-static int hexeditor_showadr; // the addresses displayed on the left on mode 1 (0x0000000 = starting address)
-static int hexeditor_browse_x; // cursor x
-static int hexeditor_browse_y; // cursor y
+static uint8 hexeditor_mode;      // 0 = use full memory location, 1 = start from 0x00000000 ( = lower bound)
+static uaddr hexeditor_lowbound;  // lowest memory address allowed to be displayed
+static uaddr hexeditor_highbound; // highest memory address allowed to be displayed
+static u8char hexeditor_infobuffer[64];            // holds the additional string info of location displayed next to Headline
+static byte hexeditor_memory[14][0x10]; // copy of displayed hex memory for comparison [lines][colums]
+static uint32 hexeditor_memtime[14][0x10];          // holds the time of hex value for color stuff [lines][colums]
+static usize hexeditor_lines;   // current number of lines that are displayed
+static uaddr hexeditor_address; // the addresses displayed on the left on mode 0 (actual memory address)
+static uaddr hexeditor_showadr; // the addresses displayed on the left on mode 1 (0x0000000 = starting address)
+static uint8 hexeditor_browse_x; // cursor x
+static uint8 hexeditor_browse_y; // cursor y
 
 //"hex_adr" is physical address cursor is at
 
@@ -4715,11 +4542,10 @@ static int hex_addressmode = 0; // 0 = physical address, module load address, gl
 
 #define MARKERS 128
 
-static u32 hex_markers[MARKERS];
+static uaddr hex_markers[MARKERS];
 
-static void hex_marker_add(u32 address) {
-  int i;
-  for( i = 0; i < MARKERS; i++ ) {
+static void hex_marker_add(uaddr address) {
+  for( array_uidx i = 0; i < MARKERS; i++ ) {
     if( hex_markers[i] == address )
       return;
 
@@ -4729,30 +4555,27 @@ static void hex_marker_add(u32 address) {
     }
   }
 
-  for( i = MARKERS-1; i > 0; i-- ) { // array full -> move by 1
+  for( array_uidx i = MARKERS-1; i > 0; i-- ) { // array full -> move by 1
     hex_markers[i] = hex_markers[i-1];
   } hex_markers[0] = address;
 }
 
-void hex_marker_addx(u32 address, int size) {
-  int i;
-  for( i = 0; i < size; i++ )
+void hex_marker_addx(uaddr address, usize size) {
+  for( uaddr i = 0; i < size; i++ )
     hex_marker_add(address+i);
 }
 
-static int hex_marker_check(u32 address) {
-  int i;
-  for( i = 0; i < MARKERS; i++ ) {
+static bool hex_marker_check(uaddr address) {
+  for( array_idx i = 0; i < MARKERS; i++ ) {
     if( hex_markers[i] == address ) {
-      return 1;
+      return true;
     }
   }
-  return 0;
+  return false;
 }
 
-static void hex_marker_remove(u32 address) {
-  int i;
-  for( i = 0; i < MARKERS; i++ ) {
+static void hex_marker_remove(uaddr address) {
+  for( array_idx i = 0; i < MARKERS; i++ ) {
     if( hex_markers[i] == address ) {
       hex_markers[i] = 0;
       return;
@@ -4761,17 +4584,16 @@ static void hex_marker_remove(u32 address) {
 }
 
 void hex_marker_clear() {
-  int i;
-  for( i = 0; i < MARKERS; i++ )
+  for( array_idx i = 0; i < MARKERS; i++ )
     hex_markers[i] = 0;
 }
 
-int hexeditor_create(u32 address, int mode, int low, int high, const char *infostring) { // init HexEditor
-  DEBUG_LOG("%i: hexeditor_create(%s)", getGametime(), infostring);
+void hexeditor_create(uaddr address, int mode, uaddr low, uaddr high, const u8string infostring) { // init HexEditor
+  DEBUG_LOG("%lu: hexeditor_create(%s)", getGametime(), infostring);
 
   if( address >= memory_low && address <= memory_high )
     hex_adr = address;
-  else return -1;
+  else return;
 
   hexeditor_mode = mode;
   hexeditor_lowbound = low;
@@ -4837,10 +4659,9 @@ int hexeditor_create(u32 address, int mode, int low, int high, const char *infos
   }
 
   flag_hexeditor = 1; // only set here!
-  return 0;
 }
 
-static int hexeditor_draw() {
+static void hexeditor_draw() {
 
   /// settings
   int hex_spaceing   = 18;
@@ -4850,21 +4671,21 @@ static int hexeditor_draw() {
   int hstarthex   = 80;  // horizontal start of hex values
   int hstartascii = 375;  // horizontal start of ascii
 
-  int i, y, x1, x2;
-  int counter, scounter; // lines & bytes per line
-  u32 SOMECOLOR;
+  int y, x1, x2;
+  usize counter, scounter; // lines & bytes per line
+  CRGBA SOMECOLOR;
   unsigned char current = 0x00;
-  unsigned int current2 = 0;
+  uint32 current2 = 0;
 
 
     hex_adr = (hexeditor_address+(hexeditor_browse_y*0x10)+(hexeditor_browse_x*0x01)); // update address depending on cursor position
 
     /// draw Title
-    drawString(_t("HexEditor"), ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX);
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_HEX, "HexEditor");
 
 
     /// draw "infostring"
-    drawString(hexeditor_infobuffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 100.0f, 8.0f, COLOR_TEXT);
+    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 100.0f, 8.0f, COLOR_TEXT, hexeditor_infobuffer);
 
 
     /// if arrays are empty (cleared via navigating for example) fill them with the new values once
@@ -4889,22 +4710,21 @@ static int hexeditor_draw() {
     /// draw current address
     COLOR_TEMP = RED;
     if( hex_addressmode == 1 ) {
-      snprintf(buffer, sizeof(buffer), "%lX", hex_adr - mod_text_addr);
+      snprintf(buffer, sizeof(buffer), "%X", hex_adr - mod_text_addr);
       COLOR_TEMP = YELLOW;
     } else if( hex_addressmode == 2 ) {
       snprintf(buffer, sizeof(buffer), "%X", hex_adr - gp);
       COLOR_TEMP = ORANGE;
     } else snprintf(buffer, sizeof(buffer), "%X", hex_adr);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8, y-line_spaceing-8, COLOR_TEMP);
+    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8, y-line_spaceing-8, COLOR_TEMP, buffer);
 
     /// draw 0 to F legend
-    for( i = 0x0; i <= 0xF; i++, x1+=hex_spaceing ) {
-      snprintf(buffer, sizeof(buffer), "%X", i);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x1+5, y-line_spaceing-8, COLOR_TEXT); // *16
+    for( uint8 i = 0x0; i <= 0xF; i++, x1+=hex_spaceing ) {
+      drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x1+5, y-line_spaceing-8, COLOR_TEXT, "%X", i); // *16
     } x1 = hstarthex;
 
     /// draw "ASCII" text
-    drawString("ASCII", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x2, y-line_spaceing-8, COLOR_TEXT);
+    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x2, y-line_spaceing-8, COLOR_TEXT, "ASCII");
 
     counter = 0;
     while( counter < hexeditor_lines ){
@@ -4915,13 +4735,13 @@ static int hexeditor_draw() {
 
      } else {
         if( hex_addressmode == 1 )
-          snprintf(buffer, sizeof(buffer), "0x%08lX", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
+          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
         else if( hex_addressmode == 2 )
-          snprintf(buffer, sizeof(buffer), "0x%08lX", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
+          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
         else
-          snprintf(buffer, sizeof(buffer), "0x%08lX", (hexeditor_address+(counter*0x10)) ); // display physical address "0x%08X"
+          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) ); // display physical address "0x%08X"
 
-     } drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, 8, y, COLOR_TEXT);
+     } drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, 8, y, COLOR_TEXT, buffer);
 
 
     /// print hex & ascii
@@ -4969,7 +4789,7 @@ static int hexeditor_draw() {
       }
 
       /// draw markers
-      for( i = 0; i < MARKERS; i++ ) {
+      for( array_uidx i = 0; i < MARKERS; i++ ) {
         if( hex_markers[i] == ((hexeditor_address+(counter*0x10))+scounter)) {
           drawBox(x1-2.0f, y + (LCS ? 0 : 1.5f), 18, 11, COLOR_HEX_MARKER); // on hex
           //drawBox(x2-2, y, 8, 11, COLOR_HEX_MARKER); // on ascii
@@ -4978,8 +4798,7 @@ static int hexeditor_draw() {
       }
 
       /// draw hex
-      snprintf(buffer, sizeof(buffer), "%02X", current );
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, x1, y, SOMECOLOR); // todo color
+      drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, x1, y, SOMECOLOR, "%02X", current); // TODO: color
 
       hexeditor_memory[counter][scounter] = current; // save same or new value in memory array
 
@@ -4992,8 +4811,7 @@ static int hexeditor_draw() {
       } else SOMECOLOR = COLOR_TEXT; // normal
 
       ///draw Ascii
-      snprintf(buffer, sizeof(buffer), "%c", current);
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, x2, y, SOMECOLOR); //draw if in bound
+      drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_HEXEDIT, SHADOW_OFF, x2, y, SOMECOLOR, "%c", current); //draw if in bound
 
       scounter++;
       x1 += hex_spaceing; // hex spacing
@@ -5009,53 +4827,48 @@ static int hexeditor_draw() {
 
   /// current values
   if( flag_use_legend ) {
-    drawString(_t("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT);
-    drawString(_t("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT);
-    drawString(_t("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT);
-    drawString(_t("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT);
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 222.0f, COLOR_TEXT, "short:");
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 233.0f, COLOR_TEXT, "integer:");
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 244.0f, COLOR_TEXT, "float:");
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  50.0f, 255.0f, COLOR_TEXT, "address:");
   } else {
-    drawString(_t("short:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT);
-    drawString(_t("integer:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT);
-    drawString(_t("float:"),   ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT);
-    drawString(_t("address:"), ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT);
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF,  40.0f, 255.0f, COLOR_TEXT, "short:");
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 150.0f, 255.0f, COLOR_TEXT, "integer:");
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 260.0f, 255.0f, COLOR_TEXT, "float:");
+    drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 400.0f, 255.0f, COLOR_TEXT, "address:");
   }
 
   switch( hex_adr % 0x10 ) {
     case 0x0: case 0x4: case 0x8: case 0xC:
-      snprintf(buffer, sizeof(buffer), "%d", *((short*)(hex_adr)) );
       if( flag_use_legend )
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 222.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 222.0f, RED, "%d", *((short*)(hex_adr)));
       else
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 45.0f, 255.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 45.0f, 255.0f, RED, "%d", *((short*)(hex_adr)));
 
-      snprintf(buffer, sizeof(buffer), "%d", *((int*)(hex_adr)) );
       if( flag_use_legend )
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 233.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 233.0f, RED, "%d", *((int*)(hex_adr)));
       else
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 155.0f, 255.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 155.0f, 255.0f, RED, "%d", *((int*)(hex_adr)));
 
-      snprintf(buffer, sizeof(buffer), "%f", *((float*)(hex_adr)));
       if( flag_use_legend )
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 244.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 244.0f, RED, "%f", *((float*)(hex_adr)));
       else
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 265.0f, 255.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 265.0f, 255.0f, RED, "%f", *((float*)(hex_adr)));
 
 
       if( *((u32*)(hex_adr)) > memory_low && *((u32*)(hex_adr)) < memory_high) { // link to accessible memory
-        snprintf(buffer, sizeof(buffer), "0x%08X", *((int*)(hex_adr)) );
         if( flag_use_legend )
-          drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 255.0f, RED);
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 255.0f, RED, "0x%08X", *((int*)(hex_adr)));
         else
-          drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 405.0f, 255.0f, RED);
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 405.0f, 255.0f, RED, "0x%08X", *((int*)(hex_adr)));
       }
       break;
 
     case 0x2: case 0x6: case 0xA: case 0xE:
-      snprintf(buffer, sizeof(buffer), "%d", *((short*)(hex_adr)) );
       if( flag_use_legend )
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 222.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 222.0f, RED, "%d", *((short*)(hex_adr)));
       else
-        drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 45.0f, 255.0f, RED);
+        drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 45.0f, 255.0f, RED, "%d", *((short*)(hex_adr)));
       break;
   }
 
@@ -5064,170 +4877,163 @@ static int hexeditor_draw() {
   if( flag_use_legend && !flag_draw_DBGVALS ) {
     #ifndef DEBUG
     drawBox(320, 220, 155, 50, COLOR_BACKGROUND);
-    drawString(_t("CROSS: Edit selected Byte"),  ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT);
-    drawString(_t("SQUARE: Set Byte to 0x00"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT);
-    drawString(_t("TRIANGLE: Open Address"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT);
-    drawString(_t("CIRCLE: Exit HexEditor"),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT);
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 222.0f, COLOR_TEXT, "CROSS: Edit selected Byte");
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 233.0f, COLOR_TEXT, "SQUARE: Set Byte to 0x00");
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 244.0f, COLOR_TEXT, "TRIANGLE: Open Address");
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 325.0f, 255.0f, COLOR_TEXT, "CIRCLE: Exit HexEditor");
 
     drawBox(160, 220, 155, 50, COLOR_BACKGROUND);
-    drawString(_t("R + SQUARE: Zero 4 Bytes"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT);
-    drawString(_t("R + TRIANGLE: Teleport xyz"), ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT);
-    drawString(_t("SELECT: Cycle Baseadr."),     ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT);
-    drawString(_t("R + CROSS: Mark selected"),   ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT);
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 233.0f, COLOR_TEXT, "R + SQUARE: Zero 4 Bytes");
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 244.0f, COLOR_TEXT, "R + TRIANGLE: Teleport xyz");
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 255.0f, COLOR_TEXT, "SELECT: Cycle Baseadr.");
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 165.0f, 222.0f, COLOR_TEXT, "R + CROSS: Mark selected");
    #endif
   }
 
 
   #ifdef DEBUG
   if( flag_draw_DBGVALS ) {
-    snprintf(buffer, sizeof(buffer), "hexeditor_lines = %i", hexeditor_lines );
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 222.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "hexeditor_address = 0x%08X", hexeditor_address );
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 233.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "hexeditor_showadr = 0x%08X", hexeditor_showadr );
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 244.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "hex_adr = 0x%08X", hex_adr );
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 255.0f, RED);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 222.0f, RED, "hexeditor_lines = %i", hexeditor_lines);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 233.0f, RED, "hexeditor_address = 0x%08lX", hexeditor_address);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 244.0f, RED, "hexeditor_showadr = 0x%08X", hexeditor_showadr);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 250.0f, 255.0f, RED, "hex_adr = 0x%08X", hex_adr);
 
     /*int u, e = hstartascii, r = 80;
     for(u = 0; u < MARKERS; u++, r+=20) {
-      snprintf(buffer, sizeof(buffer), "%d: 0x%08X", u, hex_markers[u] );
-      drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, e, r, ORANGE);
+      drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, e, r, ORANGE, "%d: 0x%08X", u, hex_markers[u]);
     }*/
   }
   #endif
-
-  return 0;
-
 }
 
-static int hexeditor_ctrl() {
-    if( hold_buttons & PSP_CTRL_DOWN ) {
-      if( hexeditor_browse_y == hexeditor_lines-1 && (hexeditor_address+(hexeditor_lines*0x10) < hexeditor_highbound) ) {
-        hexeditor_address+=0x10;
-        hexeditor_showadr+=0x10;
-        memset(hexeditor_memory, 0, sizeof(hexeditor_memory[0][0]) * hexeditor_lines * 0x10);
-        memset(hexeditor_memtime, 0, sizeof(hexeditor_memtime[0][0]) * hexeditor_lines * 0x10);
-        while( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x) >= hexeditor_highbound ) // bound_handling
-          hexeditor_browse_x--;
-        if ( hexeditor_browse_x < -1 ) { // bound error handling
+static void hexeditor_ctrl() {
+  if( hold_buttons & PSP_CTRL_DOWN ) {
+    if( hexeditor_browse_y == hexeditor_lines-1 && (hexeditor_address+(hexeditor_lines*0x10) < hexeditor_highbound) ) {
+      hexeditor_address+=0x10;
+      hexeditor_showadr+=0x10;
+      memset(hexeditor_memory, 0, sizeof(hexeditor_memory[0][0]) * hexeditor_lines * 0x10);
+      memset(hexeditor_memtime, 0, sizeof(hexeditor_memtime[0][0]) * hexeditor_lines * 0x10);
+      while( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x) >= hexeditor_highbound ) // bound_handling
+      {
+        if ( hexeditor_browse_x > 0 ) hexeditor_browse_x--;
+        else {
           hexeditor_browse_x = 0;
           hexeditor_browse_y--;
         }
-
-      } else {
-        if( hexeditor_browse_y != hexeditor_lines-1 ) {
-          hexeditor_browse_y++;
-          while( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x) >= hexeditor_highbound )
-            hexeditor_browse_x--; // bound_handling
-          if ( hexeditor_browse_x < -1 ) { // bound error handling
-            hexeditor_browse_x = 0; hexeditor_browse_y--;
-          }
-        }
       }
-    }
 
-    if( hold_buttons & PSP_CTRL_UP ) {
-      if( hexeditor_browse_y == 0 && hexeditor_address+hexeditor_browse_y > hexeditor_lowbound ) {
-        hexeditor_address-=0x10;
-        hexeditor_showadr-=0x10;
-        memset(hexeditor_memory, 0, sizeof(hexeditor_memory[0][0]) * hexeditor_lines * 0x10);
-        memset(hexeditor_memtime, 0, sizeof(hexeditor_memtime[0][0]) * hexeditor_lines * 0x10);
-      } else {
-        if( hexeditor_address+hexeditor_browse_y > hexeditor_lowbound )
-          hexeditor_browse_y--;
-      }
-    }
-
-    if( hold_buttons & PSP_CTRL_LEFT ) {
-        if( hexeditor_browse_x == 0 ) {
-          hexeditor_browse_x = 0x10-1;
-          while( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x) >= hexeditor_highbound ) // bound handling
-            hexeditor_browse_x--;
-          if( hexeditor_browse_x < -1 ) { // bound error handling
+    } else {
+      if( hexeditor_browse_y != hexeditor_lines-1 ) {
+        hexeditor_browse_y++;
+        while( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x) >= hexeditor_highbound )
+        {
+          if ( hexeditor_browse_x > 0 ) hexeditor_browse_x--;
+          else {
             hexeditor_browse_x = 0;
             hexeditor_browse_y--;
           }
-        } else hexeditor_browse_x--;
-
-
-    }
-    if( hold_buttons & PSP_CTRL_RIGHT ) {
-      if( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x+1) < hexeditor_highbound ){ // only allow go right when there is a value next to it (bound handling)
-        if( hexeditor_browse_x == 0x10-1 )
-          hexeditor_browse_x = 0;
-        else hexeditor_browse_x++;
-      } else hexeditor_browse_x = 0;
-    }
-
-
-    if( pressed_buttons & PSP_CTRL_SELECT ) {
-      if( hex_addressmode < (LCS ? 1 : 2) )
-        hex_addressmode++;
-      else hex_addressmode = 0;
-    }
-
-    if( pressed_buttons & PSP_CTRL_CROSS ) {
-      if( current_buttons & PSP_CTRL_RTRIGGER ) { // mark
-        if( hex_marker_check(hex_adr) )
-          hex_marker_remove(hex_adr);
-        else hex_marker_add(hex_adr);
-        //setTimedTextbox("Test in hex! delete", 3);
-      } else editbyte_create(); // edit byte
-    }
-
-    if( hold_buttons & PSP_CTRL_SQUARE ) { // set zero
-      if( current_buttons & PSP_CTRL_RTRIGGER ) {
-        setByte(hex_adr+0x0, 0x00);
-        setByte(hex_adr+0x1, 0x00);
-        setByte(hex_adr+0x2, 0x00);
-        setByte(hex_adr+0x3, 0x00);
-      } else setByte(hex_adr, 0x00); // set zero
-      clearICacheFor(hex_adr); // for PPSSPP
-    }
-
-
-    /// open location
-    if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
-
-      if( current_buttons & PSP_CTRL_RTRIGGER ) { // teleport to location
-        if( hex_adr % 0x4 == 0x0 )
-          teleport( getFloat(hex_adr), getFloat(hex_adr+0x4), getFloat(hex_adr+0x8) ); // Note: no value check!
-
-      } else { // open pointer location
-        if( hex_adr % 0x4 == 0x0 ) {
-          if( (u32)getInt(hex_adr) > memory_low && (u32)getInt(hex_adr) < memory_high) { // pointer to accessible memory
-
-            /* old version (drop mode 1)
-            hex_adr = getInt(hex_adr);
-            hexeditor_address=(hex_adr/0x10)*0x10; //get rid of last hex 0xX
-            hexeditor_browse_x = hex_adr-hexeditor_address;
-            hexeditor_browse_y = 0;
-            hexeditor_mode = 0;
-
-            hexeditor_lowbound = memory_low;
-            hexeditor_highbound = memory_high;*/
-
-            memset(hexeditor_memory, 0, sizeof(hexeditor_memory[0][0]) * hexeditor_lines * 0x10);
-            memset(hexeditor_memtime, 0, sizeof(hexeditor_memtime[0][0]) * hexeditor_lines * 0x10);
-
-            add_adr_to_history(hex_adr); // add address to history array
-            snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "> via offset at 0x%08X", hex_adr);
-            hexeditor_create(getInt(hex_adr), 0, memory_low, memory_high, hexeditor_infobuffer);
-          }
         }
-
       }
     }
-
-  if( pressed_buttons & PSP_CTRL_CIRCLE ) {
-    flag_hexeditor = 0;
   }
 
-  return 0;
+  if( hold_buttons & PSP_CTRL_UP ) {
+    if( hexeditor_browse_y == 0 && hexeditor_address+hexeditor_browse_y > hexeditor_lowbound ) {
+      hexeditor_address-=0x10;
+      hexeditor_showadr-=0x10;
+      memset(hexeditor_memory, 0, sizeof(hexeditor_memory[0][0]) * hexeditor_lines * 0x10);
+      memset(hexeditor_memtime, 0, sizeof(hexeditor_memtime[0][0]) * hexeditor_lines * 0x10);
+    } else {
+      if( hexeditor_address+hexeditor_browse_y > hexeditor_lowbound )
+        hexeditor_browse_y--;
+    }
+  }
+
+  if( hold_buttons & PSP_CTRL_LEFT ) {
+      if( hexeditor_browse_x == 0 ) {
+        hexeditor_browse_x = 0x10-1;
+        while( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x) >= hexeditor_highbound ) // bound handling
+        {
+          if ( hexeditor_browse_x > 0 ) hexeditor_browse_x--;
+          else {
+            hexeditor_browse_x = 0;
+            hexeditor_browse_y--;
+          }
+        }
+      } else hexeditor_browse_x--;
+  }
+
+  if( hold_buttons & PSP_CTRL_RIGHT ) {
+    if( (hexeditor_address + (hexeditor_browse_y*0x10) + hexeditor_browse_x+1) < hexeditor_highbound ){ // only allow go right when there is a value next to it (bound handling)
+      if( hexeditor_browse_x == 0x10-1 )
+        hexeditor_browse_x = 0;
+      else hexeditor_browse_x++;
+    } else hexeditor_browse_x = 0;
+  }
+
+
+  if( pressed_buttons & PSP_CTRL_SELECT ) {
+    if( hex_addressmode < (LCS ? 1 : 2) )
+      hex_addressmode++;
+    else hex_addressmode = 0;
+  }
+
+  if( pressed_buttons & PSP_CTRL_CROSS ) {
+    if( current_buttons & PSP_CTRL_RTRIGGER ) { // mark
+      if( hex_marker_check(hex_adr) )
+        hex_marker_remove(hex_adr);
+      else hex_marker_add(hex_adr);
+      //setTimedTextbox("Test in hex! delete", 3);
+    } else editbyte_create(); // edit byte
+  }
+
+  if( hold_buttons & PSP_CTRL_SQUARE ) { // set zero
+    if( current_buttons & PSP_CTRL_RTRIGGER ) {
+      setByte(hex_adr+0x0, 0x00);
+      setByte(hex_adr+0x1, 0x00);
+      setByte(hex_adr+0x2, 0x00);
+      setByte(hex_adr+0x3, 0x00);
+    } else setByte(hex_adr, 0x00); // set zero
+    clearICacheFor(hex_adr); // for PPSSPP
+  }
+
+
+  /// open location
+  if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
+
+    if( current_buttons & PSP_CTRL_RTRIGGER ) { // teleport to location
+      if( hex_adr % 0x4 == 0x0 )
+        SetPlayerPosition( getFloat(hex_adr), getFloat(hex_adr+0x4), getFloat(hex_adr+0x8) ); // Note: no value check!
+
+    } else { // open pointer location
+      if( hex_adr % 0x4 == 0x0 ) {
+        if( (uaddr)getInt(hex_adr) > memory_low && (uaddr)getInt(hex_adr) < memory_high) { // pointer to accessible memory
+
+          /* old version (drop mode 1)
+          hex_adr = getInt(hex_adr);
+          hexeditor_address=(hex_adr/0x10)*0x10; //get rid of last hex 0xX
+          hexeditor_browse_x = hex_adr-hexeditor_address;
+          hexeditor_browse_y = 0;
+          hexeditor_mode = 0;
+
+          hexeditor_lowbound = memory_low;
+          hexeditor_highbound = memory_high;*/
+
+          memset(hexeditor_memory, 0, sizeof(hexeditor_memory[0][0]) * hexeditor_lines * 0x10);
+          memset(hexeditor_memtime, 0, sizeof(hexeditor_memtime[0][0]) * hexeditor_lines * 0x10);
+
+          add_adr_to_history(hex_adr); // add address to history array
+          snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "> via offset at 0x%08X", hex_adr);
+          hexeditor_create(getInt(hex_adr), 0, memory_low, memory_high, hexeditor_infobuffer);
+        }
+      }
+
+    }
+  }
+
+  if( pressed_buttons & PSP_CTRL_CIRCLE ) {
+    flag_hexeditor = false;
+  }
 }
 #endif
 
@@ -5236,65 +5042,65 @@ static int hexeditor_ctrl() {
 static void hideHUD() {
   if( getDisplaySettingsToggleHUD() ) {
     setDisplaySettingsToggleHUD(OFF);
-    flag_hudwashidden = 1;
+    flag_hudwashidden = true;
   }
 }
 
 static void showHUD() { // only show if it was enabled before
-  if( flag_hudwashidden == 1 ) {
+  if( flag_hudwashidden ) {
     setDisplaySettingsToggleHUD(ON); // re-enable
-    flag_hudwashidden = 0;
+    flag_hudwashidden = false;
   }
 }
 
 static void hideRadar() {
   if( getDisplaySettingsToggleRadar() ) {
     setDisplaySettingsToggleRadar(OFF);
-    flag_mapwashidden = 1;
+    flag_mapwashidden = true;
   }
 }
 
 static void showRadar() { // only show if it was enabled before
-  if( flag_mapwashidden == 1 ) {
+  if( flag_mapwashidden ) {
     setDisplaySettingsToggleRadar(ON); // re-enable
-    flag_mapwashidden = 0;
+    flag_mapwashidden = false;
   }
 }
 
 
 
 void draw() { // called by hijacked game function
-  flag_menu_show = 1; // menu is allowed
+  flag_menu_show = true; // menu is allowed
 
   /// add 'watermark'
   #ifdef DEBUG
-  drawString("DEBUG", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, RED);
+  drawStringNoTVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, RED, "DEBUG");
   #endif
 
   /// add 'watermark'
   //#ifdef PREVIEW
-  drawString("PREVIEW", ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, WHITE);
+  drawStringNoTVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 478.0f, 0.0f, WHITE, "PREVIEW");
   //#endif
 
 
   /// draw welcome message in textbox (only when menu autostart is disabled!)
   if( flag_draw_welcomsg ) {
-    DEBUG_LOG("%i: drawing welcome message", getGametime());
+    DEBUG_LOG("%lu: drawing welcome message", getGametime());
     setTimedTextbox(_t(welcomemsg), 7.00f);
-    flag_draw_welcomsg = 0;
+    flag_draw_welcomsg = false;
   }
 
   /// draw low-memory message in textbox
-  #ifndef LITE
+  #if !LITE
   if( flag_draw_memwarn && !flag_menu_running && !isTextboxShowing() && getGametime() > 14000 && memory_main_free < (120*1000) ) { // only show after 14 seconds into game & when there is less than 120 KB
-    DEBUG_LOG("%i: drawing memory message", getGametime());
+    DEBUG_LOG("%lu: drawing memory message", getGametime());
     setTimedTextbox(_t(memwarning), 10.00f);
-    flag_draw_memwarn = 0;
+    flag_draw_memwarn = false;
   }
   #endif
 
   /// draw Menu and everything that uses button input
-  if( flag_menu_running == 1 && flag_menu_show == 1 ) {
+  if( flag_menu_running && flag_menu_show ) {
 
     /// reset hidden UI elements (for other 'menus')
     if( (
@@ -5318,7 +5124,7 @@ void draw() { // called by hijacked game function
       !flag_userscripts &&
       #endif
 
-      1 ) // in case all are disabled
+      true ) // in case all are disabled
 
       #ifdef HEXEDITOR
       || flag_editbyte
@@ -5331,7 +5137,7 @@ void draw() { // called by hijacked game function
     }
 
     /// decide menu to draw
-    if( 0 ) { // never true (because ifdefs..)
+    if( false ) { // never true (because ifdefs..)
 
     #ifdef HEXEDITOR
     } else if( flag_address ) // enter address dialog
@@ -5344,7 +5150,7 @@ void draw() { // called by hijacked game function
       if( flag_ui_blocking ) {
         blockTextBox();
         blockDialogs();
-        //blockLocationText(); //TODO
+        //blockLocationText(); // TODO:
         hideHUD();
         hideRadar();
       } hexeditor_draw();
@@ -5410,30 +5216,28 @@ void draw() { // called by hijacked game function
 
 
   /// SpeedOmeter (when enabled)
-  if( pcar && flag_draw_SPEEDO == 1 && flag_menu_running == 0 && !isHudDisabledWhileCutsceneCamera() && flag_draw_DEBUG == 0 && isDialogShowing() == 0 ) {
+  if( pcar && flag_draw_SPEEDO && !flag_menu_running && !isHudDisabledWhileCutsceneCamera() && !flag_draw_DEBUG && !isDialogShowing() ) {
     float speedo_x = 15.0f; //default (left bound to screen)
 
     if( getDisplaySettingsToggleRadar() ) //minimap true
       speedo_x = multiplayer ? 120.0f : 90.0f; //fix for higher minimap in mp
 
-    drawString(speed, ALIGN_FREE, FONT_NAMES, SIZE_BIG, SHADOW_ON, speedo_x, 225.0f, WHITE);
-    drawString( gear, ALIGN_FREE, FONT_NAMES, SIZE_BIG, SHADOW_ON, speedo_x, 245.0f, WHITE);
+    drawStringNoTVarg(ALIGN_FREE, FONT_NAMES, SIZE_BIG, SHADOW_ON, speedo_x, 225.0f, WHITE, speed);
+    drawStringNoTVarg(ALIGN_FREE, FONT_NAMES, SIZE_BIG, SHADOW_ON, speedo_x, 245.0f, WHITE, gear);
   }
 
 
   /// free Memory (when enabled)
-  if( flag_draw_MEM == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
-    getSizeString(buffer, memory_main_free);
-    drawString("MEM:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 48.0f, 5.0f, (memory_main_free < 150*1000 ? (memory_main_free < 100*1000 ? (memory_main_free < 50*1000 ? RED : ORANGE) : YELLOW) : GREEN) );
+  if( flag_draw_MEM && !flag_menu_running && !flag_draw_DEBUG && !isTextboxShowing() ) {
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE, "MEM:");
+    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 48.0f, 5.0f, (memory_main_free < 150*1000 ? (memory_main_free < 100*1000 ? (memory_main_free < 50*1000 ? RED : ORANGE) : YELLOW) : GREEN), SIZESTR(memory_main_free));
   }
 
 
   /// FPS indicator (when enabled)
-  if( flag_draw_FPS == 1 && flag_menu_running == 0 && flag_draw_DEBUG == 0 && isTextboxShowing() == 0 ) {
-    snprintf(buffer, sizeof(buffer), "%.0f", fps);
-    drawString("FPS:", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 29.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN) );
+  if( flag_draw_FPS && !flag_menu_running && !flag_draw_DEBUG && !isTextboxShowing() ) {
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE, "FPS:");
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 29.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN), "%.0f", fps);
   }
 
 
@@ -5441,47 +5245,42 @@ void draw() { // called by hijacked game function
   #ifdef DEBUG
   extern int saveing;
   if( saveing )
-    drawString("Saving config..", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 18.0f, 15.0f, WHITE);
+    drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 18.0f, 15.0f, WHITE, "Saving config..");
   #endif
 
 
   /// Coordinates (when enabled)
-  if( flag_draw_COORDS == 1 &&
-     #ifdef HEXEDITOR
-	 flag_hexeditor == 0 &&
-     #endif
-	 #ifdef FREECAM
-	 flag_freecam == 0 &&
-     #endif
-	 #ifdef USERSCRIPTS
-	 flag_userscripts == 0 &&
-     #endif
-	 #ifdef EDITORS
-	 flag_editor == 0 &&
-     #endif
-     flag_draw_DEBUG == 0 ) {
+  if( flag_draw_COORDS &&
+      #ifdef HEXEDITOR
+	    !flag_hexeditor &&
+      #endif
+	    #ifdef FREECAM
+	    !flag_freecam &&
+      #endif
+	    #ifdef USERSCRIPTS
+	    !flag_userscripts &&
+      #endif
+	    #ifdef EDITORS
+	    !flag_editor &&
+      #endif
+      !flag_draw_DEBUG ) {
 
     if( pplayer > 0 ) {
-      drawString(_t("Coordinates"), ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE);
+      drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE, "Coordinates");
       drawUiBox(385.0f, 115.0f, 85.0f, 75.0f, 2.0f, BLACK, ALPHABLACK);
 
-      drawString("X", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 117.0f, WHITE);
-      drawString("Y", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 131.0f, WHITE);
-      drawString("Z", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 144.0f, WHITE);
-      drawString("R", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 170.0f, WHITE);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 117.0f, WHITE, "X");
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 131.0f, WHITE, "Y");
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 144.0f, WHITE, "Z");
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 390.0f, 170.0f, WHITE, "R");
 
-      snprintf(buffer, sizeof(buffer), "%.2f", getFloat(pplayer+0x30));
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 117.0f, GREEN);
-      snprintf(buffer, sizeof(buffer), "%.2f", getFloat(pplayer+0x34));
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 131.0f, GREEN);
-      snprintf(buffer, sizeof(buffer), "%.2f", getFloat(pplayer+0x38));
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 144.0f, GREEN);
-      snprintf(buffer, sizeof(buffer), "%.0f", getPedFacingDirectionInDegree(pplayer));
-      drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 170.0f, GREEN);
+      drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 117.0f, GREEN, "%.2f", getFloat(pplayer+0x30));
+      drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 131.0f, GREEN, "%.2f", getFloat(pplayer+0x34));
+      drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 144.0f, GREEN, "%.2f", getFloat(pplayer+0x38));
+      drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 465.0f, 170.0f, GREEN, "%.0f", getPedFacingDirectionInDegree(pplayer));
 
    /* if( pcar ) { // beacause og CD
-        snprintf(buffer, sizeof(buffer), "%.0f", getVehicleSpeed(pcar) * 100 );
-        drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 190.0f, COLOR_VALUE);
+        drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 190.0f, COLOR_VALUE, "%.0f", getVehicleSpeed(pcar) * 100);
       } */
     }
   }
@@ -5489,40 +5288,37 @@ void draw() { // called by hijacked game function
 }
 
 void closeMenu() { // can be called by cheat (see teleport)
-  DEBUG_LOG("%i: closeMenu() called", getGametime());
-  flag_menu_running = 0; // trigger closing cheat device menu
-  flag_keys_disable = 0; // free keys to work in-game again
+  DEBUG_LOG("%lu: closeMenu() called", getGametime());
+  flag_menu_running = false; // trigger closing cheat device menu
+  flag_keys_disable = false; // free keys to work in-game again
 
   #ifdef CONFIG
   if( flag_use_liveconfig ) {
     //setTimedTextbox("Autosaving..", 3.00f); // 4 of 4 locations
-    save_config(main_menu, menu_size);
+    save_config();
   }
   #endif
 }
 
 void stopMenu() { // called by hijacked game function
-  flag_menu_show = 0; // menu is not allowed
+  flag_menu_show = false; // menu is not allowed
 
   if( flag_menu_running ) { // menu is open
-    DEBUG_LOG("%i: stopMenu() called", getGametime());
-    flag_menu_running = 0; // stop and exit menu thread (if running)
-    flag_keys_disable = 0; // reset to be able to use keys when menu closed
+    DEBUG_LOG("%lu: stopMenu() called", getGametime());
+    flag_menu_running = false; // stop and exit menu thread (if running)
+    flag_keys_disable = false; // reset to be able to use keys when menu closed
     flag_menu_start = 1;   // restart flag since the running menu was interrupted
 
     #ifdef CONFIG
     if( flag_use_liveconfig ) {
       //setTimedTextbox("Autosaving..", 3.00f); // 3 of 4 locations
-      save_config(main_menu, menu_size);
+      save_config();
     }
     #endif
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#define Rx Rsrv[0] // for readability
-#define Ry Rsrv[1] // right stick support
 
 /**
 current_buttons = "currently pressed"
@@ -5617,27 +5413,27 @@ void buttonInput() { // called by hijacked game function
 
 
     if( ((current_buttons & open_key ) == open_key) && current_buttons != old_buttons ) {
-      DEBUG_LOG("%i: closing menu via L + UP", getGametime());
-      flag_menu_running = 0; // stop menu
-      flag_keys_disable = 0; // set keys work in-game & for menu
+      DEBUG_LOG("%lu: closing menu via L + UP", getGametime());
+      flag_menu_running = false; // stop menu
+      flag_keys_disable = false; // set keys work in-game & for menu
 
       #ifdef CONFIG
       if( flag_use_liveconfig ) {
         //setTimedTextbox("Autosaving..", 3.00f); // 1 of 4 locations
-        save_config(main_menu, menu_size);
+        save_config();
       }
       #endif
     }
 
     if( ((current_buttons & open_key_alt ) == open_key_alt) && current_buttons != old_buttons ) {
-      DEBUG_LOG("%i: closing menu via L + DOWN", getGametime());
-      flag_menu_running = 0; // stop menu
-      flag_keys_disable = 0; // set keys work in-game & for menu
+      DEBUG_LOG("%lu: closing menu via L + DOWN", getGametime());
+      flag_menu_running = false; // stop menu
+      flag_keys_disable = false; // set keys work in-game & for menu
 
       #ifdef CONFIG
       if( flag_use_liveconfig ) {
         //setTimedTextbox("Autosaving..", 3.00f); // 2 of 4 locations
-        save_config(main_menu, menu_size);
+        save_config();
       }
       #endif
     }
@@ -5648,18 +5444,18 @@ void buttonInput() { // called by hijacked game function
 
       /// Normal Mode ( L + UP )
       if( flag_menu_start == 1 || (((current_buttons & open_key ) == open_key) && current_buttons != old_buttons )) { //) && (pressed_buttons &
-        DEBUG_LOG("%i: starting menu", getGametime());
+        DEBUG_LOG("%lu: starting menu", getGametime());
         flag_menu_start = 0;   // reset
-        flag_keys_disable = 1; // set keys exlusive for menu
-        flag_menu_running = 1; // start menu
+        flag_keys_disable = true; // set keys exlusive for menu
+        flag_menu_running = true; // start menu
       }
 
       /// Don't Eat Keys Mode ( L + DOWN )
       if( flag_menu_start == 2 || (((current_buttons & open_key_alt ) == open_key_alt) && current_buttons != old_buttons )) {
-        DEBUG_LOG("%i: starting menu (without key eating)", getGametime());
+        DEBUG_LOG("%lu: starting menu (without key eating)", getGametime());
         flag_menu_start = 0;   // reset
-        flag_keys_disable = 0; // set keys work in-game & for menu
-        flag_menu_running = 1; // start menu
+        flag_keys_disable = false; // set keys work in-game & for menu
+        flag_menu_running = true; // start menu
       }
 
     }
@@ -5676,11 +5472,11 @@ void applyCheats() { // called by hijacked game function
   menu_apply(main_menu, menu_size); // FUNC_GET_STATUS & FUNC_APPLY
 
   /// make Dodo flyable
-  if( LCS && pcar_id == 0xA4 && flag_menu_running == 0) {
+  if( LCS && pcar_id == 0xA4 && !flag_menu_running ) {
     if( current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS) ) {  // thrust
-      setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * (getVehicleSpeed(pcar) + 5.0f) * 0.001f );
-      setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * (getVehicleSpeed(pcar) + 5.0f) * 0.001f );
-      setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * (getVehicleSpeed(pcar) + 5.0f) * 0.002f );
+      setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * (getVehicleSpeed() + 5.0f) * 0.001f );
+      setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * (getVehicleSpeed() + 5.0f) * 0.001f );
+      setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * (getVehicleSpeed() + 5.0f) * 0.002f );
 
     } else if(current_buttons & PSP_CTRL_SQUARE ) { // brake/reverse
       setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - getFloat(pcar+0x10) * 0.002f );
@@ -5690,7 +5486,8 @@ void applyCheats() { // called by hijacked game function
   }
 
   #ifdef SPECIAL_VEHICLES
-  // temporary controls (todo create custom physics like for dodo)
+  // temporary controls
+  // TODO: create custom physics like for dodo
   if( pcar && ((LCS && (pcar_id == 0xC8 || pcar_id == 0xC9)) || (VCS && pcar_id == 0x118)) ){ // AEROPL & (Dead)DODO
     hover_vehicle(FUNC_APPLY, -1, -1); // apply hover cheat in loop
   }
@@ -5698,11 +5495,11 @@ void applyCheats() { // called by hijacked game function
 }
 
 void applyOnce() { //called by hijacked game function
-  DEBUG_LOG("%i: applyOnce()", getGametime());
+  DEBUG_LOG("%lu: applyOnce()", getGametime());
 
   #ifdef PREVIEW
   if( LCS ) {
-    teleport(918, 194, 5); // Portland ferry area ocean ramp
+    SetPlayerPosition(918.f, 194.f, 5.f); // Portland ferry area ocean ramp
   }
   //if( VCS ) {
   //  createParkedVehicleSpawnViaSlot(65, 187, -807.20f, -1187.13f, 12.0f, 300.0f,  -1,  -1,  0,  0); // Deluxo in front of Safehouse
@@ -5726,7 +5523,7 @@ void applyOnce() { //called by hijacked game function
 
   /// set unused gang colors
   if( VCS ) {
-    static u8 empire_gang_colors[] = {
+    static byte empire_gang_colors[] = {
       0x86, 0x04, 0x07, 0, 0x07, 228, 0x07, 125, 0x07,  69, 0x07, 0, // (0, 228, 125,  69, 0); // Umberto's guys
       0x86, 0x04, 0x07, 3, 0x07,   0, 0x07, 139, 0x07, 139, 0x07, 3, // (3,   0, 139, 139, 3); // Army
       0x86, 0x04, 0x07, 4, 0x07,   0, 0x07, 183, 0x07, 255, 0x07, 4, // (4,   0, 183, 255, 4); // Security
@@ -5781,7 +5578,7 @@ void applyOnce() { //called by hijacked game function
 
 
     /// fix Slot 111 (Bobcat with wrong y coordinate)
-    u32 addr = getVehicleWorldSpawnSlotAddress(110);
+    uaddr addr = getVehicleWorldSpawnSlotAddress(110);
     if( getInt(addr) == 0x99 && getInt(addr+0x8) == 0x4405BF5C) { // make sure its a bobcat with the exact wrong coord
       setFloat(addr+0x8, getFloat(addr+0x8) * -1.0f); // make y negative  (534.99 -> -534.99)
     }
@@ -5807,7 +5604,7 @@ void applyOnce() { //called by hijacked game function
   //if( LCS )
     //spawnPickup(0x10F, 0x3, 0xA, float x, float y, float z); // teargas in ssv pool like in alpha
 
-  DEBUG_LOG("%i: applyOnce() done!", getGametime());
+  DEBUG_LOG("%lu: applyOnce() done!", getGametime());
 }
 
 
@@ -5824,7 +5621,7 @@ void *category_toggle(int type, int cat, int set) {
   }
 
   if( type == FUNC_CHANGE_VALUE )
-    category_index[cat] = 1 - category_index[cat];
+    category_index[cat] = !category_index[cat];
 
   if( type == FUNC_SET )
     category_index[cat] = set;
@@ -5832,42 +5629,38 @@ void *category_toggle(int type, int cat, int set) {
   return NULL;
 }
 
-static int checkMenuEntryAllowedToBeDisplayed(const Menu_pack *menu_list, int entry) {
+static int checkMenuEntryAllowedToBeDisplayed(const CDRMenuItem *menu_list, int entry) {
   if( (menu_list[entry].type != MENU_CATEGORY && !category_index[(int)menu_list[entry].cat]) ||
-    (LCS && menu_list[entry].LC == FALSE) ||
-    (VCS && menu_list[entry].VC == FALSE) ||
-    (!multiplayer && menu_list[entry].SP == FALSE) ||
-    (multiplayer && menu_list[entry].MP == FALSE) ) {
+    (LCS && !menu_list[entry].LC) ||
+    (VCS && !menu_list[entry].VC) ||
+    (!multiplayer && !menu_list[entry].SP) ||
+    (multiplayer && !menu_list[entry].MP) ) {
       return 0; // nope
     }
   return 1; // ok
 }
 
 
-static int menu_sel;    // currently/last selected option
-static int toption = 0; // the option on top when there are more options than showoptions
-static int hidden = 0;  // skipping menu draw with disabled entries
+static uint16 menu_sel;    // currently/last selected option
+static uint16 toption = 0; // the option on top when there are more options than showoptions
+static uint16 hidden = 0;  // skipping menu draw with disabled entries
 
-int menu_draw(const Menu_pack *menu_list, int menu_max) {
-  const char *val;
-  static u32 color;
-  static int i;
+void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
+  u8string val;
+  static CRGBA color;
   static float x, y;
   void *(* surrent_get)(int, int);
 
   /// title
-  snprintf(buffer, sizeof(buffer), _t("%s %s by %s"), PLUGIN_NAME, VERSION, PLUGIN_AUTHOR);
-  drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE);
+  drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE, "%s %s by %s", PLUGIN_NAME, VERSION, PLUGIN_AUTHOR);
 
   /// GameID & version
-  //snprintf(buffer, sizeof(buffer), "%s v%s", buf_titleid, buf_version);
-  //drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 8.0f, 15.0f, LGREY);
+  //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 8.0f, 15.0f, LGREY, "%s v%s", buf_titleid, buf_version);
 
   /// fps counter (in menu)
   #ifdef DEBUG
   if( flag_draw_FPS ) {
-    snprintf(buffer, sizeof(buffer), "FPS: %.0f", fps);
-    drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 420.0f, 85.0f, WHITE);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 420.0f, 85.0f, WHITE, "FPS: %.0f", fps);
   }
   #endif
 
@@ -5885,13 +5678,13 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   if( menu_sel < toption )
     toption = menu_sel; // for scrolling up with selection
 
-  for( i = toption; i < menu_max; i++ ) { // skip all unallowed from toption to next available on the way scrolling down
+  for( array_uidx i = toption; i < menu_max; i++ ) { // skip all unallowed from toption to next available on the way scrolling down
     if( checkMenuEntryAllowedToBeDisplayed(menu_list, i) == 0 ) {
       toption = i;
     } else break;
   }
 
-  for( i = toption; i < showoptions+toption+hidden && i <= menu_max; i++, y += row_spacing ) {
+  for( array_uidx i = toption; i < showoptions+toption+hidden && i <= menu_max; i++, y += row_spacing ) {
     if( checkMenuEntryAllowedToBeDisplayed(menu_list, i) == 0 ) { // do not display
       y -= row_spacing;
       hidden++;
@@ -5957,20 +5750,20 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
         case MENU_SWITCH: // ON/OFF
           if( surrent_get(FUNC_GET_STATUS, 0) ) { // if cheat "ON"
             color = COLOR_CHEAT_ON;
-            drawString("ON", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-25, y, color);
+            drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-25, y, color, "ON");
           } else {
             color = COLOR_CHEAT_OFF;
-            drawString("OFF", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-30, y, color);
+            drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-30, y, color, "OFF");
           }
           break;
 
         case MENU_VALSWITCH: // ON/OFF + values
           if( surrent_get(FUNC_GET_STATUS, 0) ) {
             color = COLOR_CHEAT_ON;
-            drawString("ON", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-25, y, color);
+            drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-25, y, color, "ON");
           } else {
             color = COLOR_CHEAT_OFF;
-            drawString("OFF", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-30, y, color);
+            drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-30, y, color, "OFF");
           }
           val = surrent_get(FUNC_GET_STRING, 0);
           break;
@@ -5983,23 +5776,22 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       //if( menu_list[i].type != MENU_DUMMY ) {
         memset(&buffer[0], 0, sizeof(buffer));
 
-        const char* buffer_menu_path = menu_list[i].path;
+        const u8string buffer_menu_path = menu_list[i].path;
 
-        if ( buffer_menu_path[strlen(buffer_menu_path)-1] == ':')
+        if ( STR_ENDSWITH_CHAR(buffer_menu_path, ':') )
           snprintf(buffer, sizeof(buffer), "%s %s", _t(menu_list[i].path), _t(val));
         else
           snprintf(buffer, sizeof(buffer), "%s%s", _t(menu_list[i].path), _t(val));
 
 
         if( flag_use_cataltfont && menu_list[i].type == MENU_CATEGORY ) // alternative font
-          drawString(buffer, ALIGN_FREE, FONT_GTA, LCS ? 0.9 : 0.33, SHADOW_ON, x, y, color);
+          drawStringNoVarg(ALIGN_FREE, FONT_GTA, LCS ? 0.9f : 0.33f, SHADOW_ON, x, y, color, buffer);
         else
-          drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, color);
+          drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, color, buffer);
 
         #ifdef DEBUG
         if( flag_draw_DBGVALS ) {
-          snprintf(buffer, sizeof(buffer), "%i", i);
-          drawString(buffer, ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5, y, RED);
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5, y, RED, "%i", i);
         }
         #endif
       //}
@@ -6007,21 +5799,21 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
       /// draw message
       if( flag_use_legend ) {
         if( i == menu_sel ) {
-          drawLegendMessage(_t(menu_list[i].msg1), 0, 1, COLOR_TEXT); // left side, second row
-          drawLegendMessage(_t(menu_list[i].msg2), 1, 1, COLOR_TEXT); // right side, second row
+          drawLegendMessageNoVarg(0, 1, COLOR_TEXT, (u8string)menu_list[i].msg1); // left side, second row
+          drawLegendMessageNoVarg(1, 1, COLOR_TEXT, (u8string)menu_list[i].msg2); // right side, second row
 
           if (strlen(menu_list[i].desc) > 0) {
             char desc_formatted[128];
 
-            /* Write translation author in description          */
-            /* [TODO] There really isn't a better way to this?  */
+            // Write translation author in description
+            // TODO: There really isn't a better way to this?
             #ifdef LANG
             if ( menu_list[i].conf_id == 0x1FB9 && main_file_table && main_file_table->size > 1 )
             {
               void *(* func)(int, int, int, int) = (void *)(menu_list[i].value);
               int currSelectedLangID = (int)func(FUNC_GET_VALUE, 0, 0, 0);
 
-              /* Check if it's valid to do it, this looks excessive I know... */
+              // Check if it's valid to do it, this looks excessive I know...
               if ( currSelectedLangID > 0 && main_file_table->lang_files[currSelectedLangID] && main_file_table->lang_files[currSelectedLangID]->author_name )
                 snprintf(desc_formatted, sizeof(desc_formatted), "> %s %s", _t("Translation done by"), main_file_table->lang_files[currSelectedLangID]->author_name);
               else
@@ -6031,7 +5823,7 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
             #endif
               snprintf(desc_formatted, sizeof(desc_formatted), "> %s", _t(menu_list[i].desc));
 
-            drawLegendMessage(desc_formatted, 0, 0, COLOR_TEXT); // left side, third row
+            drawLegendMessageNoTVarg(0, 0, COLOR_TEXT, desc_formatted); // left side, third row
           }
         }
       }
@@ -6042,32 +5834,24 @@ int menu_draw(const Menu_pack *menu_list, int menu_max) {
   /// msg
   if( flag_use_legend ) {
     drawLegendBox(3, COLOR_BACKGROUND);
-    drawLegendMessage(_t("L+UP/DOWN: Toggle Menu"), 0, 2, COLOR_TEXT);
-    drawLegendMessage(_t("UP/DOWN: Navigate Cheats"), 1, 2, COLOR_TEXT);
+    drawLegendMessageNoVarg(0, 2, COLOR_TEXT, "L+UP/DOWN: Toggle Menu");
+    drawLegendMessageNoVarg(1, 2, COLOR_TEXT, "UP/DOWN: Navigate Cheats");
   }
 
   /// draw debug stuff (when enabled)
   #ifdef DEBUG //menu specific for debugging
   if( flag_draw_DBGVALS ) {
-    snprintf(buffer, sizeof(buffer), "toption: %i", toption);
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 100.0f, RED);
-    snprintf(buffer, sizeof(buffer), "menu_sel: %i", menu_sel);
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 120.0f, RED);
-    snprintf(buffer, sizeof(buffer), "hidden: %i", hidden);
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 140.0f, RED);
-    snprintf(buffer, sizeof(buffer), "menu_size: %i", menu_size);
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED);
-
-    snprintf(buffer, sizeof(buffer), "mod_text_addr: 0x%08lX", mod_text_addr);
-    drawString(buffer, ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 252.0f, RED);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 100.0f, RED, "toption: %i", toption);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 120.0f, RED, "menu_sel: %i", menu_sel);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 140.0f, RED, "hidden: %i", hidden);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED, "menu_size: %i", menu_size);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 252.0f, RED, "mod_text_addr: 0x%08lX", mod_text_addr);
   }
   #endif
-
-  return 0;
 }
 
 
-int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons check "buttonsToActionPatched()" in cheats.c
+void menu_ctrl(const CDRMenuItem *menu_list, usize menu_max) { // for blocked buttons check "buttonsToActionPatched()" in cheats.c
   static int keypress;
   int last_sel = 0;
 
@@ -6076,7 +5860,7 @@ int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons
     /// Navigation UP ////////////////////////////////////////
     if( hold_buttons & PSP_CTRL_UP && !(current_buttons & PSP_CTRL_RTRIGGER) ) {
       #ifdef DEBUG
-      drawString("hold_buttons PSP_CTRL_UP", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 140.0f, 50.0f, RED);
+      drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 140.0f, 50.0f, RED, "hold_buttons PSP_CTRL_UP");
       #endif
 
       last_sel = menu_sel;
@@ -6088,12 +5872,8 @@ int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons
 
       /// skip dummy & disabled on the way up
       while( checkMenuEntryAllowedToBeDisplayed(menu_list, menu_sel) == 0 || menu_list[menu_sel].type == MENU_DUMMY || (!flag_coll_cats ? menu_list[menu_sel].type == MENU_CATEGORY : 0) ) {
-        menu_sel--;
-
-      if( menu_sel < 0 ) { // go back to last working if only disabled on top of cheatslist
-        menu_sel = last_sel;
-        break;
-      }
+        if ( menu_sel > 0 ) menu_sel--;
+        else menu_sel = last_sel; // go back to last working if only disabled on top of cheatslist
 
       if( toption > 1 && menu_sel == 1 ) // scroll up for each dummy / disabled entry
         toption--;
@@ -6107,7 +5887,7 @@ int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons
     /// Navigation DOWN //////////////////////////////////////
     if( (hold_buttons & PSP_CTRL_DOWN) && !(current_buttons & PSP_CTRL_RTRIGGER) ) {
       #ifdef DEBUG
-      drawString("hold_buttons PSP_CTRL_DOWN", ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 140.0f, 50.0f, RED);
+      drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 140.0f, 50.0f, RED, "hold_buttons PSP_CTRL_DOWN");
       #endif
 
       last_sel = menu_sel;
@@ -6125,12 +5905,9 @@ int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons
         last_sel = menu_sel;
         do {
           do {
-            menu_sel--;
+            if ( menu_sel > 0 ) menu_sel--;
+            else menu_sel = last_sel; // go back to last working
           } while( checkMenuEntryAllowedToBeDisplayed(menu_list, menu_sel) == 0 || menu_list[menu_sel].type == MENU_DUMMY );
-          if( menu_sel < 0 ) { // go back to last working
-            menu_sel = last_sel;
-            break;
-          }
         } while( menu_list[menu_sel].type != MENU_CATEGORY );
       }
 
@@ -6162,12 +5939,12 @@ int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons
         break;
       }
 
-      if( toption+showoptions+hidden < menu_max ) { // scroll down for each dummy / disabled entry
+      if( (usize)(toption+showoptions+hidden) < menu_max )  { // scroll down for each dummy / disabled entry
         if( menu_sel >= toption+showoptions+hidden-1 )
           toption++;
       }
     }
-    if( toption+showoptions+hidden < menu_max ) { // scroll down one more time
+    if( (usize)(toption+showoptions+hidden) < menu_max )  { // scroll down one more time
       if( menu_sel >= toption+showoptions+hidden-1 )
         toption++;
     }
@@ -6223,17 +6000,14 @@ int menu_ctrl(const Menu_pack *menu_list, int menu_max) { // for blocked buttons
           break;
       }
     }
-
-  return 0;
 }
 
 
-int menu_check(const Menu_pack *menu_list, int menu_max) {
-  static int i;
+void menu_check(const CDRMenuItem *menu_list, usize menu_max) {
   void *(* surrent_get)(int);
 
-  for( i=0; i < menu_max; i++ ) {
-    if( menu_list[i].cat != CAT_ALIAS && (((LCS && menu_list[i].LC == TRUE) || (VCS && menu_list[i].VC == TRUE)) && ((!multiplayer && menu_list[i].SP == TRUE) || (multiplayer && menu_list[i].MP == TRUE))) ) { // do not check anything for copies of already exisitng cheat functions & disabled
+  for( array_uidx i = 0; i < menu_max; i++ ) {
+    if( menu_list[i].cat != CAT_ALIAS && (((LCS && menu_list[i].LC) || (VCS && menu_list[i].VC)) && ((!multiplayer && menu_list[i].SP) || (multiplayer && menu_list[i].MP))) ) { // do not check anything for copies of already exisitng cheat functions & disabled
       surrent_get = menu_list[i].value;
       switch( menu_list[i].type )  {
         case MENU_VALUE:     // value list
@@ -6244,16 +6018,13 @@ int menu_check(const Menu_pack *menu_list, int menu_max) {
       }
     }
   }
-  return 0;
 }
 
-
-int menu_apply(const Menu_pack *menu_list, int menu_max) {
-  static int i;
+void menu_apply(const CDRMenuItem *menu_list, usize menu_max) {
   void *(* surrent_get)(int);
 
-  for( i=0; i < menu_max; i++ ) {
-    if( menu_list[i].cat != CAT_ALIAS && (((LCS && menu_list[i].LC == TRUE) || (VCS && menu_list[i].VC == TRUE)) && ((!multiplayer && menu_list[i].SP == TRUE) || (multiplayer && menu_list[i].MP == TRUE))) ) { // do not apply anything for copies of already exisitng cheat functions & disabled
+  for( array_uidx i = 0; i < menu_max; i++ ) {
+    if( menu_list[i].cat != CAT_ALIAS && (((LCS && menu_list[i].LC) || (VCS && menu_list[i].VC)) && ((!multiplayer && menu_list[i].SP) || (multiplayer && menu_list[i].MP))) ) { // do not apply anything for copies of already exisitng cheat functions & disabled
       surrent_get = menu_list[i].value;
       switch( menu_list[i].type )  {
         case MENU_VALUE:  // value list
@@ -6265,16 +6036,15 @@ int menu_apply(const Menu_pack *menu_list, int menu_max) {
       }
     }
   }
-  return 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef NAMERESOLV
-int hash_to_check = -1;
-int last_hash = -1;
-char hashbuffer[32];
+uint32 hash_to_check = 0;
+uint32 last_hash = 0;
+u8char hashbuffer[32];
 int name_resolver_status = -1;
 
 int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
@@ -6283,18 +6053,18 @@ int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
   char hashstr[16];
   name_resolver_status = 1;
 
-  while( 1 ) {
+  while( true ) {
     if( hash_to_check != last_hash ) {
-      snprintf(hashstr, sizeof(hexeditor_infobuffer), "0x%08X", hash_to_check); //0x%08X
+      snprintf(hashstr, sizeof(hexeditor_infobuffer), "0x%08lX", hash_to_check); //0x%08X
       snprintf(buffer, sizeof(buffer), "%s%s", basefolder, LCS ? file_names_lcs: file_names_vcs); //ini file
 
       ini_gets( LCS ? "NAMES_LCS" : "NAMES_VCS", hashstr, "unknown", hashbuffer, 32, buffer); //
 
-      DEBUG_LOG("%i: name_resolver(0x%08X) loaded '%s'", getGametime(), hash_to_check, hashbuffer);
+      DEBUG_LOG("%lu: name_resolver(0x%08lX) loaded '%s'", getGametime(), hash_to_check, hashbuffer);
 
       last_hash = hash_to_check;
     }
-    sceKernelDelayThread(100*1000); // 100ms
+    sceKernelDelayThread(100 * 1000); // 100ms
   }
   name_resolver_status = 0;
   sceKernelExitDeleteThread(0);
@@ -6302,17 +6072,17 @@ int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
 }
 #endif
 
-static int patch() {
+static func_stat patch() {
   INFO_LOG("Found 'GTA3' module! mod_text_addr = 0x%08X, text_size = 0x%08X, data_size = 0x%08X", mod_text_addr, mod_text_size, mod_data_size);
 
   /// blacklist
   if( mod_text_size == 0x00386750 && mod_data_size == 0x0001F7E0) { // ULJM-05297_v1.01
     ERROR_LOG("unsupported game version");
-    return -1; //exit out
+    return FUNC_ERROR; //exit out
 
   } else if( mod_text_size == 0x0033388C && mod_data_size == 0x0002FEB0) { // ULJM-05255_v1.01
     ERROR_LOG("unsupported game version");
-    return -1; //exit out
+    return FUNC_ERROR; //exit out
 
   }
 
@@ -6362,57 +6132,56 @@ static int patch() {
   * ULET-00417_v0.07  text_size = 0x003868BC, data_size = 0x0001F85C
   *****************************************************************/
 
-  DEBUG_LOG("\n> searching & patching EBOOT..");
-  u32 i;
-  int lcs_counter = 0, vcs_counter = 0;
-  for( i = 0; i < mod_text_size; i += 4 ) {
-    u32 addr = mod_text_addr + i;
+  DEBUG_LOG("> searching & patching EBOOT..");
+  usize lcs_counter = 0, vcs_counter = 0;
+  for( uaddr i = 0; i < mod_text_size; i += sizeof(uaddr) ) {
+    uaddr addr = mod_text_addr + i;
 
     // first hit decides on version -> yes, potentially dangerous
-    if( (LCS == 1 || (LCS == VCS)) && PatchLCS(addr, mod_text_addr) ) {
+    if( (LCS || (LCS == VCS)) && PatchLCS(addr, mod_text_addr) ) {
       lcs_counter++;
-      LCS = 1;
+      LCS = true;
       continue;
     }
-    if( (VCS == 1 || (LCS == VCS)) && PatchVCS(addr, mod_text_addr) ) {
+    if( (VCS || (LCS == VCS)) && PatchVCS(addr, mod_text_addr) ) {
       vcs_counter++;
-      VCS = 1;
+      VCS = true;
       continue;
     }
   }
 
   /// error check
-  DEBUG_LOG(" %i LCS & %i VCS locations found", lcs_counter, vcs_counter);
+  DEBUG_LOG(" %u LCS & %u VCS locations found", lcs_counter, vcs_counter);
   if( lcs_counter > 0 && vcs_counter > 0 ) { // error check
     ERROR_LOG("both counters found something");
-    return -1;
+    return FUNC_ERROR;
   }
   if( LCS == VCS ) { // error check
     ERROR_LOG("LCS == VCS");
-    return -1;
+    return FUNC_ERROR;
   }
 
 
   /// set default cheat text color
-  DEBUG_LOG("\n> setting default color..");
+  DEBUG_LOG("> setting default color..");
   COLOR_CHEAT_OFF = LCS ? CHDVC_ORANGE : CHDVC_AZURE;
 
 
   /// set default start address for HexEditor
   #ifdef HEXEDITOR
-  DEBUG_LOG("\n> setting default hexeditor address..");
+  DEBUG_LOG("> setting default hexeditor address..");
   hex_adr = mod_text_addr + mod_text_size + mod_data_size;
   add_adr_to_history(mod_text_addr); //
   #endif
 
   /// decide draw "welcome helpbox"
   if( flag_menu_start == 0 )
-    flag_draw_welcomsg = 1;
+    flag_draw_welcomsg = true;
 
   /// decide draw "low memory warning"
-  #ifndef LITE
+  #if !LITE
   if( !PPSSPP )
-    flag_draw_memwarn = 1;
+    flag_draw_memwarn = true;
   #endif
 
   /// set text draw sizes
@@ -6472,8 +6241,8 @@ static int patch() {
   srand((unsigned int)sceKernelLibcTime(&t));
 
 
-  /// read TitleID & version from PARAM.SFO - todo
-  /*  DEBUG_LOG("Reading PARAM.SFO\n");
+  /// TODO: read TitleID & version from PARAM.SFO
+  /*  DEBUG_LOG("Reading PARAM.SFO");
   if( doesFileExist("disc0:/PSP_GAME/PARAM.SFO") ) {
     //https://github.com/PSP-Archive/TNmenu/blob/main/utils.c#L200
     //https://github.com/DaveeFTW/Chronoswitch/blob/master/src/main.c#L53
@@ -6487,9 +6256,9 @@ static int patch() {
   cdr_autostartmenu(FUNC_SET, -1, ON); //autostart on
   #endif
 
-  DEBUG_LOG("\n> Setup all done! Starting game..\n");
+  DEBUG_LOG("> Setup all done! Starting game..\n");
 
-  return 0; //success
+  return FUNC_OK; //success
 }
 
 
@@ -6497,14 +6266,13 @@ static void CheckModules() { // PPSSPP only
   SceUID modules[10];
   int count = 0;
   if( sceKernelGetModuleIdList(modules, sizeof(modules), &count) >= 0 ) {
-    int i;
     SceKernelModuleInfo info;
-    for( i = 0; i < count; i++ ) {
+    for( int i = 0; i < count; i++ ) {
+
       info.size = sizeof(SceKernelModuleInfo);
-      if (sceKernelQueryModuleInfo(modules[i], &info) < 0) {
-        continue;
-      }
-      if (strcmp(info.name, "GTA3") == 0) {
+      if (sceKernelQueryModuleInfo(modules[i], &info) < 0) continue;
+
+      if ( !strcmp(info.name, "GTA3") ) {
         mod_text_addr = info.text_addr;
         mod_text_size = info.text_size;
         mod_data_size = info.data_size;
@@ -6530,8 +6298,8 @@ static void CheckModules() { // PPSSPP only
 
         initTextBlit(mod_text_addr, mod_text_size);  // see blit.c (HAS ITS OWN SEARCHING LOOP!)
 
-        int ret = patch();
-        if( ret != 0 ) // patching returned error
+        func_stat ret = patch();
+        if( ret != FUNC_OK ) // patching returned error
           return;
 
         sceKernelDcacheWritebackAll();
@@ -6543,17 +6311,19 @@ static void CheckModules() { // PPSSPP only
 
 
 int OnModuleStart(SceModule *mod) {
-  const char *modname = mod->modname;
+  const u8string modname = mod->modname;
 
-  if( strcmp(modname, "GTA3") == 0 ) {
+  if( !strcmp(modname, "GTA3") ) {
     mod_text_addr = mod->text_addr;
     mod_text_size = mod->text_size;
     mod_data_size = mod->data_size;
 
     initTextBlit(mod_text_addr, mod_text_size); // see blit.c (HAS ITS OWN SEARCHING LOOP!)
-    int ret = patch();
-    if( ret != 0 ) // patching returned error
-      return -1;
+
+    func_stat ret = patch();
+    if( ret != FUNC_OK ) // patching returned error
+      return ret;
+    
     sceKernelDcacheWritebackAll();
   }
 
@@ -6565,16 +6335,16 @@ int OnModuleStart(SceModule *mod) {
 
 #define EMULATOR_DEVCTL__IS_EMULATOR  0x00000003
 
-int module_start(SceSize argc UNUSED, void* argp UNUSED) {
+int module_start(SceSize args UNUSED, void *argp UNUSED) {
   sceCtrlPeekBufferPositive(&pad, 1);
 
   /// create basefolder to be save (for logfile this early)
-  makedirs((char*)basefolder); // recursively create "ms0:/PSP/PLUGINS/cheatdevice_remastered/"
+  makedirs(basefolder); // recursively create "ms0:/PSP/PLUGINS/cheatdevice_remastered/"
 
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
 
-  INFO_LOG("Starting CheatDeviceRemastered %s", VERSION);
-  DEBUG_LOG("argc: %i, argp: %s", argc, argp);
+  INFO_LOG("Starting %s %s", PLUGIN_NAME, VERSION);
+  DEBUG_LOG("args: %i, argp: %s", args, (u8string)argp);
 
   /// config init
   #ifdef CONFIG
@@ -6585,16 +6355,9 @@ int module_start(SceSize argc UNUSED, void* argp UNUSED) {
   }
   #endif
 
-  int i;
-
-  /// init categories array
-  for(i = 0; i < CAT_COUNTER; i++)
-    category_index[i] = 1;
-
-
  /// check PPSSPP
   if( sceIoDevctl("kemulator:", EMULATOR_DEVCTL__IS_EMULATOR, NULL, 0, NULL, 0) == 0 ) {
-    PPSSPP = 1;
+    PPSSPP = true;
     INFO_LOG("PPSSPP detected!");
 	  sceKernelDelayThread(10*1000); // 10ms (bad fix for invalid memory crash with lite version?!)
   }
@@ -6602,7 +6365,7 @@ int module_start(SceSize argc UNUSED, void* argp UNUSED) {
 
   /// check available memory (high memory layout)
   memory_high = getHighMemBound();
-  if ( memory_high == 0 ) memory_high = 0x0A000000; // if it alloc mem fails, set default ~32 MB
+  if ( !memory_high ) memory_high = 0x0A000000; // if it alloc mem fails, set default ~32 MB
 
   DEBUG_LOG("sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
   DEBUG_LOG("sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
@@ -6610,7 +6373,7 @@ int module_start(SceSize argc UNUSED, void* argp UNUSED) {
 
   /// check Adrenaline eCFW
   if( !PPSSPP && adrenalineCheck() ) {
-    ADRENALINE = 1;
+    ADRENALINE = true;
     INFO_LOG("Adrenaline eCFW detected");
   }
 
@@ -6633,7 +6396,7 @@ int module_start(SceSize argc UNUSED, void* argp UNUSED) {
 }
 
 // On module unload / stop
-int module_stop(SceSize argc UNUSED, void* argp UNUSED)
+int module_stop(SceSize args UNUSED, void* argp UNUSED)
 {
   free_alloc_mem_cdr();
   return 0;

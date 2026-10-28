@@ -1,19 +1,24 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #ifndef __CONFIG_H__
@@ -21,21 +26,22 @@
 
 #include "main.h"
 #include "cheats.h"
+#include "mctypes.h"
 
-int save_config(const Menu_pack *menu_list, int menu_max);
-int load_config(const Menu_pack *menu_list, int menu_max);
-int create_config(const Menu_pack *menu_list, int menu_max);
+#ifdef CONFIG
 
-int load_config_block(char *magic, int address);
+extern func_stat save_config();
+extern func_stat load_config(const CDRMenuItem *menu_list, usize menu_max);
+extern func_stat create_config(const CDRMenuItem *menu_list, usize menu_max);
 
-int writeBool(SceUID file, short id, char boolean);
-int writeValue(SceUID file, short id, int value);
-int writeCategoryHeader(SceUID file, char *magic);
+extern func_stat load_config_block(const u8string magic, uaddr address);
 
-int workAchievement(SceUID file, achievement_pack *achlist, int menu_max);
+extern void writeBool(SceUID file, int16 id, bool boolean);
+extern void writeValue(SceUID file, int16 id, int value);
+extern func_stat writeCategoryHeader(SceUID file, u8string magic);
 
-int getAchievementFromConfigFor(SceUID file, char * magic, char id, int mode);
+extern int setValueInConfigFor(short id UNUSED, int value UNUSED);
 
-int setValueInConfigFor(short id, int value);
+#endif /* CONFIG */
 
 #endif

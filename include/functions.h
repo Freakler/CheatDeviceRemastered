@@ -1,90 +1,66 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #ifndef __FUNCTIONS_H__
 #define __FUNCTIONS_H__
 
-#include <psptypes.h>
+#include "mctypes.h"
+#include "storiesrwsdk.h"
 
-enum{
-  FALSE, // 0
-  TRUE   // 1
-};
-
-typedef struct { // teleporter struct
-  char *name;
-  float xval;
-  float yval;
-  float zval;
-} teleports_pack;
+typedef struct {
+  u8string name;
+  Vector3D position;
+} GTAWorldLocation;
 
 typedef struct { // vehicles struct
-  short id;
-  short type;
-  char *GXTname;   // like internal name
-  char *name;      // In-Game name
-  short hndlng_no; // number of vehicle in handling order (@ 0x52 in vehicle style block)
-  short spawnsave; // bool crashes game when spawned
-} vehicles_pack;
+  uint16 id;
+  int16 type;
+  u8string GXTname;   // like internal name
+  u8string name;      // In-Game name
+  int16 hndlng_no; // number of vehicle in handling order (@ 0x52 in vehicle style block)
+  bool16 spawnsave; // bool crashes game when spawned
+} GTAVehicle;
 
 typedef struct { // character struct
-  unsigned char id;
-  char *model;   // model name
-  char *name;    // Real name
-  short row;
-  int spawnsave; // bool crashes game when spawned
-} character_pack;
+  uint8 id;
+  u8string model;   // model name
+  u8string name;    // Real name
+  int16 row;
+  bool32 spawnsave; // bool crashes game when spawned
+} GTACharacter;
 
 typedef struct {
-  char *name;
-  short id;
-  char type;    // LCS: 00 clothes?? | 03 save_cd, rampage | 08 money | 0F weapons, health, adrenaline    -> 0xF are re-appearing ones? rest one-time pickups
-  short amount; // standard value for ammo / money object holds
-} pickups_pack;
+  u8string name;
+  uint16 id;
+  uint8 type;    // LCS: 00 clothes?? | 03 save_cd, rampage | 08 money | 0F weapons, health, adrenaline    -> 0xF are re-appearing ones? rest one-time pickups
+  uint16 amount; // standard value for ammo / money object holds
+} GTAPickup;
 
 typedef struct {
-  char *name;
-  char id;   // short in LCS, char in VCS
-  char color;
-} mapicons_pack;
-
-
-enum ModelInfoType {
-  MODELINFO_SIMPLE       = 1,
-  MODELINFO_MLO          = 2, // unused
-  MODELINFO_TIME         = 3,
-  MODELINFO_WEAPON       = 4,
-  MODELINFO_ELEMENTGROUP = 5,
-  MODELINFO_VEHICLE      = 6,
-  MODELINFO_PED          = 7,
-  MODELINFO_XTRACOMP     = 8, // unused
-};
-
-/* enum VehicleType {
-  VEHICLETYPE_CAR,
-  VEHICLETYPE_BOAT,
-  VEHICLETYPE_JETSKI, //VCS
-  VEHICLETYPE_TRAIN,
-  VEHICLETYPE_HELI,
-  VEHICLETYPE_PLANE,
-  VEHICLETYPE_BIKE,
-  VEHICLETYPE_FERRY,
-}; */
+  u8string name;
+  uint8 id;   // short in LCS, char in VCS
+  uint8 color;
+} GTAMapIcon;
 
 enum {
   VEHICLE,
@@ -119,11 +95,6 @@ enum {
   WEAPON_CAMERA
 };
 
-
-////////////////////////////////////
-
-int debugPrintf(const char *text, ...); // for testing only
-
 ////////////////////////////////////
 
 extern void (* SetActorSkinTo)(int ped_obj, const char *name); // name must be lower case!!
@@ -132,280 +103,264 @@ extern void (* RefreshActorSkin)(int ped_obj);
 
 ////////////////////////////////////
 
-int isInMemBounds(u32 valtocheck);
+extern bool isInMemBounds(uaddr valtocheck);
 
-void setBit(int adr, char bit, char boolean);
+extern void setBit(uaddr adr, uint8 bit, bool boolean);
 
-void setInt(int adr, int value);
-int getInt(int adr);
+extern void setInt(uaddr adr, int value);
+extern int getInt(uaddr adr);
 
-void setShort(int adr, short value);
-short getShort(int adr);
+extern void setShort(uaddr adr, short value);
+extern short getShort(uaddr adr);
 
-void setChar(int adr, char value);
-char getChar(int adr);
+extern void setByte(uaddr adr, byte value);
+extern byte getByte(uaddr adr);
 
-void setByte(int adr, unsigned char value);
-unsigned char getByte(int adr);
+extern void setNibbleLow(uaddr adr, uint8 value);
+extern uint8 getNibbleLow(uaddr adr);
 
-void setNibbleLow(int adr, unsigned char value);
-unsigned char getNibbleLow(int adr);
+extern void setNibbleHigh(uaddr adr, uint8 value);
+extern uint8 getNibbleHigh(uaddr adr);
 
-void setNibbleHigh(int adr, unsigned char value);
-unsigned char getNibbleHigh(int adr);
+extern void setFloat(uaddr adr, float value);
+extern float getFloat(uaddr adr);
 
-void setFloat(int adr, float value);
-float getFloat(int adr);
+extern void setString(uaddr adr, u8string string, bool unicode);
+extern u8string getString(uaddr adr, bool unicode);
 
-void setString(u32 adr, char* string, int mode);
-char *getString(u32 adr, int mode);
-
-unsigned char *getSavedataKey();
+#ifdef SAVEDITOR
+extern u8char *getSavedataKey();
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 
-void teleport(float x, float y, float z);
-void teleportFixForVehicle();
-
+extern void SetPlayerPosition(float x, float y, float z);
+extern void SetPlayerPositionFixForVehicle();
 
 /// Player flags
-char getMaxHealthMultiplier();
-void setMaxHealthMultiplier(char value);
-char getMaxArmorMultiplier();
-void setMaxArmorMultiplier(char value);
-char getUnlimitedSprintStatus();
-void setUnlimitedSprintStatus(char value);
-char getUnlimitedSwimStatus();
-void setUnlimitedSwimStatus(char value);
+extern uint8 getMaxHealthMultiplier();
+extern void setMaxHealthMultiplier(uint8 value);
+extern uint8 getMaxArmorMultiplier();
+extern void setMaxArmorMultiplier(uint8 value);
+extern bool getUnlimitedSprintStatus();
+extern void setUnlimitedSprintStatus(bool value);
+extern bool getUnlimitedSwimStatus();
+extern void setUnlimitedSwimStatus(bool value);
 
-float getPedFacingDirectionInDegree(int ped_base_adr);
+extern float getPedFacingDirectionInDegree(uaddr ped_base_adr);
 
-u32 getObjectsTouchedObjectAddress(int base_adr);
-int getTypeFromAddress(int address);
-
+extern uaddr getObjectsTouchedObjectAddress(uaddr base_adr);
+extern uint8 getTypeFromAddress(uaddr address);
 
 /// PEDs
-float getPedHealth(int ped_base_adr);
-float getPedArmor(int ped_base_adr);
+extern float getPedHealth(uaddr ped_base_adr);
+extern float getPedArmor(uaddr ped_base_adr);
 
-int getWantedLevel(int ped_base_adr);
-int getMediaAttentionValue(int ped_base_adr);
+extern int getWantedLevel(uaddr ped_base_adr);
+extern int getMediaAttentionValue(uaddr ped_base_adr);
 
-void setPedHealthAndArmor(int ped_base_adr, float health, float armor);
-void setPedNeverOnFire(int ped_base_adr);
-void setPedAmmoForWeapon(int ped_base_adr, int type, int loaded, int total);
-void setPedMass(int ped_base_adr, float mass1, float mass2);
-void setPedExitVehicleNow(int ped_base_adr);
-void setPedInvisible(int ped_base_adr, int boolean);
-void setPedIgnoredByEveryone(int ped_base_adr, int boolean);
-void setPedCanBeTargeted(int ped_base_adr, int boolean);
-void setPedFlagToUnload(int ped_base_adr);
+extern void setPedHealthAndArmor(uaddr ped_base_adr, float health, float armor);
+extern void setPedNeverOnFire(uaddr ped_base_adr);
+extern void setPedAmmoForWeapon(uaddr ped_base_adr, int type, int loaded, int total);
+extern void setPedMass(uaddr ped_base_adr, float mass1, float mass2);
+extern void setPedExitVehicleNow(uaddr ped_base_adr);
+extern void setPedInvisible(uaddr ped_base_adr, bool boolean);
+extern void setPedIgnoredByEveryone(uaddr ped_base_adr, bool boolean);
+extern void setPedCanBeTargeted(uaddr ped_base_adr, bool boolean);
+extern void setPedFlagToUnload(uaddr ped_base_adr);
 
-void setPedOrVehicleFreezePosition(int ped_base_adr, int boolean);
+extern void setPedOrVehicleFreezePosition(uaddr ped_base_adr, bool boolean);
 
-char getPedsCurrentAnimation(int ped_base_adr);
-int getPedsCurrentWeapon(int ped_base_adr);
+extern uint8 getPedsCurrentAnimation();
+extern int getPedsCurrentWeapon(uaddr ped_base_adr);
 
-unsigned char getPedID(int ped_base_adr);
-u32 getPedsVehicleObjectAddress(int base_adr);
+extern ushort getPedID(uaddr ped_base_adr);
+extern uaddr getPedsVehicleObjectAddress(uaddr base_adr);
 
-int getPedObjectIsActive(int ped_base_adr);
-int getPedActiveObjects(int peds_base, int peds_max, int peds_size);
-int checkPedIsInWater(int ped_base_adr);
-int getPedDrowning(int ped_base_adr);
-
+extern bool getPedObjectIsActive(uaddr ped_base_adr);
+extern usize getPedActiveObjects(uaddr peds_base, usize peds_max, usize peds_size);
+extern bool checkPedIsInWater(uaddr ped_base_adr);
+extern bool getPedDrowning(uaddr ped_base_adr);
 
 /// Vehicle
-char lcs_getVehicleColorBase(int vehicle_base_adr);
-char lcs_getVehicleColorStripe(int vehicle_base_adr);
-void lcs_setVehicleColorBase(int vehicle_base_adr, char x);
-void lcs_setVehicleColorStripe(int vehicle_base_adr, char x);
-int vcs_getVehicleColorBase(int vehicle_base_adr);
-int vcs_getVehicleColorStripe(int vehicle_base_adr);
-void vcs_setVehicleColorBase(int vehicle_base_adr, int color);
-void vcs_setVehicleColorStripe(int vehicle_base_adr, int color);
+extern uint8 lcs_getVehicleColorBase(uaddr vehicle_base_adr);
+extern uint8 lcs_getVehicleColorStripe(uaddr vehicle_base_adr);
+extern void lcs_setVehicleColorBase(uaddr vehicle_base_adr, uint8 x);
+extern void lcs_setVehicleColorStripe(uaddr vehicle_base_adr, uint8 x);
+extern CRGBA vcs_getVehicleColorBase(uaddr vehicle_base_adr);
+extern CRGBA vcs_getVehicleColorStripe(uaddr vehicle_base_adr);
+extern void vcs_setVehicleColorBase(uaddr vehicle_base_adr, CRGBA color);
+extern void vcs_setVehicleColorStripe(uaddr vehicle_base_adr, CRGBA color);
 
-void setVehicleRadioStation(int vehicle_base_adr, char id);
-void setRadioStationNow(char id);
-void setVehicleGravityApplies(int vehicle_base_adr, int boolean);
-void setVehicleWheelCamber(int vehicle_base_adr, float val);
-float getVehicleWheelCamber(int vehicle_base_adr);
-float getVehicleSpeed(int vehicle_base_adr);
-char getVehicleCurrentGear(int vehicle_base_adr);
-void setVehicleFlagToUnload(int vehicle_base_adr);
-void setVehicleDoorsLocked(int vehicle_base_adr, int boolean);
-void setVehicleMakePhysical(int vehicle_base_adr);
-int getVehicleAiStatus(int vehicle_base_adr);
+extern void setVehicleRadioStation(uaddr vehicle_base_adr, uint8 id);
+extern void setRadioStationNow(uint8 id);
+extern void setVehicleGravityApplies(uaddr vehicle_base_adr, bool boolean);
+extern void setVehicleWheelCamber(uaddr vehicle_base_adr, float val);
+extern float getVehicleWheelCamber(uaddr vehicle_base_adr);
+extern float getVehicleSpeed();
+extern uint8 getVehicleCurrentGear(uaddr vehicle_base_adr);
+extern void setVehicleFlagToUnload(uaddr vehicle_base_adr);
+extern void setVehicleDoorsLocked(uaddr vehicle_base_adr, bool boolean);
+extern void setVehicleMakePhysical(uaddr vehicle_base_adr);
+extern int getVehicleAiStatus(uaddr vehicle_base_adr);
 
-short getVehicleID(int vehicle_base_adr);
-short getVehicleTypeByID(short id);
+extern uint16 getVehicleID(uaddr vehicle_base_adr);
+extern uint16 getVehicleTypeByID(uint16 id);
 
-int isVehicleInWater(int vehicle_base_adr);
-int isVehicleInAir(int vehicle_base_adr);
-int isVehicleUpsideDown(int vehicle_base_adr);
+extern bool isVehicleInWater(uaddr vehicle_base_adr);
+extern bool isVehicleInAir(uaddr vehicle_base_adr);
+extern bool isVehicleUpsideDown(uaddr vehicle_base_adr);
 
-void setVehicleHealth(int vehicle_base_adr, float value);
-float getVehicleHealth(int vehicle_base_adr);
-void setVehicleNoPhysicalDamage(int vehicle_base_adr);
-void setVehicleRepairTyres(int vehicle_base_adr, short vehicle_type);
+extern void setVehicleHealth(uaddr vehicle_base_adr, float value);
+extern float getVehicleHealth(uaddr vehicle_base_adr);
+extern void setVehicleNoPhysicalDamage(uaddr vehicle_base_adr);
+extern void setVehicleRepairTyres(uint16 vehicle_type);
 
-void makeVehicleExplode(int vehicle_base_adr);
+extern void makeVehicleExplode(uaddr vehicle_base_adr);
 
-int getVehicleObjectIsActive(int vehicle_base_adr);
-int getVehicleActiveObjects(int vehicle_base, int vehicle_max, int vehicle_size);
+extern bool getVehicleObjectIsActive(uaddr vehicle_base_adr);
+extern usize getVehicleActiveObjects(uaddr vehicle_base, usize vehicle_max, usize vehicle_size);
 
-int getVehicleDriverHandle(int vehicle_base_adr);
-int getVehiclePassengerHandle(int vehicle_base_adr);
-int getVehicleBackseatLeftHandle(int vehicle_base_adr);
-int getVehicleBackseatRightHandle(int vehicle_base_adr);
+extern int getVehicleDriverHandle(uaddr vehicle_base_adr);
+extern int getVehiclePassengerHandle(uaddr vehicle_base_adr);
+extern int getVehicleBackseatLeftHandle(uaddr vehicle_base_adr);
+extern int getVehicleBackseatRightHandle(uaddr vehicle_base_adr);
 
-void setHeliHeightLimit(float height);
-void setPoliceChaseHeliModel(short model);
+extern void setHeliHeightLimit(float height);
+extern void setPoliceChaseHeliModel(short model);
 
-float getBmxJumpMultiplier();
-void setBmxJumpMultiplier(float value);
-
+extern float getBmxJumpMultiplier();
+extern void setBmxJumpMultiplier(float value);
 
 /// World
-void setWaterLevel(float level);
-void resetWaterLevel();
-void setWindClipped(float wind);
-float getWind();
-int getWorldObjectIsActive(int worldobjs_base_adr);
-int getWorldActiveObjects(int worldobjs_base, int worldobjs_max, int worldobjs_size);
-
+extern void setWaterLevel(float level);
+extern void resetWaterLevel();
+extern void setWindClipped(float wind);
+extern float getWind();
+extern bool getWorldObjectIsActive(uaddr worldobjs_base_adr);
+extern usize getWorldActiveObjects(uaddr worldobjs_base, usize worldobjs_max, usize worldobjs_size);
 
 /// pickups
-int getPickupIsActive(int pickup_base_adr);
-short getPickupID(int pickup_base_adr);
-char *getPickupNameByID(short id);
-int getPickupsActiveObjects(int pickups_base, int pickups_max, int pickups_size);
-int getPickupsActiveObjectsWithID(short id);
-int spawnPickup(short id, char type, short amount, float x, float y, float z);
-
+extern bool getPickupIsActive(uaddr pickup_base_adr);
+extern uint16 getPickupID(uaddr pickup_base_adr);
+extern u8string getPickupNameByID(uint16 id);
+extern usize getPickupsActiveObjects(uaddr pickups_base, usize pickups_max, usize pickups_size);
+extern usize getPickupsActiveObjectsWithID(uint16 id);
+extern iaddr spawnPickup(uint16 id, uint8 type, int16 amount, float x, float y, float z);
 
 ///mapicons
-int getMapiconIsActive(int mapicon_base_adr);
-int getMapiconIsVisible(int mapicon_base_adr);
-int getMapiconsActiveObjects(int mapicon_base, int mapicons_max, int mapicons_size);
-char *getMapiconNameByID(short id);
-char getMapiconID(int mapicon_base_adr);
-int getMapiconType(int mapicon_base_adr);
-char *getMapiconTypeName(int mapicon_base_adr);
-int getMapiconColor(int mapicon_base_adr);
-char *getMapiconColorName(int mapicon_base_adr);
-int getMapiconLinkedObjectSlotNumber(int mapicon_base_adr);
+extern bool getMapiconIsActive(uaddr mapicon_base_adr);
+extern bool getMapiconIsVisible(uaddr mapicon_base_adr);
+extern usize getMapiconsActiveObjects(uaddr mapicon_base, usize mapicons_max, usize mapicons_size);
+extern u8string getMapiconNameByID(uint16 id);
+extern uint8 getMapiconID(uaddr mapicon_base_adr);
+extern int getMapiconType(uaddr mapicon_base_adr);
+extern u8string getMapiconTypeName(uaddr mapicon_base_adr);
+extern uint8 getMapiconColor(uaddr mapicon_base_adr);
+extern u8string getMapiconColorName(uaddr mapicon_base_adr);
+extern array_uidx getMapiconLinkedObjectSlotNumber(uaddr mapicon_base_adr);
 
-void removeMapIcon(int mapicon_base_adr);
-void removeAllMapIcons();
-void removeAllCustomMapIcons();
-int createCustomMapIcon(char icon, int color, char onlywhenclose, char size, float x, float y, float z);
+extern void removeMapIcon(uaddr mapicon_base_adr);
+extern void removeAllMapIcons();
+extern void removeAllCustomMapIcons();
+extern iaddr createCustomMapIcon(uint8 icon, CRGBA color, bool onlywhenclose, uint8 size, float x, float y, float z);
+extern usize createCustomMapIconsForPickupsWithID(uint16 id, uint8 icon, CRGBA color);
+extern usize createCustomMapIconsForWeaponsInRange(float range);
 
-int createCustomMapIconsForPickupsWithID(short id, char icon, int color);
-int createCustomMapIconsForWeaponsInRange(float range);
+extern void setLastButtonPressedInHistory(uint8 button);
+extern void activateCheatCode(uint8 a, uint8 b, uint8 c, uint8 d, uint8 e, uint8 f, uint8 g, uint8 h);
 
-void setLastButtonPressedInHistory(char button);
-void activateCheatCode(char a, char b, char c, char d, char e, char f, char g, char h);
-
-
-int getAddressOfHandlingSlotForID(short id);
-
+extern iaddr getAddressOfHandlingSlotForID(uint16 id);
 
 /// Misc
-char getClockHours();
-char getClockMinutes();
-char getClockSeconds();
-short getClockMultiplier();
-void setClockMultiplier(short val);
-void setClockTime(char hours, char minutes, char seconds);
-void setClockHours(char hours);
-void setClockFreeze(int boolean);
-int getWeather();
+extern uint8 getClockHours();
+extern uint8 getClockMinutes();
+extern uint8 getClockSeconds();
+extern int16 getClockMultiplier();
+extern void setClockMultiplier(int16 val);
+extern void setClockTime(uint8 hours, uint8 minutes, uint8 seconds);
+extern void setClockHours(uint8 hours);
+extern void setClockFreeze(bool boolean);
+extern uint16 getWeather();
 
-int getGametime();
-int getMultiplayer();
+extern uint32 getGametime();
+extern bool getMultiplayer();
 
-void setGamespeed(float val);
-float getGamespeed();
+extern void setGamespeed(float val);
+extern float getGamespeed();
 
-void setDisplaySettingsToggleRadar(int boolean);
-int getDisplaySettingsToggleRadar();
-void setDisplaySettingsToggleHUD(int boolean);
-int getDisplaySettingsToggleHUD();
-void setFreezeGame(int boolean);
-void setMapLegendToggle(int boolean);
-int getMapLegendToggle();
+extern void setDisplaySettingsToggleRadar(bool boolean);
+extern bool getDisplaySettingsToggleRadar();
+extern void setDisplaySettingsToggleHUD(bool boolean);
+extern bool getDisplaySettingsToggleHUD();
+extern void setFreezeGame(bool boolean);
+extern void setMapLegendToggle(bool boolean);
+extern bool getMapLegendToggle();
 
+extern void setTimedTextbox(u8string sentence, float duration);
+extern bool isTextboxShowing();
+extern void blockTextBox();
+extern bool isDialogShowing();
+extern void blockDialogs();
 
-void setTimedTextbox(const char *sentence, float duration);
-int isTextboxShowing();
-void blockTextBox();
-int isDialogShowing();
-void blockDialogs();
+extern bool isHudDisabledWhileCutsceneCamera();
 
-int isHudDisabledWhileCutsceneCamera();
+extern int32 getIsland();
+extern int32 getLanguage();
 
-int getIsland();
-int getLanguage();
+extern bool isPedCrouching();
+extern void TaskDuck();
 
-int isPedCrouching(int ped);
-void TaskDuck(int ped);
-
-void setRandomPedCheat(char id);
-
+extern void setRandomPedCheat(int8 id);
 
 /// Parked Vehicle Spawns
-int getVehicleWorldSpawnSlotIsActive(int base);
-int getVehicleWorldSpawnSlotActiveObjects(int base);
-int getVehicleWorldSpawnSlotAddress(unsigned int slot);
-int isCustomParkedVehicleSpawnViaSlot(int slot);
-int createParkedVehicleSpawnViaSlot(unsigned int slot, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock);
-int createParkedVehicleSpawnViaReplaceID(short replace_id, short id, float x, float y, float z, float deg, short color1, short color2, char alarm, short door_lock);
-
+extern bool getVehicleWorldSpawnSlotIsActive(uaddr base);
+extern usize getVehicleWorldSpawnSlotActiveObjects(uaddr base);
+extern uaddr getVehicleWorldSpawnSlotAddress(uint32 slot);
+extern bool isCustomParkedVehicleSpawnViaSlot(uint32 slot);
+extern uaddr createParkedVehicleSpawnViaSlot(uint32 slot, uint16 id, float x, float y, float z, float deg, int16 color1, int16 color2, bool alarm, int16 door_lock);
+extern uaddr createParkedVehicleSpawnViaReplaceID(uint16 replace_id UNUSED, uint16 id UNUSED, float x UNUSED, float y UNUSED, float z UNUSED, float deg UNUSED, int16 color1 UNUSED, int16 color2 UNUSED, bool alarm UNUSED, int16 door_lock UNUSED);
 
 /// Garage
-int getGarageVehicleSlotIsActive(int base);
-int getGarageVehicleActiveObjects(int base);
-void createGarageVehicle(int garage_base_adr, short id, float x, float y, float z, float vec1, float vec2, float vec3, char flags1, char flags2, char radio, char var1, char var2);
+extern bool getGarageVehicleSlotIsActive(uaddr base);
+extern usize getGarageVehicleActiveObjects(uaddr base);
+extern void createGarageVehicle(uaddr garage_base_adr, uint16 id, float x, float y, float z, float vec1, float vec2, float vec3, uint8 flags1, uint8 flags2, uint8 radio, uint8 var1, uint8 var2);
 
-int getIdeType(short id);
-int getFirstIdeOfType(int type);
-int getLastIdeOfType(int type);
-char *getIdeTypeName(char no);
-int getAddressOfIdeSlotForID(short id);
-int getIdeSlotSizeByType(char no);
+extern int8 getIdeType(array_uidx id);
+extern array_idx getFirstIdeOfType(int8 type);
+extern int getLastIdeOfType(int8 type);
+extern u8string getIdeTypeName(uint8 no);
+extern uaddr getAddressOfIdeSlotForID(array_uidx id);
+extern usize getIdeSlotSizeByType(uint8 no);
 
-char *getModelNameViaHash(int hash, int time);
-char *getModelNameViaID(int id, int time);
-char *getGxtTranslation(char *identifier);
-char *getRealVehicleNameViaID(short id);
-char *getGxtIdentifierForVehicleViaID(int id);
-char *vcs_getNameForPedViaID(int id);
+extern u8string getModelNameViaHash(uint32 hash, uint32 time);
+extern u8string getModelNameViaID(uint32 id, uint32 time);
+extern u8string getGxtTranslation(u8string identifier);
+extern u8string getRealVehicleNameViaID(uint16 id);
+extern u8string getGxtIdentifierForVehicleViaID(uint16 id);
+extern u8string vcs_getNameForPedViaID(uint16 id);
 
-char *getRadioStationName(unsigned int no);
+extern u8string getRadioStationName(uint32 no);
 
-char *removeColor(char *string);
-
+extern u8string removeColor(u8string string);
 
 /// Camera
-void setCameraCenterBehindPlayer();
-void setFieldOfView(float fov);
-float getFieldOfView();
+extern void setCameraCenterBehindPlayer();
+extern void setFieldOfView(float fov);
+extern float getFieldOfView();
 
-void setPedSkin(int ped_handle, const char *name);
-int removeIPLObjectsCollision(short id);
+extern void setPedSkin(int ped_handle, const u8string name);
+extern usize removeIPLObjectsCollision(uint16 id);
 
-int getParticleOffsetFor(char *name);
-char *getPedstatName(unsigned int no);
+extern uaddr getParticleOffsetFor(const u8string name);
+extern u8string getPedstatName(uint32 no);
 
 
 /// SCM
-void CustomScriptAdd();
-void CustomScriptClearBuffer();
-void CustomScriptClear(int address, int codesize);
-void CustomScriptPlace(u8 *script, int address, int codesize);
-void CustomScriptExecute(int var);
+extern void CustomScriptClear(uaddr address, usize size);
+extern void CustomScriptPlace(const byte *script, uaddr address, usize size);
+extern void CustomScriptExecute(uaddr address);
 
-int getScriptGlobalValue(int var);
+extern int getScriptGlobalValue(uint32 var);
 
 #endif

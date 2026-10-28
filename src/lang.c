@@ -1,19 +1,24 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2026, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #include <pspkernel.h>
@@ -32,8 +37,8 @@
 
 #ifdef LANG
 
-extern char folder_translations[];
-extern const char *basefolder;
+extern u8string folder_translations;
+extern const u8string basefolder;
 
 static LangHashTable *langTableCreate()
 {
@@ -45,20 +50,20 @@ static LangHashTable *langTableCreate()
   return ht;
 }
 
-static int langTableInsert(LangHashTable *ht, const char *original_string, const char *trans_string)
+static func_stat langTableInsert(LangHashTable *ht, const u8string original_string, const u8string trans_string)
 {
-  if ( !ht || !main_file_table || !original_string || !trans_string ) return -1;
+  if ( !ht || !main_file_table || !original_string || !trans_string ) return FUNC_ERROR;
 
   uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED) % TABLE_SIZE;
 
   string_lang *new_kv = (string_lang *)malloc(sizeof(string_lang));
-  if ( !new_kv ) return -1;
+  if ( !new_kv ) return FUNC_ERROR;
 
   new_kv->original_string = strdup(original_string);
   if ( !new_kv->original_string )
   {
     free(new_kv);
-    return -1;
+    return FUNC_ERROR;
   }
 
   new_kv->trans_string = strdup(trans_string);
@@ -66,20 +71,20 @@ static int langTableInsert(LangHashTable *ht, const char *original_string, const
   {
     free(new_kv->original_string);
     free(new_kv);
-    return -1;
+    return FUNC_ERROR;
   }
 
   new_kv->next = ht->table[index]; // Point to the current list at index
   ht->table[index] = new_kv; // Insert new_kv at the beginning
 
-  return 1;
+  return FUNC_OK;
 }
 
-static char *langTableSearch(LangHashTable *ht, const char *original_string)
+static u8string langTableSearch(LangHashTable *ht, const u8string original_string)
 {
-  if ( !ht || !original_string ) return (char *)original_string;
+  if ( !ht || !original_string ) return (u8string)original_string;
 
-  uint32_t index = hash(original_string, strlen(original_string), MURMURMASH_3_SEED) % TABLE_SIZE;
+  array_uidx index = (array_uidx)(hash(original_string, strlen(original_string), MURMURMASH_3_SEED) % TABLE_SIZE);
   
   string_lang *current = ht->table[index];
 
@@ -91,15 +96,14 @@ static char *langTableSearch(LangHashTable *ht, const char *original_string)
   }
 
   // If not found, return the original string
-  return (char *)original_string;
+  return (u8string)original_string;
 }
 
 void langTableFree(LangHashTable *ht)
 {
   if ( !ht ) return;
 
-  int i;
-  for (i = 0; i < TABLE_SIZE; i++)
+  for (array_uidx i = 0; i < TABLE_SIZE; i++)
   {
     string_lang *current = ht->table[i];
     while (current)
@@ -132,10 +136,10 @@ static LangFileTable *langFileTableInit()
   return table;
 }
 
-int currLanguageID = 0;
+LangID currLanguageID = LANG_ENGLISH;
 
 // Append a LanguageFile to the LangFileTable
-static void langFileTableAppend(LangFileTable *table, const char *version, const char *author, const char *language, const char *filename)
+static void langFileTableAppend(LangFileTable *table, const u8string version, const u8string author, const u8string language, const u8string filename)
 {
   if ( !table || !filename || table->size >= LANG_FILES_LIMIT ) return;
 
@@ -178,6 +182,8 @@ static void langFileTableAppend(LangFileTable *table, const char *version, const
     return;
   }
 
+  DEBUG_LOG("Adding '%s' (%s)", filename, language);
+
   // Append new LanguageFile to table
   table->lang_files[table->size] = new_lf;
   table->size++;
@@ -188,8 +194,7 @@ void langFileTableFree(LangFileTable *table)
 {
   if ( !table ) return;
 
-  int i;
-  for (i = 0; i < table->size; i++)
+  for (array_uidx i = 0; i < table->size; i++)
   {
     LanguageFile *currLangFile = table->lang_files[i];
     if ( !currLangFile ) continue;
@@ -218,7 +223,7 @@ static void langFileTableSearch()
   langFileTableAppend(main_file_table, VERSION, "Freakler", "English (United States)", "");
 
   // Open Directory
-  char buffer[128];
+  u8char buffer[128];
   snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_translations);
   SceUID dir = sceIoDopen(buffer);
   if ( dir < 0 ) return;
@@ -249,14 +254,14 @@ static void langFileTableSearch()
   return;
 }
 
-void GetLangINIInfo(LangFileTable *table, const char *filename)
+void GetLangINIInfo(LangFileTable *table, const u8string filename)
 {
   if ( !table || !filename ) return;
 
-  char version[8];
-  char author[32];
-  char lang[32];
-  char path[256];
+  u8char version[8];
+  u8char author[32];
+  u8char lang[32];
+  u8char path[256];
 
   snprintf(path, sizeof(path), "%s%s%s", basefolder, folder_translations, filename);
 
@@ -271,37 +276,33 @@ void GetLangINIInfo(LangFileTable *table, const char *filename)
   langFileTableAppend(table, version, author, lang, filename);
 }
 
-static unsigned int translatedStringsLength = 0;
+static usize translatedStringsLength = 0;
 static int ReadTranslationEntry(const char *section, const char *key, const char *value, void *user_data)
 {
   if ( !section || !key || !value || !user_data ) return 0; // Invalid args
 
   TranslationBrowseData *data = (TranslationBrowseData *)user_data;
   if ( translatedStringsLength >= TRANSLATED_STRINGS_LIMIT ) return 0; // We've reached the limit!
-  translatedStringsLength++;
-
-  char original_string[256];
-  char translated_string[256];
-  snprintf(original_string, sizeof(original_string), "%s", key);
-  snprintf(translated_string, sizeof(translated_string), "%s", value);
-
+  if ( data->section[0] != section[0] ) return 1; // Not needed
+  
   // Empty or english string
-  if ( translated_string[0] == '\0' || !strcmp(original_string, translated_string) ) return 1;
-
-  langTableInsert(data->table, original_string, translated_string);
+  if ( STR_EMPTY(value) || !strcmp(key, value) ) return 1;
+  
+  langTableInsert(data->table, (const u8string)key, (const u8string)value);
+  translatedStringsLength++;
   return 1;
 }
 
-static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection, int index)
+static void ReadTranslationsFromINI(LangHashTable *table, const u8string INISection, array_uidx index)
 {
-  if ( !table || !main_file_table || !INISection || *INISection == '\0' || index < 0 || index >= main_file_table->size ) return;
+  if ( !table || !main_file_table || !INISection || *INISection == '\0' || index >= main_file_table->size ) return;
 
   #ifdef LANG_DEBUG
   SceInt64 curr_time = sceKernelGetSystemTimeWide();
   (void)curr_time; // Dumb compiler
   #endif
   
-  char lang_path[128];
+  u8char lang_path[128];
   snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->path);
 
   #ifdef LANG_DEBUG
@@ -321,7 +322,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const char *INISection
   #endif
 }
 
-void langTableUpdate(int langIndex)
+void langTableUpdate(LangID langID)
 {
   translatedStringsLength = 0;
 
@@ -337,12 +338,12 @@ void langTableUpdate(int langIndex)
     main_file_table = NULL;
   }
 
-  langTableSetup(langIndex);
+  langTableSetup(langID);
 }
 
-void langTableSetup(int langIndex)
+void langTableSetup(LangID langID)
 {
-  currLanguageID = langIndex;
+  currLanguageID = langID;
 
   main_lang_table = langTableCreate();
   if ( !main_lang_table ) return;
@@ -351,20 +352,20 @@ void langTableSetup(int langIndex)
   if ( !main_file_table || main_file_table->size == 1 ) return;
 
   // If current language is English (lang and file tables still need to be created)
-  if ( langIndex == 0 ) return;
+  if ( langID == LANG_ENGLISH ) return;
 
-  ReadTranslationsFromINI(main_lang_table, "GENERAL", langIndex);
-  ReadTranslationsFromINI(main_lang_table, LCS ? "LCS" : "VCS", langIndex);
+  ReadTranslationsFromINI(main_lang_table, "GENERAL", langID);
+  ReadTranslationsFromINI(main_lang_table, LCS ? "LCS" : "VCS", langID);
 }
 
 #endif
 
 // Get translated string from .ini file
-char *_t(const char *string)
+u8string _t(const u8string string)
 {
   #ifdef LANG
   if ( currLanguageID != 0 ) return langTableSearch(main_lang_table, string);
   #endif
 
-  return (char *)string;
+  return (u8string)string;
 }

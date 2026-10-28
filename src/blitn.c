@@ -1,19 +1,24 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 /******************************************************************************************
@@ -21,16 +26,17 @@ You can display MAX_TEXTS messages with a length of MSGLENGTH characters!
 Call "initTextBlit()" with the GTA modules' text_addr
 
 Then blit text to screen via:
-  drawString(char *string, short style, float scale, float x, float y, u32 color);
+  drawString(short style, float scale, float x, float y, CRGBA color, u8string string);
 
 Draw Rectangles via:
-  void drawBox(float x, float y, float width, float height, u32 color);
+  void drawBox(float x, float y, float width, float height, CRGBA color);
 *******************************************************************************************/
 
 #include <pspsdk.h>
 #include <pspkernel.h>
 #include <systemctrl.h>
 
+#include <stdio.h>
 #include <string.h>
 #include <wchar.h>
 #include <stdarg.h>
@@ -38,6 +44,9 @@ Draw Rectangles via:
 #include "blitn.h"
 #include "logs.h"
 #include "putils.h"
+#include "cheats.h"
+#include "mctypes.h"
+#include "lang.h"
 
 /***********
 ~w~ = white
@@ -61,49 +70,50 @@ Draw Rectangles via:
 
 /* FUNCTIONS ****************************************************************************/
 
-char *(*SetBoxColor)(char *param_1,char alpha,char red,char green,char blue);
-float *(*SetBoxCoords)(float param_1, float param_2, float param_3, float param_4, float *param_5);
-void (*DrawRect)(float *param_1,unsigned int *param_2,char param_3);
-void (*PrintString_LCS)(float X, float Y, wchar_t* text, int* unknown);
-void (*PrintString_VCS)(wchar_t* text, int x, int y);
-void (*SetRightJustifyOn)();
-void (*SetRightJustifyOff)();
-void (*SetCentreOff)();
-void (*SetCentreOn)();
-void (*SetJustifyOn)();
-void (*SetJustifyOff)();
-void (*SetColor)(u32* color);
-void (*SetBackgroundColor)(u32* color);
-void (*SetFontStyle)(short style);
-void (*SetDropShadowPosition)(short bool_box);
-void (*SetDropColor)(char* rgba);
-void (*SetScale_LCS)(float width, float height);
-void (*SetScale_VCS)(float scale);
-void (*SetBackGroundOnlyTextOn)();
-void (*SetBackGroundOnlyTextOff)();
-void (*SetPropOn)();
-void (*SetPropOff)();
-void (*SetBackgroundOn)();
-void (*SetBackgroundOff)();
+void (*CFont_SetScaleLCS)(float xScale, float yScale);
+void (*CFont_SetScaleVCS)(float scale);
+void (*CFont_SetSlantRefPoint)(float x, float y);
+void (*CFont_SetSlant)(float s);
+void (*CFont_SetJustifyOn)(void);
+void (*CFont_SetJustifyOff)(void);
+void (*CFont_SetRightJustifyOn)(void);
+void (*CFont_SetRightJustifyOff)(void);
+void (*CFont_SetCentreOn)(void);
+void (*CFont_SetCentreOff)(void);
+void (*CFont_SetWrapx)(float x);
+void (*CFont_SetCentreSize)(float s);
+void (*CFont_SetBackgroundOn)(void);
+void (*CFont_SetBackgroundOff)(void);
+void (*CFont_SetBackGroundOnlyTextOn)(void);
+void (*CFont_SetBackGroundOnlyTextOff)(void);
+void (*CFont_SetPropOn)(void);
+void (*CFont_SetPropOff)(void);
+void (*CFont_SetFontStyle)(int16 style);
+void (*CFont_SetRightJustifyWrap)(float wrap);
+void (*CFont_SetAlphaFade)(float fade);
+void (*CFont_SetDropShadowPosition)(int16 pos);
+void (*CFont_SetBackgroundColor)(CRGBA *col);
+void (*CFont_SetColor)(CRGBA *col);
+void (*CFont_SetDropColor)(CRGBA *col);
+void (*CFont_PrintStringLCS)(float x, float y, wchar *s, int *unk);
+void (*CFont_PrintStringVCS)(wchar *text, int x, int y);
+
+void (*ResetFontStyling)();
 void (*SetTextOriginPoint)(int origin);
 void (*SetTextSpaceing)(int option);
-void (*SetTextBounds)(float* array);
-void (*ResetFontStyling)();
-void (*SetRightJustifyWrap)(float x);
-void (*SetWrapx)(float x);
-void (*SetSlant)(float param_1);
-void (*SetCentreSize)(float param_1);
-void (*SetSlantRefPoint)(float param_1, float param_2);
+void (*SetTextBounds)(CRect* bounds);
+
+void (*CSprite2d_DrawRect_2)(const CRect *r, const CRGBA *col, bool screenUnits);
 
 /* FUNCTIONS ****************************************************************************/
 
 static menu_blit_text main_blit_texts[MAX_TEXTS]  = {0};
-static menu_blit_box main_blit_boxes[MAX_BOXES]   = {0};
+static menu_blit_box  main_blit_boxes[MAX_BOXES]  = {0};
 
 static int gta_version = -1;
 
 // It must be sorted by (unicode, gamecode) for binary search.
-static const u16 LCS_UNICODES[] = {
+static const uint16 LCS_UNICODES[] = {
   0x00A1, 0x00A2, 0x00A3, 0x00A4, 0x00A5, 0x00A6, 0x00A7, 0x00A8,
   0x00A9, 0x00AA, 0x00AB, 0x00AE, 0x00B0, 0x00B4, 0x00BB, 0x00BF,
   0x00C0, 0x00C1, 0x00C2, 0x00C3, 0x00C4, 0x00C5, 0x00C6, 0x00C7,
@@ -117,7 +127,8 @@ static const u16 LCS_UNICODES[] = {
   0x0152, 0x0153, 0x0178, 0x02C6, 0x02DC, 0x2018, 0x2019, 0x201A,
   0x201C, 0x201D, 0x201E, 0x2039, 0x203A, 0x20AC, 0x2122, 0xFFFD
 };
-static const u8 LCS_GAMECODES[] = {
+
+static const uint8 LCS_GAMECODES[] = {
   0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, // ¡ ¢ £ ¤ ¥ ¦ § ¨
   0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, // © ª « ® ° ´ » ¿
   0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, // À Á Â Ã Ä Å Æ Ç
@@ -132,7 +143,7 @@ static const u8 LCS_GAMECODES[] = {
   0xC8, 0xC9, 0xC2, 0xC4, 0xCC, 0xC0, 0xCB, 0xDF  // “ ” „ ‹ › € ™ �
 };
 
-static const u16 VCS_UNICODES[] = {
+static const uint16 VCS_UNICODES[] = {
   0x00A1, 0x00A2, 0x00A3, 0x00A4, 0x00A5, 0x00A6, 0x00A7, 0x00A9, 0x00AA, 0x00AB,
   0x00AE, 0x00B0, 0x00B1, 0x00B2, 0x00B3, 0x00B9, 0x00BA, 0x00BB, 0x00BF, 0x00C0,
   0x00C1, 0x00C2, 0x00C3, 0x00C4, 0x00C5, 0x00C6, 0x00C7, 0x00C8, 0x00C9, 0x00CA,
@@ -144,7 +155,8 @@ static const u16 VCS_UNICODES[] = {
   0x00FD, 0x00FE, 0x00FF, 0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017D, 0x017E,
   0x0192, 0x02C6, 0x02DC, 0x0384, 0x03BC, 0x2022, 0x208D, 0x208E, 0x2122, 0xFFFD
 };
-static const u8 VCS_GAMECODES[] = {
+
+static const uint8 VCS_GAMECODES[] = {
   0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA9, 0xAA, 0xAB, // ¡ ¢ £ ¤ ¥ ¦ § © ª «
   0xAE, 0xB0, 0xB1, 0xB2, 0xB3, 0xB9, 0xBA, 0xBB, 0xBF, 0xC0, // ® ° ± ² ³ ¹ º » ¿ À
   0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, // Á Â Ã Ä Å Æ Ç È É Ê
@@ -157,9 +169,9 @@ static const u8 VCS_GAMECODES[] = {
   0x83, 0x88, 0x98, 0xB4, 0xB5, 0x95, 0x8B, 0x9B, 0x99, 0x80  // ƒ ˆ ˜ ΄ μ • ₍ ₎ ™ �
 };
 
-static const u16 *UNICODES[] = { VCS_UNICODES, LCS_UNICODES };
-static const u8 *GAMECODES[] = { VCS_GAMECODES, LCS_GAMECODES };
-static const size_t CHARMAP_LENS[] = {
+static const uint16 *UNICODES[] = { VCS_UNICODES, LCS_UNICODES };
+static const uint8 *GAMECODES[] = { VCS_GAMECODES, LCS_GAMECODES };
+static const array_size CHARMAP_LENS[] = {
   ARRAY_SIZE(VCS_UNICODES),
   ARRAY_SIZE(LCS_UNICODES),
 };
@@ -168,15 +180,16 @@ static const size_t CHARMAP_LENS[] = {
 #define REPLACEMENT_CHAR '?'
 
 // Binary search version
-static wchar_t UnicodeToGameChar(uint32_t unicode, const u16 *unicodes,
-         const u8 *gamecodes, const size_t charmap_len)
+static wchar UnicodeToGameChar(uint32 unicode, const uint16 *unicodes,
+         const uint8 *gamecodes, const array_size charmap_len)
 {
   if (unicode > 0xFFFF)
     return REPLACEMENT_CHAR;
-  size_t low = 0;
-  size_t high = charmap_len - 1;
+    
+  array_size low = 0;
+  array_size high = charmap_len - 1;
   while (low <= high) {
-    size_t mid = low + (high - low) / 2;
+    array_uidx mid = low + (high - low) / 2;
 
     if (unicodes[mid] == unicode)
       return gamecodes[mid];
@@ -193,7 +206,7 @@ static wchar_t UnicodeToGameChar(uint32_t unicode, const u16 *unicodes,
 
 // Linear version
 /*
-static inline wchar_t UnicodeToGameChar(uint32_t unicode, const u16 *unicodes, const u8 *gamecodes, const size_t charmap_len) {
+static inline wchar UnicodeToGameChar(uint32_t unicode, const uint16 *unicodes, const uint8 *gamecodes, const size_t charmap_len) {
   if (unicode > 0xFFFF)
     return REPLACEMENT_CHAR;
 
@@ -206,7 +219,7 @@ static inline wchar_t UnicodeToGameChar(uint32_t unicode, const u16 *unicodes, c
   return REPLACEMENT_CHAR;
 }*/
 
-static int GetUtf8CharLen(u8 byte)
+static usize GetUtf8CharLen(uint8 byte)
 {
   if ((byte & 0x80) == 0x00)
     return 1;
@@ -220,36 +233,36 @@ static int GetUtf8CharLen(u8 byte)
   return 0;
 }
 
-static int IsCont(u8 byte)
+static bool IsCont(uint8 byte)
 {
   return (byte & 0xC0) == 0x80;
 }
 
-static void PutReplacementChar(wchar_t **out)
+static void PutReplacementChar(wstring *out)
 {
   *(*out)++ = REPLACEMENT_CHAR;
 }
 
-void Utf8ToGameEncoding(const char *in, wchar_t *out)
+void Utf8ToGameEncoding(u8string in, wstring out)
 {
   if (gta_version != 0 && gta_version != 1) {
     *out = '\0';
     return;
   }
 
-  const u16 *unicodes = UNICODES[gta_version];
-  const u8 *gamecodes = GAMECODES[gta_version];
-  const size_t charmap_len = CHARMAP_LENS[gta_version];
+  const uint16 *unicodes = UNICODES[gta_version];
+  const uint8 *gamecodes = GAMECODES[gta_version];
+  const usize charmap_len = CHARMAP_LENS[gta_version];
 
   while (*in != '\0') {
-    unsigned char c1 = (unsigned char)*in++;
-    uint32_t unicode;
+    uchar c1 = (uchar)*in++;
+    uint32 unicode;
 
-    int len = GetUtf8CharLen(c1);
+    usize len = GetUtf8CharLen(c1);
 
     switch (len) {
     case 1: {
-      *out++ = (wchar_t)c1;
+      *out++ = (wchar)c1;
       continue;
     }
 
@@ -258,7 +271,7 @@ void Utf8ToGameEncoding(const char *in, wchar_t *out)
         PutReplacementChar(&out);
         continue;
       }
-      u8 c2 = (u8)*in++;
+      uint8 c2 = (uint8)*in++;
       unicode = ((c1 & 0x1F) << 6) | (c2 & 0x3F);
 
       if (unicode < 0x80) {
@@ -275,8 +288,8 @@ void Utf8ToGameEncoding(const char *in, wchar_t *out)
         PutReplacementChar(&out);
         continue;
       }
-      u8 c2 = (u8)*in++;
-      u8 c3 = (u8)*in++;
+      uint8 c2 = (uint8)*in++;
+      uint8 c3 = (uint8)*in++;
 
       unicode = ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) |
           (c3 & 0x3F);
@@ -296,9 +309,9 @@ void Utf8ToGameEncoding(const char *in, wchar_t *out)
         PutReplacementChar(&out);
         continue;
       }
-      u8 c2 = (u8)*in++;
-      u8 c3 = (u8)*in++;
-      u8 c4 = (u8)*in++;
+      uint8 c2 = (uint8)*in++;
+      uint8 c3 = (uint8)*in++;
+      uint8 c4 = (uint8)*in++;
 
       unicode = ((c1 & 0x07) << 18) | ((c2 & 0x3F) << 12) |
           ((c3 & 0x3F) << 6) | (c4 & 0x3F);
@@ -323,14 +336,14 @@ void Utf8ToGameEncoding(const char *in, wchar_t *out)
   *out = '\0';
 }
 
-void drawBox(float x, float y, float width, float height, u32 color) {
-  int i;
-  for( i = 0; i < MAX_BOXES; i++ ) {
+void drawBox(float x, float y, float width, float height, CRGBA color) {
+  for( array_uidx i = 0; i < MAX_BOXES; i++ )
+  {
     menu_blit_box* curr_box = &main_blit_boxes[i];
-
     if( curr_box->id == (x+y+width+height) ) break;
 
-    if( curr_box->id == 0 ) {
+    if( curr_box->id == 0 )
+    {
       curr_box->id = x+y+width+height;
       curr_box->pos.x = x;
       curr_box->pos.y = y;
@@ -342,7 +355,7 @@ void drawBox(float x, float y, float width, float height, u32 color) {
   }
 }
 
-void drawUiBox(float x, float y, float width, float height, float bordersize, u32 bordercolor, u32 bgcolor) {
+void drawUiBox(float x, float y, float width, float height, float bordersize, CRGBA bordercolor, CRGBA bgcolor) {
   drawBox(x, y, width, height, bgcolor); // x, y, width, height, color
 
   drawBox(x-bordersize, y-bordersize, width+(bordersize*2), bordersize, bordercolor); // top
@@ -352,12 +365,14 @@ void drawUiBox(float x, float y, float width, float height, float bordersize, u3
   drawBox(x+width, y, bordersize, height, bordercolor); // right
 }
 
-void drawString(const char *string, int origin, short style, float scale, short shadow, float x, float y, u32 color) {
-  int i;
-  for( i = 0; i < MAX_TEXTS; i++ ) {
+void drawStringNoTVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8string string) {
+
+  for( array_uidx i = 0; i < MAX_TEXTS; i++ )
+  {
     menu_blit_text* curr_text = &main_blit_texts[i];
 
-    if( curr_text->text[0] == '\0' ) {
+    if( STR_EMPTY(curr_text->text) )
+    {
       Utf8ToGameEncoding(string, curr_text->text);
       curr_text->pos.x = x;
       curr_text->pos.y = y;
@@ -372,57 +387,99 @@ void drawString(const char *string, int origin, short style, float scale, short 
 
 }
 
-void drawStringLCS(const char *string, int origin, short style, float scale, short shadow UNUSED, float x, float y, u32 color) {
-  wchar_t str[MSGLENGTH] = L" ";
-  Utf8ToGameEncoding(string, str);
+void drawStringNoT(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8string string, ...)
+{
+  u8char finalstr[MAX_TEXT_SIZE];
+  va_list args;
+  va_start(args, string);
+  vsnprintf(finalstr, MAX_TEXT_SIZE, string, args);
+  va_end(args);
 
-  SetColor(&color);
-  SetPropOn();
-  SetBackgroundOff();
-  switch( origin ) {
-    case 0: SetRightJustifyOff(); break; // free
-    case 2: SetCentreOn(); break; // center
-    case 4: SetRightJustifyOn(); break; // right
-  }
-  SetRightJustifyWrap(0.0f);
-  SetWrapx(SCREEN_WIDTH);
-  SetFontStyle(style);
-  SetScale_LCS(scale/2,scale); // eg: 0.4048,0.88
-
-  PrintString_LCS(x,y, str, 0);
+  drawStringNoTVarg(origin, style, scale, shadow, x, y, color, finalstr);
 }
 
-void drawStringVCS(const char *string, int origin, short style, float scale, short shadow UNUSED, float x, float y, u32 color) {
-  float coords[4];
+void drawStringNoVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8string string)
+{
+  drawStringNoTVarg(origin, style, scale, shadow, x, y, color, _t(string));
+}
 
-  wchar_t str[MSGLENGTH] = L" ";
-  Utf8ToGameEncoding(string, str);
+void drawString(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8string string, ...) {
 
-  SetFontStyle(style);
+  string = _t(string); /* Translate text */
+
+  u8char finalstr[MAX_TEXT_SIZE];
+  va_list args;
+  va_start(args, string);
+  vsnprintf(finalstr, MAX_TEXT_SIZE, string, args);
+  va_end(args);
+
+  drawStringNoTVarg(origin, style, scale, shadow, x, y, color, finalstr);
+}
+
+void drawStringLCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8string string, ...) {
+  wchar str[MSGLENGTH] = {' '};
+
+  string = _t(string); /* Translate text */
+
+  u8char finalstr[MAX_TEXT_SIZE];
+  va_list args;
+  va_start(args, string);
+  vsnprintf(finalstr, MAX_TEXT_SIZE, string, args);
+  va_end(args);
+
+  Utf8ToGameEncoding(finalstr, str);
+
+  CFont_SetColor(&color);
+  CFont_SetPropOn();
+  CFont_SetBackgroundOff();
+  
+  switch( origin )
+  {
+    case ALIGN_FREE:    CFont_SetRightJustifyOff(); break; // free
+    case ALIGN_CENTER:  CFont_SetCentreOn();        break; // center
+    case ALIGN_RIGHT:   CFont_SetRightJustifyOn();  break; // right
+  }
+
+  CFont_SetRightJustifyWrap(0.0f);
+  CFont_SetWrapx(SCREEN_WIDTH);
+  CFont_SetFontStyle(style);
+  CFont_SetScaleLCS(scale / 2, scale); // eg: 0.4048,0.88
+
+  CFont_PrintStringLCS(x, y, str, NULL);
+}
+
+void drawStringVCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8string string, ...) {
+  wchar str[MSGLENGTH] = {' '};
+
+  string = _t(string); /* Translate text */
+
+  u8char finalstr[MAX_TEXT_SIZE];
+  va_list args;
+  va_start(args, string);
+  vsnprintf(finalstr, MAX_TEXT_SIZE, string, args);
+  va_end(args);
+
+  Utf8ToGameEncoding(finalstr, str);
+
+  CFont_SetFontStyle(style);
   ResetFontStyling();
 
-  coords[0] = 0.0f;
-  coords[1] = SCREEN_HEIGHT;
-  coords[2] = SCREEN_WIDTH;
-  coords[3] = 0.0f;
-  SetTextBounds(coords); // full screen
+  SetTextBounds(&(CRect){0.0f, SCREEN_HEIGHT, SCREEN_WIDTH, 0.0f}); // full screen
 
   SetTextSpaceing(1);
   SetTextOriginPoint(origin); // free
-  SetScale_VCS(scale);
-  SetColor(&color);
+  CFont_SetScaleVCS(scale);
+  CFont_SetColor(&color);
 
-  PrintString_VCS(str, (int)x, (int)y);
+  CFont_PrintStringVCS(str, (int)x, (int)y);
 }
 
 /*void cWorldStream_Render_LCS_Patched(void *this, int mode) {
 
-  //int i;
-
   cWorldStream_Render(this, mode);
 
   if( mode == 2 ) {
-    for( i = 0; i < MAX_TEXTS; i++ ) {
+    for( int i = 0; i < MAX_TEXTS; i++ ) {
       if( wideBuffer[i][0] != '\0' ) {
         SetFontStyle(fontstyle[i]);
         SetColor(&fontcolor[i]);
@@ -438,12 +495,10 @@ void drawStringVCS(const char *string, int origin, short style, float scale, sho
 }
 void cWorldStream_Render_VCS_Patched(void *this, int mode) {
 
-  //int i;
-
   cWorldStream_Render(this, mode);
 
   if(mode == 2) {
-    for( i = 0; i < MAX_TEXTS; i++ ) {
+    for( int i = 0; i < MAX_TEXTS; i++ ) {
       if( wideBuffer[i][0] != '\0' ) {
         ResetFontStyling();
         SetFontStyle(fontstyle[i]);
@@ -460,19 +515,17 @@ void cWorldStream_Render_VCS_Patched(void *this, int mode) {
 
 void (*mymenurender_LCS)(void);
 static void mymenurender_LCS_patched() {
-  int i;
-  float coordinates[4];
-  float *ptr_coords;
+  CRect boxRect = {0};
 
   /// BOXes
-  for( i = 0; i < MAX_BOXES; i++ )
+  for( uint32 i = 0; i < MAX_BOXES; i++ )
   {
     menu_blit_box* curr_box = &main_blit_boxes[i];
 
     if( curr_box->id != 0 )
     {
-      ptr_coords = (float *)SetBoxCoords(curr_box->pos.x, curr_box->pos.y, curr_box->pos.x + curr_box->size.x, curr_box->pos.y + curr_box->size.y, coordinates);
-      DrawRect(ptr_coords, (unsigned int*)&curr_box->color, 0x1); // todo
+      CRect_CRect_2(curr_box->pos.x, curr_box->pos.y, curr_box->pos.x + curr_box->size.x, curr_box->pos.y + curr_box->size.y, &boxRect);
+      CSprite2d_DrawRect_2(&boxRect, &curr_box->color, true);
       curr_box->id = 0; // Zero after drawing
       continue;
     }
@@ -481,54 +534,52 @@ static void mymenurender_LCS_patched() {
   }
 
   /// TEXTs
-  for( i = 0; i < MAX_TEXTS; i++ )
+  for( uint32 i = 0; i < MAX_TEXTS; i++ )
   {
     menu_blit_text* curr_text = &main_blit_texts[i];
 
-    if( curr_text->text[0] != '\0' )
+    if( !STR_EMPTY(curr_text->text) )
     {
-      SetFontStyle(curr_text->style);
-      SetScale_LCS(curr_text->scale / 2.0f, curr_text->scale);
+      CFont_SetFontStyle(curr_text->style);
+      CFont_SetScaleLCS(curr_text->scale / 2.0f, curr_text->scale);
 
-      SetColor(&curr_text->color);
-      SetSlant(0.0f);
-      SetDropShadowPosition(curr_text->shadow);
+      CFont_SetColor(&curr_text->color);
+      CFont_SetSlant(0.0f);
+      CFont_SetDropShadowPosition(curr_text->shadow);
 
-      if( curr_text->shadow == SHADOW_ON ) { // (fix) if shadow is enabled.. keep it from fading when for example vehicle/location text fades aways
-        char rgba[] = { 0x00, 0x00, 0x00, 0xFF }; // todo allow rgb values (although LCS only! -> ?)
-        SetDropColor(rgba);
-      }
+      if( curr_text->shadow == SHADOW_ON )// (fix) if shadow is enabled.. keep it from fading when for example vehicle/location text fades aways
+        CFont_SetDropColor(&(CRGBA){ .a = 0xFF });
 
       /// origin: 0 = free positioning , 2 = center, 3 = left, 4 = right (uses X coordinate unlike VCS!)
       switch ( curr_text->origin )
       {
         case ALIGN_CENTER:
-          SetRightJustifyOff();
-          SetJustifyOff();
-          SetCentreOn();
-          SetCentreSize(SCREEN_WIDTH); // todo I guess
+          CFont_SetRightJustifyOff();
+          CFont_SetJustifyOff();
+          CFont_SetCentreOn();
+          CFont_SetCentreSize(SCREEN_WIDTH); // TODO:
           break;
 
         case ALIGN_FREE:
         case ALIGN_LEFT:
-          SetCentreOff();
-          SetRightJustifyOff();
-          SetJustifyOn();
-          SetWrapx(SCREEN_WIDTH);
+          CFont_SetCentreOff();
+          CFont_SetRightJustifyOff();
+          CFont_SetJustifyOn();
+          CFont_SetWrapx(SCREEN_WIDTH);
           break;
 
         case ALIGN_RIGHT:
-          SetCentreOff();
-          SetJustifyOff();
-          SetRightJustifyOn();
-          SetRightJustifyWrap(0.0f);
+          CFont_SetCentreOff();
+          CFont_SetJustifyOff();
+          CFont_SetRightJustifyOn();
+          CFont_SetRightJustifyWrap(0.0f);
           break;
 
         case ALIGN_SCREENCENTER:
-          SetRightJustifyOff();
-          SetJustifyOff();
-          SetCentreOn();
-          SetCentreSize(SCREEN_WIDTH);
+          CFont_SetRightJustifyOff();
+          CFont_SetJustifyOff();
+          CFont_SetCentreOn();
+          CFont_SetCentreSize(SCREEN_WIDTH);
           curr_text->pos.x = SCREEN_WIDTH / 2.0f;
           break;
 
@@ -536,13 +587,13 @@ static void mymenurender_LCS_patched() {
           break;
       }
 
-      SetPropOn(); // proportional
-      SetBackgroundOff();
-      SetBackGroundOnlyTextOff();
+      CFont_SetPropOn(); // proportional
+      CFont_SetBackgroundOff();
+      CFont_SetBackGroundOnlyTextOff();
 
-      PrintString_LCS(curr_text->pos.x, curr_text->pos.y, curr_text->text, NULL);
+      CFont_PrintStringLCS(curr_text->pos.x, curr_text->pos.y, curr_text->text, NULL);
 
-      curr_text->text[0] = '\0'; // Zero string after drawing
+      CLEAR_STR(curr_text->text); // Zero string after drawing
       continue;
     }
 
@@ -554,21 +605,18 @@ static void mymenurender_LCS_patched() {
 
 void (*mymenurender_VCS)(void);
 static void mymenurender_VCS_patched() {
-  int i;
-  float coordinates[4];
-  float *ptr_coords;
-  float posfix = 2.0f; // a fix to better match position compared to LCS version
-  float coords[4];
+  const float posfix = 2.0f; // a fix to better match position compared to LCS version
+  CRect boxRect = {0};
 
   /// BOXes
-  for( i = 0; i < MAX_BOXES; i++ )
+  for( array_uidx i = 0; i < MAX_BOXES; i++ )
   {
     menu_blit_box* curr_box = &main_blit_boxes[i];
 
     if( curr_box->id != 0 )
     {
-      ptr_coords = (float *)SetBoxCoords(curr_box->pos.x, curr_box->pos.y, curr_box->pos.x + curr_box->size.x, curr_box->pos.y + curr_box->size.y, coordinates);
-      DrawRect(ptr_coords, (unsigned int*)&curr_box->color, 0x1); // todo
+      CRect_CRect_2(curr_box->pos.x, curr_box->pos.y, curr_box->pos.x + curr_box->size.x, curr_box->pos.y + curr_box->size.y, &boxRect);
+      CSprite2d_DrawRect_2(&boxRect, &curr_box->color, true);
       curr_box->id = 0; // Zero after drawing
       continue;
     }
@@ -577,27 +625,25 @@ static void mymenurender_VCS_patched() {
   }
 
   /// TEXTs
-  for( i = 0; i < MAX_TEXTS; i++ )
+  for( array_uidx i = 0; i < MAX_TEXTS; i++ )
   {
     menu_blit_text* curr_text = &main_blit_texts[i];
 
-    if( curr_text->text[0] != '\0' )
+    if( !STR_EMPTY(curr_text->text) )
     {
-      SetFontStyle(curr_text->style);
+      CFont_SetFontStyle(curr_text->style);
       ResetFontStyling();
-      coords[0] = 0.0f;
-      coords[1] = SCREEN_HEIGHT;
-      coords[2] = SCREEN_WIDTH;
-      coords[3] = 0.0f;
+
+      CRect textBounds = {0.0f, SCREEN_HEIGHT, SCREEN_WIDTH, 0.0f};
 
       switch ( curr_text->origin )
       {
         case ALIGN_RIGHT:
-          coords[2] = curr_text->pos.x;
+          textBounds.right = curr_text->pos.x;
           break;
 
         case ALIGN_CENTER:
-          coords[2] = curr_text->pos.x * 2.0f;
+          textBounds.right = curr_text->pos.x * 2.0f;
           break;
 
         default:
@@ -605,7 +651,7 @@ static void mymenurender_VCS_patched() {
       }
 
       SetTextSpaceing(1); // set 0 to put whitespace between each char
-      SetTextBounds(coords); // in combination with "SetTextOriginPoint" text can be centered! I did this to match LCS
+      SetTextBounds(&textBounds); // in combination with "SetTextOriginPoint" text can be centered! I did this to match LCS
       SetTextOriginPoint(curr_text->origin);
 
       /* * * * * * *
@@ -640,18 +686,17 @@ static void mymenurender_VCS_patched() {
       33 =
       * * * * * *  */
 
-      SetScale_VCS(curr_text->scale);
+      CFont_SetScaleVCS(curr_text->scale);
 
       if( curr_text->shadow == SHADOW_ON && curr_text->style != FONT_NAMES ) { // fake shadow (black shifted text) + disable on FONT_NAMES because those have shadow by default
-        u32 rgba[] = { 0xBB000000 };
-        SetColor(rgba);
-        PrintString_VCS(curr_text->text, (int)(curr_text->pos.x + 1.0f), (int)(curr_text->pos.y + 1.0f + posfix));
+        CFont_SetColor(&(CRGBA){ .a = 0xBB });
+        CFont_PrintStringVCS(curr_text->text, (int)(curr_text->pos.x + 1.0f), (int)(curr_text->pos.y + 1.0f + posfix));
       }
 
-      SetColor(&curr_text->color);
-      PrintString_VCS(curr_text->text, (int)curr_text->pos.x, (int)(curr_text->pos.y + posfix));
+      CFont_SetColor(&curr_text->color);
+      CFont_PrintStringVCS(curr_text->text, (int)curr_text->pos.x, (int)(curr_text->pos.y + posfix));
 
-      curr_text->text[0] = '\0'; // Zero after drawing
+      CLEAR_STR(curr_text->text); // Zero after drawing
       continue;
     }
 
@@ -662,7 +707,7 @@ static void mymenurender_VCS_patched() {
 }
 
 
-static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
+static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
   /*************************************
    * ULUS-10041 v1.02 | 0x0010dfa8 | OK!
    * ULUS-10041 v1.05 | 0x001BEF40 | OK!
@@ -678,10 +723,10 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x001BEDD0 | OK!
    * ULUX-80146 v0.02 | 0x00077AA0 | OK!
    **************************************/
-  if( _lw(addr + 0x34) == 0x24C5FEE0 && _lw(addr + 0x24) == 0x00C02025 ) { // 0x001BEE84
+  if( !mymenurender_LCS && _lw(addr + 0x34) == 0x24C5FEE0 && _lw(addr + 0x24) == 0x00C02025 ) { // 0x001BEE84
     DEBUG_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_LCS_patched", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, mymenurender_LCS_patched, mymenurender_LCS);
-    return 1;
+    return true;
   }
 
   /*************************************
@@ -698,12 +743,12 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00250D44 | OK!
    * ULUX-80146 v0.02 | 0x001C3F10 | OK!
    **************************************/
-  if( _lw(addr - 0x4) == 0xA080001F && _lw(addr + 0x8) == 0xE48C0004 && _lw(addr + 0x10) == 0xE48D0008 && _lw(addr + 0x20) == 0xE48C000C ) { // 0x00250DF8
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetScale_LCS", addr-text_addr, addr);
-    SetScale_LCS = (void*)(addr);
-    SetSlant = (void*)(addr+0x14); // FUN_00250e0c_SetSlant
-    SetSlantRefPoint = (void*)(addr+0x24); // FUN_00250e1c_SetSlantRefPoint
-    return 1;
+  if( !CFont_SetScaleLCS && _lw(addr - 0x4) == 0xA080001F && _lw(addr + 0x8) == 0xE48C0004 && _lw(addr + 0x10) == 0xE48D0008 && _lw(addr + 0x20) == 0xE48C000C ) { // 0x00250DF8
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetScale", addr-text_addr, addr);
+    CFont_SetScaleLCS       = (void(*)(float x, float y))(addr);
+    CFont_SetSlant          = (void(*)(float s))(addr+0x14); // FUN_00250e0c_SetSlant
+    CFont_SetSlantRefPoint  = (void(*)(float x, float y))(addr+0x24); // FUN_00250e1c_SetSlantRefPoint
+    return true;
   }
 
   /*************************************  OK!
@@ -720,10 +765,10 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00250D7C | OK!
    * ULUX-80146 v0.02 | 0x001C3F48 | OK!
    **************************************/
-  if( _lw(addr - 0x4) == 0xE48D0014 && _lw(addr) == 0x00802825 && _lw(addr + 0x4) == 0x90A40000 && _lw(addr + 0x10) == 0x90A70001 ) { // 0x00250E30
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetColor", addr-text_addr, addr);
-    SetColor = (void*)(addr);
-    return 1;
+  if( !CFont_SetColor && _lw(addr - 0x4) == 0xE48D0014 && _lw(addr) == 0x00802825 && _lw(addr + 0x4) == 0x90A40000 && _lw(addr + 0x10) == 0x90A70001 ) { // 0x00250E30
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetColor", addr-text_addr, addr);
+    CFont_SetColor = (void(*)(CRGBA *col))(addr);
+    return true;
   }
 
   /*************************************
@@ -740,15 +785,15 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00250E60 | OK!
    * ULUX-80146 v0.02 | 0x001C402C | OK!
    **************************************/
-  if( _lw(addr + 0xC) == 0xA0800018 && _lw(addr + 0x10) == 0x03E00008 && _lw(addr + 0x14) == 0xA0800019 && _lw(addr + 0x18) == 0x44807000 && _lw(addr + 0x1C) == 0x3C0443F0 ) { // 0x00250F14
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetJustify(s)", addr-text_addr, addr);
-    SetRightJustifyOff = (void*)(addr);
-    SetRightJustifyOn  = (void*)(addr - 0x1C); //FUN_00250ef8_
-    SetCentreOff       = (void*)(addr - 0x2C); //FUN_00250ee8_
-    SetCentreOn        = (void*)(addr - 0x48); //FUN_00250ecc_
-    SetJustifyOff      = (void*)(addr - 0x5C); //FUN_00250eb8_
-    SetJustifyOn       = (void*)(addr - 0x78); //FUN_00250e9c_
-    return 1;
+  if( !CFont_SetRightJustifyOff && _lw(addr + 0xC) == 0xA0800018 && _lw(addr + 0x10) == 0x03E00008 && _lw(addr + 0x14) == 0xA0800019 && _lw(addr + 0x18) == 0x44807000 && _lw(addr + 0x1C) == 0x3C0443F0 ) { // 0x00250F14
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetJustify(s)", addr-text_addr, addr);
+    CFont_SetRightJustifyOff = (void(*)(void))(addr);
+    CFont_SetRightJustifyOn  = (void(*)(void))(addr - 0x1C); //FUN_00250ef8_
+    CFont_SetCentreOff       = (void(*)(void))(addr - 0x2C); //FUN_00250ee8_
+    CFont_SetCentreOn        = (void(*)(void))(addr - 0x48); //FUN_00250ecc_
+    CFont_SetJustifyOff      = (void(*)(void))(addr - 0x5C); //FUN_00250eb8_
+    CFont_SetJustifyOn       = (void(*)(void))(addr - 0x78); //FUN_00250e9c_
+    return true;
   }
 
   /*************************************
@@ -765,10 +810,10 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00250F1C | OK!
    * ULUX-80146 v0.02 | 0x001C40E8 | OK!
    **************************************/
-  if( _lw(addr - 0x4) == 0xA0A4001B && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0xC) == 0xA080001B && _lw(addr + 0x10) == 0x90850000 && _lw(addr + 0x1C) == 0xA0C50028 ) { // 0x00250FD0
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetBackgroundOff", addr-text_addr, addr);
-    SetBackgroundOff = (void*)(addr);
-    return 1;
+  if( !CFont_SetBackgroundOff && _lw(addr - 0x4) == 0xA0A4001B && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0xC) == 0xA080001B && _lw(addr + 0x10) == 0x90850000 && _lw(addr + 0x1C) == 0xA0C50028 ) { // 0x00250FD0
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetBackgroundOff", addr-text_addr, addr);
+    CFont_SetBackgroundOff = (void(*)(void))(addr);
+    return true;
   }
 
   /*************************************
@@ -785,11 +830,11 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00250F7C | OK!
    * ULUX-80146 v0.02 | 0x001C4148 | OK!
    **************************************/
-  if( _lw(addr - 0x4) == 0xA080001C && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0xC) == 0x03E00008 && _lw(addr + 0x10) == 0xA0A4001D ) { // 0x00251030
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetPropOn", addr-text_addr, addr);
-    SetPropOn = (void*)(addr);
-    SetPropOff = (void*)(addr+14);
-    return 1;
+  if( !CFont_SetPropOn && _lw(addr - 0x4) == 0xA080001C && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0xC) == 0x03E00008 && _lw(addr + 0x10) == 0xA0A4001D ) { // 0x00251030
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetPropOn", addr-text_addr, addr);
+    CFont_SetPropOn   = (void(*)(void))(addr);
+    CFont_SetPropOff  = (void(*)(void))(addr + 0x14);
+    return true;
   }
 
   /*************************************
@@ -806,10 +851,10 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00250FA0 | OK!
    * ULUX-80146 v0.02 | 0x001C416C | OK!
    **************************************/
-  if( _lw(addr) == 0x00042C00 && _lw(addr + 0xc) == 0x34060002 && _lw(addr + 0x10) == 0x14A60005 && _lw(addr + 0x18) == 0xA4850038 ) { // 0x00251054
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetFontStyle", addr-text_addr, addr);
-    SetFontStyle = (void*)(addr);
-    return 1;
+  if( !CFont_SetFontStyle && _lw(addr) == 0x00042C00 && _lw(addr + 0xc) == 0x34060002 && _lw(addr + 0x10) == 0x14A60005 && _lw(addr + 0x18) == 0xA4850038 ) { // 0x00251054
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetFontStyle", addr-text_addr, addr);
+    CFont_SetFontStyle = (void(*)(int16 style))(addr);
+    return true;
   }
 
   /*************************************
@@ -826,11 +871,11 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00250FE8 | OK!
    * ULUX-80146 v0.02 | 0x001C41B4 | OK!
    **************************************/
-  if( _lw(addr - 0x3C) == 0x34060002 && _lw(addr + 0x10) == 0x00802825 &&  _lw(addr + 0xB4) == 0x00000000 ) { // 0x0025109c
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetDropShadowPosition & SetDropColor", addr-text_addr, addr);
-    SetDropShadowPosition = (void*)(addr);
-    SetDropColor = (void*)(addr + 0x10);
-    return 1;
+  if( !CFont_SetDropShadowPosition && _lw(addr - 0x3C) == 0x34060002 && _lw(addr + 0x10) == 0x00802825 &&  _lw(addr + 0xB4) == 0x00000000 ) { // 0x0025109c
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetDropShadowPosition & CFont::SetDropColor", addr-text_addr, addr);
+    CFont_SetDropShadowPosition = (void(*)(int16 pos))(addr);
+    CFont_SetDropColor          = (void(*)(CRGBA *col))(addr + 0x10);
+    return true;
   }
 
   /*************************************
@@ -847,33 +892,10 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x00252A20 | OK!
    * ULUX-80146 v0.02 | 0x001C54B8 | OK!
    **************************************/
-  if( _lw(addr - 0x6C) == 0x0211A02B && _lw(addr - 0xD8) == 0x0211A02B ) { // 0x00252AD4
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> PrintString_LCS", addr-text_addr, addr);
-    PrintString_LCS = (void*)(addr);
-    return 1;
-  }
-
-  /*************************************
-   * ULUS-10041 v1.02 | 0x001A1660 | OK!
-   * ULUS-10041 v1.05 | 0x001F9434 | OK!
-   * ULUS-10041 v3.00 | 0x001F9378 | OK!
-   * ULES-00182 v1.00 | 0x001F9380 | OK!
-   * ULES-00182 v2.00 | 0x001F92C4 | OK!
-   * ULES-00151 v1.05 | 0x001F9434 | OK!
-   * ULES-00151 v2.00 | 0x001F9434 | OK!
-   * ULES-00151 v3.00 | 0x001F9378 | OK!
-   * ULES-00151 v4.00 | 0x001F9378 | OK!
-   * ULJM-05255 v1.01 | 0x001FEFA8 | OK!
-   * ULET-00361 v0.02 | 0x001F9378 | OK!
-   * ULET-00362 v0.01 | 0x001F92C4 | OK!
-   * ULUX-80146 v0.02 | 0x002846C0 | OK!
-   * ULUX-80146 v0.03 | 0x001FF904 | OK!
-   **************************************/
-  if( (_lw(addr - 0x20) == 0x3C05C974 &&_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025) &&  // 0x001F9378
-      (_lw(addr + 0x4C) == 0x27A50010 || _lw(addr + 0x34) == 0x00003825) ) {  // rest || ULUS v1.02
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
-    SetBoxCoords = (void*)(addr);
-    return 1;
+  if( !CFont_PrintStringLCS && _lw(addr - 0x6C) == 0x0211A02B && _lw(addr - 0xD8) == 0x0211A02B ) { // 0x00252AD4
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::PrintString", addr-text_addr, addr);
+    CFont_PrintStringLCS = (void(*)(float x, float y, wchar *s, int* unk))(addr);
+    return true;
   }
 
   /*************************************
@@ -890,10 +912,10 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 | 0x002CFD64 | OK!
    * ULUX-80146 v0.02 | 0x0017C10C | OK!
    **************************************/
-  if( _lw(addr+0x20) == 0x02004025 && _lw(addr + 0x8) == 0x30C900FF && _lw(addr + 0x64) == 0x3404000C /*0x3404000A for VCS*/ ) {  // 0x002CFDD0
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
-    DrawRect = (void*)(addr);
-    return 1;
+  if( !CSprite2d_DrawRect_2 && _lw(addr+0x20) == 0x02004025 && _lw(addr + 0x8) == 0x30C900FF && _lw(addr + 0x64) == 0x3404000C /*0x3404000A for VCS*/ ) {  // 0x002CFDD0
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CSprite2d::DrawRect", addr-text_addr, addr);
+    CSprite2d_DrawRect_2 = (void(*)(const CRect *r, const CRGBA *col, bool screenUnits))(addr);
+    return true;
   }
 
   /*************************************
@@ -910,25 +932,25 @@ static int FindPatchLCS(u32 addr, u32 text_addr UNUSED) {
    * ULET-00362 v0.01 |
    * ULUX-80146 v0.02 |
    **************************************/
-  if( _lw(addr+0x4) == 0x3C0443F0 && _lw(addr + 0x44) == 0x3C0443F0 && _lw(addr + 0x68) == 0x00000000 ) {
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetRightJustifyWrap", addr-text_addr, addr);
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> SetWrapx", addr+0x40-text_addr, addr+0x40);
-    SetRightJustifyWrap = (void*)(addr); // 0x00250F2C
-    SetWrapx = (void*)(addr+0x40); // 0x00250f6c
-    SetCentreSize = (void*)(addr+0x80); // FUN_00250fac_SetCentreSize
-    SetBackgroundOn = (void*)(addr+0x90); // FUN_00250fbc_SetBackgroundOn
-    SetBackgroundOff = (void*)(addr+0xA4); // FUN_00250fd0_SetBackgroundOff
-    SetBackgroundColor = (void*)(addr+0xB4); // FUN_00250fe0_SetBackgroundColor
-    SetBackGroundOnlyTextOn = (void*)(addr+0xE0); // FUN_0025100c_SetBackGroundOnlyTextOn
-    SetBackGroundOnlyTextOff = (void*)(addr+0xF4); // FUN_00251020_SetBackGroundOnlyTextOff
-    return 1;
+  if( !CFont_SetRightJustifyWrap && _lw(addr+0x4) == 0x3C0443F0 && _lw(addr + 0x44) == 0x3C0443F0 && _lw(addr + 0x68) == 0x00000000 ) {
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetRightJustifyWrap", addr-text_addr, addr);
+    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetWrapx", addr+0x40-text_addr, addr+0x40);
+    CFont_SetRightJustifyWrap       = (void(*)(float wrap))(addr); // 0x00250F2C
+    CFont_SetWrapx                  = (void(*)(float x))(addr+0x40); // 0x00250f6c
+    CFont_SetCentreSize             = (void(*)(float s))(addr+0x80); // FUN_00250fac_SetCentreSize
+    CFont_SetBackgroundOn           = (void(*)(void))(addr+0x90); // FUN_00250fbc_SetBackgroundOn
+    CFont_SetBackgroundOff          = (void(*)(void))(addr+0xA4); // FUN_00250fd0_SetBackgroundOff
+    CFont_SetBackgroundColor        = (void(*)(CRGBA *col))(addr+0xB4); // FUN_00250fe0_SetBackgroundColor
+    CFont_SetBackGroundOnlyTextOn   = (void(*)(void))(addr+0xE0); // FUN_0025100c_SetBackGroundOnlyTextOn
+    CFont_SetBackGroundOnlyTextOff  = (void(*)(void))(addr+0xF4); // FUN_00251020_SetBackGroundOnlyTextOff
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 
-static int FindPatchVCS(u32 addr, u32 text_addr UNUSED) {
+static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
   /*************************************
    * ULUS-10160 v1.03 | 0x001325BC | OK!
    * ULES-00502 v1.02 | 0x001324E8 | OK!
@@ -936,10 +958,10 @@ static int FindPatchVCS(u32 addr, u32 text_addr UNUSED) {
    * ULJM-05297 v1.01 | 0x001C99F8 | OK!
    * ULET-00417 v0.06 | 0x0012A07C | OK!
    **************************************/
-  if( _lw(addr - 0xB0) == 0x34060001 && _lw(addr + 0x98) == 0x28A60000  && _lw(addr + 0xD0) == 0x00003825 ) {
+  if( !mymenurender_VCS && _lw(addr - 0xB0) == 0x34060001 && _lw(addr + 0x98) == 0x28A60000  && _lw(addr + 0xD0) == 0x00003825 ) {
     PATCH_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_VCS_patched", addr-text_addr, addr);
     HIJACK_FUNCTION(addr, mymenurender_VCS_patched, mymenurender_VCS); // 0x01325bc
-    return 1;
+    return true;
   }
 
   /*************************************
@@ -949,10 +971,10 @@ static int FindPatchVCS(u32 addr, u32 text_addr UNUSED) {
    * ULJM-05297 v1.01 | 0x000FCB5C | OK!
    * ULET-00417 v0.06 | 0x002FF87C | OK!
    **************************************/
-  if( _lw(addr - 0x4) == 0x27BD0010 && _lw(addr) == 0x27BDFFE0 && _lw(addr + 0x4) == 0xAFB00014 && _lw(addr + 0x8) == 0x341000FF ) {
+  if( !ResetFontStyling && _lw(addr - 0x4) == 0x27BD0010 && _lw(addr) == 0x27BDFFE0 && _lw(addr + 0x4) == 0xAFB00014 && _lw(addr + 0x8) == 0x341000FF ) {
     PATCH_LOG("blitn: 0x%08X (0x%08X) -> ResetFontStyling", addr-text_addr, addr);
     ResetFontStyling = (void*)(addr); // 0x0030805C
-    return 1;
+    return true;
   }
 
   /*************************************
@@ -962,10 +984,10 @@ static int FindPatchVCS(u32 addr, u32 text_addr UNUSED) {
    * ULJM-05297 v1.01 | 0x000FCC40 | OK!
    * ULET-00417 v0.06 | 0x002FF958 | OK!
    **************************************/
-  if( _lw(addr + 0x30) == 0x00409825 && _lw(addr + 0x54) == 0x00404825 ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> PrintString_VCS", addr-text_addr, addr);
-    PrintString_VCS = (void*)(addr); // 0x00308138
-    return 1;
+  if( !CFont_PrintStringVCS && _lw(addr + 0x30) == 0x00409825 && _lw(addr + 0x54) == 0x00404825 ) {
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::PrintString", addr-text_addr, addr);
+    CFont_PrintStringVCS = (void(*)(wchar *text, int x, int y))(addr); // 0x00308138
+    return true;
   }
 
   /*************************************
@@ -975,38 +997,21 @@ static int FindPatchVCS(u32 addr, u32 text_addr UNUSED) {
    * ULJM-05297 v1.01 | 0x000FCCD8 | OK!
    * ULET-00417 v0.06 | 0x002FFCB8 | OK!
    **************************************/
-  if( _lw(addr) == 0x03E00008 && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0x20) == 0x90840003 ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetFontStyle, SetColor, SetScale_VCS, ...", addr-text_addr, addr);
-    SetFontStyle = (void*)(addr); // 0x308498
-    SetColor = (void*)(addr+0x10); // 0x3084A8
-    SetTextBounds = (void*)(addr+0x3C); // 0x3084d4
-    SetScale_VCS = (void*)(addr+0x88); // 0x308520
-    SetTextSpaceing = (void*)(addr+0x130); // 0x3085c8
-    SetTextOriginPoint = (void*)(addr+0x16C); // 0x308604
-    return 1;
+  if( !CFont_SetFontStyle && _lw(addr) == 0x03E00008 && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0x20) == 0x90840003 ) {
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetFontStyle, CFont::SetColor, CFont::SetScale, ...", addr-text_addr, addr);
+    CFont_SetFontStyle  = (void(*)(int16 style))(addr); // 0x308498
+    CFont_SetColor      = (void(*)(CRGBA *col))(addr+0x10); // 0x3084A8
+    SetTextBounds       = (void(*)(CRect *bounds))(addr+0x3C); // 0x3084d4
+    CFont_SetScaleVCS   = (void(*)(float scale))(addr+0x88); // 0x308520
+    SetTextSpaceing     = (void(*)(int option))(addr+0x130); // 0x3085c8
+    SetTextOriginPoint  = (void(*)(int origin))(addr+0x16C); // 0x308604
+    return true;
   }
-  if( _lw(addr+0x20) == 0x00052880 && _lw(addr + 0x68) == 0x00052880 && _lw(addr + 0x6C) == 0x00852021 ) { // JP only: 0x000FCE10
+  if( !SetTextSpaceing && _lw(addr+0x20) == 0x00052880 && _lw(addr + 0x68) == 0x00052880 && _lw(addr + 0x6C) == 0x00852021 ) { // JP only: 0x000FCE10
     PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetTextSpaceing, SetTextOriginPoint (JP only)", addr-text_addr, addr);
-    SetTextSpaceing = (void*)(addr); // sub_000FCE10
-    SetTextOriginPoint = (void*)(addr+0x48); // sub_000FCE58
-    return 1;
-  }
-
-  /*************************************
-   * ULUS-10160 v1.01 | 0x0019895C
-   * ULUS-10160 v1.02 |
-   * ULUS-10160 v1.03 | 0x001CDB1C
-   * ULES-00502 v1.02 | 0x001CDEB0
-   * ULES-00503 v1.02 | 0x001CDD78
-   * ULJM-05297 v1.01 | 0x001E2118
-   * ULET-00417 v0.06 | 0x001C3E14
-   * ULET-00417 v0.07 |
-   **************************************/
-  if( (_lw(addr) == 0xE48C0000 && _lw(addr + 0x14) == 0x00801025 && _lw(addr - 0x24 ) == 0x00801025) && // also LCS !!
-    (_lw(addr + 0x34 ) == 0x00003825 || _lw(addr + 0x4C ) == 0x00402025) ) { // rest || JP
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetBoxCoords", addr-text_addr, addr);
-    SetBoxCoords = (void*)(addr);
-    return 1;
+    SetTextSpaceing     = (void(*)(int option))(addr); // sub_000FCE10
+    SetTextOriginPoint  = (void(*)(int origin))(addr+0x48); // sub_000FCE58
+    return true;
   }
 
   /*************************************
@@ -1016,24 +1021,23 @@ static int FindPatchVCS(u32 addr, u32 text_addr UNUSED) {
    * ULJM-05297 v1.01 | 0x0032FEB4 | OK!
    * ULET-00417 v0.06 | 0x002EBC20 | OK!
    **************************************/
-  if( _lw(addr+0x20) == 0x02004025 && _lw(addr+0x8) == 0x30C900FF && _lw(addr+0x64) == 0x3404000A /* 0x3404000C for LCS*/ ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> DrawRect", addr-text_addr, addr);
-    DrawRect = (void*)(addr);
-    return 1;
+  if( !CSprite2d_DrawRect_2 && _lw(addr+0x20) == 0x02004025 && _lw(addr+0x8) == 0x30C900FF && _lw(addr+0x64) == 0x3404000A /* 0x3404000C for LCS*/ ) {
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CSprite2d::DrawRect", addr-text_addr, addr);
+    CSprite2d_DrawRect_2 = (void(*)(const CRect *r, const CRGBA *col, bool screenUnits))(addr);
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 
-int initTextBlit(u32 text_addr, u32 text_size) {
-  DEBUG_LOG("\nblitn: start..");
+func_stat initTextBlit(uaddr text_addr, usize text_size) {
+  DEBUG_LOG("Starting blitn...");
 
   gta_version = -1;
 
-  u32 i;
-  for( i = 0; i < text_size; i += 4 ) {
-    u32 addr = text_addr + i;
+  for( uaddr i = 0; i < text_size; i += sizeof(uaddr) ) {
+    uaddr addr = text_addr + i;
     if ((gta_version == -1 || gta_version == 0) && FindPatchVCS(addr, text_addr)) {
       gta_version = 0;
       continue;
@@ -1044,11 +1048,12 @@ int initTextBlit(u32 text_addr, u32 text_size) {
     }
   }
 
-  if( gta_version == -1 ) {
-    ERROR_LOG("blitn: ..error!\n");
-    return -1; // error
+  if( gta_version == -1 )
+  {
+    ERROR_LOG("Error!");
+    return FUNC_ERROR; // error
   }
 
-  DEBUG_LOG("blitn: ..success! (%s)\n", gta_version ? "LCS" : "VCS");
-  return 0;
+  DEBUG_LOG("Success! (%s)", gta_version ? "LCS" : "VCS");
+  return FUNC_OK;
 }

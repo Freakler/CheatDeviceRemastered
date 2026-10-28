@@ -5,3 +5,7 @@
 [submodule "lib/minIni-PSP"]
 	path = lib/minIni-PSP
 	url = https://codeberg.org/daniemun/minIni-PSP
+
+[submodule "lib/StoriesRWSDK"]
+	path = lib/StoriesRWSDK
+	url = https://codeberg.org/StoriesPatch/StoriesRWSDK

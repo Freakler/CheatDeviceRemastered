@@ -1,19 +1,24 @@
 /*
  *  CheatDevice Remastered
- *  Copyright (C) 2017-2025, Freakler
+ *  Copyright (C) 2017-, Freakler
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ * 
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  */
 
 #include <pspkernel.h>
@@ -29,17 +34,16 @@
 #include "main.h"
 #include "logs.h"
 
-extern char file_log[];
-extern const char *basefolder;
+extern u8string file_log;
+extern const u8string basefolder;
 
 // Check if file exists
-int doesFileExist(const char* path) {
-  SceIoStat stat;
-  memset(&stat, 0, sizeof(SceIoStat));
+bool doesFileExist(const u8string path) {
+  SceIoStat stat; memset(&stat, 0, sizeof(SceIoStat));
 
   if ( sceIoGetstat(path, &stat) < 0 ) {
     DEBUG_LOG("doesFileExist('%s') -> no", path);
-    return 0;
+    return false;
   }
 
   DEBUG_LOG("doesFileExist('%s') -> %s", path, FIO_SO_ISREG(stat.st_attr) ? "yes" : "no");
@@ -48,13 +52,12 @@ int doesFileExist(const char* path) {
 }
 
 // Check if dir exists
-int doesDirExist(const char* path) {
-  SceIoStat stat;
-  memset(&stat, 0, sizeof(SceIoStat));
+bool doesDirExist(const u8string path) {
+  SceIoStat stat; memset(&stat, 0, sizeof(SceIoStat));
 
   if ( sceIoGetstat(path, &stat) < 0 ) {
     DEBUG_LOG("doesDirExist('%s') -> no", path);
-    return 0;
+    return false;
   }
 
     DEBUG_LOG("doesDirExist('%s') -> %s", path, FIO_SO_ISDIR(stat.st_attr) ? "yes" : "no");
@@ -62,12 +65,11 @@ int doesDirExist(const char* path) {
   return FIO_SO_ISDIR(stat.st_attr);
 }
 
-int countFilesInFolder(const char *path) {
-  int file_count = 0;
-  SceUID fd;
-  SceIoDirent d_dir;
-  memset(&d_dir,0,sizeof(SceIoDirent)); // prevents a crash
-  fd = sceIoDopen(path);
+usize countFilesInFolder(const u8string path) {
+  SceIoDirent d_dir; memset(&d_dir, 0, sizeof(SceIoDirent)); // prevents a crash
+  usize file_count = 0;
+
+  SceUID fd = sceIoDopen(path);
   if( fd >= 0 )  {
     while( sceIoDread(fd, &d_dir) > 0 )  {
       if( FIO_SO_ISREG(d_dir.d_stat.st_attr) ) { // if entry is a regular file
@@ -79,11 +81,10 @@ int countFilesInFolder(const char *path) {
   return file_count;
 }
 
-int countFoldersInFolder(const char *path) {
-  int folder_count = 0;
+usize countFoldersInFolder(const u8string path) {
+  usize folder_count = 0;
   SceUID fd;
-  SceIoDirent d_dir;
-  memset(&d_dir,0,sizeof(SceIoDirent)); // prevents a crash
+  SceIoDirent d_dir; memset(&d_dir,0,sizeof(SceIoDirent)); // prevents a crash
   fd = sceIoDopen(path);
   if( fd >= 0 )  {
     while( sceIoDread(fd, &d_dir) > 0 )  {
@@ -97,11 +98,11 @@ int countFoldersInFolder(const char *path) {
 }
 
 #ifdef SAVEDITOR
-int setFolderModificationDateNow(const char* folder) {
+func_stat setFolderModificationDateNow(const u8string folder) {
   DEBUG_LOG("setFolderModificationDateNow('%s')", folder);
 
   int ret;
-  SceIoStat d_stat;
+  SceIoStat d_stat; memset(&d_stat, 0, sizeof(SceIoStat));
 
   ret = sceIoGetstat(folder, &d_stat);
   DEBUG_LOG("sceIoGetstat() returned %i", ret);
@@ -125,10 +126,10 @@ int setFolderModificationDateNow(const char* folder) {
   return ret;
 }
 
-char *getFolderModificationDate(const char* folder, char *out, size_t size) {
+u8string getFolderModificationDate(const u8string folder, u8string out, usize size) {
   DEBUG_LOG("getFolderModificationDate('%s')", folder);
 
-  SceIoStat d_stat;
+  SceIoStat d_stat; memset(&d_stat, 0, sizeof(SceIoStat));
   int ret = sceIoGetstat(folder, &d_stat);
   DEBUG_LOG("sceIoGetstat() returned %i", ret);
   if( ret >= 0 )
@@ -139,22 +140,23 @@ char *getFolderModificationDate(const char* folder, char *out, size_t size) {
 }
 #endif
 
-int adrenalineCheck() {
+bool adrenalineCheck()
+{
   return doesFileExist("flash1:/config.adrenaline");
 }
 
-void clearICacheFor(u32 address) {
+void clearICacheFor(uaddr address) {
   /// https://wololo.net/talk/viewtopic.php?t=11656
   /// https://www.romhacking.net/forum/index.php?topic=25734.0
   /// http://www.ethernut.de/en/documents/arm-inline-asm.html
   /// https://wiki.osdev.org/Inline_Assembly
   /// asm(code : output operand list : input operand list : clobber list);
 
-  //asm("li $t0,0x08A0E898\n"); //this works.. but i want to store "address"
+  //__asm__("li $t0,0x08A0E898\n"); //this works.. but i want to store "address"
 
   // DEBUG_LOG("clearICacheFor(0x%08X)", address);
 
-  asm volatile ( // volatile so compiler won't mess with this
+  __asm__ volatile ( // volatile so compiler won't mess with this
     "cache 8, 0(%0)\n"
     :
     : "r"(address)
@@ -163,42 +165,24 @@ void clearICacheFor(u32 address) {
 }
 
 
-void writeShort(uint8_t *address, short value) { // because of memory alignment
-  int adr = (int)&value;
-
-  *(unsigned char*)(address + 0) = *(unsigned char*)adr;
-  *(unsigned char*)(address + 1) = *(unsigned char*)(adr+1);
+void writeShort(byte *address, short value) { // because of memory alignment
+  memcpy(address, &value, sizeof(value));
 }
 
-void writeInteger(uint8_t *address, int value) { // because of memory alignment
-  //DEBUG_LOG("value: 0x%08X", value);
-
-  int adr = (int)&value;
-  //DEBUG_LOG("adr: '0x%08X'", adr);
-
-  *(unsigned char*)(address + 0) = *(unsigned char*)adr;
-  *(unsigned char*)(address + 1) = *(unsigned char*)(adr+1);
-  *(unsigned char*)(address + 2) = *(unsigned char*)(adr+2);
-  *(unsigned char*)(address + 3) = *(unsigned char*)(adr+3);
+void writeInteger(byte *address, int value) { // because of memory alignment
+  memcpy(address, &value, sizeof(value));
 }
 
-void writeFloat(uint8_t *address, float value) { // because of memory alignment
-  //DEBUG_LOG("value: %f", value);
-
-  int adr = (int)&value;
-  //DEBUG_LOG("adr: '0x%08X'", adr);
-
-  *(unsigned char*)(address + 0) = *(unsigned char*)adr;
-  *(unsigned char*)(address + 1) = *(unsigned char*)(adr+1);
-  *(unsigned char*)(address + 2) = *(unsigned char*)(adr+2);
-  *(unsigned char*)(address + 3) = *(unsigned char*)(adr+3);
+void writeFloat(byte *address, float value) { // because of memory alignment
+  memcpy(address, &value, sizeof(value));
 }
 
-char *_fgets(char *s, int size, SceUID stream) {
+u8string _fgets(u8string s, usize size, SceUID stream) {
   int read = sceIoRead(stream, s, size - 1);
   if( read <= 0 )
     return NULL;
-  int i = 0;
+
+  array_uidx i = 0;
   while( i < read ) {
     if( s[i++] == '\n' )
       break;
@@ -209,8 +193,8 @@ char *_fgets(char *s, int size, SceUID stream) {
   return s;
 }
 
-void makedirs(const char *path) { // recursively create path
-  char *sep = strrchr(path, '/');
+void makedirs(const u8string path) { // recursively create path
+  u8string sep = strrchr(path, '/');
   if( sep != NULL ) {
     *sep = 0;
     makedirs(path);
@@ -222,16 +206,15 @@ void makedirs(const char *path) { // recursively create path
 }
 
 /*void FillVRAM(u32 color){
-  int i;
   //sceDisplaySetMode(0, 480, 272);
   //sceDisplaySetFrameBuf((void*)0x44000000,512,1,0);
   //sceDisplaySetFrameBufferInternal(0,(void*)0x44000000,512,1,0);
-  for( i = 0x44000000; i < 0x44100000; i += 4 ) {
+  for( uaddr i = 0x44000000; i < 0x44100000; i += sizeof(uaddr) ) {
     (((u32 *)i)[0]) = color;
   }
 } */
 
-u32 getHighMemBound() { // thx Acid_Snake :)
+uaddr getHighMemBound() { // thx Acid_Snake :)
   // PSP Fat -> ~24 MB
   // PSP Slim/Go/Street (~54 MB with High Memory Layout)
 
@@ -257,22 +240,21 @@ u32 getHighMemBound() { // thx Acid_Snake :)
   SceUID block = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "test", PSP_SMEM_High, 0x100, NULL);
   if ( block < 0 ) return 0; // Shouldn't fail but we never know...
 
-  u32 address = (u32)sceKernelGetBlockHeadAddr(block) + 0x100; // highest address is not calculated precisely this way either but it gives a rough idea
+  uaddr address = (uaddr)sceKernelGetBlockHeadAddr(block) + 0x100; // highest address is not calculated precisely this way either but it gives a rough idea
   sceKernelFreePartitionMemory(block);
-
 
   /// manual adjustment for non-highmem
   if( address == 0x09FC0000 )
     address = 0x0A000000;
 
   /// manual adjustment for high-mem
-  if( address >= 0x0B000000 && !PPSSPP )
+  if( address >= 0x0B000000 )
     address = 0x0C000000; // SHOULD be the same for all CFWs
 
   return address;
 }
 
-int checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius) {
+bool checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius) {
   const float xdist = a - x;
   const float ydist = b - y;
   const float zdist = c - z;
@@ -285,24 +267,43 @@ float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float
   const float xdist = x2 - x1;
   const float ydist = y2 - y1;
   const float zdist = z2 - z1;
+  const float dist2 = ( xdist * xdist + ydist * ydist + zdist * zdist );
 
-  return sqrtf(xdist * xdist + ydist * ydist + zdist * zdist);
+  return sqrtf(dist2);
 }
 
-void getSizeString(char *string, uint64_t size) {
-  static const char *units[] = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+/**
+ * Convert a raw size number to a size with byte units.
+ * @param size Raw size.
+ * @param outString Output string.
+ * @param outStringSize Output string size.
+ * @returns `outString` on success, `NULL` otherwise.
+ */
+u8string SizeToStrUnits(usize size, u8string outString, usize outStringSize)
+{
+  if ( STR_NULL(outString) || outStringSize == 0 ) return NULL;
 
-  double double_size = (double)size;
-  int i = 0;
-  while( double_size >= 1024.0 ) {
-    double_size /= 1024.0;
-    i++;
+  // Yes I'm using the correct metric unit (which is a power of 2)
+  static const u8string sizeUnits[] = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+
+  // Unrealistically large, probably negative
+  if ( size > 4000000000 ) size = 0;
+
+  float fsize = (float)size;
+  uint8 exp = 0;
+
+  while( fsize >= 1024.0f ) {
+    fsize /= 1024.0f;
+    exp++;
+    if ( exp == 8 ) break; // Max unit reached
   }
-  snprintf(string, 16, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
+
+  snprintf(outString, outStringSize, "%.*f %s", ( exp == 0 ) ? 0 : 2, fsize, sizeUnits[exp]);
+  return outString;
 }
 
 // Check if filename (or path) ends with extension
-int stringEndsWith(const char* string, const char* endswith)
+bool stringEndsWith(const u8string string, const u8string endswith)
 {
   if ( !string || !endswith || *string == '\0' || *endswith == '\0' ) return 0;
 
@@ -310,36 +311,35 @@ int stringEndsWith(const char* string, const char* endswith)
 }
 
 // Get extension length
-int getExtensionLength(const char* path)
+usize getExtensionLength(const u8string path)
 {
   if ( !path || *path == '\0' ) return 0;
 
-  const char* dot = strrchr(path, '.'); // Find last dot
+  const u8string dot = strrchr(path, '.'); // Find last dot
   if ( !dot ) return 0;
 
-  return (int)(strlen(path) - (size_t)(dot - path));
+  return strlen(path) - (usize)(dot - path);
 }
 
 // FUNC: MurmurHash3 hash function
-uint32_t hash(const char *key, uint32_t len, uint32_t seed)
+uint32 hash(const u8string key, usize len, uint32 seed)
 {
-  uint32_t c1 = 0xcc9e2d51;
-  uint32_t c2 = 0x1b873593;
-  uint32_t r1 = 15;
-  uint32_t r2 = 13;
-  uint32_t m = 5;
-  uint32_t n = 0xe6546b64;
-  uint32_t h = seed;
-  uint32_t k = 0;
-  const uint8_t *d = (const uint8_t *)key;
-  const uint32_t *chunks = (const uint32_t *)(d);
-  const uint8_t *tail = (const uint8_t *)(d + (len / 4) * 4);
+  uint32 c1 = 0xcc9e2d51;
+  uint32 c2 = 0x1b873593;
+  uint32 r1 = 15;
+  uint32 r2 = 13;
+  uint32 m = 5;
+  uint32 n = 0xe6546b64;
+  uint32 h = seed;
+  uint32 k = 0;
+  const uint8 *d = (const uint8 *)key;
+  const uint32 *chunks = (const uint32 *)(d);
+  const uint8 *tail = (const uint8 *)(d + (len / 4) * 4);
 
-  int l = len / 4;
+  usize l = len / 4;
 
   // Process the body (4-byte chunks)
-  int i;
-  for (i = 0; i < l; ++i) {
+  for (usize i = 0; i < l; ++i) {
     k = chunks[i];
     k *= c1;
     k = (k << r1) | (k >> (32 - r1));
@@ -381,6 +381,8 @@ uint32_t hash(const char *key, uint32_t len, uint32_t seed)
   return h;
 }
 
+// TODO: Remove this (it's here cause of newlib math -_-)
+// Don't take this off otherwise plugin bloats by like 20KB (annoying linker)
 int errno;
 int *__errno (void)
 {

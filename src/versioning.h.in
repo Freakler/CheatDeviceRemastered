@@ -1,7 +1,7 @@
 #ifndef VERSION_H_
 #define VERSION_H_
 
-/* Generated at compile time by CMake */
+// Generated at compile time by CMake
 
 #define PLUGIN_NAME           "@PROJECT_NAME@"
 #define PLUGIN_AUTHOR         "@PROJECT_AUTHOR@"
