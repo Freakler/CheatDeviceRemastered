@@ -1446,11 +1446,16 @@ const GTAMapIcon vcs_mapicons[] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const uaddr memory_low  = 0x08400000; // memory bounds
-uaddr memory_high = 0x0A000000; // default ~32 MB (with high memory layout -> 0x0C000000) dynamically overwritten in module_start
+CFWMemory pluginMemory =
+{
+  .LowestMemoryAddr           = 0x08400000, // PSP's lowest valid address
+  .HighestMemoryAddr          = 0x0A000000, // PSP's highest valid address (set at plugin start)
+  .MemoryConfig               = PSP_MEM_32MB,
+  .ExtraMemory                = false,
+};
 
 bool isInMemBounds(uaddr valtocheck) {
-  return (valtocheck >= memory_low && valtocheck < memory_high);
+  return (valtocheck >= pluginMemory.LowestMemoryAddr && valtocheck < pluginMemory.HighestMemoryAddr);
 }
 
 void setBit(uaddr adr, uint8 bit, bool boolean) { // 1bit
@@ -1650,7 +1655,7 @@ float getFloat(uaddr adr) { // 32bit
 
 void setString(uaddr adr, u8string string, bool unicode) { // unicode -> (where every second is a char)
   #if MEMCHECK
-  if( adr >= memory_low && adr+MAX_STRING_SIZE < memory_high ) {
+  if( adr >= pluginMemory.LowestMemoryAddr && adr+MAX_STRING_SIZE < pluginMemory.HighestMemoryAddr ) {
   #endif
     uint32 pos; array_uidx mem;
     for( pos = 0, mem = 0; pos < MAX_STRING_SIZE && string[mem] != 0x00; (unicode ? pos+=2 : pos++), mem++ ) {
@@ -1670,7 +1675,7 @@ u8string getString(uaddr adr, bool unicode) { // mode = 1 (where every second is
   CLEAR_STR(str);
 
   #if MEMCHECK
-  if( adr >= memory_low && adr+MAX_STRING_SIZE < memory_high ) {
+  if( adr >= pluginMemory.LowestMemoryAddr && adr+MAX_STRING_SIZE < pluginMemory.HighestMemoryAddr ) {
   #endif
     array_uidx i = 0;
     for( uint32 pos = 0; pos < MAX_STRING_SIZE && !STR_EMPTY((u8char*)(adr+pos)); (unicode ? pos+=2 : pos++), i++ ) {

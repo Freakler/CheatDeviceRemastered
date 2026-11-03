@@ -231,7 +231,46 @@ void makedirs(const u8string path)
   }
 } */
 
-uaddr getHighMemBound() { // thx Acid_Snake :)
+
+static const PspMemConfig pspMemConfigs[] =
+{
+  /*  |---------|
+   *  |         | PSP-1000
+   *  |         | Epinephrine's (Adrenaline v8) High Memory Layout  -> Force Disabled
+   *  |         | ARK-5's (Adrenaline v8) Use Extra Memory          -> Off
+   *  | 32  MiB | PRO CFW's High Memory Layout                      -> OFF
+   *  |         | (L)ME 2.3 CFW's High Memory Layout                -> OFF
+   *  |         | Adrenaline v7 or earlier's Extra Memory           -> OFF
+   *  |         | PPSSPP's plugin.ini memory                        -> 32
+   *  |---------| */
+  { 0x0A000000, PSP_MEM_32MB },
+
+  /*  |---------|
+   *  |         | Epinephrine's (Adrenaline v8) High Memory Layout  -> Force Stable
+   *  | 48  MiB | ARK-5's (Adrenaline v8) Use Extra Memory          -> +16MiB
+   *  |         | PPSSPP's plugin.ini memory                        -> 48
+   *  |---------| */
+  { 0x0B000000, PSP_MEM_48MB },
+
+  /*  |---------|
+   *  |         | Epinephrine's (Adrenaline v8) High Memory Layout  -> Force Max
+   *  |         | ARK-5's (Adrenaline v8) Use Extra Memory          -> MAX
+   *  |         | PRO CFW's High Memory Layout                      -> ON
+   *  | 64  MiB | (L)ME 2.3 CFW's High Memory Layout                -> ON
+   *  |         | Adrenaline v7 or earlier's Extra Memory           -> ON
+   *  |         | PPSSPP's plugin.ini memory                        -> 64
+   *  |         |
+   *  |---------| */
+  { 0x0C000000, PSP_MEM_64MB },
+
+  /*  |---------|
+   *  | 93  MiB | PPSSPP's plugin.ini memory                        -> 93
+   *  |---------| */
+  { 0x0DD00000, PSP_MEM_93MB },
+}; static const array_size pspMemConfigsSize = ARRAY_SIZE(pspMemConfigs);
+
+void GetMemConfig(CFWMemory *memory)
+{
   // PSP Fat -> ~24 MB
   // PSP Slim/Go/Street (~54 MB with High Memory Layout)
 
@@ -253,22 +292,43 @@ uaddr getHighMemBound() { // thx Acid_Snake :)
   //  One to make the memory read/write for user
   //  One to force it into p2 (the user partition)
 
+  if ( !memory ) return;
 
-  SceUID block = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "test", PSP_SMEM_High, 0x100, NULL);
-  if ( block < 0 ) return 0; // Shouldn't fail but we never know...
+  SceUID memID = sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER, "Highest Address Check", PSP_SMEM_High, 0x100, NULL);
+  if ( memID < 0 )
+  {
+    ERROR_LOG("sceKernelAllocPartitionMemory() failed!");
+    goto DEFAULT_MEM_CONFIG;
+  }
 
-  uaddr address = (uaddr)sceKernelGetBlockHeadAddr(block) + 0x100; // highest address is not calculated precisely this way either but it gives a rough idea
-  sceKernelFreePartitionMemory(block);
+  uaddr highestAddress = (uaddr)sceKernelGetBlockHeadAddr(memID);
+  if ( !highestAddress ) goto DEFAULT_MEM_CONFIG;
 
-  /// manual adjustment for non-highmem
-  if( address == 0x09FC0000 )
-    address = 0x0A000000;
+  sceKernelFreePartitionMemory(memID);
+  highestAddress += 0x100;
 
-  /// manual adjustment for high-mem
-  if( address >= 0x0B000000 )
-    address = 0x0C000000; // SHOULD be the same for all CFWs
+  // Find correct mem config type
+  for (array_uidx i = 0; i < pspMemConfigsSize; i++)
+  {
+    const PspMemConfig *memConfig = &pspMemConfigs[i];
 
-  return address;
+    // If it's lower or equal to memconfig's highest mem address, then we found our memconfig!
+    if ( highestAddress <= memConfig->highMemAddr )
+    {
+      memory->MemoryConfig = memConfig->configType;
+      memory->HighestMemoryAddr = memConfig->highMemAddr;
+      memory->ExtraMemory = memConfig->configType != PSP_MEM_32MB;
+      return;
+    }
+  }
+
+  DEFAULT_MEM_CONFIG:
+  {
+    // Config not found...
+    memory->MemoryConfig = PSP_MEM_UNK_SIZE;
+    memory->HighestMemoryAddr = 0x0A000000;
+    memory->ExtraMemory = false;
+  }
 }
 
 bool checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius)

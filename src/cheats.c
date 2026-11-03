@@ -121,9 +121,6 @@ extern bool flag_ui_blocking;
 extern bool flag_use_legend;
 extern bool flag_swapxr;
 
-extern uaddr memory_low;
-extern uaddr memory_high;
-
 extern uint8 L,R,UP,DOWN,LEFT,RIGHT,CROSS,CIRCLE,SQUARE,TRIANGLE,NONE;
 extern uint32 key_to_pad;
 
@@ -451,9 +448,8 @@ SceSize sceKernelMaxFreeMemSize_patched(void)
   const SceSize memory_free = KiB(512); /* 512 KB */
   const SceSize memory_available = sceKernelMaxFreeMemSize();
 
-  /* Check for Extra Memory */
-  if ( memory_high > 0x0A800000 ) return memory_available - memory_free;
-  else return memory_available; /* 32 MB? -> well, bad luck then */
+  if ( pluginMemory.ExtraMemory ) return memory_available - memory_free;
+  else return memory_available; /* No extra memory (32 MiB)? -> well, bad luck then */
 }
 
 bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
@@ -3999,19 +3995,22 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
 
     if ( gametimer >= 1000 )
     {
-      static int memcreate_ran = 0;
-      if ( !memcreate_ran )
+      if ( pluginMemory.ExtraMemory )
       {
-        memcreate(KiB(256)); /* Should be enough */
-        memcreate_ran = 1;
-      }
-
-      #ifdef LANG
-      static int lang_ran = 0;
-      if (!lang_ran)
-      {
-        langTableSetup(currLanguageID);
-        lang_ran = 1;
+        static int memcreate_ran = 0;
+        if ( !memcreate_ran )
+        {
+          memcreate(KiB(256)); /* Should be enough */
+          memcreate_ran = 1;
+        }
+  
+        #ifdef LANG
+        static int lang_ran = 0;
+        if (!lang_ran)
+        {
+          langTableSetup(currLanguageID);
+          lang_ran = 1;
+        }
       }
       #endif
     }
@@ -4286,15 +4285,15 @@ void user_scripts(int calltype, int keypress, bool defaultstatus UNUSED) {
       }
       #ifdef HEXEDITOR
       else if( keypress == PSP_CTRL_SQUARE ) {
-        //hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)), 0, memory_low, memory_high, "> ScriptSpace");
+        //hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace");
         int scriptspace = getInt(global_ScriptSpace + (LCS ? 0 : gp));
         hexeditor_create(scriptspace, 1, scriptspace, scriptspace + getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)), "> ScriptSpace");
 
       //} else if( keypress == PSP_CTRL_TRIANGLE ) {
-      //  hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)), 0, memory_low, memory_high, "> ScriptSpace + MainScriptSize");
+      //  hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace + MainScriptSize");
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)) - 4096, 0, memory_low, memory_high, "> ScriptSpace + MainScriptSize + LargestMission - 4096");
+        hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)) - 4096, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace + MainScriptSize + LargestMission - 4096");
       }
       #endif
       break;
@@ -4344,7 +4343,7 @@ void freecam(int calltype, int keypress, bool defaultstatus UNUSED) {
         hex_marker_addx(global_camera + (LCS ? 0x368 : 0xD8), sizeof(float)); // cam_coord_z2
 
         hex_marker_addx(global_camera + (LCS ? 0xCC : 0x798 ), sizeof(float)); // in vehicle camera mode (used to unbind cam)
-        hexeditor_create(global_camera, 1, global_camera, memory_high, "> camera location");
+        hexeditor_create(global_camera, 1, global_camera, pluginMemory.HighestMemoryAddr, "> camera location");
         #endif
       }
       break;
@@ -4972,7 +4971,7 @@ void bttncht_givemoney() { // int calltype, int keypress, bool defaultstatus
         hex_marker_addx(global_buttoninput + (LCS ? 0x95 : 0xA9), sizeof(int));
         hex_marker_addx(global_buttoninput + (LCS ? 0x95 : 0xA9) + 0x4 , sizeof(int));
 
-        hexeditor_create(global_buttoninput + (LCS ? 0x95 : 0xA9), 1, memory_low, memory_high, "> global_buttoninput");
+        hexeditor_create(global_buttoninput + (LCS ? 0x95 : 0xA9), 1, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_buttoninput");
         #endif
       }
       break;
@@ -5066,7 +5065,7 @@ void *bttncht_randomplayer(int calltype, int keypress, bool defaultstatus UNUSED
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(addr_randompedcheat, sizeof(int));
-        hexeditor_create(addr_randompedcheat, 0, memory_low, memory_high, "");
+        hexeditor_create(addr_randompedcheat, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "");
         #endif
       }
     setRandomPedCheat(model);
@@ -5168,7 +5167,7 @@ void *gamespeed(int calltype, int keypress, bool defaultstatus, int defaultval) 
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_timescale + gp_, sizeof(float));
-        hexeditor_create(global_timescale + gp_, 0, memory_low, memory_high, "> timescale");
+        hexeditor_create(global_timescale + gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> timescale");
         #endif
       }
 
@@ -5237,7 +5236,7 @@ void *fps_cap(int calltype, int keypress, bool defaultstatus, int defaultval) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(addr_fpsCap, sizeof(short)); // hour value
-        hexeditor_create(addr_fpsCap, 0, memory_low, memory_high, "> fps cap");
+        hexeditor_create(addr_fpsCap, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> fps cap");
         #endif
       } break;
 
@@ -5360,7 +5359,7 @@ void *teleporter(int calltype, int keypress, bool defaultstatus UNUSED, int defa
         hex_marker_addx(pobj+0x30, sizeof(float));
         hex_marker_addx(pobj+0x34, sizeof(float));
         hex_marker_addx(pobj+0x38, sizeof(float));
-        hexeditor_create(pobj+0x30, 0, memory_low, memory_high, "> world xyz coord");
+        hexeditor_create(pobj+0x30, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> world xyz coord");
         #endif
       }
       break;
@@ -6211,7 +6210,7 @@ void *disable_textures(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(render + gp_, sizeof(int)); // health value
-        hexeditor_create(render + gp_, 0, memory_low, memory_high, "> Texturetable of WRLD");
+        hexeditor_create(render + gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> Texturetable of WRLD");
         #endif
       } break;
 
@@ -6254,7 +6253,7 @@ void *godmode(int calltype, int keypress, bool defaultstatus) {
         hex_marker_addx(pplayer+(LCS ? 0x4B8 : 0x4E4), sizeof(float)); // health value
         hex_marker_addx(pplayer+(LCS ? 0x4BC : 0x4E8), sizeof(float)); // armor value
         hex_marker_addx(pplayer+(LCS ? 0x6DC : 0x6B0), sizeof(int));   // on-fire boolean
-        hexeditor_create(pplayer + (LCS ? 0x4B8 : 0x4E4), 0, memory_low, memory_high, "> pplayer health & armor");
+        hexeditor_create(pplayer + (LCS ? 0x4B8 : 0x4E4), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> pplayer health & armor");
         #endif
       } break;
 
@@ -6344,7 +6343,7 @@ void *invisible(int calltype, int keypress, bool defaultstatus) {
         hex_marker_clear();
         if( LCS ) hex_marker_addx(pplayer+0x19A, sizeof(byte));
         if( VCS ) hex_marker_addx(pplayer+0x4C, sizeof(int16));
-        hexeditor_create(pplayer + (LCS ? 0x19A : 0x4C), 0, memory_low, memory_high, "> pplayer invisible");
+        hexeditor_create(pplayer + (LCS ? 0x19A : 0x4C), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> pplayer invisible");
         #endif
       } break;
 
@@ -6384,7 +6383,7 @@ void *ignored(int calltype, int keypress, bool defaultstatus) {
         int temp = pplayer + (LCS ? 0x82E : 0x90E);
         hex_marker_clear();
         hex_marker_addx(temp, sizeof(bool));
-        hexeditor_create(temp, 0, memory_low, memory_high, "");
+        hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "");
         #endif
       } break;
 
@@ -6426,7 +6425,7 @@ void *warp_out_water(int calltype, int keypress, bool defaultstatus) {
         int temp = pplayer + 0x142;
         hex_marker_clear();
         hex_marker_addx(temp, sizeof(bool));
-        hexeditor_create(temp, 0, memory_low, memory_high, "");
+        hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "");
         #endif
       }*/ break;
 
@@ -6590,7 +6589,7 @@ void *heavy_player(int calltype, int keypress, bool defaultstatus) {
         hex_marker_clear();
         hex_marker_addx(pplayer+0xD0, sizeof(float));
         hex_marker_addx(pplayer+0xD4, sizeof(float));
-        hexeditor_create(pplayer+0xD0, 0, memory_low, memory_high, "> pplayer mass");
+        hexeditor_create(pplayer+0xD0, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> pplayer mass");
         #endif
       } break;
 
@@ -7099,7 +7098,7 @@ void *indestr_vehicle(int calltype, int keypress, bool defaultstatus) {
           if( VCS && mod_text_size == 0x00377D30 ) temp = pcar + 0x29C; // ULUS v1.01
           hex_marker_clear();
           hex_marker_addx(temp, sizeof(float));
-          hexeditor_create(temp, 0, memory_low, memory_high, "> vehicle health value");
+          hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> vehicle health value");
           #endif
         }
       }
@@ -7153,7 +7152,7 @@ void *lockdoors(int calltype, int keypress, bool defaultstatus) {
           int temp = pcar + (LCS ? 0x294 : 0x2A8);
           hex_marker_clear();
           hex_marker_addx(temp, sizeof(bool));
-          hexeditor_create(temp, 0, memory_low, memory_high, "> vehicle lock doors");
+          hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> vehicle lock doors");
           #endif
         }
       }
@@ -7528,7 +7527,7 @@ void *world_gravity(int calltype, int keypress, bool defaultstatus, int defaultv
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(addr_worldgravity, sizeof(short));
-        hexeditor_create(addr_worldgravity, 0, memory_low, memory_high, "> world gravity");
+        hexeditor_create(addr_worldgravity, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> world gravity");
         #endif
       }
 
@@ -7658,7 +7657,7 @@ void *vehicle_base_color(int calltype, int keypress, bool defaultstatus UNUSED) 
           int temp = pcar + (LCS ? 0x1F0 : 0x224);
           hex_marker_clear();
           hex_marker_addx(temp, (LCS ? sizeof(uint8) : sizeof(int)));
-          hexeditor_create(temp, 0, memory_low, memory_high, "> Primary Color");
+          hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> Primary Color");
           #endif
           break;
         }
@@ -7728,7 +7727,7 @@ void *vehicle_stripe_color(int calltype, int keypress, bool defaultstatus UNUSED
           int temp = pcar + (LCS ? 0x1F1 : 0x228);
           hex_marker_clear();
           hex_marker_addx(temp, (LCS?sizeof(uint8):sizeof(int)));
-          hexeditor_create(temp, 0, memory_low, memory_high, "> Secondary Color");
+          hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> Secondary Color");
           #endif
           break;
         }
@@ -7865,7 +7864,7 @@ void *traffic_density(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_trafficdensity + gp_, sizeof(float));
-        hexeditor_create(global_trafficdensity+ gp_, 0, memory_low, memory_high, "> traffic density multiplier");
+        hexeditor_create(global_trafficdensity+ gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> traffic density multiplier");
         #endif
       }
       break;
@@ -7962,7 +7961,7 @@ void *peds_density(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_peddensity + gp_, sizeof(float));
-        hexeditor_create(global_peddensity + gp_, 0, memory_low, memory_high, "> ped density multiplier");
+        hexeditor_create(global_peddensity + gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ped density multiplier");
         #endif
       }
       break;
@@ -8032,10 +8031,10 @@ void *onmission(int calltype, int keypress, bool defaultstatus, int defaultval) 
         hex_marker_clear();
         if( offsetinspace == 0 ) {
           hex_marker_addx(offsetinspace, sizeof(uint8));
-          hexeditor_create(offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
+          hexeditor_create(offsetinspace, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> OnAMissionFlag");
         } else if( offsetinspace > 0 && scriptspace > 0 ) {
           hex_marker_addx(scriptspace + offsetinspace, sizeof(uint8));
-          hexeditor_create(scriptspace + offsetinspace, 0, memory_low, memory_high, "> OnAMissionFlag");
+          hexeditor_create(scriptspace + offsetinspace, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> OnAMissionFlag");
         }
         #endif
       }
@@ -8083,7 +8082,7 @@ void *freeze_timers(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_freezetimers, sizeof(bool));
-        hexeditor_create(global_freezetimers, 0, memory_low, memory_high, "> freeze timers");
+        hexeditor_create(global_freezetimers, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> freeze timers");
         #endif
       }
       break;
@@ -8307,7 +8306,7 @@ void *max_health(int calltype, int keypress) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_maxhealthmult, sizeof(uint8));
-        hexeditor_create(global_maxhealthmult, 0, memory_low, memory_high, "> max health multiplier");
+        hexeditor_create(global_maxhealthmult, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> max health multiplier");
         #endif
       }
       break;
@@ -8353,7 +8352,7 @@ void *max_armor(int calltype, int keypress) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_maxhealthmult, sizeof(uint8));
-        hexeditor_create(global_maxarmormult, 0, memory_low, memory_high, "> max armor multiplier");
+        hexeditor_create(global_maxarmormult, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> max armor multiplier");
         #endif
       }
       break;
@@ -8398,7 +8397,7 @@ void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_unlimtedsprint, sizeof(bool));
-        hexeditor_create(global_unlimtedsprint, 0, memory_low, memory_high, "> unlimted sprinting bool");
+        hexeditor_create(global_unlimtedsprint, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> unlimted sprinting bool");
         #endif
       }
       break;
@@ -8443,7 +8442,7 @@ void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_unlimtedswim, sizeof(bool));
-        hexeditor_create(global_unlimtedswim, 0, memory_low, memory_high, "> unlimted swimming bool");
+        hexeditor_create(global_unlimtedswim, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> unlimted swimming bool");
         #endif
       }
       break;
@@ -8512,7 +8511,7 @@ void *wanted_level(int calltype, int keypress, bool defaultstatus, int defaultva
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_maxwantedlevel+gp_, sizeof(uint8));
-        hexeditor_create(global_maxwantedlevel+gp_, 0, memory_low, memory_high, "> maximum wanted level possible");
+        hexeditor_create(global_maxwantedlevel+gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> maximum wanted level possible");
         #endif
       } break;
 
@@ -8748,7 +8747,7 @@ void *world_time(int calltype, int keypress, bool defaultstatus, int defaultval 
         hex_marker_addx(global_clockmultiplier + gp_ + 0x4, sizeof(uint8)); // hour value
         hex_marker_addx(global_clockmultiplier + gp_ + 0x5, sizeof(uint8)); // minute value
         hex_marker_addx(global_clockmultiplier + gp_ + 0x6, sizeof(uint8)); // second value
-        hexeditor_create(global_clockmultiplier+ gp_ + 0x4, 0, memory_low, memory_high, "> game clock");
+        hexeditor_create(global_clockmultiplier+ gp_ + 0x4, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> game clock");
         #endif
       } break;
 
@@ -8825,7 +8824,7 @@ void *world_liftcontrol(int calltype, int keypress, bool defaultstatus, int defa
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_bridgeState, sizeof(int));
-        hexeditor_create(global_bridgeState, 0, memory_low, memory_high, "> bridge state");
+        hexeditor_create(global_bridgeState, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> bridge state");
         #endif
       }
 
@@ -8880,7 +8879,7 @@ void *world_realtimeclock(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_clockmultiplier + gp_, sizeof(int));
-        hexeditor_create(global_clockmultiplier+ gp_, 0, memory_low, memory_high, "> game time multiplier");
+        hexeditor_create(global_clockmultiplier+ gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> game time multiplier");
         #endif
       }
       break;
@@ -8933,7 +8932,7 @@ void *no_cheating_warning(int calltype, int keypress, bool defaultstatus UNUSED)
         hex_marker_clear();
         hex_marker_addx(global_cheatusedboolean + gp_, sizeof(bool));
         hex_marker_addx(global_cheatusedcounter + gp_, sizeof(int));
-        hexeditor_create(global_cheatusedboolean+ gp_, 0, memory_low, memory_high, "> cheatcode used boolean (IN THIS PLAY SESSION)");
+        hexeditor_create(global_cheatusedboolean+ gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> cheatcode used boolean (IN THIS PLAY SESSION)");
         #endif
       } break;
 
@@ -9062,7 +9061,7 @@ void *world_waterlevel(int calltype, int keypress, bool defaultstatus, int defau
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
-        hexeditor_create(LCS ? global_ptr_water : global_ptr_water+gp, 0, memory_low, memory_high, "> water level");
+        hexeditor_create(LCS ? global_ptr_water : global_ptr_water+gp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> water level");
         #endif
       }
 
@@ -9153,7 +9152,7 @@ void *world_waveheight(int calltype, int keypress, bool defaultstatus, int defau
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
-        hexeditor_create(LCS ? global_WindClipped : global_WindClipped+gp, 0, memory_low, memory_high, "> wave height");
+        hexeditor_create(LCS ? global_WindClipped : global_WindClipped+gp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> wave height");
         #endif
       }
 
@@ -10666,7 +10665,7 @@ void *camera_centered(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_camera + (LCS ? 0x1AA : 0x113), sizeof(float)); // not ulux
-        hexeditor_create( global_camera + (LCS ? 0x1AA : 0x113), 0, memory_low, memory_high, "> centered");
+        hexeditor_create( global_camera + (LCS ? 0x1AA : 0x113), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> centered");
         #endif
       }
       break;
@@ -10731,7 +10730,7 @@ void *fieldofview(int calltype, int keypress, bool defaultstatus, int defaultval
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_camera + (LCS ? 0x254 : 0x198), sizeof(float));
-        hexeditor_create( global_camera + (LCS ? 0x254 : 0x198), 0, memory_low, memory_high, "> FOV");
+        hexeditor_create( global_camera + (LCS ? 0x254 : 0x198), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> FOV");
         #endif
       }
       break;
@@ -10777,7 +10776,7 @@ void *camera_topdown(int calltype, int keypress, bool defaultstatus) {
         hex_marker_addx(global_camera + (LCS ? 0x13C : 0x890), sizeof(float));
         hex_marker_addx(global_camera + (LCS ? 0x24C : 0x0E8), sizeof(float)); // not ulux
         hex_marker_addx(global_camera + (LCS ? 0x250 : 0x194), sizeof(float)); // not ulux
-        hexeditor_create( global_camera + (LCS ? 0x24C : 0x194), 0, memory_low, memory_high, "> TopDown camera");
+        hexeditor_create( global_camera + (LCS ? 0x24C : 0x194), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> TopDown camera");
         #endif
       }
       break;
@@ -10820,7 +10819,7 @@ void *dev_flag(int calltype, int keypress, bool defaultstatus) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_developerflag+(VCS?gp:0), sizeof(char));
-        hexeditor_create(global_developerflag+(VCS?gp:0), 0, memory_low, memory_high, "> developer flag");
+        hexeditor_create(global_developerflag+(VCS?gp:0), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> developer flag");
         #endif
       }
       break;
@@ -10969,7 +10968,7 @@ void *bmxjumpheight(int calltype, int keypress, bool defaultstatus, int defaultv
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_bmxjumpmult + gp_, sizeof(float));
-        hexeditor_create(global_bmxjumpmult + gp_, 0, memory_low, memory_high, "> global_bmxjumpmult");
+        hexeditor_create(global_bmxjumpmult + gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_bmxjumpmult");
         #endif
       }
 
@@ -11058,7 +11057,7 @@ void *policechaseheli(int calltype, int keypress, bool defaultstatus, int defaul
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(addr_policechaseheli_2, sizeof(short));
-        hexeditor_create(addr_policechaseheli_2, 0, memory_low, memory_high, "> addr_policechaseheli_2");
+        hexeditor_create(addr_policechaseheli_2, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> addr_policechaseheli_2");
         #endif
       }
 
@@ -11439,7 +11438,7 @@ void *test_switch(int calltype, int keypress, bool defaultstatus) {
         //if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
           //hex_marker_clear();
           //hex_marker_addx(savedatakey + (LCS ? 0 : gp), 0x10);
-          hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)), 0, memory_low, memory_high, "> global_ScriptSpace");
+          hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_ScriptSpace");
         //}
         #endif
       } else if( keypress == PSP_CTRL_SQUARE ) {
@@ -11447,7 +11446,7 @@ void *test_switch(int calltype, int keypress, bool defaultstatus) {
         //if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
           //hex_marker_clear();
           //hex_marker_addx(savedatakey + (LCS ? 0 : gp), 0x10);
-          hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)), 0, memory_low, memory_high, "> global_ScriptSpace + global_MainScriptSize");
+          hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_ScriptSpace + global_MainScriptSize");
         //}
         #endif
       }
@@ -11507,7 +11506,7 @@ void *mp_test(int calltype, int keypress, bool defaultstatus) {
         //if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
           //hex_marker_clear();
           //hex_marker_addx(savedatakey + (LCS ? 0 : gp), 0x10);
-          hexeditor_create(getInt(global_mp_parameters), 0, memory_low, memory_high, "> global_mp_parameters");
+          hexeditor_create(getInt(global_mp_parameters), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_mp_parameters");
         //}
         #endif
       }

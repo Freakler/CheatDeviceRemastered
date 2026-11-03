@@ -119,7 +119,31 @@ extern void writeFloat(byte *address, float value);
 extern u8string _fgets(u8string s, usize size, SceUID stream);
 
 extern void makedirs(const u8string path);
-extern uaddr getHighMemBound();
+
+typedef enum
+{
+  PSP_MEM_UNK_SIZE = -1,
+  PSP_MEM_32MB = MiB(32),
+  PSP_MEM_48MB = MiB(48),
+  PSP_MEM_64MB = MiB(64),
+  PSP_MEM_93MB = MiB(93), // PPSSPP
+} PspMemConfigType;
+
+typedef struct
+{
+  uaddr highMemAddr;
+  PspMemConfigType configType;
+} PspMemConfig;
+
+typedef struct CFWMemory
+{
+  const uaddr       LowestMemoryAddr;
+  uaddr             HighestMemoryAddr;
+  PspMemConfigType  MemoryConfig;
+  bool              ExtraMemory;
+} CFWMemory;
+
+extern void GetMemConfig(CFWMemory *memory);
 
 extern bool checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius);
 extern float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2);

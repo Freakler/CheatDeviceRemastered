@@ -25,6 +25,7 @@
 #define __FUNCTIONS_H__
 
 #include "mctypes.h"
+#include "putils.h"
 #include "storiesrwsdk.h"
 
 typedef struct {
@@ -362,5 +363,7 @@ extern void CustomScriptPlace(const byte *script, uaddr address, usize size);
 extern void CustomScriptExecute(uaddr address);
 
 extern int getScriptGlobalValue(uint32 var);
+
+extern CFWMemory pluginMemory;
 
 #endif

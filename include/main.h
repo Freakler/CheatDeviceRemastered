@@ -58,8 +58,8 @@
 #endif
 
 #if LOGGING
- #define PATCH_LOGGING       ON  // debug logging for detected patch locations only
- #define MEMORY_LOGGING      ON  // logging bad memory access to console
+ #define PATCH_LOGGING       OFF  // debug logging for detected patch locations only
+ #define MEMORY_LOGGING      OFF  // logging bad memory access to console
  #define USERSCRIPT_LOGGING  OFF  // debug logging for userscripts only
  #define GAME_LOGGING        OFF  // display developer logs on screen + to file (LCS US v3.00 only)
  #define CONFIG_LOGGING      OFF

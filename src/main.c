@@ -190,8 +190,6 @@ uaddr hex_adr = 0; // mem address for HexEditor
 
 
 /// some externs
-extern uaddr memory_low;
-extern uaddr memory_high;
 extern uaddr pplayer;
 extern uaddr pcar;
 extern uaddr pobj;
@@ -4354,15 +4352,15 @@ static void address_ctrl() {
 
   if( hold_buttons & PSP_CTRL_DOWN ) {
     tempaddress -= 1 << (addresspos * 4); // addresspos 0: -= 0x1, 1: -= 0x10, 2: -= 0x100, ....
-    if( tempaddress <= memory_low )
-      tempaddress = memory_low;
+    if( tempaddress <= pluginMemory.LowestMemoryAddr )
+      tempaddress = pluginMemory.LowestMemoryAddr;
     history_position = 0;
   }
 
   if( hold_buttons & PSP_CTRL_UP ) {
     tempaddress += 1 << (addresspos * 4); // addresspos 0: += 0x1, 1: += 0x10, 2: += 0x100, ....
-  if ( tempaddress >= memory_high )
-      tempaddress = memory_high;
+  if ( tempaddress >= pluginMemory.HighestMemoryAddr )
+      tempaddress = pluginMemory.HighestMemoryAddr;
     history_position = 0;
   }
 
@@ -4392,7 +4390,7 @@ static void address_ctrl() {
     history_position = 0;
     add_adr_to_history(tempaddress);
     hex_adr = tempaddress;
-    hexeditor_create(hex_adr, 0, memory_low, memory_high, "");
+    hexeditor_create(hex_adr, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "");
   }
   if( pressed_buttons & PSP_CTRL_CIRCLE ) {
     history_position = 0;
@@ -4553,7 +4551,7 @@ void hex_marker_clear() {
 void hexeditor_create(uaddr address, int mode, uaddr low, uaddr high, const u8string infostring) { // init HexEditor
   DEBUG_LOG("%lu: hexeditor_create(%s)", getGametime(), infostring);
 
-  if( address >= memory_low && address <= memory_high )
+  if( isInMemBounds(address) )
     hex_adr = address;
   else return;
 
@@ -4738,7 +4736,7 @@ static void hexeditor_draw() {
           SOMECOLOR = BLUE;
 
         /// check if pointer (for different color)
-        } else if( current2 > memory_low && current2 < memory_high) {
+        } else if( current2 > pluginMemory.LowestMemoryAddr && current2 < pluginMemory.HighestMemoryAddr) {
 
           if( current2 >= mod_text_addr && current2 <= mod_text_addr + mod_text_size ) //pointer to TEXT area
             SOMECOLOR = ORANGE;
@@ -4818,7 +4816,7 @@ static void hexeditor_draw() {
         drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 265.0f, 255.0f, RED, "%f", *((float*)(hex_adr)));
 
 
-      if( *((u32*)(hex_adr)) > memory_low && *((u32*)(hex_adr)) < memory_high) { // link to accessible memory
+      if( *((u32*)(hex_adr)) > pluginMemory.LowestMemoryAddr && *((u32*)(hex_adr)) < pluginMemory.HighestMemoryAddr) { // link to accessible memory
         if( flag_use_legend )
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 255.0f, RED, "0x%08X", *((int*)(hex_adr)));
         else
@@ -4969,7 +4967,7 @@ static void hexeditor_ctrl() {
 
     } else { // open pointer location
       if( hex_adr % 0x4 == 0x0 ) {
-        if( (uaddr)getInt(hex_adr) > memory_low && (uaddr)getInt(hex_adr) < memory_high) { // pointer to accessible memory
+        if( (uaddr)getInt(hex_adr) > pluginMemory.LowestMemoryAddr && (uaddr)getInt(hex_adr) < pluginMemory.HighestMemoryAddr) { // pointer to accessible memory
 
           /* old version (drop mode 1)
           hex_adr = getInt(hex_adr);
@@ -4978,15 +4976,15 @@ static void hexeditor_ctrl() {
           hexeditor_browse_y = 0;
           hexeditor_mode = 0;
 
-          hexeditor_lowbound = memory_low;
-          hexeditor_highbound = memory_high;*/
+          hexeditor_lowbound = pluginMemory.LowestMemoryAddr;
+          hexeditor_highbound = pluginMemory.HighestMemoryAddr;*/
 
           memset(hexeditor_memory, 0, sizeof(hexeditor_memory[0][0]) * hexeditor_lines * 0x10);
           memset(hexeditor_memtime, 0, sizeof(hexeditor_memtime[0][0]) * hexeditor_lines * 0x10);
 
           add_adr_to_history(hex_adr); // add address to history array
           snprintf(hexeditor_infobuffer, sizeof(hexeditor_infobuffer), "> via offset at 0x%08X", hex_adr);
-          hexeditor_create(getInt(hex_adr), 0, memory_low, memory_high, hexeditor_infobuffer);
+          hexeditor_create(getInt(hex_adr), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, hexeditor_infobuffer);
         }
       }
 
@@ -6325,17 +6323,14 @@ int module_start(SceSize args UNUSED, void *argp UNUSED) {
   if( sceIoDevctl("kemulator:", EMULATOR_DEVCTL__IS_EMULATOR, NULL, 0, NULL, 0) == 0 ) {
     PPSSPP = true;
     INFO_LOG("PPSSPP detected!");
-	  sceKernelDelayThread(10*1000); // 10ms (bad fix for invalid memory crash with lite version?!)
+	  sceKernelDelayThread(msec(10)); // 10ms (bad fix for invalid memory crash with lite version?!)
   }
 
-
   /// check available memory (high memory layout)
-  memory_high = getHighMemBound();
-  if ( !memory_high ) memory_high = 0x0A000000; // if it alloc mem fails, set default ~32 MB
+  GetMemConfig(&pluginMemory);
 
-  DEBUG_LOG("sceKernelTotalFreeMemSize = %i bytes", sceKernelTotalFreeMemSize() );
-  DEBUG_LOG("sceKernelGetBlockHeadAddr() = 0x%08X", memory_high);
-
+  DEBUG_LOG("Memory Setting: %s", SIZESTR(pluginMemory.MemoryConfig));
+  DEBUG_LOG("Extra Memory: %s", BOOLSTR(pluginMemory.ExtraMemory));
 
   /// check Adrenaline eCFW
   if( !PPSSPP && adrenalineCheck() ) {
