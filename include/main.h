@@ -54,7 +54,6 @@
 //  #define MEMORY           // display memory usage on screen (LCS US v3.00 only)
 
 #else
- #undef LOGGING
  #undef DEBUG
  #undef PREVIEW
 #endif
