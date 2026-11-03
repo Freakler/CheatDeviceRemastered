@@ -2181,9 +2181,9 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   }
   #endif
 
-  /*************************************
+  /**************************************
    * jal sceKernelMaxFreeMemSize
-   *************************************
+   **************************************
    * ULUS-10041 v1.05 | 0x002A0BF4 | OK!
    * ULUS-10041 v3.00 | 0x002A0B44 | OK!
    * ULES-00182 v1.00 | Unknown    | Not Tested
@@ -2226,6 +2226,54 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
       if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
     }
 
+    return true;
+  }
+
+  /**************************************
+   * CHud::DrawHealthBar
+   **************************************
+   * ULUS-10041 v1.05 | Unknown    | Not Tested
+   * ULUS-10041 v3.00 | 0x001830BC | OK!
+   * ULES-00182 v1.00 | Unknown    | Not Tested
+   * ULES-00182 v2.00 | Unknown    | Not Tested
+   * ULES-00151 v1.05 | Unknown    | Not Tested
+   * ULES-00151 v2.00 | Unknown    | Not Tested
+   * ULES-00151 v3.00 | Unknown    | Not Tested
+   * ULES-00151 v4.00 | Unknown    | Not Tested
+   * ULJM-05255 v1.01 | Unknown    | Not Tested
+   * ULET-00361 v0.02 | Unknown    | Not Tested
+   * ULET-00362 v0.01 | Unknown    | Not Tested
+   * ULUX-80142 v0.02 | Unknown    | Not Tested
+   * ULUX-80146 v0.02 | Unknown    | Not Tested
+   **************************************/
+  if ( _lw(addr + 0x98) == 0xC4ED04B8 )
+  {
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawHealthBar", addr-text_addr, addr);
+    HIJACK_FUNCTION(addr, CHud_DrawHealthBar_LCS_Patched, CHud_DrawHealthBar_LCS);
+    return true;
+  }
+
+  /**************************************
+   * CHud::DrawArmourBar
+   **************************************
+   * ULUS-10041 v1.05 | Unknown    | Not Tested
+   * ULUS-10041 v3.00 | 0x00183568 | OK!
+   * ULES-00182 v1.00 | Unknown    | Not Tested
+   * ULES-00182 v2.00 | Unknown    | Not Tested
+   * ULES-00151 v1.05 | Unknown    | Not Tested
+   * ULES-00151 v2.00 | Unknown    | Not Tested
+   * ULES-00151 v3.00 | Unknown    | Not Tested
+   * ULES-00151 v4.00 | Unknown    | Not Tested
+   * ULJM-05255 v1.01 | Unknown    | Not Tested
+   * ULET-00361 v0.02 | Unknown    | Not Tested
+   * ULET-00362 v0.01 | Unknown    | Not Tested
+   * ULUX-80142 v0.02 | Unknown    | Not Tested
+   * ULUX-80146 v0.02 | Unknown    | Not Tested
+   **************************************/
+  if ( _lw(addr + 0x98) == 0xC4ED04BC )
+  {
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawArmourBar", addr-text_addr, addr);
+    HIJACK_FUNCTION(addr, CHud_DrawArmourBar_LCS_Patched, CHud_DrawArmourBar_LCS);
     return true;
   }
 
@@ -3531,6 +3579,38 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
       if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
     }
 
+    return true;
+  }
+
+  /**************************************
+   * CHud::DrawHealthBar
+   **************************************
+   * ULUS-10160 v1.03 | 0x001B7B18 | OK!
+   * ULES-00502 v1.02 | Unknown    | Not Tested
+   * ULES-00503 v1.02 | Unknown    | Not Tested
+   * ULJM-05297 v1.01 | Unknown    | Not Tested
+   * ULET-00417 v0.06 | Unknown    | Not Tested
+   **************************************/
+  if ( _lw(addr + 0xA0) == 0xC4ED04E4 )
+  {
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawHealthBar", addr-text_addr, addr);
+    HIJACK_FUNCTION(addr, CHud_DrawHealthBar_VCS_Patched, CHud_DrawHealthBar_VCS);
+    return true;
+  }
+
+  /**************************************
+   * CHud::DrawArmourBar
+   **************************************
+   * ULUS-10160 v1.03 | 0x001BB4F0 | OK!
+   * ULES-00502 v1.02 | Unknown    | Not Tested
+   * ULES-00503 v1.02 | Unknown    | Not Tested
+   * ULJM-05297 v1.01 | Unknown    | Not Tested
+   * ULET-00417 v0.06 | Unknown    | Not Tested
+   **************************************/
+  if ( _lw(addr + 0x134) == 0xC4AC04E8 && _lw(addr + 0x4) == 0x90852431 )
+  {
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawArmourBar", addr-text_addr, addr);
+    HIJACK_FUNCTION(addr, CHud_DrawArmourBar_VCS_Patched, CHud_DrawArmourBar_VCS);
     return true;
   }
 
@@ -6146,9 +6226,7 @@ void *disable_textures(int calltype, int keypress, bool defaultstatus) {
 
 /** Godmode **************************************************************************************************************
  *
- * Completion:  99% :)
- *
- * TODO:  - bar is not completely full with such a huge value.. fixable?
+ * Completion:  100% :)
  *
  * Notes:     /
  **************************************************************************************************************************************/
@@ -11455,4 +11533,55 @@ void FUN_000B0A18_Patched(uaddr data)
   // and gta idiotically saves it, breaking the save for non-cheaters
   DEBUG_LOG("Overwriting CClock::ms_nMillisecondsPerGameMinute on save to %lu", CClock_ms_nMillisecondsPerGameMinute_default);
   setInt(data + 0x14, CClock_ms_nMillisecondsPerGameMinute_default);
+}
+
+void (*CHud_DrawHealthBar_LCS)(int16 value);
+void CHud_DrawHealthBar_LCS_Patched(int16 value)
+{
+  if ( getPedHealth(pplayer) > getMaxHealthMultiplier() ) // Using infinite health and armor cheat
+  {
+    value = getMaxHealthMultiplier(); // Clamp value to max health
+  }
+  
+  CHud_DrawHealthBar_LCS(value);
+}
+
+void (*CHud_DrawArmourBar_LCS)(int16 value);
+void CHud_DrawArmourBar_LCS_Patched(int16 value)
+{
+  if ( getPedArmor(pplayer) > getMaxArmorMultiplier() ) // Using infinite health and armor cheat
+  {
+    value = getMaxArmorMultiplier(); // Clamp value to max armor
+  }
+
+  CHud_DrawArmourBar_LCS(value);
+}
+
+void (*CHud_DrawHealthBar_VCS)(void *param_1, int16 value);
+void CHud_DrawHealthBar_VCS_Patched(void *param_1, int16 value)
+{
+  if ( getPedHealth(pplayer) > getMaxHealthMultiplier() ) // Using infinite health and armor cheat
+  {
+    value = getMaxHealthMultiplier(); // Clamp value to max health
+  }
+
+  CHud_DrawHealthBar_VCS(param_1, value);
+}
+
+void (*CHud_DrawArmourBar_VCS)(void *param_1);
+void CHud_DrawArmourBar_VCS_Patched(void *param_1)
+{
+  if ( getPedArmor(pplayer) > getMaxArmorMultiplier() ) // Using infinite health and armor cheat
+  {
+    // Stupid but CHud::DrawArmourBar reads the armor value directly in VCS???
+    // So, we set player armor to max armor for a very short time while the func runs
+    // Visually it'll remain the same, so no worries
+    const float old_armor = getPedArmor(pplayer);
+    setPedHealthAndArmor(pplayer, getPedHealth(pplayer), getMaxArmorMultiplier());
+    CHud_DrawArmourBar_VCS(param_1);
+    setPedHealthAndArmor(pplayer, getPedHealth(pplayer), old_armor);
+    return;
+  }
+
+  CHud_DrawArmourBar_VCS(param_1);
 }

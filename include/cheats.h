@@ -144,6 +144,16 @@ extern void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1);
 extern void (*FUN_000B0A18)(uaddr data);
 extern void FUN_000B0A18_Patched(uaddr data);
 
+extern void (*CHud_DrawHealthBar_LCS)(int16 value);
+extern void CHud_DrawHealthBar_LCS_Patched(int16 value);
+extern void (*CHud_DrawArmourBar_LCS)(int16 value);
+extern void CHud_DrawArmourBar_LCS_Patched(int16 value);
+
+extern void (*CHud_DrawHealthBar_VCS)(void *param_1, int16 value);
+extern void CHud_DrawHealthBar_VCS_Patched(void *param_1, int16 value);
+extern void (*CHud_DrawArmourBar_VCS)(void *param_1);
+extern void CHud_DrawArmourBar_VCS_Patched(void *param_1);
+
 /// Cheat functions
 extern void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultval);
 extern void *debug_vars(int calltype, int keypress, bool defaultstatus, int defaultval UNUSED);
