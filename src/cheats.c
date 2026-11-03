@@ -4374,7 +4374,7 @@ void *speedometer_toggle(int calltype, int keypress, bool defaultstatus, int def
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         flag_draw_SPEEDO = status = !status;
       } else if( keypress == PSP_CTRL_SQUARE ) { // SQUARE
-        real = !status;
+        real = !real;
       } else if( keypress == PSP_CTRL_LEFT ) { // LEFT
         unit = 0; // mp/h
       } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
