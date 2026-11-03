@@ -3089,8 +3089,8 @@ u8string getModelNameViaHash(uint32 hash, uint32 time) {
   extern uint32 hash_to_check;
   extern uint32 last_hash;
   extern u8char hashbuffer[];
-  extern int name_resolver_status;
-  if( name_resolver_status > 0 ) { // "name_resolver" thread is alive!
+  extern bool name_resolver_status;
+  if( name_resolver_status ) { // "name_resolver" thread is alive!
     if( hash == last_hash ) // previously checked
       return hashbuffer;
 

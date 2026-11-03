@@ -6011,13 +6011,13 @@ void menu_apply(const CDRMenuItem *menu_list, usize menu_max) {
 uint32 hash_to_check = 0;
 uint32 last_hash = 0;
 u8char hashbuffer[32];
-int name_resolver_status = -1;
+bool name_resolver_status = false;
 
 int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
   DEBUG_LOG("name_resolver Thread started");
 
   char hashstr[16];
-  name_resolver_status = 1;
+  name_resolver_status = true;
 
   while( true ) {
     if( hash_to_check != last_hash ) {
