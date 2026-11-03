@@ -269,25 +269,25 @@ usize var_wldobjsize          = 0;
 usize var_bsnobjsize          = 0;
 
 uaddr addr_vehiclesworldspawn        = 0;
-uaddr var_vehiclesworldspawnslots    = 0;
+usize var_vehiclesworldspawnslots    = 0;
 usize var_vehiclesworldspawnslotsize = 0;
 
 
 /// GAME.DTZ ////////////////////////
 uaddr ptr_buildingsIPL          = 0;
-uaddr buildingsIPL_max          = 0;
+usize buildingsIPL_max          = 0;
 usize var_buildingsIPLslotsize  = 0;
 
 uaddr ptr_treadablesIPL         = 0;
-uaddr treadablesIPL_max         = 0;
+usize treadablesIPL_max         = 0;
 usize var_treadablesIPLslotsize = 0;
 
 uaddr ptr_dummysIPL             = 0;
-uaddr dummysIPL_max             = 0;
+usize dummysIPL_max             = 0;
 usize var_dummysIPLslotsize     = 0;
 
 uaddr ptr_handlingCFG           = 0;
-uaddr var_handlingcfgslots      = 0;
+usize var_handlingcfgslots      = 0;
 usize var_handlingcfgslotsize   = 0;
 
 uaddr ptr_particleCFG           = 0;
@@ -7923,7 +7923,7 @@ void *onmission(int calltype, int keypress, bool defaultstatus, int defaultval) 
       return (int*)status;
 
     case FUNC_GET_STRING:
-      return ( option ? "true" : "false");
+      return ( BOOLSTR(option) );
 
     case FUNC_CHECK:
       offsetinspace = getInt(global_OnAMissionFlag + (LCS ? 0 : gp));

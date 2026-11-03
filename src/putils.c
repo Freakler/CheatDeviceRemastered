@@ -38,29 +38,31 @@ extern u8string file_log;
 extern const u8string basefolder;
 
 // Check if file exists
-bool doesFileExist(const u8string path) {
+bool doesFileExist(const u8string path)
+{
   SceIoStat stat; memset(&stat, 0, sizeof(SceIoStat));
 
   if ( sceIoGetstat(path, &stat) < 0 ) {
-    DEBUG_LOG("doesFileExist('%s') -> no", path);
+    DEBUG_LOG("doesFileExist('%s') -> false", path);
     return false;
   }
 
-  DEBUG_LOG("doesFileExist('%s') -> %s", path, FIO_SO_ISREG(stat.st_attr) ? "yes" : "no");
+  DEBUG_LOG("doesFileExist('%s') -> %s", path, BOOLSTR(FIO_SO_ISREG(stat.st_attr)));
 
   return FIO_SO_ISREG(stat.st_attr);
 }
 
 // Check if dir exists
-bool doesDirExist(const u8string path) {
+bool doesDirExist(const u8string path)
+{
   SceIoStat stat; memset(&stat, 0, sizeof(SceIoStat));
 
   if ( sceIoGetstat(path, &stat) < 0 ) {
-    DEBUG_LOG("doesDirExist('%s') -> no", path);
+    DEBUG_LOG("doesDirExist('%s') -> false", path);
     return false;
   }
 
-    DEBUG_LOG("doesDirExist('%s') -> %s", path, FIO_SO_ISDIR(stat.st_attr) ? "yes" : "no");
+    DEBUG_LOG("doesDirExist('%s') -> %s", path, BOOLSTR(FIO_SO_ISDIR(stat.st_attr)));
 
   return FIO_SO_ISDIR(stat.st_attr);
 }
@@ -88,7 +90,7 @@ usize countFoldersInFolder(const u8string path) {
   fd = sceIoDopen(path);
   if( fd >= 0 )  {
     while( sceIoDread(fd, &d_dir) > 0 )  {
-      if( FIO_SO_ISDIR(d_dir.d_stat.st_attr) && d_dir.d_name[0] != '.' ) { // if entry is a regular file
+      if( FIO_SO_ISDIR(d_dir.d_stat.st_attr) && !STR_STARTSWITH_CHAR(d_dir.d_name, '.') ) { // if entry is a regular file
         folder_count++;
       }
     }
@@ -98,7 +100,8 @@ usize countFoldersInFolder(const u8string path) {
 }
 
 #ifdef SAVEDITOR
-func_stat setFolderModificationDateNow(const u8string folder) {
+func_stat setFolderModificationDateNow(const u8string folder)
+{
   DEBUG_LOG("setFolderModificationDateNow('%s')", folder);
 
   int ret;
@@ -126,7 +129,8 @@ func_stat setFolderModificationDateNow(const u8string folder) {
   return ret;
 }
 
-u8string getFolderModificationDate(const u8string folder, u8string out, usize size) {
+u8string getFolderModificationDate(const u8string folder, u8string out, usize size)
+{
   DEBUG_LOG("getFolderModificationDate('%s')", folder);
 
   SceIoStat d_stat; memset(&d_stat, 0, sizeof(SceIoStat));
@@ -145,7 +149,8 @@ bool adrenalineCheck()
   return doesFileExist("flash1:/config.adrenaline");
 }
 
-void clearICacheFor(uaddr address) {
+void clearICacheFor(uaddr address)
+{
   /// https://wololo.net/talk/viewtopic.php?t=11656
   /// https://www.romhacking.net/forum/index.php?topic=25734.0
   /// http://www.ethernut.de/en/documents/arm-inline-asm.html
@@ -165,15 +170,21 @@ void clearICacheFor(uaddr address) {
 }
 
 
-void writeShort(byte *address, short value) { // because of memory alignment
+// because of memory alignment
+void writeShort(byte *address, short value)
+{
   memcpy(address, &value, sizeof(value));
 }
 
-void writeInteger(byte *address, int value) { // because of memory alignment
+// because of memory alignment
+void writeInteger(byte *address, int value)
+{
   memcpy(address, &value, sizeof(value));
 }
 
-void writeFloat(byte *address, float value) { // because of memory alignment
+// because of memory alignment
+void writeFloat(byte *address, float value)
+{
   memcpy(address, &value, sizeof(value));
 }
 
@@ -193,14 +204,20 @@ u8string _fgets(u8string s, usize size, SceUID stream) {
   return s;
 }
 
-void makedirs(const u8string path) { // recursively create path
+// recursively create path
+void makedirs(const u8string path)
+{
   u8string sep = strrchr(path, '/');
-  if( sep != NULL ) {
-    *sep = 0;
+
+  if( sep != NULL )
+  {
+    *sep = '\0';
     makedirs(path);
     *sep = '/';
   }
-  if( sceIoMkdir(path, 0777) < 0 ) {
+
+  if( sceIoMkdir(path, 0777) < 0 )
+  {
     ERROR_LOG("Unable to create '%s'", path);
   }
 }
@@ -254,7 +271,8 @@ uaddr getHighMemBound() { // thx Acid_Snake :)
   return address;
 }
 
-bool checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius) {
+bool checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius)
+{
   const float xdist = a - x;
   const float ydist = b - y;
   const float zdist = c - z;
@@ -263,7 +281,8 @@ bool checkCoordinateInsideArea(float a, float b, float c, float x, float y, floa
   return dist2 <= (radius * radius);
 }
 
-float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2) {
+float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2)
+{
   const float xdist = x2 - x1;
   const float ydist = y2 - y1;
   const float zdist = z2 - z1;
@@ -305,7 +324,7 @@ u8string SizeToStrUnits(usize size, u8string outString, usize outStringSize)
 // Check if filename (or path) ends with extension
 bool stringEndsWith(const u8string string, const u8string endswith)
 {
-  if ( !string || !endswith || *string == '\0' || *endswith == '\0' ) return 0;
+  if ( STR_NULL(string) || STR_NULL(endswith) || STR_EMPTY(string) || STR_EMPTY(endswith) ) return 0;
 
   return !strcasecmp(string + strlen(string) - strlen(endswith), endswith);
 }
@@ -313,7 +332,7 @@ bool stringEndsWith(const u8string string, const u8string endswith)
 // Get extension length
 usize getExtensionLength(const u8string path)
 {
-  if ( !path || *path == '\0' ) return 0;
+  if ( STR_NULL(path) || STR_EMPTY(path) ) return 0;
 
   const u8string dot = strrchr(path, '.'); // Find last dot
   if ( !dot ) return 0;
@@ -382,7 +401,7 @@ uint32 hash(const u8string key, usize len, uint32 seed)
 }
 
 // TODO: Remove this (it's here cause of newlib math -_-)
-// Don't take this off otherwise plugin bloats by like 20KB (annoying linker)
+// Don't take this off, otherwise plugin bloats by like 20KB (annoying linker)
 int errno;
 int *__errno (void)
 {

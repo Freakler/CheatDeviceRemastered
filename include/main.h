@@ -200,7 +200,7 @@ typedef struct userscript_entry
   usize files_folders_count;
 } userscript_entry;
 
-extern func_stat free_userscripts_array();
+extern void free_userscripts_array();
 extern void userscripts_create();
 #endif
 
