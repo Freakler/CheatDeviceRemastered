@@ -5652,7 +5652,11 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
   void *(* surrent_get)(int, int);
 
   /// title
+  #if LITE
+  drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE, "%s %s Lite by %s", PLUGIN_NAME, VERSION, PLUGIN_AUTHOR);
+  #else
   drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE, "%s %s by %s", PLUGIN_NAME, VERSION, PLUGIN_AUTHOR);
+  #endif
 
   /// GameID & version
   //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 8.0f, 15.0f, LGREY, "%s v%s", buf_titleid, buf_version);
