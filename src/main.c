@@ -6032,7 +6032,7 @@ int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
     }
     sceKernelDelayThread(msec(100)); // 100ms
   }
-  name_resolver_status = 0;
+  name_resolver_status = false;
   sceKernelExitDeleteThread(0);
   return 0;
 }
