@@ -25,7 +25,6 @@
 #define __MAIN_H__
 
 #include "mctypes.h"
-#include <pspiofilemgr.h>
 
 #include "editor.h"
 
@@ -37,7 +36,7 @@
 // #define PREVIEW  // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
 #define LITE      OFF // 'Lite' version with less features for more memory on PSP-1000
-#define LOGGING   ON  // General Logging (DEBUG, INFO, WARNING, ERROR)
+#define LOGGING   OFF  // General Logging (DEBUG, INFO, WARNING, ERROR)
 #define MEMCHECK  ON  // memory bounds check (faster memory operations if disabled but crash on out-of-bounds access)
 
 #if !LITE

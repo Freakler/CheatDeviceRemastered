@@ -79,7 +79,7 @@
 #define CONCAT(x, y) x##y
 
 #define BOOLSTRCUSTOM(boolean, falsestr, truestr) ((boolean) ? (truestr) : (falsestr))
-#define BOOLSTR(boolean) BOOLSTRCUSTOM((boolean), "true", "false")
+#define BOOLSTR(boolean) BOOLSTRCUSTOM((boolean), STRINGIFY(false), STRINGIFY(true))
 
 #define EPSILON 0.0001f
 #define FLOATEQL(f1, f2) ( FABS(f1 - f2) < EPSILON )

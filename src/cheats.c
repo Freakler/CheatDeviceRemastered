@@ -8788,7 +8788,7 @@ void *world_liftcontrol(int calltype, int keypress, bool defaultstatus, int defa
       return (int*)status;
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), " %s", _t(state ? "down" : "up"));
+      snprintf(retbuf, sizeof(retbuf), "%s", _t(state ? "down" : "up"));
       return retbuf;
 
     case FUNC_APPLY:
@@ -10158,7 +10158,7 @@ void buttonApplyOnce(int i) { // apply once on button press
 
 void *up_button(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
-  int i = 10; // default position
+  static array_uidx i = 10; // default position
   static array_size list_size = ARRAY_SIZE(buttonCheatNames) - 1;
 
   switch( calltype ) {
@@ -10166,7 +10166,7 @@ void *up_button(int calltype, int keypress, bool defaultstatus, int defaultval) 
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_GET_STRING:
       return (void *)_t(buttonCheatNames[i]);
@@ -10206,7 +10206,7 @@ void *up_button(int calltype, int keypress, bool defaultstatus, int defaultval) 
 
 void *down_button(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
-  int i = 9; // default position
+  static array_uidx i = 9; // default position
   static array_size list_size = ARRAY_SIZE(buttonCheatNames) - 1;
 
   switch( calltype ) {
@@ -10214,7 +10214,7 @@ void *down_button(int calltype, int keypress, bool defaultstatus, int defaultval
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_GET_STRING:
       return (void *)buttonCheatNames[i];
@@ -10257,7 +10257,7 @@ void *down_button(int calltype, int keypress, bool defaultstatus, int defaultval
 
 void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
-  int i = 0; // default position
+  static array_uidx i = 0; // default position
   static const u8string list_names[] = {"kill instantly",    // 0
                                         "replenish Health",  // 1
                                         "freeze position",   // 2
@@ -10276,7 +10276,7 @@ void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defau
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_GET_STRING:
       return (void *)list_names[i];
@@ -10345,7 +10345,7 @@ void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defau
 
 void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
-  int i = 0; // default position
+  static array_uidx i = 0; // default position
   static const u8string list_names[] = {"make it float away",     // 0
                                         "set it on fire",         // 1
                                         "make it explode",        // 2
@@ -10370,7 +10370,7 @@ void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultv
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_GET_STRING:
       return (void *)_t(list_names[i]);
@@ -10470,7 +10470,7 @@ void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultv
 
 void *touch_object(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
-  int i = 0; // default position
+  static array_uidx i = 0; // default position
   static const u8string list_names[] = {"unload it",
                                         #ifdef HEXEDITOR
                                         "open in HexEditor"
@@ -10485,7 +10485,7 @@ void *touch_object(int calltype, int keypress, bool defaultstatus, int defaultva
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)i;
+      return (int*)(int)i;
 
     case FUNC_GET_STRING:
       return (void *)list_names[i];
@@ -10545,7 +10545,7 @@ mark OBJECTS on radar
 ****/
 void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
-  int j = 0, i = 0; // default position
+  static array_uidx j = 0, i = 0; // default position
   static int res = 0;
 
   switch( calltype ) {
@@ -10553,7 +10553,7 @@ void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) 
       return (int*)status;
 
     case FUNC_GET_VALUE: // for config
-      return (int*)j;
+      return (int*)(int)j;
 
     case FUNC_GET_STRING:
       if( j == 0 ) { // pickups
@@ -10630,7 +10630,7 @@ void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) 
     case FUNC_SET:
       status = defaultstatus;
       j = 0;
-      if( defaultval >= 0  ) // TODO: something < value check
+      if( defaultval >= 0 && defaultval <= 1 ) // TODO: something < value check
         j = defaultval;
       break;
   }
