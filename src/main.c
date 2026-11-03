@@ -53,7 +53,7 @@
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
 
 /// settings
-const uint32 menuopendelay = 2 * 1000;  // wait ~2 seconds before showing menu & applying after spawning
+const uint32 menuopendelay = msec(2);  // wait ~2 seconds before showing menu & applying after spawning
 uint16 showoptions = 12;    // the number of options / lines that should be displayed at once
 static const float row_spacing = 15.0f; // pixels between rows
 static const uint32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
@@ -4483,7 +4483,7 @@ static bool flag_hexeditor = false;
 
 /// settings
 static const usize hexeditor_maxlines   = 14;      // the maximum number of lines that can be displayed - considering max text possible by the game is 512 we are pretty maxed out already
-static const usize hexeditor_colordelay = 3 * 1000 * 1000; // delay for changed value color (3 seconds)
+static const usize hexeditor_colordelay = usec(3); // delay for changed value color (3 seconds)
 
 /// set & used by functions
 static uint8 hexeditor_mode;      // 0 = use full memory location, 1 = start from 0x00000000 ( = lower bound)
@@ -5054,7 +5054,7 @@ void draw() { // called by hijacked game function
 
   /// draw low-memory message in textbox
   #if !LITE
-  if( flag_draw_memwarn && !flag_menu_running && !isTextboxShowing() && getGametime() > 14000 && memory_main_free < (120*1000) ) { // only show after 14 seconds into game & when there is less than 120 KB
+  if( flag_draw_memwarn && !flag_menu_running && !isTextboxShowing() && getGametime() > 14000 && memory_main_free < KiB(120) ) { // only show after 14 seconds into game & when there is less than 120 KiB
     DEBUG_LOG("%lu: drawing memory message", getGametime());
     setTimedTextbox(_t(memwarning), 10.00f);
     flag_draw_memwarn = false;
@@ -6030,7 +6030,7 @@ int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
 
       last_hash = hash_to_check;
     }
-    sceKernelDelayThread(100 * 1000); // 100ms
+    sceKernelDelayThread(msec(100)); // 100ms
   }
   name_resolver_status = 0;
   sceKernelExitDeleteThread(0);

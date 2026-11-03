@@ -3922,7 +3922,7 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
       static int memcreate_ran = 0;
       if ( !memcreate_ran )
       {
-        memcreate(256 * 1024); /* Should be enough */
+        memcreate(KiB(256)); /* Should be enough */
         memcreate_ran = 1;
       }
 
@@ -4358,12 +4358,12 @@ void *speedometer_toggle(int calltype, int keypress, bool defaultstatus, int def
       return (int*)(int)unit;
 
     case FUNC_GET_STRING:
-      return (real ? ( unit == 0 ? "MP/H (real)" : "KM/H (real)") : ( unit == 0 ? "MP/H" : "KM/H"));
+      return (real ? BOOLSTRCUSTOM(unit == 0, "km/h (real)", "mph (real)") : BOOLSTRCUSTOM(unit == 0, "km/h", "mph"));
 
     case FUNC_APPLY:
       if( pcar ) {
         /// speed (Example: "ESPRIT" 1.065 (fMaxVelocity) * 180 * 1.2 = 230 km/h as set in beta handling.cfg)  See: https://github.com/guard3/g3DTZ/blob/e22a1a2295fe136e702153aabb391453be9f6305/source/core/HandlingMgr.cpp#L13
-        snprintf(speed, sizeof(speed), (unit == 0 ? "%.0f MP/H" : "%.0f KM/H"), getVehicleSpeed() * 180.0f * (real ? 1 : 1.2f) * (unit == 0 ? 1 : 0.621371f)); // og CD used raw speed calculated from moving vector
+        snprintf(speed, sizeof(speed), BOOLSTRCUSTOM(unit == 0, "%.0f km/h", "%.0f mph"), getVehicleSpeed() * 180.0f * (real ? 1 : 1.2f) * (unit == 0 ? 1 : 0.621371f)); // og CD used raw speed calculated from moving vector
 
         /// gears
         snprintf(gear, sizeof(speed), _t("Gear: %X"), getVehicleCurrentGear( pcar ) );

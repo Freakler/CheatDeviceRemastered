@@ -45,6 +45,11 @@
 #define YiBytes (YiBytes * YiBytes)
 #define YiB(x)  (usize)((x) * YiBytes)
 
+#define msecond (1000)
+#define msec(x) (usize)((x) * msecond)
+#define usecond (msecond * msecond)
+#define usec(x) (usize)((x) * usecond)
+
 #define ABS(x) ( (x) >= 0 ? (x) : -(x) )
 #define FABS(x) ( (x) >= 0.0f ? (x) : -(x) )
 
