@@ -5192,14 +5192,14 @@ void draw() { // called by hijacked game function
   /// free Memory (when enabled)
   if( flag_draw_MEM && !flag_menu_running && !flag_draw_DEBUG && !isTextboxShowing() ) {
     drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f, WHITE, "MEM:");
-    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 48.0f, 5.0f, (memory_main_free < 150*1000 ? (memory_main_free < 100*1000 ? (memory_main_free < 50*1000 ? RED : ORANGE) : YELLOW) : GREEN), SIZESTR(memory_main_free));
+    drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 48.0f, 5.0f, memory_main_free < MiB(4) ? (memory_main_free < KiB(150) ? (memory_main_free < KiB(100) ? (memory_main_free < KiB(50) ? RED : ORANGE) : YELLOW) : GREEN) : CYAN, SIZESTR(memory_main_free));
   }
 
 
   /// FPS indicator (when enabled)
   if( flag_draw_FPS && !flag_menu_running && !flag_draw_DEBUG && !isTextboxShowing() ) {
     drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 8.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), WHITE, "FPS:");
-    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), (fps < 29.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN), "%.0f", fps);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 43.0f, 5.0f + (flag_draw_MEM ? row_spacing : 0), fps < 57.0f ? (fps < 27.0f ? (fps < 20.0f ? (fps < 15.0f ? RED : ORANGE) : YELLOW) : GREEN) : CYAN, "%.0f", fps);
   }
 
 
