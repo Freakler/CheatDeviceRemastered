@@ -1176,6 +1176,846 @@ static void userscripts_update_array()
   sceIoDclose(dir);
 }
 
+extern int isdigit(int x);
+
+/***************************************************************
+The following function was more of a PoC and just continued on..
+It really is very work in progress and contains bugs most probably.
+
+Yes, it somehow works but please do not take it as an example as
+this is not how it should be done! :D
+
+TODO: rewrite this
+****************************************************************/
+static void userscript_run(u8string currentfile)
+{
+  USERSCRIPT_LOG("UserScript: %s", currentfile);
+
+  // // // // // // // SETTINGS // // // // // // // // // // // // //
+  extern usize global_MainScriptSize;
+  extern uaddr global_ScriptSpace;
+  extern usize global_LargestMissionScriptSize;
+
+  uint32 placeholder = 0xDEADB000; // base (+1 for each)
+  usize customtextcounter = 0;
+
+
+  /************
+  - inside script space
+  - at the very end minus SCRIPT_SIZE !
+  -
+  ***************/
+
+  /// relative offset where script will be placed to MAIN = 0 (important for calculating label jumps!)
+  uaddr roff = getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)) - SCRIPT_SIZE;
+  //DEBUG_LOG("roff: 0x%08X", roff);
+
+  /// physical address where script will be placed
+  uaddr addr = (uaddr)getInt(global_ScriptSpace + (LCS ? 0 : gp)) + roff;
+  //DEBUG_LOG("addr: 0x%08X", addr);
+
+
+  // // // // // // // // // // // // // // // // // // // // // // //
+  u8char file_path[PATH_MAX];
+  snprintf(file_path, sizeof(file_path), "%s%s", script_workfldr, currentfile);
+  SceUID file = sceIoOpen(file_path, PSP_O_RDONLY, 0777);
+  if ( file < 0 )
+  {
+    ERROR_LOG("Opening Userscript '%s' returned 0x%08X", currentfile, file);
+    snprintf(buffer, sizeof(buffer), _t("~r~Error: Script can't be opened!?"));
+    setTimedTextbox(buffer, 7.00f);
+    return;
+  }
+
+  CustomScriptClear(addr, SCRIPT_SIZE); // zero script area in ScriptSpace
+
+  int opcode = -1;
+  byte script[SCRIPT_SIZE] = {0}; // TODO: size
+  usize pos = 0, line = 0;
+  int tempint;
+  float tempflt;
+  u8char tempbuf[16];
+  u8char readbuf[SCRIPTLINELGT]; // SCRIPTLINELGT is max line length
+
+  u8char label_ch_arr[SUPPORT_LABEL][MAX_LABEL_LENGTH] = {0};
+  usize label_pos_arr[SUPPORT_LABEL] = {0};
+  usize label_pos_cur = 0;
+  u8char unk_label[SUPPORT_LABEL][MAX_LABEL_LENGTH] = {0}; // save unknown labels (placeholder = placeholderbase + array offset)
+  usize unk_label_pos_cur = 0;
+  int lastif = -1, opcodessinceif = -1;
+  //int blockcomment = 0;
+
+  /// read in line by line /////////////////////////////////////////////////////////////////
+  while( _fgets(readbuf, SCRIPTLINELGT, file) ) // read txt line by line
+  {
+    line++;
+    u8char *linehandle = readbuf; // create ptr to work with
+
+    /// remove preceding whitespaces and tabs
+    while( (*linehandle == ' ') || (*linehandle == '\t') ) linehandle++;
+
+    /// skip comment lines
+    if( linehandle[0] == '/' && linehandle[1] == '/' ) continue;
+
+    /// block comments (needs more checks.. maybe later)
+    /*if( linehandle[0] == '/' && linehandle[1] == '*' ) { // start
+      blockcomment = 1;
+      continue;
+    }
+    if( linehandle[0] == '*' && linehandle[1] == '/' ) { // end
+      blockcomment = 0;
+      linehandle+=2; // continue after
+    }
+    if( blockcomment ) // we are inside a commented out block
+      continue;
+    */
+
+    /// error exit - script too big
+    if( pos >= SCRIPT_SIZE ) {
+      snprintf(buffer, sizeof(buffer), _t("~r~Error: Script exceeds currently supported size! Sorry"));
+      setTimedTextbox(buffer, 7.00f);
+      sceIoClose(file);
+      return;
+    }
+
+    /// clean string
+    for( array_uidx i = 0; i < SCRIPTLINELGT-1; i++ )
+    {
+      /// replace tabs
+      if( readbuf[i] == '\t' ) readbuf[i] = ' ';
+
+      /// remove following comments
+      if( readbuf[i] == '/' && readbuf[i+1] == '/' ) readbuf[i] = '\0';
+
+      /// remove new line
+      if( readbuf[i] == '\r' || readbuf[i] == '\n') readbuf[i] = '\0';
+    }
+
+    /// check type of row
+    if( linehandle[4] == ':' && linehandle[5] == ' ' ) // operation (eg: "024C: request_model 172")
+    {
+      opcodessinceif++;
+      usize counter = 0;
+      int8 isfuncall = -1;
+      u8char *saveptr;
+      u8string token = strtok_r(linehandle, " ", &saveptr); // get the first token
+      while( token != NULL ) // walk through other tokens
+      {
+        // // // // // // // // // // // // // // //
+        /// opcode
+        if( counter == 0 )
+        {
+          token[4] = 0; // zero out ":"
+          snprintf(tempbuf, sizeof(tempbuf), "0x%s", token);
+          opcode = strtol(tempbuf, NULL, 0);
+
+          USERSCRIPT_LOG("opcode: 0x%04X", opcode);
+
+          script[pos++] = opcode % 0x100;
+          script[pos++] = opcode >> 8;
+
+          /// special case (for later)
+          if( opcode == 0x05AE || opcode == 0x05AF || // LCS
+            opcode == 0x037A || opcode == 0x037B ) { // VCS
+            isfuncall = 3; // first 3 vals without identifier (like 06 for int XX XX XX XX)
+          } else isfuncall = 0;
+        }
+
+        /// rest are args or text
+        else
+        {
+          if( !STR_EMPTY(token) )
+          {
+            USERSCRIPT_LOG("arg_%u: '%s'", counter, token);
+
+            if( STR_ENDSWITH_CHAR(token, ')') ) // "x(y,z)" eg.: $3922(38@,10)
+            {
+              /******
+              0@    -> 6C
+              14@   -> 7A
+              $400  -> E7 90
+              $1414 -> EB 86
+              $1446 -> EB A6
+              $4147 -> F6 33
+
+              inner
+              0@ -> 00
+              1@ -> 01
+              ...
+
+              0 -> 00
+              5 -> 05
+              ...
+              ********/
+
+              for( array_uidx i = 0; i < strlen(token); i++ )
+              {
+                if( token[i] == '(' ) token[i] = ' ';
+                if( token[i] == ')' ) token[i] = '\0';
+                if( token[i] == ',' ) token[i] = ' ';
+              } //DEBUG_LOG("token '%s' found ", token);
+
+              u8char *saveptrsub = NULL;
+              usize subcounter = 0;
+              int tempint = 0;
+              u8string utoken = strtok_r(token, " ", &saveptrsub); // get the first sub token
+              while( utoken ) // walk through other sub tokens
+              {
+                //DEBUG_LOG("utoken '%s'", utoken);
+
+                if( STR_ENDSWITH_CHAR(utoken, '@') ) // "..@" local variable (eg: 0@ 1@ 2@)
+                {
+                  utoken[strlen(utoken)-1] = '\0'; // remove the @
+                  tempint = strtol(utoken, NULL, 0); // convert
+
+                  if( subcounter == 0 ) { // OUTSIDE  X@( , )
+                    script[pos++] = (byte)tempint + (LCS ? 0x6C : 0x6D); // because 0@ is 0xC (for LCS)
+                  } else { // INSIDE  (X@, )
+                    script[pos++] = (byte)tempint;
+                  }
+
+                } else if( STR_STARTSWITH_CHAR(utoken, '$') ) // "$..." global variables (eg: $4028)
+                {
+                  utoken++; // remove the $
+                  tempint = strtol(utoken, NULL, 0); // convert
+
+                  uaddr addr_tempint = (uaddr)&tempint;
+
+                  //eg LCS: $1414  -> 0x0586 -> EB 86 in script
+                  script[pos++] = (*(byte*)(addr_tempint+1)) + 0xE6; // TODO: vcs
+                  script[pos++] = *(byte*)addr_tempint;
+
+                } else { //must be simple int then
+                  tempint = strtol(utoken, NULL, 0); // convert
+                  script[pos++] = (byte)tempint;
+                }
+
+                subcounter++;
+                utoken = strtok_r(NULL, " ", &saveptrsub);
+              }
+
+              //snprintf(buffer, sizeof(buffer), "~r~Error: '%s' in line %i not yet supported!", token, line);
+              //setTimedTextbox(buffer, 7.00f);
+              //sceIoClose(file);
+              //return;
+
+            } else if( STR_STARTSWITH_CHAR(token, '$') ) // "$...." global variables (eg: $4028, $PLAYER_CHAR)
+            {
+              /** LCS *** (PSP) *******************
+              533=PLAYER_SKIN    0x215  -> 0x15CE
+              536=PLAYER_CHAR    0x218  -> 0x18CE
+              540=PLAYER_ACTOR   0x21C  -> 0x1CCE
+              560=ONMISSION      0x230  -> 0x30CE
+
+              500          0x1F4  -> 0xF4CD
+              512          0x200  -> 0x00CE
+              4028         0xFBC  -> 0xBCDB
+              ************************************/
+
+              /** VCS *** (PSP) *******************
+              782=PLAYER_CHAR   0x30E  -> 0x0ED0
+              789=ONMISSION     0x315  -> 0x15D0  D0 15
+
+              500          0x1F4  -> 0xF4CE  CE F4
+              ************************************/
+              token++; //remove the $
+              if( STR_STARTSWITH_CHAR(token, '_') ) token++;
+
+              if( !strcmp(token, "PLAYER_SKIN") ) { // LCS only
+                tempint = 533;
+              } else if( !strcmp(token, "PLAYER_CHAR") ) {
+                tempint = (LCS ? 536 : 782);
+                if( VCS && mod_text_size == 0x00377D30 ) tempint = 759; // for ULUS v1.01
+                if( LCS && mod_text_size == 0x00320A34 ) tempint = 534; // for ULUS v1.02
+              } else if( !strcmp(token, "PLAYER_ACTOR") ) { // LCS only
+                tempint = 540;
+              } else if( !strcmp(token, "ONMISSION") ) {
+                tempint = (LCS ? 560 : 789);
+                if( VCS && mod_text_size == 0x00377D30 ) tempint = 766; // for ULUS v1.01
+                if( LCS && mod_text_size == 0x00320A34 ) tempint = 558; // for ULUS v1.02
+              } else {
+                tempint = strtol(token, NULL, 0); // convert
+              }
+              //DEBUG_LOG("-> %i", tempint);
+
+              uaddr addr_tempint = (uaddr)&tempint;
+
+              //eg LCS: $500  -> 0x01F4  -> 0xF4CD in script
+              script[pos++] = (*(byte*)(addr_tempint+1)) + (LCS ? 0xCC : 0xCD);  // 0x01 + 0xCD = 0xCE
+              script[pos++] = *(byte*)addr_tempint; // 0xF4
+
+            } else if ( STR_STARTSWITH_CHAR(token, '#') ) //"#...."  alias
+            {
+              /// TODO:
+              //eg: " 024C: request_model #SCRIPT_SALCHAIR "
+
+              snprintf(buffer, sizeof(buffer), _t("~r~Error: '%s' in line %i not yet supported!"), token, line);
+              setTimedTextbox(buffer, 7.00f);
+              sceIoClose(file);
+              return;
+            } else if ( STR_STARTSWITH_CHAR(token, '@') ) // "@....." (eg: @RAYS4_15305 )
+            {
+              token++; // remove the @
+              //DEBUG_LOG("Label = '%s'", token);
+
+              /// error
+              if ( VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
+                snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
+                setTimedTextbox(buffer, 7.00f);
+                sceIoClose(file);
+                return;
+              }
+
+              int tempint = 0;
+
+              /// if already in saved label array
+              for(array_uidx i = 0; i < SUPPORT_LABEL; i++) { // loop saved labels
+                if ( !strcmp(label_ch_arr[i], token) ) {
+                  //tempint = 0 - label_pos_arr[i];   // write saved address from array (old.. negative offset like mission script works)
+                  tempint = roff + label_pos_arr[i];   // write saved address from array
+                  //DEBUG_LOG("%s found in array at position %i", token, i);
+                }
+              }
+
+              if( tempint == 0 ) { // not found
+                /// check if this is a script name in MAIN maybe //////////////////// experimental ////////////////
+                uaddr address = 0;
+                usize main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
+                uaddr script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+                for( address = script_space; address < script_space + main_size; address++ )
+                {
+                  u8string curr_string = (u8string)address;
+                  if( curr_string[0] == token[0] && curr_string[1] == token[1] ) // first because faster
+                  {
+                    //DEBUG_LOG("'%s' vs '%s'", token, getString(address, 0));
+                    if( !strcmp(token, getString(address, 0)) )
+                    {
+                      USERSCRIPT_LOG("string '%s' found @ 0x%08X in mainscript", token, address - script_space);
+
+                      tempint = address - script_space - 2; // 2 is opcode length
+                      if( VCS ) tempint--; // vcs has additional 0xA as string identifier
+
+                      goto skip_found;
+                    }
+                  }
+                }
+                /////////////////////////////////////////////////////////////////////////////////////////////////
+
+                tempint = placeholder + unk_label_pos_cur; // write incremented placeholder
+
+                /// check if label already in unknown array maybe
+                bool in_unk_arr = false;
+                for( array_uidx i = 0; i < SUPPORT_LABEL; i++ ) // loop unknown labels
+                {
+                  if ( !strcmp(unk_label[i], token) )
+                  {
+                    in_unk_arr = true;
+                    tempint = placeholder + i; // overwrite placeholder position
+                    //DEBUG_LOG("%s found in array at position %i", token, i);
+                    break;
+                  }
+                }
+
+                /// save label in unknown array (if not in already)
+                if( !in_unk_arr && (unk_label_pos_cur < SUPPORT_LABEL) )
+                {
+                  strncpy(unk_label[unk_label_pos_cur], token, sizeof(unk_label[unk_label_pos_cur]));
+                  unk_label_pos_cur++;
+                }
+              }
+              //DEBUG_LOG("write 0x%08X", tempint);
+
+              skip_found:
+
+              /// write to script
+              script[pos++] = 0x06; // integer (4 Bytes)
+              memcpy(&script[pos], (void*)&tempint, sizeof(int));
+              pos += 4;
+            } else if( STR_ENDSWITH_CHAR(token, '@') ) // "....@" local variable (eg: 0@ 1@ 2@ ... decimal!)
+            {
+              /** LCS ***
+              0x0C = 0@
+              0x0D = 1@
+              0x0E = 2@
+              ...
+              ***********/
+              token[strlen(token)-1] = '\0'; // remove the @
+              tempint = strtol(token, NULL, 0); // convert
+              script[pos++] = tempint + (LCS ? 0xC : 0xD); // because 0@ is 0xC (for LCS)
+            } else if( STR_STARTSWITH_CHAR(token, '\'') ) // "'xyz'" string
+            {
+              token++; // remove ' at the beginning
+              u8char identifier[CSTGXTLGT] = {0}; // the games GXT String OR full Custom Text
+              if( !STR_ENDSWITH_CHAR(token, '\'') ) // custom text can span multiple tokens
+              {
+                snprintf(identifier, sizeof(identifier), "%s ", token);
+                token = strtok_r(saveptr, "\'", &saveptr); // custom text can have whitespaces.
+                strncat(identifier, token, strlen(token));
+              } else {
+                memcpy(identifier, token, strlen(token)-1);
+              }
+
+              USERSCRIPT_LOG("String found: '%s'", identifier);
+
+              extern uaddr ptr_gxtloadadr;
+
+              // not found in GXT
+              if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) )
+              {
+                USERSCRIPT_LOG("not found in GXT.."); // could be custom string or special string at this point
+
+                /// ignore special strings in the following opcodes (like special models eg "MAR_01") that are not in GXT
+                if( // LCS
+                  opcode == 0x0161 ||  // set_zone_ped_info
+                  opcode == 0x0241 ||  // load_special_character
+                  opcode == 0x02E9 ||  // load_cutscene
+                  opcode == 0x02EB ||  // set_cutscene_anim
+                  opcode == 0x02F8 ||  // load_special_model
+                  opcode == 0x0357 ||  // undress_char
+                  opcode == 0x03A9 ||  // script_name
+                  opcode == 0x03D4 ||  // load_mission_audio
+                  opcode == 0x0505 ||  // is_player_wearing
+                  opcode == 0x0663 ||  // store_player_outfit
+
+                  // VCS
+                  opcode == 0x0159 ||  // load_special_character
+                  opcode == 0x01D1 ||  // load_special_model
+                  opcode == 0x020F ||  // undress_char
+                  opcode == 0x0238 ||  // script_name
+                  opcode == 0x0257 ||  // load_mission_audio
+                  opcode == 0x0318 ||  // is_player_wearing
+                  opcode == 0x035B     // is_player_in_info_zone
+
+                  //opcode == 0x0006
+
+                ) {
+                  USERSCRIPT_LOG("-> special game string! don't touch");
+                  // do nothing
+                } else { // custom string!
+                  if ( customtextcounter >= CSTGXTS )
+                  {
+                    snprintf(buffer, sizeof(buffer), _t("~r~Error: Custom strings limit of %u reached."), CSTGXTS);
+                    setTimedTextbox(buffer, 7.00f);
+                    sceIoClose(file);
+                    return;
+                  }
+
+                  /// save string as wchar in array
+                  memset(custom_gxts[customtextcounter], 0, CSTGXTLGT * sizeof(wchar));
+                  Utf8ToGameEncoding(identifier, custom_gxts[customtextcounter]);
+                  USERSCRIPT_LOG("-> custom string! %u (location %p)", customtextcounter, &custom_gxts[customtextcounter]);
+
+                  /// replace token with CUSTOM GXT LABEL
+                  snprintf(identifier, sizeof(identifier), "CUST_%02u", customtextcounter); // see cheats.c (name has to match obviously)
+
+                  customtextcounter++;
+                }
+              }
+
+              /// write GXT name to script
+              if( VCS ) script[pos++] = 0x0A;
+
+              usize ctr = 0;
+              while( identifier[ctr] != '\0' )
+              {
+                script[pos++] = identifier[ctr];
+                ctr++;
+
+                if( ctr > 7 ) { // a gxt id string can't be longer than 7 chars!!
+                  snprintf(buffer, sizeof(buffer), _t("~r~Error: String '%s' in line %u too long!"), identifier, line);
+                  setTimedTextbox(buffer, 7.00f);
+                  sceIoClose(file);
+                  return;
+                }
+              }
+              if( LCS ) {
+                while( ctr < 8 ) {
+                  script[pos++] = '\0'; // odd? + 00
+                  ctr++;
+                }
+              } else {
+                script[pos++] = '\0';
+              }
+            } else if( isdigit((uchar)token[0]) || isdigit((uchar)token[1]) ) { /// "number"
+              /****************************************
+              01  0             int
+              02  0.0           float
+              03  XX            float (uppest byte)    2.0   = 03 40        0x40000000
+              04  XX XX         float (upper half)    1.0    = 04 80 3F     0x3F800000
+              05  XX XX XX      float               1337.5   = 05 30 A7 44  0x44A73000
+              06  XX XX XX XX   int
+              07  XX            int  -128 to 127
+              08  XX XX         int 128 to ___
+              09  XX XX XX XX   float               3.14152  = 09 AA 0E 49 40  0x40490EAA
+
+              0A  String VCS only?!?
+              ****************************************/
+
+              /// contains "." then FLOAT
+              if( strstr(token, ".") )
+              {
+                tempflt = (float)atof(token); // convert
+
+                uaddr addr_tempflt = (uaddr)&tempflt;
+
+                if( *(byte*)(addr_tempflt) != 0 ) { // 4 Bytes needed
+                  script[pos++] = 0x09;
+                  memcpy(&script[pos], (void*)addr_tempflt, 4);
+                  pos+=4;
+                }
+                else if( *(byte*)(addr_tempflt+1) != 0 ) { // 3 Bytes needed
+                  script[pos++] = 0x05;
+                  memcpy(&script[pos], (void*)(addr_tempflt + 1), 3);
+                  pos+=3;
+                }
+                else if( *(byte*)(addr_tempflt+2) != 0 ) { // 2 Bytes needed
+                  script[pos++] = 0x04;
+                  memcpy(&script[pos], (void*)(addr_tempflt + 2), 2);
+                  pos+=2;
+                }
+                else if( *(byte*)(addr_tempflt+3) != 0 ) { // 1 Byte needed
+                  script[pos++] = 0x03;
+                  script[pos++] = *(byte*)(addr_tempflt+3);
+                }
+                else {  //0 Byte needed because value is 0.0
+                  script[pos++] = 0x02;
+                }
+                /// else INTEGER
+              } else {
+                tempint = strtol(token, NULL, 0); // convert
+                //DEBUG_LOG("tempint: '%i' 0x%08X", tempint, tempint);
+
+                /// special case
+                if( isfuncall > 0 ) { // no identifier (like 08 for int XX XX) for 3 first args in function call opcodes
+                  script[pos++] = (byte)tempint;
+                  isfuncall--;
+                }
+
+                /// normal
+                else {
+                  /// TODO: most common hardcoded for now
+                  if( tempint == 0 ) {
+                    script[pos++] = 0x01;
+                  } else if( tempint == 1 ) {
+                    script[pos++] = 0x07;
+                    script[pos++] = 0x01;
+                  } else if( tempint == -1 ) {
+                    script[pos++] = 0x07;
+                    script[pos++] = 0xFF;
+                  } else
+                  {
+                    /******************************************************************
+                    Examples                              Sanny:
+                    0319: set_total_unique_jumps_to 0     // 19 03 01
+                    0319: set_total_unique_jumps_to 1     // 19 03 07 01
+                    0319: set_total_unique_jumps_to 2     // 19 03 07 02
+                    0319: set_total_unique_jumps_to 126   // 19 03 07 7E
+                    0319: set_total_unique_jumps_to 127   // 19 03 07 7F
+                    0319: set_total_unique_jumps_to 128   // 19 03 08 80 00
+                    0319: set_total_unique_jumps_to 129   // 19 03 08 81 00
+                    0319: set_total_unique_jumps_to 254   // 19 03 08 FE 00
+                    0319: set_total_unique_jumps_to 255   // 19 03 08 FF 00          !
+                    0319: set_total_unique_jumps_to 256   // 19 03 08 00 01
+                    0319: set_total_unique_jumps_to 80000 // 19 03 06 80 38 01 00
+                    0319: set_total_unique_jumps_to -1    // 19 03 07 FF             !
+                    0319: set_total_unique_jumps_to -1000 // 19 03 08 18 FC
+                    ******************************************************************/
+
+                    /// TODO: !!!
+                    //if( *(byte*)(adr+2) != 0 ) { //4 Bytes needed
+                      script[pos++] = 0x06; //
+                      memcpy((void*)&script[pos], (void*)&tempint, 4);
+                      pos+=4;
+
+                    /*} else if( *(byte*)(adr+1) != 0 ) { //2 Bytes needed
+                      script[pos++] = 0x08; //
+                      script[pos++] = *(byte*)adr;
+                      script[pos++] = *(byte*)(adr+1);
+
+                    } else if( *(byte*)adr != 0 ) { //1 Byte needed        eg 172 = 0xAC but sanny uses 08 ?
+                      script[pos++] = 0x07; //
+                      script[pos++] = *(byte*)adr;
+
+                    } else { //1 Byte needed
+                      script[pos++] = 0x01; //0 Byte needed because value is 0
+                    }*/
+                  }
+                }
+              }
+
+
+            } else /// "keyword" (eg: and, or, radius, from, to, model, visibility.. etc)
+            {
+              // most are to be ignored
+
+              /// constants though
+              if( !strcmp(token, "TIMERA") ) {
+                script[pos++] = 0x0A; //
+              } else if( !strcmp(token, "TIMERB") ) {
+                script[pos++] = 0x0B; //
+              }
+
+              /// "if and" & "if or"
+              if( opcode == 0x00DB || opcode == 0x0078 ) { // LCS & VCS
+                opcodessinceif = -1;
+                if( !strcmp(token, "and") ) {
+                  script[pos++] = 0x07; // int  -128 to 127
+                  script[pos++] = 0x00; // 0x00 + number of and conditions (eg 0x4 = 4)
+                  USERSCRIPT_LOG("Number of conditions will be adjusted later!");
+                } else if( !strcmp(token, "or") ) {
+                  script[pos++] = 0x07; // int  -128 to 127
+                  script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
+                  USERSCRIPT_LOG("Number of conditions will be adjusted later!");
+                }
+                lastif = pos-1;
+              }
+
+              if( lastif != -1 ) { // if "lastif" is not -1 then previously there was an "if and" or "if or" opcode which still needs its conditions parameter set!
+                if( opcode == 0x004C || opcode == 0x004D || opcode == 0x0021 || opcode == 0x0022 ) { // set it once we reached "goto_if_false" or "goto_if_true"
+                  script[lastif] = script[lastif] + opcodessinceif; // add
+                  USERSCRIPT_LOG("Last 'if' has %d conditions and is now set!", opcodessinceif);
+                  lastif = -1; // reset
+                }
+              }
+
+              if( VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
+                if( strcmp(token, "enable") == 0 ) {
+                  break; // ignore "enable 1"
+                }
+              }
+
+              // TODO: more?
+
+            }
+          } else {
+            //DEBUG_LOG("empty arg string");
+          }
+        }
+
+        // // // // // // // // // // // // // // //
+        token = strtok_r(NULL, " ", &saveptr);
+        counter++;
+      }
+
+
+      /**************
+      C0 04   07 02
+      BB 03   09 8B D4 8C 44   09 0C 96 8C C4   09 B4 C8 64 41   04 48 42   07 FD   07 FF
+      68 03   09 8B D4 8C 44   09 0C 96 8C C4   09 B4 C8 64 41   04 48 42   07 FE   01
+      D0 03   09 8B D4 8C 44   09 0C 96 8C C4   09 B4 C8 64 41
+      4E 00
+
+      04C0: set_area_visible 2
+      03BB: swap_nearest_building_model 1126.642 -1124.689 14.299 radius 50.0 from #WAREHOUSE3Z to #IZ_VIN
+      0368: set_visibility_of_closest_object_of_type 1126.642 -1124.689 14.299 radius 50.0 model #LODEHOUSE3Z visibility 0
+      03D0: load_scene 1126.642 -1124.689 14.299
+      004E: terminate_this_script
+
+
+      4C 02   08 AC 00
+      90 03
+      54 00   CE 18   0C   0D   0E
+      75 01   CE 18   0F
+      D3 02   0C 0D 0E 10
+      A5 00   08 AC 00   0C 0D 10 11
+      7A 01   11 0F
+      6E 03   CE 18   11
+      4E 00
+
+      024C: request_model 172
+      0390: load_all_models_now
+      0054: get_player_coordinates $PLAYER_CHAR store_to 0@ 1@ 2@
+      0175: get_player_heading $PLAYER_CHAR store_to 3@
+      02D3: get_ground_z_for_3d_coord 0@ 1@ 2@ store_to 4@
+      00A5: create_car 172 at 0@ 1@ 4@ store_to 5@
+      017A: set_car_heading 5@ to 3@
+      036E: put_player $PLAYER_CHAR in_car 5@
+      004E: terminate_this_script
+
+      **************/
+
+      USERSCRIPT_LOG("--------------------------------------");
+
+    } else if( STR_STARTSWITH_CHAR(linehandle, ':') ) { // label (eg ":DONS4_12258")
+      linehandle++; // skip the ":"
+
+      u8string token = strtok(strtok(linehandle, "  "), " "); // get rid of whitespace and tabs
+
+      /// error check: SUPPORT_LABEL count
+      if( label_pos_cur >= SUPPORT_LABEL ) { //label matches
+        snprintf(buffer, sizeof(buffer), _t("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
+        setTimedTextbox(buffer, 7.00f);
+        sceIoClose(file);
+        return;
+      }
+
+
+      /// error check: label-name already in array
+      for( array_uidx k = 0; k < label_pos_cur; k++ ) { // loop found labels array
+        USERSCRIPT_LOG("comparing for doubles: '%s' with '%s'", token, label_ch_arr[k]);
+
+        if( !strcmp(token, label_ch_arr[k]) ) { // label matches
+          snprintf(buffer, sizeof(buffer), _t("~r~Error: Found already used label '%s' in line %i?"), token, line);
+          setTimedTextbox(buffer, 7.00f);
+          sceIoClose(file);
+          return;
+        }
+
+      }
+
+      /// save label-name in array and corresponding placeholder in second array
+      if( label_pos_cur < SUPPORT_LABEL ) {
+        snprintf(label_ch_arr[label_pos_cur], sizeof(label_ch_arr[label_pos_cur]), "%s", token);
+
+        if( pos == 0 ) { // itsafix! mission script can't start with a :label -> write a NOP so label is at position 2 (- FE FF FF FF)
+          script[pos++] = 0x00; //
+          script[pos++] = 0x00; //
+        }
+
+        label_pos_arr[label_pos_cur] = pos; // save offset in array
+        label_pos_cur++;
+      }
+
+    /// the following can only happen when opcode is missing (write Opcodes in Sanny is disabled)
+    } else if( STR_STARTSWITH_CHAR(linehandle, '$') ) // variable assign opcode (eg "$544 = -144.4412")
+    {
+      // enable Write Opcodes in Sanny
+      // 04 00   DB E7   07 01   //$4071 = 1
+
+      snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %u? (%s)"), line, linehandle); // $...
+      setTimedTextbox(buffer, 7.00f);
+      sceIoClose(file);
+      return;
+    } else if( linehandle[strlen(linehandle)-1] == '@' ) { // calculation opcode (eg "78@ == 1")
+
+      // enable Write Opcodes in Sanny
+      // 39 00   2F     07 02    //35@ == 2
+
+      snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $...
+      setTimedTextbox(buffer, 7.00f);
+      sceIoClose(file);
+      return;
+    } else
+    {
+      // TODO:
+      //can be empty row!
+      //can be a comment row!
+      //can be (eg: 33@ = 1)
+      /*snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); //$...
+      setTimedTextbox(buffer, 7.00f);
+      sceIoClose(file);
+      return;*/
+
+      /// but also custom calls.. (this was a test, works for PS2 scm but not PSP)
+      /*if( STR_STARTSWITH_CHAR(linehandle, '!') ) {
+        linehandle++;
+
+        ///patch the debug menu scroll for LCS
+        if( LCS && strcmp(linehandle, "patchDBGMENU") == 0 ) {
+          uaddr address = 0;
+          int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
+          int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+          for(address = script_space; address < script_space + main_size; address++) {
+            if( *(byte*)(address) == 0x4D &&
+              *(byte*)(address+15) == 0x0F &&
+              *(byte*)(address+31) == 0x07 &&
+              *(byte*)(address+52) == 0x0F ) {
+
+              // *(byte*)(address+10) = 0x08;
+              // *(byte*)(address+0x24) = 0x08;
+
+
+              DEBUG_LOG("found @ 0x%08X in mainscript", address - script_space);
+              //snprintf(buffer, sizeof(buffer), "found @ 0x%08X in mainscript", address - script_space);
+              //setTimedTextbox(buffer, 7.00f);
+              //break;
+            }
+          }
+
+
+        }
+          
+        //setTimedTextbox("custom call found", 7.00f); //
+      }*/
+
+    }
+  }
+
+  sceIoClose(file);
+
+
+  USERSCRIPT_LOG("LABELs: %u/%u", label_pos_cur, SUPPORT_LABEL);
+  for( array_uidx i = 0; i < SUPPORT_LABEL; i++ )
+  {
+    if( STR_EMPTY(label_ch_arr[i]) ) break;
+
+    ///USERSCRIPT_LOG("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], 0 - label_pos_arr[i]); // negative offsets in mission script
+    USERSCRIPT_LOG("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], roff + label_pos_arr[i]); // now positive jump offest
+  }
+
+  USERSCRIPT_LOG("UNKNOWN LABELs: %u/%u", unk_label_pos_cur, SUPPORT_LABEL);
+
+  for( array_uidx i = 0; i < SUPPORT_LABEL; i++ )
+  {
+    if( STR_EMPTY(unk_label[i]) ) break;
+    USERSCRIPT_LOG("unk_label[%i]: '%s' (0x%08lX)", i, unk_label[i], placeholder + i);
+  }
+
+
+  /// now fix placeholder for jumps
+  for( array_uidx i = 0; i < pos - 4; i++ ) // loop script
+  {
+    if( script[i] == 0x06 ) // int with 4 Bytes
+    {
+      for( array_uidx j = 0; j < unk_label_pos_cur; j++) // loop unknown labels array
+      {
+        int tempint = placeholder + j;
+
+        if( *(int*)(&script[i+1]) == tempint )
+        {
+          USERSCRIPT_LOG("found placeholder at script position %u", i);
+
+          /// replace placeholder
+          for( array_uidx k = 0; k < label_pos_cur; k++ ) { // loop found labels array
+            USERSCRIPT_LOG("comparing: '%s' with '%s'", unk_label[j], label_ch_arr[k]);
+
+            if( strcmp(unk_label[j], label_ch_arr[k]) == 0 ) { // label matches
+              //USERSCRIPT_LOG("labels match: '%s' (to be replaced with; 0x%08X)", unk_label[j], 0 - label_pos_arr[k]);
+              USERSCRIPT_LOG("labels match: '%s' (to be replaced with; 0x%08X)", unk_label[j], roff + label_pos_arr[k]);
+
+              //tempint = 0 - label_pos_arr[k]; // (old.. negative offset like mission script works)
+              tempint = roff + label_pos_arr[k];
+
+              memcpy((void*)&script[i+1], (void*)&tempint, 4);
+              break;
+            }
+          }
+
+          /// error goto label not found in Labels
+          if( (uint32)tempint == placeholder + j ) { // if tempint not overwriten (ugly)
+            snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' not found?!!"), unk_label[j]);
+            setTimedTextbox(buffer, 7.00f);
+            return;
+          }
+          i += 4;
+          break;
+        }
+      }
+    }
+  }
+
+  USERSCRIPT_LOG("script size: %u/%u", pos, SCRIPT_SIZE);
+
+  CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
+
+  // char tempbuffffff[2048]; // quick temp printout
+  // memset(&tempbuffffff, 0, sizeof(tempbuffffff));
+  // for( i = 0; i < (pos < 2048 ? pos : 2048); i++ )
+  //   snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
+  // USERSCRIPT_LOG("SCRIPT: %s", tempbuffffff);
+
+  CustomScriptExecute(addr);
+}
 
 void userscripts_create() {
   DEBUG_LOG("%lu: userscript_create()", getGametime());
@@ -1480,7 +2320,6 @@ static void userscripts_draw() { // this is the worst code and I'm not proud of 
   }
 }
 
-extern int isdigit(int x);
 static void userscripts_ctrl() {
   if( hold_buttons & PSP_CTRL_UP ) {
     if( userscript_selected_val <= 0 ) {
@@ -1570,890 +2409,13 @@ static void userscripts_ctrl() {
         return;
       }
 
-      /***************************************************************
-      The following code was more of a PoC and just continued on..
-
-      Its neither good nor should it be executed in this function. It
-      really is very work in progress and contains bugs most probably.
-
-      Yes, it somehow works but please do not take it as an example as
-      this is not how it should be done! :D
-
-      TODO: organize this better
-      ****************************************************************/
       if( is_file_userscript(currentfile) ) {
         closeMenu();
-
-        USERSCRIPT_LOG("UserScript: %s", currentfile);
-
-        // // // // // // // SETTINGS // // // // // // // // // // // // //
-        extern int global_MainScriptSize;
-        extern int global_ScriptSpace;
-        extern int global_LargestMissionScriptSize;
-
-        int placeholder = 0xDEADB000; // base (+1 for each)
-        int customtextcounter = 0;
-
-
-        /************
-        - inside script space
-        - at the very end minus SCRIPT_SIZE !
-        -
-        ***************/
-
-        /// relative offset where script will be placed to MAIN = 0 (important for calculating label jumps!)
-        int roff = getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)) - SCRIPT_SIZE;
-        //DEBUG_LOG("roff: 0x%08X", roff);
-
-        /// physical address where script will be placed
-        uaddr addr = (uaddr)getInt(global_ScriptSpace + (LCS ? 0 : gp)) + roff;
-        //DEBUG_LOG("addr: 0x%08X", addr);
-
-
-        // // // // // // // // // // // // // // // // // // // // // // //
-
-        char file_path[PATH_MAX];
-        snprintf(file_path, sizeof(file_path), "%s%s", script_workfldr, currentfile);
-        SceUID file = sceIoOpen(file_path, PSP_O_RDONLY, 0777);
-        if( file >= 0 ) {
-
-          CustomScriptClear(addr, SCRIPT_SIZE); // zero script area in ScriptSpace
-
-          int j, k;
-          int opcode = -1;
-          byte script[SCRIPT_SIZE]; // TODO: size
-          for(array_uidx i = 0; i < SCRIPT_SIZE; i++) // poorly memset
-            script[i] = 0;
-
-          uint32 pos = 0, line = 0;
-          int tempint;
-          float tempflt;
-          char tempbuf[16];
-          char readbuf[SCRIPTLINELGT]; // SCRIPTLINELGT is max line length
-
-          char label_ch_arr[SUPPORT_LABEL][MAX_LABEL_LENGTH];
-          for(array_uidx i = 0; i < SUPPORT_LABEL; i++) // poorly memset label_ch_arr
-            label_ch_arr[i][0] = 0;
-          int label_pos_arr[SUPPORT_LABEL] = {0};
-          int label_pos_cur = 0;
-          char unk_label[SUPPORT_LABEL][MAX_LABEL_LENGTH]; // save unknown labels (placeholder = placeholderbase + array offset)
-          for(array_uidx i = 0; i < SUPPORT_LABEL; i++) // poorly memset unk_label
-            unk_label[i][0] = 0;
-          int unk_label_pos_cur = 0;
-          int lastif = -1, opcodessinceif = -1;
-          //int blockcomment = 0;
-
-          /// read in line by line /////////////////////////////////////////////////////////////////
-          while( _fgets(readbuf, SCRIPTLINELGT, file) ) { // read txt line by line
-            line++;
-
-            char *linehandle = readbuf; //create ptr to work with
-
-            /// remove preceding whitespaces and tabs
-            while( (*linehandle == ' ') || (*linehandle == '\t') )
-              ++linehandle;
-
-
-            /// skip comment lines
-            if( linehandle[0] == '/' && linehandle[1] == '/' )
-              continue;
-
-            /// block comments (needs more checks.. maybe later)
-            /*if( linehandle[0] == '/' && linehandle[1] == '*' ) { // start
-              blockcomment = 1;
-              continue;
-            }
-            if( linehandle[0] == '*' && linehandle[1] == '/' ) { // end
-              blockcomment = 0;
-              linehandle+=2; // continue after
-            }
-            if( blockcomment ) // we are inside a commented out block
-              continue;
-            */
-
-            /// error exit - script too big
-            if( pos >= SCRIPT_SIZE ) {
-              snprintf(buffer, sizeof(buffer), _t("~r~Error: Script exceeds currently supported size! Sorry"));
-              setTimedTextbox(buffer, 7.00f); //
-              sceIoClose(file);
-              return;
-            }
-
-            /// clean string
-            for(array_uidx i = 0; i < SCRIPTLINELGT-1; i++) {
-
-              /// replace tabs
-              if( readbuf[i] == '\t' )
-                readbuf[i] = ' ';
-
-              /// remove following comments
-              if( readbuf[i] == '/' && readbuf[i+1] == '/' )
-                readbuf[i] = 0;
-
-              /// remove new line
-              if( readbuf[i] == '\r' || readbuf[i] == '\n') {
-                readbuf[i] = 0;
-              }
-
-            }
-
-            /// check type of row
-            if( linehandle[4] == ':' && linehandle[5] == ' ' ) { // operation (eg: "024C: request_model 172")
-              opcodessinceif++;
-              int counter = -1, isfuncall = -1;
-              char *saveptr;
-              char *token = strtok_r(linehandle, " ", &saveptr); // get the first token
-              while( token != NULL ) { // walk through other tokens
-                // // // // // // // // // // // // // // //
-
-                /// opcode
-                if( counter == -1) {
-                  token[4] = 0; // zero out ":"
-                  snprintf(tempbuf, sizeof(tempbuf), "0x%s", token);
-                  opcode = strtol(tempbuf, NULL, 0);
-
-                  USERSCRIPT_LOG("opcode: 0x%04X", opcode);
-
-                  script[pos++] = opcode % 0x100;
-                  script[pos++] = opcode >> 8;
-
-                  /// special case (for later)
-                  if( opcode == 0x05AE || opcode == 0x05AF || // LCS
-                    opcode == 0x037A || opcode == 0x037B ) { // VCS
-                    isfuncall = 3; // first 3 vals without identifier (like 06 for int XX XX XX XX)
-                  } else isfuncall = 0;
-                }
-
-                /// rest are args or text
-                else {
-
-                  if( token[0] != '\0' ) {
-
-                    USERSCRIPT_LOG("arg_%i: '%s'", counter, token);
-
-                    if( STR_ENDSWITH_CHAR(token, ')') ) { // "x(y,z)" eg.: $3922(38@,10)
-
-                      /******
-                      0@    -> 6C
-                      14@   -> 7A
-                      $400  -> E7 90
-                      $1414 -> EB 86
-                      $1446 -> EB A6
-                      $4147 -> F6 33
-
-                      inner
-                      0@ -> 00
-                      1@ -> 01
-                      ...
-
-                      0 -> 00
-                      5 -> 05
-                      ...
-                      ********/
-
-                      for( array_uidx i = 0; i < strlen(token); i++ ) {
-                        if( token[i] == '(' ) token[i] = ' ';
-                        if( token[i] == ')' ) token[i] = 0;
-                        if( token[i] == ',' ) token[i] = ' ';
-                      } //DEBUG_LOG("token '%s' found ", token);
-
-                      char *saveptrsub = NULL;
-                      int subcounter = 0, tempint = 0;
-                      char *utoken = strtok_r(token, " ", &saveptrsub); // get the first sub token
-                      while( utoken != NULL ) { // walk through other sub tokens
-                        //DEBUG_LOG("utoken '%s'", utoken);
-
-                        if( STR_ENDSWITH_CHAR(utoken, '@') ) { // "..@" local variable (eg: 0@ 1@ 2@)
-
-                          utoken[strlen(utoken)-1] = '\0'; // remove the @
-                          tempint = strtol(utoken, NULL, 0); // convert
-
-                          if( subcounter == 0 ) { // OUTSIDE  X@( , )
-                            script[pos++] = (byte)tempint + (LCS ? 0x6C : 0x6D); // because 0@ is 0xC (for LCS)
-                          } else { // INSIDE  (X@, )
-                            script[pos++] = (byte)tempint;
-                          }
-
-                        } else if( STR_STARTSWITH_CHAR(utoken, '$') ) { // "$..." global variables (eg: $4028)
-                          utoken++; // remove the $
-                          tempint = strtol(utoken, NULL, 0); // convert
-
-                          uaddr adr = (int)&tempint; //fugly
-
-                          //eg LCS: $1414  -> 0x0586 -> EB 86 in script
-                          script[pos++] = (*(byte*)(adr+1)) + 0xE6; // TODO: vcs
-                          script[pos++] = *(byte*)adr; //
-
-                        } else { //must be simple int then
-                          tempint = strtol(utoken, NULL, 0); // convert
-                          script[pos++] = (byte)tempint;
-                        }
-
-                        subcounter++;
-                        utoken = strtok_r(NULL, " ", &saveptrsub);
-                      }
-
-                      //snprintf(buffer, sizeof(buffer), "~r~Error: '%s' in line %i not yet supported!", token, line);
-                      //setTimedTextbox(buffer, 7.00f); //
-                      //sceIoClose(file);
-                      //return;
-
-                    } else if( STR_STARTSWITH_CHAR(token, '$') ) { // "$...." global variables (eg: $4028, $PLAYER_CHAR)
-
-                      /** LCS *** (PSP) *******************
-                      533=PLAYER_SKIN    0x215  -> 0x15CE
-                      536=PLAYER_CHAR    0x218  -> 0x18CE
-                      540=PLAYER_ACTOR   0x21C  -> 0x1CCE
-                      560=ONMISSION      0x230  -> 0x30CE
-
-                      500          0x1F4  -> 0xF4CD
-                      512          0x200  -> 0x00CE
-                      4028         0xFBC  -> 0xBCDB
-                      ************************************/
-
-                      /** VCS *** (PSP) *******************
-                      782=PLAYER_CHAR   0x30E  -> 0x0ED0
-                      789=ONMISSION     0x315  -> 0x15D0  D0 15
-
-                      500          0x1F4  -> 0xF4CE  CE F4
-                      ************************************/
-                      token++; //remove the $
-                      if( STR_STARTSWITH_CHAR(token, '_') )
-                        token++;
-
-                      uaddr adr = 0;
-
-                      if( strcmp(token, "PLAYER_SKIN") == 0 ) { // LCS only
-                        tempint = 533;
-
-                      } else if( strcmp(token, "PLAYER_CHAR") == 0 ) {
-                        tempint = (LCS ? 536 : 782);
-                        if( VCS && mod_text_size == 0x00377D30 ) tempint = 759; // for ULUS v1.01
-                        if( LCS && mod_text_size == 0x00320A34 ) tempint = 534; // for ULUS v1.02
-
-                      } else if( strcmp(token, "PLAYER_ACTOR") == 0 ) { // LCS only
-                        tempint = 540;
-
-                      } else if( strcmp(token, "ONMISSION") == 0 ) {
-                        tempint = (LCS ? 560 : 789);
-                        if( VCS && mod_text_size == 0x00377D30 ) tempint = 766; // for ULUS v1.01
-                        if( LCS && mod_text_size == 0x00320A34 ) tempint = 558; // for ULUS v1.02
-
-                      } else {
-                        tempint = strtol(token, NULL, 0); // convert
-                      }
-                      //DEBUG_LOG("-> %i", tempint);
-
-                      adr = (int)&tempint; //fugly
-
-                      //eg LCS: $500  -> 0x01F4  -> 0xF4CD in script
-                      script[pos++] = (*(byte*)(adr+1)) + (LCS ? 0xCC : 0xCD);  // 0x01 + 0xCD = 0xCE
-                      script[pos++] = *(byte*)adr;                // 0xF4
-
-
-                    } else if ( STR_STARTSWITH_CHAR(token, '#') ) { //"#...."  alias
-
-                      /// TODO:
-                      //eg: " 024C: request_model #SCRIPT_SALCHAIR "
-
-                      snprintf(buffer, sizeof(buffer), _t("~r~Error: '%s' in line %i not yet supported!"), token, line);
-                      setTimedTextbox(buffer, 7.00f); //
-                      sceIoClose(file);
-                      return;
-
-                    } else if ( STR_STARTSWITH_CHAR(token, '@') ) { // "@....." (eg: @RAYS4_15305 )
-                      token++; // remove the @
-
-                      //DEBUG_LOG("Label = '%s'", token);
-
-                        /// error
-                        if ( VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
-                          snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
-                          setTimedTextbox(buffer, 7.00f); //
-                          sceIoClose(file);
-                          return;
-                        }
-
-                      uaddr adr = 0;
-                      int tempint = 0;
-
-                      /// if already in saved label array
-                      for(array_uidx i = 0; i < SUPPORT_LABEL; i++) { // loop saved labels
-                        if ( strcmp(label_ch_arr[i], token) == 0) {
-                          //tempint = 0 - label_pos_arr[i];   // write saved address from array (old.. negative offset like mission script works)
-                          tempint = roff + label_pos_arr[i];   // write saved address from array
-                          //DEBUG_LOG("%s found in array at position %i", token, i);
-                        }
-                      }
-                      if( tempint == 0 ) { // not found
-
-                        /// check if this is a script name in MAIN maybe //////////////////// experimental ////////////////
-                        uaddr address = 0;
-                        usize main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
-                        uaddr script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
-                        for(address = script_space; address < script_space + main_size; address++) {
-                          if( *(byte*)address == token[0] && *(byte*)(address+1) == token[1] ) { // first because faster
-                            //DEBUG_LOG("'%s' vs '%s'", token, getString(address, 0));
-                            if( strcmp(token, getString(address, 0)) == 0 ) {
-                              USERSCRIPT_LOG("string '%s' found @ 0x%08X in mainscript", token, address - script_space);
-
-                              tempint = address - script_space - 2; // 2 is opcode length
-                              if( VCS ) tempint--; // vcs has additional 0xA as string identifier
-
-                              goto skip_found;
-                            }
-                          }
-                        }
-                        /////////////////////////////////////////////////////////////////////////////////////////////////
-
-                        tempint = placeholder + unk_label_pos_cur; // write incremented placeholder
-
-                        /// check if label already in unknown array maybe
-                        int in_unk_arr = 0;
-                        for(array_uidx i = 0; i < SUPPORT_LABEL; i++) { // loop unknown labels
-                          if ( strcmp(unk_label[i], token) == 0) {
-                            in_unk_arr = 1;
-                            tempint = placeholder + i; // overwrite placeholder position
-                            //DEBUG_LOG("%s found in array at position %i", token, i);
-                            break;
-                          }
-                        }
-
-                        /// save label in unknown array (if not in already)
-                        if( !in_unk_arr && (unk_label_pos_cur < SUPPORT_LABEL) ) {
-                          snprintf(unk_label[unk_label_pos_cur], sizeof(unk_label[unk_label_pos_cur]), "%s", token);
-                          unk_label_pos_cur++;
-                        }
-                      }
-                      //DEBUG_LOG("write 0x%08X", tempint);
-
-                      skip_found:
-
-                        adr = (int)&tempint; // fugglyyy
-
-                        /// write to script
-                        script[pos++] = 0x06; // integer (4 Bytes)
-                        script[pos++] = *(byte*)adr;
-                        script[pos++] = *(byte*)(adr+1);
-                        script[pos++] = *(byte*)(adr+2);
-                        script[pos++] = *(byte*)(adr+3);
-
-                    } else if( STR_ENDSWITH_CHAR(token, '@') ) { // "....@" local variable (eg: 0@ 1@ 2@ ... decimal!)
-
-                      /** LCS ***
-                      0x0C = 0@
-                      0x0D = 1@
-                      0x0E = 2@
-                      ...
-                      ***********/
-                      token[strlen(token)-1] = '\0'; // remove the @
-                      tempint = strtol(token, NULL, 0); // convert
-                      script[pos++] = tempint + (LCS ? 0xC : 0xD); // because 0@ is 0xC (for LCS)
-
-
-                    } else if( STR_STARTSWITH_CHAR(token, '\'') ) { // "'xyz'" string
-                      token++; // remove ' at the beginning
-
-                      char identifier[CSTGXTLGT]; // the games GXT String OR full Custom Text
-                      memset(identifier, 0, sizeof(identifier)); // clear
-
-                      if( !STR_ENDSWITH_CHAR(token, '\'') ) { // custom text can span multiple tokens
-                        snprintf(identifier, sizeof(identifier), "%s ", token);
-                        token = strtok_r(saveptr, "\'", &saveptr); // custom text can have whitespaces.
-                        strncat(identifier, token, strlen(token));
-                      } else
-                        memcpy(identifier, token, strlen(token)-1);
-
-                      USERSCRIPT_LOG("String found: '%s'", identifier);
-
-                      extern uaddr ptr_gxtloadadr;
-                      if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) ) { // not found in GXT
-                        USERSCRIPT_LOG("not found in GXT.."); // could be custom string or special string at this point
-
-                        /// ignore special strings in the following opcodes (like special models eg "MAR_01") that are not in GXT
-                        if( // LCS
-                          opcode == 0x0161 ||  // set_zone_ped_info
-                          opcode == 0x0241 ||  // load_special_character
-                          opcode == 0x02E9 ||  // load_cutscene
-                          opcode == 0x02EB ||  // set_cutscene_anim
-                          opcode == 0x02F8 ||  // load_special_model
-                          opcode == 0x0357 ||  // undress_char
-                          opcode == 0x03A9 ||  // script_name
-                          opcode == 0x03D4 ||  // load_mission_audio
-                          opcode == 0x0505 ||  // is_player_wearing
-                          opcode == 0x0663 ||  // store_player_outfit
-
-                          // VCS
-                          opcode == 0x0159 ||  // load_special_character
-                          opcode == 0x01D1 ||  // load_special_model
-                          opcode == 0x020F ||  // undress_char
-                          opcode == 0x0238 ||  // script_name
-                          opcode == 0x0257 ||  // load_mission_audio
-                          opcode == 0x0318 ||  // is_player_wearing
-                          opcode == 0x035B     // is_player_in_info_zone
-
-                          //opcode == 0x0006
-
-                          ) {
-                          USERSCRIPT_LOG("-> special game string! don't touch");
-                          // do nothing
-
-                        } else { // custom string!
-                          if( customtextcounter < CSTGXTS ) { // check max supported custom strings
-
-                            /// save string as ushort in array
-                            int ctr = 0;
-                            memset(custom_gxts[customtextcounter], 0, CSTGXTLGT * sizeof(wchar));
-                            while(identifier[ctr] != 0x00) {
-                              custom_gxts[customtextcounter][ctr] = identifier[ctr];
-                              ctr++;
-                            }
-                            USERSCRIPT_LOG("-> custom string! %d (location %p)", customtextcounter, &custom_gxts[customtextcounter]);
-
-                            /// replace token with CUSTOM GXT LABEL
-                            snprintf(identifier, sizeof(identifier), "CUST_%02d", customtextcounter); // see cheats.c (name has to match obviously)
-
-                            customtextcounter++;
-                          } else {
-                            snprintf(buffer, sizeof(buffer), _t("~r~Error: Custom strings limit of %i reached."), CSTGXTS);
-                            setTimedTextbox(buffer, 7.00f); //
-                            sceIoClose(file);
-                            return;
-                          }
-                        }
-                      }
-
-                      /// write GXT name to script
-                      if( VCS ) script[pos++] = 0x0A;
-
-                      int ctr = 0;
-                      while( identifier[ctr] != 0x00 ) { //'\''
-                        script[pos++] = identifier[ctr];
-                        ctr++;
-
-                        if( ctr > 7 ) { // a gxt id string can't be longer than 7 chars!!
-                          snprintf(buffer, sizeof(buffer), _t("~r~Error: String '%s' in line %i too long!"), identifier, line);
-                          setTimedTextbox(buffer, 7.00f);
-                          sceIoClose(file);
-                          return;
-                        }
-                      }
-                      if( LCS ) {
-                        while( ctr < 8 ) {
-                          script[pos++] = 0x00; // odd? + 00
-                          ctr++;
-                        }
-                      } else {
-                        script[pos++] = 0x00;
-                      }
-
-
-                    } else if( isdigit((uchar)token[0]) || isdigit((uchar)token[1]) ) { /// "number"
-                      uaddr adr = 0;
-
-                      /****************************************
-                      01  0             int
-                      02  0.0           float
-                      03  XX            float (uppest byte)    2.0   = 03 40        0x40000000
-                      04  XX XX         float (upper half)    1.0    = 04 80 3F     0x3F800000
-                      05  XX XX XX      float               1337.5   = 05 30 A7 44  0x44A73000
-                      06  XX XX XX XX   int
-                      07  XX            int  -128 to 127
-                      08  XX XX         int 128 to ___
-                      09  XX XX XX XX   float               3.14152  = 09 AA 0E 49 40  0x40490EAA
-
-                      0A  String VCS only?!?
-                      ****************************************/
-
-                      /// contains "." then FLOAT
-                      if(strstr(token, ".") != NULL) {
-                        tempflt = (float)atof(token); // convert
-                        adr = (int)&tempflt; // fugly more
-                        if( *(byte*)(adr) != 0 ) { // 4 Bytes needed
-                          script[pos++] = 0x09; //
-                          script[pos++] = *(byte*)adr;
-                          script[pos++] = *(byte*)(adr+1);
-                          script[pos++] = *(byte*)(adr+2);
-                          script[pos++] = *(byte*)(adr+3);
-
-                        } else if( *(byte*)(adr+1) != 0 ) { // 3 Bytes needed
-                          script[pos++] = 0x05; //
-                          script[pos++] = *(byte*)(adr+1);
-                          script[pos++] = *(byte*)(adr+2);
-                          script[pos++] = *(byte*)(adr+3);
-
-                        } else if( *(byte*)(adr+2) != 0 ) { // 2 Bytes needed
-                          script[pos++] = 0x04; //
-                          script[pos++] = *(byte*)(adr+2);
-                          script[pos++] = *(byte*)(adr+3);
-
-                        } else if( *(byte*)(adr+3) != 0 ) { // 1 Byte needed
-                          script[pos++] = 0x03;
-                          script[pos++] = *(byte*)(adr+3);
-
-                        } else {  //0 Byte needed because value is 0.0
-                          script[pos++] = 0x02;
-                        }
-
-
-                      /// else INTEGER
-                      } else {
-                        tempint = strtol(token, NULL, 0); // convert
-                        //DEBUG_LOG("tempint: '%i' 0x%08X", tempint, tempint);
-
-                        /// special case
-                        if( isfuncall > 0 ) { // no identifier (like 08 for int XX XX) for 3 first args in function call opcodes
-                          script[pos++] = (byte)tempint;
-                          isfuncall--;
-
-                        /// normal
-                        } else {
-                          adr = (int)&tempint; // fugly
-
-                          /// TODO: most common hardcoded for now
-                          if( tempint == 0 ) {
-                            script[pos++] = 0x01;
-                          } else if( tempint == 1 ) {
-                            script[pos++] = 0x07;
-                            script[pos++] = 0x01;
-                          } else if( tempint == -1 ) {
-                            script[pos++] = 0x07;
-                            script[pos++] = 0xFF;
-                          } else {
-
-                            /******************************************************************
-                            Examples                              Sanny:
-                            0319: set_total_unique_jumps_to 0     // 19 03 01
-                            0319: set_total_unique_jumps_to 1     // 19 03 07 01
-                            0319: set_total_unique_jumps_to 2     // 19 03 07 02
-                            0319: set_total_unique_jumps_to 126   // 19 03 07 7E
-                            0319: set_total_unique_jumps_to 127   // 19 03 07 7F
-                            0319: set_total_unique_jumps_to 128   // 19 03 08 80 00
-                            0319: set_total_unique_jumps_to 129   // 19 03 08 81 00
-                            0319: set_total_unique_jumps_to 254   // 19 03 08 FE 00
-                            0319: set_total_unique_jumps_to 255   // 19 03 08 FF 00          !
-                            0319: set_total_unique_jumps_to 256   // 19 03 08 00 01
-                            0319: set_total_unique_jumps_to 80000 // 19 03 06 80 38 01 00
-                            0319: set_total_unique_jumps_to -1    // 19 03 07 FF             !
-                            0319: set_total_unique_jumps_to -1000 // 19 03 08 18 FC
-                            ******************************************************************/
-
-                            /// TODO: !!!
-                            //if( *(byte*)(adr+2) != 0 ) { //4 Bytes needed
-                              script[pos++] = 0x06; //
-                              script[pos++] = *(byte*)adr;
-                              script[pos++] = *(byte*)(adr+1);
-                              script[pos++] = *(byte*)(adr+2);
-                              script[pos++] = *(byte*)(adr+3);
-
-                            /*} else if( *(byte*)(adr+1) != 0 ) { //2 Bytes needed
-                              script[pos++] = 0x08; //
-                              script[pos++] = *(byte*)adr;
-                              script[pos++] = *(byte*)(adr+1);
-
-                            } else if( *(byte*)adr != 0 ) { //1 Byte needed        eg 172 = 0xAC but sanny uses 08 ?
-                              script[pos++] = 0x07; //
-                              script[pos++] = *(byte*)adr;
-
-                            } else { //1 Byte needed
-                              script[pos++] = 0x01; //0 Byte needed because value is 0
-                            }*/
-
-                          }
-                        }
-                      }
-
-
-                    } else { /// "keyword" (eg: and, or, radius, from, to, model, visibility.. etc)
-
-                      // most are to be ignored
-
-                      /// constants though
-                      if( strcmp(token, "TIMERA") == 0 ) {
-                        script[pos++] = 0x0A; //
-                      } else if( strcmp(token, "TIMERB") == 0 ) {
-                        script[pos++] = 0x0B; //
-                      }
-
-                      /// "if and" & "if or"
-                      if( opcode == 0x00DB || opcode == 0x0078 ) { // LCS & VCS
-                        opcodessinceif = -1;
-                        if( strcmp(token, "and") == 0 ) {
-                          script[pos++] = 0x07; // int  -128 to 127
-                          script[pos++] = 0x00; // 0x00 + number of and conditions (eg 0x4 = 4)
-                          USERSCRIPT_LOG("Number of conditions will be adjusted later!");
-                        } else if( strcmp(token, "or") == 0 ) {
-                          script[pos++] = 0x07; // int  -128 to 127
-                          script[pos++] = 0x14; // 0x14 + number of or conditions (eg 0x16 = 2, 0x17 = 3 ..)
-                          USERSCRIPT_LOG("Number of conditions will be adjusted later!");
-                        }
-                        lastif = pos-1;
-                      }
-                      if( lastif != -1 ) { // if "lastif" is not -1 then previously there was an "if and" or "if or" opcode which still needs its conditions parameter set!
-                        if( opcode == 0x004C || opcode == 0x004D || opcode == 0x0021 || opcode == 0x0022 ) { // set it once we reached "goto_if_false" or "goto_if_true"
-                          script[lastif] = script[lastif] + opcodessinceif; // add
-                          USERSCRIPT_LOG("Last 'if' has %d conditions and is now set!", opcodessinceif);
-                          lastif = -1; // reset
-                        }
-                      }
-
-                      if( VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
-                        if( strcmp(token, "enable") == 0 ) {
-                          break; // ignore "enable 1"
-                        }
-                      }
-
-                      // TODO: more?
-
-                    }
-                  } else {
-                    //DEBUG_LOG("empty arg string");
-                  }
-                }
-
-                // // // // // // // // // // // // // // //
-                token = strtok_r(NULL, " ", &saveptr);
-                counter++;
-              }
-
-
-              /**************
-              C0 04   07 02
-              BB 03   09 8B D4 8C 44   09 0C 96 8C C4   09 B4 C8 64 41   04 48 42   07 FD   07 FF
-              68 03   09 8B D4 8C 44   09 0C 96 8C C4   09 B4 C8 64 41   04 48 42   07 FE   01
-              D0 03   09 8B D4 8C 44   09 0C 96 8C C4   09 B4 C8 64 41
-              4E 00
-
-                04C0: set_area_visible 2
-                03BB: swap_nearest_building_model 1126.642 -1124.689 14.299 radius 50.0 from #WAREHOUSE3Z to #IZ_VIN
-                0368: set_visibility_of_closest_object_of_type 1126.642 -1124.689 14.299 radius 50.0 model #LODEHOUSE3Z visibility 0
-                03D0: load_scene 1126.642 -1124.689 14.299
-                004E: terminate_this_script
-
-
-              4C 02   08 AC 00
-              90 03
-              54 00   CE 18   0C   0D   0E
-              75 01   CE 18   0F
-              D3 02   0C 0D 0E 10
-              A5 00   08 AC 00   0C 0D 10 11
-              7A 01   11 0F
-              6E 03   CE 18   11
-              4E 00
-
-                024C: request_model 172
-                0390: load_all_models_now
-                0054: get_player_coordinates $PLAYER_CHAR store_to 0@ 1@ 2@
-                0175: get_player_heading $PLAYER_CHAR store_to 3@
-                02D3: get_ground_z_for_3d_coord 0@ 1@ 2@ store_to 4@
-                00A5: create_car 172 at 0@ 1@ 4@ store_to 5@
-                017A: set_car_heading 5@ to 3@
-                036E: put_player $PLAYER_CHAR in_car 5@
-                004E: terminate_this_script
-
-              **************/
-
-              USERSCRIPT_LOG("--------------------------------------");
-
-            } else if( STR_STARTSWITH_CHAR(linehandle, ':') ) { // label (eg ":DONS4_12258")
-              linehandle++; // skip the ":"
-
-              char *token = strtok(strtok(linehandle, "  "), " "); // get rid of whitespace and tabs
-
-              /// error check: SUPPORT_LABEL count
-              if( label_pos_cur >= SUPPORT_LABEL ) { //label matches
-                snprintf(buffer, sizeof(buffer), _t("~r~Error: Too many labels. (%i is max)"), SUPPORT_LABEL);
-                setTimedTextbox(buffer, 7.00f); //
-                sceIoClose(file);
-                return;
-              }
-
-
-              /// error check: label-name already in array
-              for( k = 0; k < label_pos_cur; k++ ) { // loop found labels array
-                USERSCRIPT_LOG("comparing for doubles: '%s' with '%s'", token, label_ch_arr[k]);
-                if( strcmp(token, label_ch_arr[k]) == 0 ) { // label matches
-                  snprintf(buffer, sizeof(buffer), _t("~r~Error: Found already used label '%s' in line %i?"), token, line);
-                  setTimedTextbox(buffer, 7.00f); //
-                  sceIoClose(file);
-                  return;
-                }
-
-              }
-
-              /// save label-name in array and corresponding placeholder in second array
-              if( label_pos_cur < SUPPORT_LABEL ) {
-                snprintf(label_ch_arr[label_pos_cur], sizeof(label_ch_arr[label_pos_cur]), "%s", token);
-
-                if( pos == 0 ) { // itsafix! mission script can't start with a :label -> write a NOP so label is at position 2 (- FE FF FF FF)
-                  script[pos++] = 0x00; //
-                  script[pos++] = 0x00; //
-                }
-
-                label_pos_arr[label_pos_cur] = pos; // save offset in array
-                label_pos_cur++;
-              }
-
-
-            /// the following can only happen when opcode is missing (write Opcodes in Sanny is disabled)
-            } else if( STR_STARTSWITH_CHAR(linehandle, '$') ) { // variable assign opcode (eg "$544 = -144.4412")
-
-              // enable Write Opcodes in Sanny
-              // 04 00   DB E7   07 01   //$4071 = 1
-
-              snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $...
-              setTimedTextbox(buffer, 7.00f); //
-              sceIoClose(file);
-              return;
-
-
-            } else if( linehandle[strlen(linehandle)-1] == '@' ) { // calculation opcode (eg "78@ == 1")
-
-              // enable Write Opcodes in Sanny
-              // 39 00   2F     07 02    //35@ == 2
-
-              snprintf(buffer, sizeof(buffer), _t("~r~Error: Missing opcode in line %i? (%s)"), line, linehandle); // $...
-              setTimedTextbox(buffer, 7.00f); //
-              sceIoClose(file);
-              return;
-
-
-            } else {
-
-              //can be empty row!
-
-
-              //can be a comment row!
-
-
-              //can be (eg: 33@ = 1)
-                // TODO:
-
-                /*snprintf(buffer, sizeof(buffer), "~r~Error: Missing opcode in line %i? (%s)", line, linehandle); //$...
-                setTimedTextbox(buffer, 7.00f); //
-                sceIoClose(file);
-                return;*/
-
-
-              /// but also custom calls.. (this was a test, works for PS2 scm but not PSP)
-              /*if( STR_STARTSWITH_CHAR(linehandle, '!') ) {
-                linehandle++;
-
-                ///patch the debug menu scroll for LCS
-                if( LCS && strcmp(linehandle, "patchDBGMENU") == 0 ) {
-
-
-                  uaddr address = 0;
-                  int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
-                  int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
-                  for(address = script_space; address < script_space + main_size; address++) {
-                    if( *(byte*)(address) == 0x4D &&
-                      *(byte*)(address+15) == 0x0F &&
-                      *(byte*)(address+31) == 0x07 &&
-                      *(byte*)(address+52) == 0x0F ) {
-
-                      // *(byte*)(address+10) = 0x08;
-                      // *(byte*)(address+0x24) = 0x08;
-
-
-                      DEBUG_LOG("found @ 0x%08X in mainscript", address - script_space);
-                      //snprintf(buffer, sizeof(buffer), "found @ 0x%08X in mainscript", address - script_space);
-                      //setTimedTextbox(buffer, 7.00f); //
-                      //break;
-                    }
-                  }
-
-
-                }
-                //setTimedTextbox("custom call found", 7.00f); //
-              }*/
-
-            }
-
-          }
-
-          sceIoClose(file);
-
-
-          USERSCRIPT_LOG("LABELs: %i/%i", label_pos_cur, SUPPORT_LABEL);
-          for( array_uidx i = 0; i < SUPPORT_LABEL; i++ ) {
-            if( strlen(label_ch_arr[i]) == 0 ) break;
-            ///USERSCRIPT_LOG("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], 0 - label_pos_arr[i]); // negative offsets in mission script
-            USERSCRIPT_LOG("label_ch_arr[%i]: '%s' (pos: %i -> 0x%08X)", i, label_ch_arr[i], label_pos_arr[i], roff + label_pos_arr[i]); // now positive jump offest
-          }
-          USERSCRIPT_LOG("UNKNOWN LABELs: %i/%i", unk_label_pos_cur, SUPPORT_LABEL);
-          for( array_uidx i = 0; i < SUPPORT_LABEL; i++ ) {
-            if( strlen(unk_label[i]) == 0 ) break;
-            USERSCRIPT_LOG("unk_label[%i]: '%s' (0x%08X)", i, unk_label[i], placeholder + i);
-          }
-
-
-          /// now fix placeholder for jumps
-          for(array_uidx i = 0; i < pos - 4; i++) { // loop script
-
-            if( script[i] == 0x06) { // int with 4 Bytes
-
-              for(j = 0; j < unk_label_pos_cur; j++) { // loop unknown labels array
-
-                int tempint = placeholder + j;
-                uaddr adr = (uaddr)&tempint; // fugly
-
-                if( (script[i+1] == *(byte*)adr) &&
-                    (script[i+2] == *(byte*)(adr+1)) &&
-                    (script[i+3] == *(byte*)(adr+2)) &&
-                    (script[i+4] == *(byte*)(adr+3)) ) {
-
-                  USERSCRIPT_LOG("found placeholder at script position %i", i);
-
-                  /// replace placeholder
-                  for(k = 0; k < label_pos_cur; k++ ) { // loop found labels array
-                    USERSCRIPT_LOG("comparing: '%s' with '%s'", unk_label[j], label_ch_arr[k]);
-
-                    if( strcmp(unk_label[j], label_ch_arr[k]) == 0 ) { // label matches
-                      //USERSCRIPT_LOG("labels match: '%s' (to be replaced with; 0x%08X)", unk_label[j], 0 - label_pos_arr[k]);
-                      USERSCRIPT_LOG("labels match: '%s' (to be replaced with; 0x%08X)", unk_label[j], roff + label_pos_arr[k]);
-
-                      //tempint = 0 - label_pos_arr[k]; // (old.. negative offset like mission script works)
-                      tempint = roff + label_pos_arr[k];
-                      adr = (int)&tempint; //more fugly
-
-                      script[i+1] = *(byte*)adr;
-                      script[i+2] = *(byte*)(adr+1);
-                      script[i+3] = *(byte*)(adr+2);
-                      script[i+4] = *(byte*)(adr+3);
-                      break;
-                    }
-                  }
-
-                  /// error goto label not found in Labels
-                  if( tempint == placeholder + j ) { // if tempint not overwriten (ugly)
-                    snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' not found?!!"), unk_label[j]);
-                    setTimedTextbox(buffer, 7.00f); //
-                    return;
-                  }
-                  i += 4;
-                  break;
-                }
-              }
-            }
-          }
-
-          USERSCRIPT_LOG("script size: %lu/%u", pos, SCRIPT_SIZE);
-
-          CustomScriptPlace(script, addr, pos); // "addr" physical address (must be in script space though), "pos" is the length/size
-
-          // char tempbuffffff[2048]; // quick temp printout
-          // memset(&tempbuffffff, 0, sizeof(tempbuffffff));
-          // for( i = 0; i < (pos < 2048 ? pos : 2048); i++ )
-          //   snprintf(tempbuffffff, sizeof(tempbuffffff), "%s %02X", tempbuffffff, script[i]);
-          // USERSCRIPT_LOG("SCRIPT: %s", tempbuffffff);
-
-          CustomScriptExecute(addr);
-        }
+        userscript_run(currentfile);
 
         // // // // // // // // // // // // // // // // // // // //
         //snprintf(buffer, sizeof(buffer), "Success: '%s' executed!", currentfile);
-        //setTimedTextbox(buffer, 7.00f); //
+        //setTimedTextbox(buffer, 7.00f);
       }
 
       ////////////////////////////////////////////////////////////
