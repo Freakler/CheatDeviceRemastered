@@ -11,3 +11,4 @@
 	url = https://codeberg.org/StoriesPatch/StoriesRWSDK
 [submodule "ext/CDRLoader"]
 	path = ext/CDRLoader
+	url = https://codeberg.org/daniemun/CDRLoader
