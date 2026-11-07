@@ -4572,7 +4572,7 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
         } else if( i == 2 ) { // pplayer
           drawStringNoTVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "pplayer");
 
-          if( pplayer > 0 ) {
+          if( pplayer ) {
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "pplayer = 0x%08lX", pplayer);
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, CYAN, "Mass = %.2f, %.2f", getFloat(pplayer+0xD0), getFloat(pplayer+0xD4));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, CYAN, "animation: 0x%0X", getByte(pplayer + (LCS ? 0x250 : 0x894)));
@@ -6571,7 +6571,7 @@ void *heavy_player(int calltype, int keypress, bool defaultstatus) {
       break;
 
     case FUNC_CHECK:
-      if( pplyrbckp != pplayer && pplayer > 0 ) { // new pplayer object loaded -> let apply take care of re-setting
+      if( pplyrbckp != pplayer && pplayer ) { // new pplayer object loaded -> let apply take care of re-setting
         backup1 = 0; backup2 = 0; pplyrbckp = 0; vehicleflag = 0;
       }
       break;
@@ -7376,7 +7376,7 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
     case FUNC_SET:
       status = defaultstatus;
 
-      if( pplayer > 0 && lastcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) {
+      if( pplayer && lastcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE) ) {
         setVehicleGravityApplies(lastcar, true); // restore gravity for vehicle
         setVehicleWheelCamber(lastcar, wheels);  // restore wheels camber to default value
         wheels = 0;
@@ -7858,7 +7858,7 @@ void *traffic_density(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_SET:
       status = defaultstatus;
-      if(!status && pplayer > 0) // check if game in playable state
+      if(!status && pplayer) // check if game in playable state
         goto trafficdensity_disable;
       break;
   }
@@ -7955,7 +7955,7 @@ void *peds_density(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_SET:
       status = defaultstatus;
-      if( !status && pplayer > 0 )
+      if( !status && pplayer )
         goto peddensity_disable;
       break;
   }
@@ -8526,7 +8526,7 @@ void *fireproof_cheat(int calltype, int keypress, bool defaultstatus) {
  **************************************************************************************************************************************/
 void *wanted_level(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status = false;
-  static uint8 stars = 0;
+  static int stars = 0;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -8544,7 +8544,7 @@ void *wanted_level(int calltype, int keypress, bool defaultstatus, int defaultva
       break;
 
     case FUNC_CHECK:
-      if( !status && pplayer > 0 ) // check current level when cheat deactivated
+      if( !status && pplayer ) // check current level when cheat deactivated
         stars = getWantedLevel(pplayer);
       break;
 
@@ -8582,7 +8582,7 @@ void *wanted_level(int calltype, int keypress, bool defaultstatus, int defaultva
       else stars = 0;
 
       /// reset maximum level possible to 6
-      if( !status && pplayer > 0 )
+      if( !status && pplayer )
         SetMaxWantedLevel(6);
 
       break;
@@ -8810,7 +8810,7 @@ void *world_time(int calltype, int keypress, bool defaultstatus, int defaultval 
 
     case FUNC_SET:
       status = defaultstatus;
-      if( pplayer > 0 ) { // check if game in playable state
+      if( pplayer ) { // check if game in playable state
         if( status ) goto worldtime_enable; // TODO: change this
         else goto worldtime_disable; // TODO: change this
       } break;
@@ -8943,7 +8943,7 @@ void *world_realtimeclock(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_SET:
       status = defaultstatus;
-      if( pplayer > 0 ) { // check if game in playable state
+      if( pplayer ) { // check if game in playable state
         if( status )
           goto realtime_enable;
         else goto realtime_disable;
@@ -9130,14 +9130,14 @@ void *world_waterlevel(int calltype, int keypress, bool defaultstatus, int defau
 
       if( defaultval >= 500 && defaultval <= 2000 ) {  // very rough values for bounds check
         level = (float)((float)(defaultval-1000)/10.0f);
-        //if(status && pplayer > 0) // only set when game active and cheat on
+        //if(status && pplayer) // only set when game active and cheat on
         //  setWaterLevel(level);
         //else
           if( status ) onetimeapply = 1;
 
       } else {
         level = LCS ? 0.00f : 6.00f; // set default height
-        if( !status && pplayer > 0 ) // only reset when game active and cheat off
+        if( !status && pplayer ) // only reset when game active and cheat off
           resetWaterLevel();
       }
       break;
@@ -10884,10 +10884,10 @@ void *dev_flag(int calltype, int keypress, bool defaultstatus) {
     case FUNC_SET:
       status = defaultstatus;
       //if( global_developerflag > 0 ) {
-        if( status )  //&& pplayer > 0
+        if( status )  //&& pplayer
           goto devflag_enable;
         else {
-          if( pplayer > 0 ) // dev flag is off on game boot and doesn't need to be set! only when triggered by player while playing, right?!
+          if( pplayer ) // dev flag is off on game boot and doesn't need to be set! only when triggered by player while playing, right?!
             goto devflag_disable;
         }
       //}

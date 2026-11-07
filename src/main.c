@@ -5226,7 +5226,7 @@ void draw() { // called by hijacked game function
       #endif
       !flag_draw_DEBUG ) {
 
-    if( pplayer > 0 ) {
+    if( pplayer ) {
       drawStringNoVarg(ALIGN_RIGHT, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 470.0f, 95.0f, WHITE, "Coordinates");
       drawUiBox(385.0f, 115.0f, 85.0f, 75.0f, 2.0f, BLACK, ALPHABLACK);
 
