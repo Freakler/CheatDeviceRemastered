@@ -192,6 +192,7 @@ uaddr global_maxhealthmult    = 0;
 uaddr global_maxarmormult     = 0;
 uaddr global_unlimtedsprint   = 0;
 uaddr global_unlimtedswim     = 0;
+uaddr global_fireproof        = 0;
 uaddr global_ismultiplayer    = 0;
 uaddr global_clockmultiplier  = 0;
 uaddr global_cheatusedboolean = 0;
@@ -995,6 +996,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0013F3E4: 0x90A50164 'd...' - lbu        $a1, 356($a1)
     *******************************************************************/
     global_unlimtedsprint = (_lh(addr+0x5C) * 0x10000) + (int16)_lh(addr+0x60) + _lh(addr+0x68); //actual address!
+    global_fireproof = global_unlimtedsprint + 0x2; // Only 2 bytes in front!
     PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_00385c74_playerNeverGetsTired
     return true;
   }
@@ -2713,6 +2715,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     *******************************************************************/
     global_unlimtedsprint = (_lh(addr+0x50) * 0x10000) + (int16)_lh(addr+0x58) + _lh(addr+0x60); // actual address!
     global_unlimtedswim = global_unlimtedsprint-1; // Yes, it is always 1 byte behind unlimited_sprinting bool
+    global_fireproof = global_unlimtedsprint + 0x2; // Only 2 bytes in front!
     PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_003da5fd_playerNeverGetsTired
 
     return true;
@@ -8459,7 +8462,58 @@ void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
   return NULL;
 }
 
+void *fireproof_cheat(int calltype, int keypress, bool defaultstatus) {
+  static bool status;
+  static bool locked_bool = false;
 
+  switch( calltype ) {
+    case FUNC_GET_STATUS:
+      return (int*)(status || locked_bool);
+
+    case FUNC_GET_STRING:
+      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
+      return (void*)retbuf;
+    
+    case FUNC_CHECK:
+      status = getFireproofStatus();
+      break;
+
+    case FUNC_APPLY:
+      if ( locked_bool ) setFireproofStatus(true);
+      break;
+
+    case FUNC_CHANGE_VALUE:
+      if( keypress == PSP_CTRL_CROSS ) { // CROSS
+        if( status ) {
+          fireproof_disable:
+          status = false;
+        } else status = true;
+        
+        setFireproofStatus(status);
+      }
+
+      else if( keypress == PSP_CTRL_SQUARE && status ) { // CROSS
+        locked_bool = !locked_bool;
+      }
+
+      else if( keypress == PSP_CTRL_TRIANGLE ) {
+        #ifdef HEXEDITOR
+        hex_marker_clear();
+        hex_marker_addx(global_fireproof, sizeof(bool));
+        hexeditor_create(global_fireproof, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> fireproof bool");
+        #endif
+      }
+      break;
+
+    case FUNC_SET: // TODO: not used currently
+      status = defaultstatus;
+      if( pplayer && !status )// check if game in playable state
+        goto fireproof_disable;
+      break;
+  }
+
+  return NULL;
+}
 
 /** Wanted level ************************************************************************************
  *

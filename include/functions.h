@@ -147,6 +147,8 @@ extern bool getUnlimitedSprintStatus();
 extern void setUnlimitedSprintStatus(bool value);
 extern bool getUnlimitedSwimStatus();
 extern void setUnlimitedSwimStatus(bool value);
+extern bool getFireproofStatus();
+extern void setFireproofStatus(bool value);
 
 extern float getPedFacingDirectionInDegree(uaddr ped_base_adr);
 

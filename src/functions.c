@@ -65,6 +65,7 @@ extern uaddr global_maxhealthmult;
 extern uaddr global_maxarmormult;
 extern uaddr global_unlimtedsprint;
 extern uaddr global_unlimtedswim;
+extern uaddr global_fireproof;
 extern uaddr global_ismultiplayer;
 extern uaddr global_clockmultiplier;
 extern uaddr global_displaysettings;
@@ -1801,6 +1802,14 @@ bool getUnlimitedSwimStatus() {
 
 void setUnlimitedSwimStatus(bool value) {
   setByte(global_unlimtedswim, value);
+}
+
+bool getFireproofStatus() {
+  return getByte(global_fireproof);
+}
+
+void setFireproofStatus(bool value) {
+  setByte(global_fireproof, value);
 }
 
 int getWantedLevel(uaddr ped_base_adr) {

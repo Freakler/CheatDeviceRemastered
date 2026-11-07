@@ -209,6 +209,7 @@ extern void *automaticflipover(int calltype, int keypress, bool defaultstatus) ;
 extern void *driveonwalls(int calltype, int keypress, bool defaultstatus);
 extern void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus);
 extern void *unlimited_swimming(int calltype, int keypress, bool defaultstatus);
+extern void *fireproof_cheat(int calltype, int keypress, bool defaultstatus);
 extern void *pickup_spawner(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval);
 extern void *player_model(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval);
 extern void *vehicle_spawner(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval);
