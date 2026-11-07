@@ -258,8 +258,8 @@ const CDRMenuItem main_menu[] = {
   {"Player"                           , CAT_PLAYER  , MENU_CATEGORY    , true  , true  , true  , true  , 0x245F , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , "" },
   {"Infinite Health & Armor"          , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x1A93 , OFF , godmode              , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are immune to explosions, gunshots, fall damage, fire etc.." },
   {"Unlimited Ammo & No reloading"    , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x18AB , OFF , unlimited_ammo       , "CROSS: Enable/Disable Cheat"      , ""                                   , "All your Weapons have unlimited ammunition and no reloading needed." },
-  {"Unlimited sprinting"              , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x11E0 , -1  , unlimited_sprinting  , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from sprinting ever again." },
-  {"Unlimited swimming"               , CAT_PLAYER  , MENU_SWITCH      , false , true  , true  , false , 0x11E1 , -1  , unlimited_swimming   , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are never getting tired from swimming ever again." },
+  {"Unlimited sprinting"              , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x11E0 , -1  , unlimited_sprinting  , "CROSS: Enable/Disable Cheat"      , "SQUARE: Lock Setting"               , "You are never getting tired from sprinting ever again." },
+  {"Unlimited swimming"               , CAT_PLAYER  , MENU_SWITCH      , false , true  , true  , false , 0x11E1 , -1  , unlimited_swimming   , "CROSS: Enable/Disable Cheat"      , "SQUARE: Lock Setting"               , "You are never getting tired from swimming ever again." },
   {"Walking Speed:"                   , CAT_PLAYER  , MENU_VALSWITCH   , true  , true  , true  , false , 0x192C , OFF , walking_speed        , "CROSS: Enable/Disable Cheat"      , "CIRCLE: Disable and reset"          , "Adjust your speed of walking, sprinting etc" },
   {"Invisible"                        , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x1D18 , OFF , invisible            , "CROSS: Enable/Disable Cheat"      , ""                                   , "You are invisible but can still be attacked." },
   {"Ignored by everyone"              , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x155A , OFF , ignored              , "CROSS: Enable/Disable Cheat"      , ""                                   , "Everyone including police and mission enemys will ignore you." },
@@ -5719,6 +5719,7 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
             color = COLOR_CHEAT_OFF;
             drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x-30, y, color, "OFF");
           }
+          val = surrent_get(FUNC_GET_STRING, 0);
           break;
 
         case MENU_VALSWITCH: // ON/OFF + values

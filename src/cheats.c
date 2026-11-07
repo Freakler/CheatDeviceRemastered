@@ -8355,28 +8355,38 @@ void *max_armor(int calltype, int keypress) {
  **************************************************************************************************************************************/
 void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus) {
   static bool status;
+  static bool locked_bool = false;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
-      return (int*)status;
+      return (int*)(status || locked_bool);
 
-    case FUNC_APPLY:
-      setUnlimitedSprintStatus(true);
-      //setByte(pplayer+0xbb3, 0x1); //this alone works as well for LCS
-      break;
+    case FUNC_GET_STRING:
+      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
+      return (void*)retbuf;
 
     case FUNC_CHECK:
-      if( !status ) status = getUnlimitedSprintStatus();
+      status = getUnlimitedSprintStatus();
+      break;
+
+    case FUNC_APPLY:
+      if ( locked_bool ) setUnlimitedSprintStatus(true);
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           unlimsprint_disable:
-          setUnlimitedSprintStatus(false);
           status = false;
         } else status = true;
+
+        setUnlimitedSprintStatus(status);
       }
+
+      if( keypress == PSP_CTRL_SQUARE && status ) { // CROSS
+        locked_bool = !locked_bool;
+      }
+
       if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
@@ -8388,10 +8398,8 @@ void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_SET: // TODO: not used currently
       status = defaultstatus;
-      if( pplayer > 0 ) { // check if game in playable state
-        if( !status )
-          goto unlimsprint_disable;
-      }
+      if( pplayer && !status ) // check if game in playable state
+        goto unlimsprint_disable;
       break;
   }
 
@@ -8400,29 +8408,39 @@ void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus) {
 
 void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
   static bool status;
+  static bool locked_bool = false;
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
-      return (int*)status;
+      return (int*)(status || locked_bool);
 
-    case FUNC_APPLY:
-      setUnlimitedSwimStatus(true);
+    case FUNC_GET_STRING:
+      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
+      return (void*)retbuf;
+    
+    case FUNC_CHECK:
+      status = getUnlimitedSwimStatus();
       break;
 
-    case FUNC_CHECK:
-      if( !status ) status = getUnlimitedSwimStatus();
+    case FUNC_APPLY:
+      if ( locked_bool ) setUnlimitedSwimStatus(true);
       break;
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           unlimswim_disable:
-          setUnlimitedSwimStatus(false);
           status = false;
         } else status = true;
         
+        setUnlimitedSwimStatus(status);
       }
-      if( keypress == PSP_CTRL_TRIANGLE ) {
+
+      else if( keypress == PSP_CTRL_SQUARE && status ) { // CROSS
+        locked_bool = !locked_bool;
+      }
+
+      else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_unlimtedswim, sizeof(bool));
@@ -8433,10 +8451,8 @@ void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_SET: // TODO: not used currently
       status = defaultstatus;
-      if( pplayer > 0 ) { // check if game in playable state
-        if( !status )
-          goto unlimswim_disable;
-      }
+      if( pplayer && !status )// check if game in playable state
+        goto unlimswim_disable;
       break;
   }
 
