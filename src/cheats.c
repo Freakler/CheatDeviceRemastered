@@ -7622,41 +7622,44 @@ void *driveonwalls(int calltype, int keypress, bool defaultstatus) {
   return NULL;
 }
 
+static const u8string vehicle_color_strings[sizeof(CRGBA) - 1] =
+{
+  "R: >%u< | G:  %u | B:  %u",
+  "R:  %u | G: >%u< | B:  %u",
+  "R:  %u | G:  %u | B: >%u<"
+};
 
 /** Current Vehicle Color ********************************************************************************************
  *
  * Completion:   99% :/
  *
- * TODO:  - make LCS cheat same as VCS. Copy real color value to pos: 127 and adjust there like in VCS
+ * TODO:  - make LCS cheat same as VCS. Copy real color value to color_channel: 127 and adjust there like in VCS
  *
  * Notes:     for VCS the full color value is in vehcile_object @ 0x224 & 0x228 while LCS uses presets
  ******************************************************************************************************************************************************/
 void *vehicle_base_color(int calltype, int keypress, bool defaultstatus UNUSED) {
-  static array_uidx lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
+  static uint8 lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
   static CRGBA vcs_color = COLOR32(0);  // VCS : 0xFFRRGGBB  -> in ram  -> BB GG RR FF   BB GG RR FF
-  static array_idx pos = 2;
+  static array_uidx color_channel = 0;
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING:
-        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%i", lcs_color);
-        if( VCS ) {
-          snprintf(retbuf, sizeof(retbuf), pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") :
-                          pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") :
-                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), vcs_color.r, vcs_color.g, vcs_color.b);
-        }
+        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%u", lcs_color);
+        else if( VCS ) snprintf(retbuf, sizeof(retbuf), vehicle_color_strings[color_channel], vcs_color.r, vcs_color.g, vcs_color.b);
+
         return (void *)retbuf;
 
       case FUNC_CHECK:
         if( LCS ) lcs_color = lcs_getVehicleColorBase( pcar );
-        if( VCS ) vcs_color = vcs_getVehicleColorBase( pcar );
+        else if( VCS ) vcs_color = vcs_getVehicleColorBase( pcar );
         break;
 
       case FUNC_CHANGE_VALUE:
         if( keypress == PSP_CTRL_TRIANGLE ) {
           #ifdef HEXEDITOR
-          int temp = pcar + (LCS ? 0x1F0 : 0x224);
+          uaddr temp = pcar + (LCS ? 0x1F0 : 0x224);
           hex_marker_clear();
-          hex_marker_addx(temp, (LCS ? sizeof(uint8) : sizeof(int)));
+          hex_marker_addx(temp, (LCS ? sizeof(uint8) : sizeof(CRGBA)));
           hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> Primary Color");
           #endif
           break;
@@ -7664,30 +7667,22 @@ void *vehicle_base_color(int calltype, int keypress, bool defaultstatus UNUSED) 
 
         if( VCS ) {
           if( keypress == PSP_CTRL_CROSS ) { // CROSS
-            pos--;
-            if( pos < 0 ) pos = 2;
+            color_channel++; color_channel %= (sizeof(CRGBA) - 1);
             break;
           }
 
-          if( keypress == PSP_CTRL_LEFT ) {
-            if( pos == 2 ) if( vcs_color.r > 0x00 ) vcs_color.r--;
-            if( pos == 1 ) if( vcs_color.g > 0x00 ) vcs_color.g--;
-            if( pos == 0 ) if( vcs_color.b > 0x00 ) vcs_color.b--;
-          }
-          if( keypress == PSP_CTRL_RIGHT) {
-            if( pos == 2 ) if( vcs_color.r < 0xFF ) vcs_color.r++;
-            if( pos == 1 ) if( vcs_color.g < 0xFF ) vcs_color.g++;
-            if( pos == 0 ) if( vcs_color.b < 0xFF ) vcs_color.b++;
-          }
+          if( keypress == PSP_CTRL_LEFT && vcs_color.bytes[color_channel] > 0x00 )
+            vcs_color.bytes[color_channel]--;
+          else if( keypress == PSP_CTRL_RIGHT  && vcs_color.bytes[color_channel] < 0xFF )
+            vcs_color.bytes[color_channel]++;
 
           vcs_setVehicleColorBase(pcar, vcs_color);
         }
-        if( LCS ) {
-          if( keypress == PSP_CTRL_LEFT && lcs_color > 0 ) {
+        else if( LCS ) {
+          if( keypress == PSP_CTRL_LEFT && lcs_color > 0 )
             lcs_color--;
-          } else if( keypress == PSP_CTRL_RIGHT && lcs_color < 127 ) {
+          else if( keypress == PSP_CTRL_RIGHT && lcs_color < 127 )
             lcs_color++;
-          }
 
           lcs_setVehicleColorBase(pcar, lcs_color);
         }
@@ -7696,37 +7691,34 @@ void *vehicle_base_color(int calltype, int keypress, bool defaultstatus UNUSED) 
 
   } else {
     if( calltype == FUNC_GET_STRING )
-      return "/"; // not in a car
+      return "None"; // not in a car
   }
   return NULL;
 }
 
 void *vehicle_stripe_color(int calltype, int keypress, bool defaultstatus UNUSED) {
-  static array_uidx lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
+  static uint8 lcs_color = 0; // LCS : 0 to 127          BASE         STRIPE
   static CRGBA vcs_color = COLOR32(0);  // VCS : 0xFFRRGGBB  -> in ram  -> BB GG RR FF   BB GG RR FF
-  static array_idx pos = 2;
+  static array_uidx pos = 0;
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING:
-        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%i", lcs_color);
-        if( VCS ) {
-          snprintf(retbuf, sizeof(retbuf), pos == 0 ? _t("Red: %i Green: %i Blue:>%i<") :
-                          pos == 1 ? _t("Red: %i Green:>%i<Blue: %i") :
-                          pos == 2 ? _t("Red:>%i<Green: %i Blue: %i") : _t("error"), vcs_color.r, vcs_color.g, vcs_color.b);
-        }
+        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%u", lcs_color);
+        else if( VCS ) snprintf(retbuf, sizeof(retbuf), vehicle_color_strings[pos], vcs_color.r, vcs_color.g, vcs_color.b);
+
         return (void *)retbuf;
 
       case FUNC_CHECK:
         if( LCS ) lcs_color = lcs_getVehicleColorStripe( pcar );
-        if( VCS ) vcs_color = vcs_getVehicleColorStripe( pcar );
+        else if( VCS ) vcs_color = vcs_getVehicleColorStripe( pcar );
         break;
 
       case FUNC_CHANGE_VALUE:
         if( keypress == PSP_CTRL_TRIANGLE ) {
           #ifdef HEXEDITOR
-          int temp = pcar + (LCS ? 0x1F1 : 0x228);
+          uaddr temp = pcar + (LCS ? 0x1F1 : 0x228);
           hex_marker_clear();
-          hex_marker_addx(temp, (LCS?sizeof(uint8):sizeof(int)));
+          hex_marker_addx(temp, (LCS ? sizeof(uint8) : sizeof(CRGBA)));
           hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> Secondary Color");
           #endif
           break;
@@ -7734,29 +7726,22 @@ void *vehicle_stripe_color(int calltype, int keypress, bool defaultstatus UNUSED
 
         if( VCS ) {
           if( keypress == PSP_CTRL_CROSS ) { // CROSS
-            pos--;
-            if( pos < 0) pos = 2;
+            pos++; pos %= (sizeof(CRGBA) - 1);
             break;
           }
-          if( keypress == PSP_CTRL_LEFT ) {
-            if( pos == 2 ) if( vcs_color.r > 0x00 ) vcs_color.r--;
-            if( pos == 1 ) if( vcs_color.g > 0x00 ) vcs_color.g--;
-            if( pos == 0 ) if( vcs_color.b > 0x00 ) vcs_color.b--;
-          }
-          if( keypress == PSP_CTRL_RIGHT ) {
-            if( pos == 2 ) if( vcs_color.r < 0xFF ) vcs_color.r++;
-            if( pos == 1 ) if( vcs_color.g < 0xFF ) vcs_color.g++;
-            if( pos == 0 ) if( vcs_color.b < 0xFF ) vcs_color.b++;
-          }
+
+          if( keypress == PSP_CTRL_LEFT && vcs_color.bytes[pos] > 0x00 )
+            vcs_color.bytes[pos]--;
+          else if( keypress == PSP_CTRL_RIGHT && vcs_color.bytes[pos] < 0xFF )
+            vcs_color.bytes[pos]++;
 
           vcs_setVehicleColorStripe(pcar, vcs_color);
         }
-        if( LCS ) {
-          if( keypress == PSP_CTRL_LEFT && lcs_color > 0 ) {
+        else if( LCS ) {
+          if( keypress == PSP_CTRL_LEFT && lcs_color > 0 )
             lcs_color--;
-          } else if( keypress == PSP_CTRL_RIGHT && lcs_color < 127 ) {
+          else if( keypress == PSP_CTRL_RIGHT && lcs_color < 127 )
             lcs_color++;
-          }
 
           lcs_setVehicleColorStripe(pcar, lcs_color);
         }
@@ -7765,11 +7750,10 @@ void *vehicle_stripe_color(int calltype, int keypress, bool defaultstatus UNUSED
 
   } else {
     if( calltype == FUNC_GET_STRING )
-      return "/"; // not in a car
+      return "None"; // not in a car
   }
   return NULL;
 }
-
 
 
 /** Weather ************************************************************************************
@@ -7810,15 +7794,15 @@ void *world_weather(int calltype, int keypress, bool defaultstatus, int defaultv
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         status = !status; // switch status
-        if( status == 0 )
-          CWeather_ReleaseWeather();
+
+        if( !status ) CWeather_ReleaseWeather();
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
-        status = 1;
+        status = true;
       } else if( keypress == PSP_CTRL_RIGHT && i < 15 ) { // RIGHT
         i++;
-        status = 1;
+        status = true;
       } break;
 
     case FUNC_SET:
@@ -7827,7 +7811,7 @@ void *world_weather(int calltype, int keypress, bool defaultstatus, int defaultv
         i = defaultval;
       else i = 0;
 
-      if( status == 0 && pplayer > 0 ) // check pplayer so that inital FUNC_SET on boot doesn't call function
+      if( !status && pplayer ) // check pplayer so that inital FUNC_SET on boot doesn't call function
         CWeather_ReleaseWeather(); // otherwise crashes VCS US on boot! but US only????
       break;
   }
