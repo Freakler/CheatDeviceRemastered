@@ -8380,6 +8380,7 @@ void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           unlimsprint_disable:
+          locked_bool = false;
           status = false;
         } else status = true;
 
@@ -8433,6 +8434,7 @@ void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           unlimswim_disable:
+          locked_bool = false;
           status = false;
         } else status = true;
         
@@ -8486,6 +8488,7 @@ void *fireproof_cheat(int calltype, int keypress, bool defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
         if( status ) {
           fireproof_disable:
+          locked_bool = false;
           status = false;
         } else status = true;
         
