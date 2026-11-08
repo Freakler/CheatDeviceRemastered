@@ -4191,7 +4191,7 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     FUN_00109dac_CWaterLevel_GetWaterLevel(getFloat(pplayer+0x30),getFloat(pplayer+0x34), test);
 
     float boost = 0.05f;
-    int cross = (flag_menu_running == 0 && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
+    int cross = (!flag_menu_running && (current_buttons & PSP_CTRL_CROSS)) ? 1 : 0; // is cross pressed bool
     float crawl = ((ystick < 0.0f) && cross) ? -ystick*0.3f : 0.0f; // only if stick forward & cross pressed
 
     //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 20.0f, 20.0f, RED, "z = %.2f, xstick = %.2f, ystick = %.2f", test[0], xstick, ystick);
@@ -4678,7 +4678,7 @@ void *cdr_freezegameinmenu(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_CHECK:
       if( state == 0 && flag_menu_running == 1 ) state = 1; // to be frozen
-      if( state == 2 && flag_menu_running == 0 ) state = 3; // to be unfrozen
+      if( state == 2 && !flag_menu_running ) state = 3; // to be unfrozen
       break;
 
     case FUNC_CHANGE_VALUE:
@@ -6283,7 +6283,7 @@ void *powerjump(int calltype, int keypress, bool defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      if( !pcar && flag_menu_running == 0 ) {
+      if( !pcar && !flag_menu_running ) {
         if( getByte(pplayer+(LCS?0x10A:136)) == 0 ) { // TODO: player not touching ground (better check)
 
           /// calc current speed
@@ -6716,7 +6716,7 @@ void *nitro(int calltype, int keypress, bool defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      if( pcar && (pressed_buttons & PSP_CTRL_CIRCLE) && (getVehicleCurrentGear( pcar ) >= 0x2) && flag_menu_running == 0 ) { // activate nitro only if gear is 2 or higher
+      if( pcar && (pressed_buttons & PSP_CTRL_CIRCLE) && (getVehicleCurrentGear( pcar ) >= 0x2) && !flag_menu_running ) { // activate nitro only if gear is 2 or higher
         nos_time = gametimer + 2000; // 2 sec
       }
 
@@ -6732,7 +6732,7 @@ void *nitro(int calltype, int keypress, bool defaultstatus) {
           setInt( exhaust_offs + (LCS ? 0x70 : 0x60), 0x00CC1111 ); // blue-ish
         }
 
-        if( pcar && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && flag_menu_running == 0 && isVehicleInAir( pcar ) == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
+        if( pcar && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && !flag_menu_running && isVehicleInAir( pcar ) == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
 
           /// FOV
           setFieldOfView( getFieldOfView() + 4.0f);
@@ -6802,7 +6802,7 @@ void *rocketboost(int calltype, int keypress, bool defaultstatus, int defaultval
       return (void *)retbuf;
 
     case FUNC_APPLY:
-      if( pcar && boost > 0 && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && flag_menu_running == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
+      if( pcar && boost > 0 && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && !flag_menu_running && isVehicleUpsideDown( pcar ) == 0 ) {
 
         /// boats are inWater = true and inAir = true
         if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
@@ -6862,7 +6862,7 @@ void *untouchable(int calltype, int keypress, bool defaultstatus) {
      //drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 5.0f, 45.0f, WHITE, "forcemult: %f", forcemult);
 
       /// check if conditions meet
-      //if( pcar && /*(pressed_buttons & PSP_CTRL_DOWN) &&*/ flag_menu_running == 0 ) {
+      //if( pcar && /*(pressed_buttons & PSP_CTRL_DOWN) &&*/ !flag_menu_running ) {
 
 
         /// loop all vehicles
@@ -7209,7 +7209,7 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
         if( lcs_getVehicleColorBase( pcar ) == 13 && lcs_getVehicleColorStripe( pcar ) == 0 ) { // color
           setInt(global_m_pVehicleNameToPrint, (int)&delo[0]); // redirect m_pVehicleNameToPrint
 
-          if( hover_vehicle(FUNC_GET_STATUS, -1, -1) == 0 ) // only when real cheat is disabled (otherwise double apply)
+          if( !status ) // only when real cheat is disabled (otherwise double apply)
             hover_vehicle(FUNC_APPLY, -1, -1); // apply hover cheat in loop
 
         } else {
@@ -7254,42 +7254,41 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
 
         /// lower wheels slowly
         if( pcar_type == VEHICLE_CAR ) { // car
-          if( getVehicleWheelCamber(pcar) < 3.0000 ) { // 0x40400000 same as edison
-            setVehicleWheelCamber(pcar, getVehicleWheelCamber( pcar ) + 0.05);
+          if( getVehicleWheelCamber(pcar) < 3.0000f ) { // 0x40400000 same as edison
+            setVehicleWheelCamber(pcar, getVehicleWheelCamber( pcar ) + 0.05f);
           }
         }
 
         /// always keep car level #OK
-          // flip vehicle forward/backward + up/down with analog
-          setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
-          setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+0x4) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
-          setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+0x8) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
+        // flip vehicle forward/backward + up/down with analog
+        setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
+        setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+0x4) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
+        setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+0x8) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
 
-          // flip adjustments + ///roll vehicle left/right  + left/right leaning with analog
-          setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar+(LCS?0x80:0x70)) + getFloat(pcar+0x10) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
-          setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+(LCS?0x84:0x74)) + getFloat(pcar+0x14) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
-          setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+(LCS?0x88:0x78)) + getFloat(pcar+0x18) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
-
+        // flip adjustments + ///roll vehicle left/right  + left/right leaning with analog
+        setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar+(LCS?0x80:0x70)) + getFloat(pcar+0x10) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
+        setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+(LCS?0x84:0x74)) + getFloat(pcar+0x14) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
+        setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+(LCS?0x88:0x78)) + getFloat(pcar+0x18) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
 
         /// turning left/right #OK
         setFloat(pcar + (LCS?0x88:0x78), -0.04 * xstick); // spin vehicle around Z world axis (slow turning -0.02 | -0.05 faster turning)
 
         ///manual hovering up/down
-        if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && flag_menu_running == 0 )
+        if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && !flag_menu_running )
           setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) + 0.02); // 0.015 for LCS?
-        if( (current_buttons & PSP_CTRL_DOWN) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && flag_menu_running == 0 ) {
+        if( (current_buttons & PSP_CTRL_DOWN) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && !flag_menu_running ) {
           setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) - 0.02);
         }
 
         /// hovering animation #could be smoother
         if( speed < 0.05 ) {
           if( hovermation == 1 ) { // animation up
-            if( gametimer >= hovermation_time + 1000 ) { // 1 sec
+            if( gametimer >= hovermation_time + msec(1) ) { // 1 sec
                hovermation_time = gametimer;
                hovermation = 2;
             } else setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))+0.001);
           } else if( hovermation == 2 ) { // animation down
-            if( gametimer >= hovermation_time + 1000 ) { // 1 sec
+            if( gametimer >= hovermation_time + msec(1) ) { // 1 sec
                hovermation_time = gametimer;
                hovermation = 1;
             } else setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))-0.001);
@@ -7298,7 +7297,7 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
 
         ///////////////////////////////////////////////////////////
 
-        if( !(current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER)) && flag_menu_running == 0 ) { /// "handbrake" keeps momentum (old style)
+        if( !(current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER)) ) { /// "handbrake" keeps momentum (old style)
           if( xyspeed > 0.1f ) { // to allow hover animation without force forward
             if( getVehicleCurrentGear(pcar) > 0 ) { // not in reverse
               /// keep the momentum in the direction the vehicle
@@ -7315,12 +7314,12 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
         }
 
         /// thrust, reverse & automatically slowing down (could also be done by setting lower/higher speed but I'd like to keep the "handbrake feature")
-        if( current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS) && flag_menu_running == 0 ) {  /// forward
+        if( current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS) && !flag_menu_running ) {  /// forward
           setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * 0.010);
           setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * 0.010);
           setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * 0.022);
 
-        } else if( current_buttons & PSP_CTRL_SQUARE && flag_menu_running == 0 ) { /// break & reverse
+        } else if( current_buttons & PSP_CTRL_SQUARE && !flag_menu_running ) { /// break & reverse
           if( getVehicleCurrentGear(pcar) > 0 || speed < 0.5f ) { /// limit reverse speed
             setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - getFloat(pcar+0x10) * 0.02);
             setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - getFloat(pcar+0x14) * 0.02);
@@ -7595,7 +7594,7 @@ void *driveonwalls(int calltype, int keypress, bool defaultstatus) {
         if( getFloat(pcar+0x28) < 0.50 ) { // -0.00 would be on side of car | -1 completely on roof | 1 normal
           setVehicleGravityApplies(pcar, false); // set gravity false
 
-          if( gravity_reverse && (current_buttons & PSP_CTRL_UP) && flag_menu_running == 0 ) { // reverse button from worldgravity cheat is pressed
+          if( gravity_reverse && (current_buttons & PSP_CTRL_UP) && !flag_menu_running ) { // reverse button from worldgravity cheat is pressed
             setFloat(pcar + (LCS?0x70:0x140),  getFloat(pcar + (LCS?0x70:0x140)) + getFloat(pcar + 0x20) * 0.01 );
             setFloat(pcar + (LCS?0x74:0x144),  getFloat(pcar + (LCS?0x74:0x144)) + getFloat(pcar + 0x24) * 0.01 );
             setFloat(pcar + (LCS?0x78:0x148),  getFloat(pcar + (LCS?0x78:0x148)) + getFloat(pcar + 0x28) * 0.01 );
@@ -9776,7 +9775,7 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
 
         writeFloat(&script_spawnvehicle[46], deg);
 
-        CustomScriptExecute((int)&script_spawnvehicle); // make game execute it
+        CustomScriptExecute((uaddr)&script_spawnvehicle); // make game execute it
 
       }
       break;
@@ -10228,10 +10227,10 @@ void *up_button(int calltype, int keypress, bool defaultstatus, int defaultval) 
       return (void *)_t(buttonCheatNames[i]);
 
     case FUNC_APPLY:
-      if( (pressed_buttons & PSP_CTRL_UP) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && flag_menu_running == 0 && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
+      if( (pressed_buttons & PSP_CTRL_UP) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && !flag_menu_running && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
         buttonApplyOnce(i); // pressed button (apply ONCE!)
       }
-      if( (current_buttons & PSP_CTRL_UP) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && flag_menu_running == 0 && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
+      if( (current_buttons & PSP_CTRL_UP) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && !flag_menu_running && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
         buttonApply(i); // pressed button
       }
       break;
@@ -10276,10 +10275,10 @@ void *down_button(int calltype, int keypress, bool defaultstatus, int defaultval
       return (void *)buttonCheatNames[i];
 
     case FUNC_APPLY:
-      if( (pressed_buttons & PSP_CTRL_DOWN) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && flag_menu_running == 0 && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
+      if( (pressed_buttons & PSP_CTRL_DOWN) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && !flag_menu_running && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
         buttonApplyOnce(i);
       }
-      if( (current_buttons & PSP_CTRL_DOWN) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && flag_menu_running == 0 && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
+      if( (current_buttons & PSP_CTRL_DOWN) && ((current_buttons & PSP_CTRL_LTRIGGER) == 0) && !flag_menu_running && flag_menu_show == 1 ) { // flag_menu_stop will prevent going up in menu trigger it
         buttonApply(i);
       }
       break;
@@ -10366,7 +10365,7 @@ void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defau
 
         } else if( i == 5 ) { // 5
           #ifdef HEXEDITOR
-          if( flag_menu_running == 0 ) {
+          if( !flag_menu_running ) {
             hexeditor_create(addr, 1, addr, addr + var_pedobjsize, "> touched Pedestrian");
             flag_menu_start = 1;
           }
@@ -10491,7 +10490,7 @@ void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultv
           }
         } else if( i == 12 ) { // open in HexEditor
           #ifdef HEXEDITOR
-          if( flag_menu_running == 0 ) {
+          if( !flag_menu_running ) {
             hexeditor_create(addr, 1, addr, addr + var_vehobjsize, "> touched Vehicle");
             flag_menu_start = 1;
           }
@@ -10554,7 +10553,7 @@ void *touch_object(int calltype, int keypress, bool defaultstatus, int defaultva
 
         } else if( i == 1 ) { // 1
           #ifdef HEXEDITOR
-          if( flag_menu_running == 0 ) {
+          if( !flag_menu_running ) {
             hexeditor_create(addr, 1, addr, addr + var_wldobjsize, "> touched World Object");
             flag_menu_start = 1;
           }
@@ -11641,3 +11640,56 @@ void CHud_DrawArmourBar_VCS_Patched(void *param_1)
 
   CHud_DrawArmourBar_VCS(param_1);
 }
+
+#ifdef PREVIEW
+void *vehicle_musicplaying(int calltype, int keypress, bool defaultstatus, int defaultval) {
+  static bool status;
+  static array_uidx radio_station_index = 0, music_index = 0; // default position
+
+  switch( calltype ) {
+    case FUNC_GET_STATUS:
+      return (int*)status;
+
+    case FUNC_CHECK:
+      if ( !pcar ) break;
+
+      GTARadioMusic *currMusic = getCurrentRadioStationMusic();
+      if ( !currMusic ) break;
+      status = !strcmp(currMusic->name, game_radiostations[radio_station_index].music[music_index].name); // TODO: Check by ID
+      break;
+
+    case FUNC_GET_STRING:
+      if ( !pcar )
+      {
+        strcpy(retbuf, "None");
+        return (void *)retbuf;
+      }
+
+      GTARadioMusic *music = &game_radiostations[radio_station_index].music[music_index];
+      snprintf(retbuf, sizeof(retbuf), "%s: %s", getRadioStationName(radio_station_index), music->name);
+      return (void *)retbuf;
+
+    case FUNC_CHANGE_VALUE:
+      if ( !pcar ) break;
+
+      if ( keypress == PSP_CTRL_LEFT && music_index > 0 ) // Music Exists
+        music_index--;
+
+      if ( keypress == PSP_CTRL_RIGHT && game_radiostations[radio_station_index].music[music_index + 1].name ) // Music Exists
+        music_index++;
+
+      if ( keypress == PSP_CTRL_SQUARE ) // SQUARE
+      {
+        radio_station_index++; radio_station_index %= game_radiostations_size;
+        music_index = 0;
+      }
+
+      if ( keypress == PSP_CTRL_CROSS )
+        setRadioStationMusic(radio_station_index, game_radiostations[radio_station_index].music[music_index].timestamp_ms);
+
+      break;
+  }
+
+  return NULL;
+}
+#endif
