@@ -50,6 +50,15 @@
 #define usecond (msecond * msecond)
 #define usec(x) (usize)((x) * usecond)
 
+#define minsec          (60)
+#define hourmin         (60)
+#define hoursec         (minsec * hourmin)
+#define minutes(x)      (x * minsec)
+#define hours(x)        (x * hoursec)
+#define stime(h, m, s)  (hours(h) + minutes(m) + s)
+#define mstime(h, m, s) (msec(hours(h) + minutes(m) + s))
+#define ustime(h, m, s) (usec(hours(h) + minutes(m) + s))
+
 #define ABS(x) ( (x) >= 0 ? (x) : -(x) )
 #define FABS(x) ( (x) >= 0.0f ? (x) : -(x) )
 
