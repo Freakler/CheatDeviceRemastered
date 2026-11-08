@@ -4353,14 +4353,14 @@ static void address_ctrl() {
 
   if( hold_buttons & PSP_CTRL_DOWN ) {
     tempaddress -= 1 << (addresspos * 4); // addresspos 0: -= 0x1, 1: -= 0x10, 2: -= 0x100, ....
-    if( tempaddress <= pluginMemory.LowestMemoryAddr )
+    if( tempaddress < pluginMemory.LowestMemoryAddr )
       tempaddress = pluginMemory.LowestMemoryAddr;
     history_position = 0;
   }
 
   if( hold_buttons & PSP_CTRL_UP ) {
     tempaddress += 1 << (addresspos * 4); // addresspos 0: += 0x1, 1: += 0x10, 2: += 0x100, ....
-  if ( tempaddress >= pluginMemory.HighestMemoryAddr )
+  if ( tempaddress > pluginMemory.HighestMemoryAddr )
       tempaddress = pluginMemory.HighestMemoryAddr;
     history_position = 0;
   }
@@ -4737,7 +4737,7 @@ static void hexeditor_draw() {
           SOMECOLOR = BLUE;
 
         /// check if pointer (for different color)
-        } else if( current2 > pluginMemory.LowestMemoryAddr && current2 < pluginMemory.HighestMemoryAddr) {
+        } else if( isInMemBounds(current2) ) {
 
           if( current2 >= mod_text_addr && current2 <= mod_text_addr + mod_text_size ) //pointer to TEXT area
             SOMECOLOR = ORANGE;
@@ -4817,7 +4817,7 @@ static void hexeditor_draw() {
         drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 265.0f, 255.0f, RED, "%f", *((float*)(hex_adr)));
 
 
-      if( *((u32*)(hex_adr)) > pluginMemory.LowestMemoryAddr && *((u32*)(hex_adr)) < pluginMemory.HighestMemoryAddr) { // link to accessible memory
+      if( isInMemBounds((uaddr)getInt(hex_adr)) ) { // link to accessible memory
         if( flag_use_legend )
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 56.0f, 255.0f, RED, "0x%08X", *((int*)(hex_adr)));
         else
@@ -4968,7 +4968,7 @@ static void hexeditor_ctrl() {
 
     } else { // open pointer location
       if( hex_adr % 0x4 == 0x0 ) {
-        if( (uaddr)getInt(hex_adr) > pluginMemory.LowestMemoryAddr && (uaddr)getInt(hex_adr) < pluginMemory.HighestMemoryAddr) { // pointer to accessible memory
+        if( isInMemBounds((uaddr)getInt(hex_adr)) ) { // pointer to accessible memory
 
           /* old version (drop mode 1)
           hex_adr = getInt(hex_adr);
