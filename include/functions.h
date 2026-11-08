@@ -34,33 +34,33 @@ typedef struct {
 } GTAWorldLocation;
 
 typedef struct { // vehicles struct
-  uint16 id;
-  int16 type;
-  u8string GXTname;   // like internal name
-  u8string name;      // In-Game name
-  int16 hndlng_no; // number of vehicle in handling order (@ 0x52 in vehicle style block)
-  bool16 spawnsave; // bool crashes game when spawned
+  uint16    id;
+  int16     type;
+  u8string  GXTname;   // like internal name
+  u8string  name;      // In-Game name
+  int16     hndlng_no; // number of vehicle in handling order (@ 0x52 in vehicle style block)
+  bool16    spawnsave; // bool crashes game when spawned
 } GTAVehicle;
 
 typedef struct { // character struct
-  uint8 id;
-  u8string model;   // model name
-  u8string name;    // Real name
-  int16 row;
-  bool32 spawnsave; // bool crashes game when spawned
+  uint8     id;
+  u8string  model;   // model name
+  u8string  name;    // Real name
+  int16     row;
+  bool32    spawnsave; // bool crashes game when spawned
 } GTACharacter;
 
 typedef struct {
-  u8string name;
-  uint16 id;
-  uint8 type;    // LCS: 00 clothes?? | 03 save_cd, rampage | 08 money | 0F weapons, health, adrenaline    -> 0xF are re-appearing ones? rest one-time pickups
-  uint16 amount; // standard value for ammo / money object holds
+  u8string  name;
+  uint16    id;
+  uint8     type;    // LCS: 00 clothes?? | 03 save_cd, rampage | 08 money | 0F weapons, health, adrenaline    -> 0xF are re-appearing ones? rest one-time pickups
+  uint16    amount; // standard value for ammo / money object holds
 } GTAPickup;
 
 typedef struct {
-  u8string name;
-  uint8 id;   // short in LCS, char in VCS
-  uint8 color;
+  u8string  name;
+  uint8     id;   // short in LCS, char in VCS
+  uint8     color;
 } GTAMapIcon;
 
 enum {
