@@ -6895,22 +6895,35 @@ void *untouchable(int calltype, int keypress, bool defaultstatus) {
           }
         }
 
-    /// loop peds
-    /*base = peds_base;
-      for( j = 0; j < peds_max; j++, base += var_pedobjsize ) {
-        if( getPedObjectIsActive(base) && base != pplayer ) { // ignore player
+        /// loop peds
+        base = peds_base;
+        for( uint32 j = 0; j < peds_max; j++, base += var_pedobjsize ) {
+          if ( getPedObjectIsActive(base) && base != pplayer ) { // ignore player
             float radius = 15.0f; // in which force should be applied
             float x1 = getFloat(pobj+0x30);
             float y1 = getFloat(pobj+0x34);
             float z1 = getFloat(pobj+0x38);
-        float x2 = getFloat(base+0x30);
-      float y2 = getFloat(base+0x34);
-      float z2 = getFloat(base+0x38);
-      if( checkCoordinateInsideArea(x1, y1, z1, x2, y2, z2, radius) ) { // is in radius
-        // TODO:
-      }
-      }
-    }*/
+            float x2 = getFloat(base+0x30);
+            float y2 = getFloat(base+0x34);
+            float z2 = getFloat(base+0x38);
+            if( checkCoordinateInsideArea(x1, y1, z1, x2, y2, z2, radius) ) { // is in radius
+              /// set vectors
+              float distance = distanceBetweenCoordinates3d(x1, y1, z1, x2, y2, z2);
+              float forcemult = distance * 100.0f / radius; // the lower the faster
+              float x_obj = ((x2 - x1) / forcemult) * 1.5f;
+              float y_obj = ((y2 - y1) / forcemult) * 1.5f;
+
+              if (VCS)
+                setShort(base+0x1c8, 0x1020); // Get player off ground
+              else
+                setBit(base+0x194, 0, false); // bIsStanding set to false
+
+              setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
+              setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
+              setFloat(base+(LCS?0x78:0x148), getFloat(base+(LCS?0x78:0x148)) + 0.05f);
+            }
+          }
+        }
       //}
       break;
 

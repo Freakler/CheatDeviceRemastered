@@ -272,6 +272,7 @@ const CDRMenuItem main_menu[] = {
   {"Maximum Health:"                  , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x1D7D , -1  , max_health           , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra health! ('Health Plus')" },
   {"Maximum Armor:"                   , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x178E , -1  , max_armor            , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
   {"Power Jump"                       , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x1E4A , OFF , powerjump            , "CROSS: Enable/Disable Cheat"      , ""                                   , "Hold the jumping key to jump as high as you want." }, // "Super Jump" in VCS
+  {"Untouchable"                      , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x15D3 , OFF , untouchable          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Vehicles and pedestrians wont be able to get near you and will be pushed back." },
   #ifdef SWIM
   {"Swimming"                         , CAT_PLAYER  , MENU_SWITCH      , true  , false , true  , true  , 0x173E , OFF , fake_swimming        , "CROSS: Enable/Disable Cheat"      , ""                                   , "You finally learned to swim! No more drowning. Experimental though!"},
   #endif
@@ -307,7 +308,6 @@ const CDRMenuItem main_menu[] = {
   {"Touch Vehicle to:"                , CAT_TRFFIC  , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1EC4 , OFF , touch_vehicle        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust option"          , "Decide what should happen with a vehicle as soon as you touch." },
   {"Default RadioStation:"            , CAT_TRFFIC  , MENU_VALSWITCH   , true  , true  , true  , true  , 0x1B98 , OFF , traffic_radiostation , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Select Station"         , "Select a Radio Station that will be played when entering a vehicle."  },
   {"BMX Jump Height:"                 , CAT_TRFFIC  , MENU_VALUE       , false , true  , true  , true  , 0x1BDE , OFF , bmxjumpheight        , "CROSS: Enable/Disable Cheat"      , "LEFT/RIGHT: Adjust multiplier"      , "Adjust the BMXs jump height." },
-  {"Untouchable"                      , CAT_TRFFIC  , MENU_SWITCH      , true  , true  , true  , true  , 0x15D3 , OFF , untouchable          , "CROSS: Enable/Disable Cheat"      , ""                                   , "Vehicles wont be able to get near you and will be pushed back." },
   {""                                 , CAT_TRFFIC  , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
   {"Pedestrians"                      , CAT_PEDS    , MENU_CATEGORY    , true  , true  , true  , true  , 0x28A4 , OFF , category_toggle      , "CROSS: Show/Hide Category"        , ""                                   , ""  },
