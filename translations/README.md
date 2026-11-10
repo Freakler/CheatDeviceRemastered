@@ -74,7 +74,7 @@
 
 
 # Translating CheatDevice Remastered
-_Translation add-on made and readme written by **[@danssmnt](https://github.com/danssmnt)**_.
+_Translation add-on made and readme written by **[@daniemun](https://github.com/daniemun)**_.
 
 Translating CDR is actually pretty simple:
 
@@ -94,9 +94,6 @@ Translating CDR is actually pretty simple:
 | `Translate Language`    | Name of the language with format: `Language (Country)`                      |
 
  3. Start translating! Fill every line that has an english string and `=` with the translated string after.
-
-> [!WARNING]
->  You can only use [ASCII printable characters](https://en.wikipedia.org/wiki/ASCII#Printable_character_table), if you try to use accented or other types of characters, they won't show in CDR.
 
 > [!IMPORTANT]
 >  - If you don't want / need to translate a string, just leave everything after the `=` blank (it will default to english in CDR).

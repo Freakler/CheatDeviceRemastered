@@ -1,0 +1,7 @@
+file(GLOB_RECURSE MAIN_SOURCES CONFIGURE_DEPENDS
+  *.c
+  **/*.c
+  *.S
+  exports.exp
+)
+set(MAIN_SOURCES ${MAIN_SOURCES} PARENT_SCOPE)
