@@ -4590,7 +4590,7 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "pcar: 0x%08lX", pcar);
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, AZURE, "pcar_id = 0x%02X", pcar_id);
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, AZURE, "pcar_type = 0x%02X", pcar_type);
-            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE, "isVehicleInWater = %X", isVehicleInWater(pcar));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, AZURE, "isVehicleInWater = %s", BOOLSTR(isVehicleInWater(pcar)));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, AZURE, "isVehicleInAir = %X", isVehicleInAir(pcar));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, AZURE, "isVehicleUpsideDown = %X", isVehicleUpsideDown(pcar));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, AZURE, "health = %.2f", getVehicleHealth(pcar));
@@ -6414,8 +6414,8 @@ void *warp_out_water(int calltype, int keypress, bool defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      if( LCS && !pcar && checkPedIsInWater(pplayer) && (gametimer > timer) ) {
-        setFloat(pplayer+0x38, -200.0f); //let game take care of spawn point
+      if( !pcar && checkPedIsInWater(pplayer) && (gametimer > timer) ) {
+        setFloat(pplayer+0x38, -500.0f); //let game take care of spawn point
         timer = gametimer + 2000; // 2 sec
       }
       break;
@@ -6458,8 +6458,8 @@ void *warp_out_water_veh(int calltype, int keypress, bool defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      if( pcar && (pcar_type != VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1) && (gametimer > timer)) {
-        setFloat(pcar+0x38, -200.0f); // let game take care of spawn point
+      if( pcar && (pcar_type != VEHICLE_BOAT) && isVehicleInWater( pcar ) && (gametimer > timer)) {
+        setFloat(pcar+0x38, -500.0f); // let game take care of spawn point
         timer = gametimer + 2000; // 2 sec
       }
       break;
@@ -6805,7 +6805,7 @@ void *rocketboost(int calltype, int keypress, bool defaultstatus, int defaultval
       if( pcar && boost > 0 && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && !flag_menu_running && isVehicleUpsideDown( pcar ) == 0 ) {
 
         /// boats are inWater = true and inAir = true
-        if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && (isVehicleInWater( pcar ) >= 1))*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
+        if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && isVehicleInWater( pcar )*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
 
           /// SPEED
           setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * ((boost+1) * thrust) );
@@ -11169,7 +11169,7 @@ void *fake_swimming(int calltype, int keypress, bool defaultstatus, int defaultv
       return (int*)status;
 
     case FUNC_APPLY:
-     if( pcar && (pcar_type != VEHICLE_BOAT) && (isVehicleInWater(pcar) >= 1) && isVehicleInAir(pcar) ) { // when vehicle in water and no ground contact
+     if( pcar && (pcar_type != VEHICLE_BOAT) && isVehicleInWater(pcar) && isVehicleInAir(pcar) ) { // when vehicle in water and no ground contact
         if( current_buttons & PSP_CTRL_TRIANGLE ) { // player wants to exit vehicle
           setPedExitVehicleNow(pplayer);
       }

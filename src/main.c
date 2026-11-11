@@ -267,7 +267,7 @@ const CDRMenuItem main_menu[] = {
   {"Wanted Level:"                    , CAT_PLAYER  , MENU_VALSWITCH   , true  , true  , true  , false , 0x19DF , OFF , wanted_level         , "CROSS: Enable/Disable Cheat"      , "SQUARE: Set current level as max"   , "Adjust your Wanted Level, lock it and set the Maximum Level possible." },
   {"Heavy Player"                     , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x1F3B , OFF , heavy_player         , "CROSS: Enable/Disable Cheat"      , ""                                   , "You can push cars by running against them but are to heavy to jump!" },
   {"Aim of Death"                     , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , false , 0x1BBC , OFF , aim_of_death         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Aiming down at a target will instantly kill it." },
-  {"Warp out of Water automatically"  , CAT_PLAYER  , MENU_SWITCH      , true  , false , true  , true  , 0x1A48 , OFF , warp_out_water       , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
+  {"Warp out of Water automatically"  , CAT_PLAYER  , MENU_SWITCH      , true  , true  , true  , true  , 0x1A48 , OFF , warp_out_water       , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
   {"Model:"                           , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x1C87 , OFF , player_model         , "CROSS: Change now"                , "LEFT/RIGHT: Select model"           , "Change the actor skin / model. Beware: May break the game!" },
   {"Maximum Health:"                  , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x1D7D , -1  , max_health           , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra health! ('Health Plus')" },
   {"Maximum Armor:"                   , CAT_PLAYER  , MENU_VALUE       , true  , true  , true  , false , 0x178E , -1  , max_armor            , "LEFT/RIGHT: Adjust multiplier"    , ""                                   , "Adjust the Multiplier value giving extra armor! ('Armor Plus')" },
@@ -292,7 +292,7 @@ const CDRMenuItem main_menu[] = {
   {"N.O.S boost"                      , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x19A9 , OFF , nitro                , "CROSS: Enable/Disable Cheat"      , ""                                   , "Press O to activate a 2 sec Nitro Boost for your vehicle." },
   {"Rocket boost:"                    , CAT_VEHICL  , MENU_VALUE       , true  , true  , true  , true  , 0x19A8 , OFF , rocketboost          , "LEFT/RIGHT: Adjust multiplier"    , "CIRCLE: Disable and reset"          , "Continuous additional boost to your vehicle forward speed." },
   {"Behave like Tank"                 , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , false , 0x1489 , OFF , tank                 , "CROSS: Enable/Disable Cheat"      , "SQUARE: Toggle explode on touch"    , "Press O to fire cannon and make vehicles explode when run into!" },
-  {"Warp out of Water automatically"  , CAT_VEHICL  , MENU_SWITCH      , true  , false , true  , true  , 0x1A49 , OFF , warp_out_water_veh   , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
+  {"Warp out of Water automatically"  , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , true  , 0x1A49 , OFF , warp_out_water_veh   , "CROSS: Enable/Disable Cheat"      , ""                                   , "If you fall into the ocean you will be teleported out automatically." },
   {"Cars drive on Water"              , CAT_VEHICL  , MENU_SWITCH      , true  , true  , true  , false , 0x15F7 , OFF , driveonwater         , "CROSS: Enable/Disable Cheat"      , ""                                   , "Your car can drive on water." },
   {""                                 , CAT_VEHICL  , MENU_DUMMY       , true  , true  , true  , true  , 0      , -1  , NULL                 , NULL                               , NULL                                 , NULL },
 
@@ -5204,7 +5204,7 @@ void draw() { // called by hijacked game function
 
   /// Config saveing
   #ifdef DEBUG
-  extern int saveing;
+  extern bool saveing;
   if( saveing )
     drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 18.0f, 15.0f, WHITE, "Saving config..");
   #endif

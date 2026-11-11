@@ -1999,8 +1999,8 @@ usize getPedActiveObjects(uaddr peds_base, usize peds_max, usize peds_size) {
   return ret;
 }
 
-bool checkPedIsInWater(uaddr ped_base_adr) { // TODO: VCS
-  return ((getByte(ped_base_adr + 0x142) & 0x10) != 0); // true
+bool checkPedIsInWater(uaddr ped_base_adr) {
+  return LCS ? ((getByte(ped_base_adr + 0x142) & 0x10) != 0) : /* VCS */ getBit(ped_base_adr + 0xEF, 2); // true
 }
 
 bool getPedDrowning(uaddr ped_base_adr) { // not in car!
@@ -2173,12 +2173,8 @@ void setPedExitVehicleNow(uaddr ped_base_adr) {
     setByte(ped_base_adr+0x894, 0x10); // trigger exiting
 }
 
-bool isVehicleInWater(uaddr vehicle_base_adr) { // TODO: VCS
-  if( LCS ) if( getByte(vehicle_base_adr+0x142) & 0x10 ) return true;
-  //if( VCS ) if( getByte(vehicle_base_adr+0xED) ) return 1; //different for different vehicles???
-  if( VCS ) return getByte(vehicle_base_adr+0xED);
-
-  return false;
+bool isVehicleInWater(uaddr vehicle_base_adr) {
+  return LCS ? getByte(vehicle_base_adr+0x142) & 0x10 : /* VCS */ getBit(vehicle_base_adr+0xED, 0);
 }
 
 bool isVehicleInAir(uaddr vehicle_base_adr) {
