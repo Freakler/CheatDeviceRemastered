@@ -6444,9 +6444,6 @@ void *warp_out_water(int calltype, int keypress, bool defaultstatus) {
  *
  * Completion:
  *
- * TODO:     - VCS.. inWater() doesn't return bool currently and is different for different vehicles
- *        -
- *
  * Notes:
  **************************************************************************************************************************************/
 void *warp_out_water_veh(int calltype, int keypress, bool defaultstatus) {
