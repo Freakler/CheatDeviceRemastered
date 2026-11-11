@@ -182,7 +182,7 @@ u8char config[128];
 bool category_index[CAT_COUNTER] = {[0 ... CAT_COUNTER-1] = true}; // true = visible/expanded/enabled (init by module_start)
 
 SceCtrlData pad;
-int hold_n = 0;
+float hold_timer = 0;
 uint32 old_buttons = 0, current_buttons = 0, pressed_buttons = 0, hold_buttons = 0, lx, ly, rx, ry;
 float xstick, ystick, xstick_, ystick_;
 
@@ -200,6 +200,7 @@ extern u8string lcs_garagenames[];
 extern u8string vcs_garagenames[];
 extern uint16 pcar_id;
 extern float fps;
+extern float fps_deltaTime;
 extern usize memory_main_free;
 extern const u8string weather_lcs[];
 extern const u8string weather_vcs[];
@@ -5327,16 +5328,16 @@ void buttonInput() { // called by hijacked game function
   hold_buttons = pressed_buttons;
 
   if( old_buttons & current_buttons ) {
-    if( hold_n >= 10 ) {
+    if( hold_timer >= 0.250f ) {
       hold_buttons = current_buttons;
-      hold_n = 8;
-    } hold_n++;
-  } else hold_n = 0;
+      hold_timer -= 0.065f;
+    } hold_timer += fps_deltaTime;
+  } else hold_timer = 0.0f;
 
   if( flag_menu_running ) { // menu is open
 
     /// get input for control
-    if( 0 ) { } // never true (because ifdefs..)
+    if( false ) { } // never true (because ifdefs..)
 
     #ifdef HEXEDITOR
     else if( flag_address ) // enter address dialog

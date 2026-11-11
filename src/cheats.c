@@ -3696,14 +3696,16 @@ void drawMemoryUsage() {
 SceInt64 cur_micros = 0, delta_micros = 0, last_micros = 0;
 usize frames = 0;
 float fps = 0.0f;
+float fps_deltaTime = 0.0f;
 usize memory_main_free = 0;
 
 SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   SceInt64 cur_micros = sceKernelGetSystemTimeWide();
-  if( cur_micros >= (last_micros + 1000000) ) { // every second
+  if( cur_micros >= (last_micros + usec(0.5f)) ) { // every second
     delta_micros = cur_micros - last_micros;
     last_micros = cur_micros;
-    fps = (frames / (double)delta_micros) * 1000000.0f;
+    fps = (frames / (double)delta_micros) * (float)usec(1.0f);
+    fps_deltaTime = 1.0f / fps;
     frames = 0;
   } frames++;
 
