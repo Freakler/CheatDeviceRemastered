@@ -8,7 +8,7 @@
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
- * 
+ *
  *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
@@ -21,7 +21,7 @@
  *  SOFTWARE.
  */
 
-/* 
+/*
  * (M)ore types for C
  */
 
@@ -83,7 +83,7 @@ typedef uint8_t   bool8;
 #define __bool8_defined
 #endif
 
-// 16-bit 
+// 16-bit
 #ifndef __int16_defined
 typedef int16_t   int16;
 #define __int16_defined

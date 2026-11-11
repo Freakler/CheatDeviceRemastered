@@ -8,7 +8,7 @@
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
- * 
+ *
  *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
@@ -499,7 +499,7 @@ void drawLegendMessageNoTVarg(int side, int pos, CRGBA color, u8string str) { //
 }
 
 void drawLegendMessageNoT(int side, int pos, CRGBA color, u8string str, ...) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
-  
+
   u8char finalstr[MAX_TEXT_SIZE];
   va_list args;
   va_start(args, str);
@@ -1130,7 +1130,7 @@ static void userscripts_update_array()
   // Check if there are files & folders to store
   if ( userscript_cd_scripts_count == 0 )
     return;
-  
+
   userscript_currentdir_scripts = (userscript_entry *)malloc(sizeof(userscript_entry) * userscript_cd_scripts_count);
   if ( !userscript_currentdir_scripts ) return;
 
@@ -1934,7 +1934,7 @@ static void userscript_run(u8string currentfile)
 
 
         }
-          
+
         //setTimedTextbox("custom call found", 7.00f); //
       }*/
 
@@ -6290,7 +6290,7 @@ int OnModuleStart(SceModule *mod) {
     func_stat ret = patch();
     if( ret != FUNC_OK ) // patching returned error
       return ret;
-    
+
     sceKernelDcacheWritebackAll();
   }
 

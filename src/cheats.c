@@ -8,7 +8,7 @@
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
- * 
+ *
  *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
@@ -3964,14 +3964,13 @@ mode 0 - streets, some buildings
 mode 1 - more detailed buildings and interior
 mode 2 - everything with transparency like trees, windows etc
 **************************************************************/
-extern SceUID memcreate(SceSize vplSize);
 void (* cWorldStream_Render)(void *this, int mode);
 void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered -> allow cheat menu
 
-  static int debug_cwsrp = 1;
+  static bool debug_cwsrp = true;
   if( debug_cwsrp ) {
     DEBUG_LOG("%lu: cWorldStream_Render_Patched() ran the first time", getGametime() );
-    debug_cwsrp = 0;
+    debug_cwsrp = false;
   }
 
   #if GAME_LOGGING
@@ -3991,22 +3990,25 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
 
     if ( gametimer >= 1000 )
     {
+      #if !LITE
       if ( pluginMemory.ExtraMemory )
       {
-        static int memcreate_ran = 0;
+        extern SceUID memcreate(SceSize vplSize);
+        static bool memcreate_ran = false;
         if ( !memcreate_ran )
         {
           memcreate(KiB(256)); /* Should be enough */
-          memcreate_ran = 1;
+          memcreate_ran = true;
         }
-  
+
         #ifdef LANG
-        static int lang_ran = 0;
+        static bool lang_ran = false;
         if (!lang_ran)
         {
           langTableSetup(currLanguageID);
-          lang_ran = 1;
+          lang_ran = true;
         }
+        #endif
       }
       #endif
     }
@@ -4164,10 +4166,10 @@ int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int param_4
   return ret;
 }
 
-int (*FUN_000e7d70_CCam_IsTargetInWater)(int param_1);
 
 #ifdef SWIM
 /// fake swimming
+int (*FUN_000e7d70_CCam_IsTargetInWater)(int param_1);
 int FUN_000e7d70_CCam_IsTargetInWater_patched(int param_1) {
   return (fake_swimming(FUNC_GET_STATUS, -1, -1, -1) ? 0 : FUN_000e7d70_CCam_IsTargetInWater(param_1));
 }
@@ -4500,7 +4502,7 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
                                         "Vehicle",  // 3
                                         "tests",    // 4
                                         "5"};       // 5
-  
+
   static array_size list_size = ARRAY_SIZE(list_names) - 1;
 
   switch( calltype ) {
@@ -4700,7 +4702,7 @@ void *cdr_allowuiblocking(int calltype, int keypress, bool defaultstatus) {
     case FUNC_GET_STATUS: return (int*)status;
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        flag_ui_blocking = status = !status; 
+        flag_ui_blocking = status = !status;
       } break;
     case FUNC_SET:
       flag_ui_blocking = status = defaultstatus;
@@ -5219,15 +5221,15 @@ void *fps_cap(int calltype, int keypress, bool defaultstatus, int defaultval) {
             status = true;
           }
         }
-      } 
+      }
       else if( keypress == PSP_CTRL_LEFT && i < 7 ) { // LEFT
         i++;
         if( status ) goto fpscap_enable; // TODO: change this
-      } 
+      }
       else if( keypress == PSP_CTRL_RIGHT && i > 1 ) { // RIGHT
         i--;
         if( status ) goto fpscap_enable; // TODO: change this
-      } 
+      }
       else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
@@ -5550,7 +5552,7 @@ void *mission_select(int calltype, int keypress, bool defaultstatus UNUSED, int 
           /// terminate_this_script
           0x4E, 0x00
         }; *(byte*)&script_startmission[3] = (byte)i;
-        
+
         if( VCS ) {
           writeShort(&script_startmission[0], 0x0289);
           writeShort(&script_startmission[4], 0x0023);
@@ -6034,7 +6036,7 @@ void mission_selector() {
  *
  * Completion:   100% :D
  *
- * Notes:     
+ * Notes:
  **************************************************************************************************************************************/
 void *skip_intros(int calltype, int keypress, bool defaultstatus) {
   static bool status;
@@ -7902,7 +7904,7 @@ void *traffic_freeze(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
-        status = !status; 
+        status = !status;
         if( !status ) {
           base = vehicles_base;
           for( uint32 j = 0; j < vehicles_max; j++, base += var_vehobjsize ) {
@@ -8423,7 +8425,7 @@ void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
     case FUNC_GET_STRING:
       snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
       return (void*)retbuf;
-    
+
     case FUNC_CHECK:
       status = getUnlimitedSwimStatus();
       break;
@@ -8439,7 +8441,7 @@ void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
           locked_bool = false;
           status = false;
         } else status = true;
-        
+
         setUnlimitedSwimStatus(status);
       }
 
@@ -8477,7 +8479,7 @@ void *fireproof_cheat(int calltype, int keypress, bool defaultstatus) {
     case FUNC_GET_STRING:
       snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
       return (void*)retbuf;
-    
+
     case FUNC_CHECK:
       status = getFireproofStatus();
       break;
@@ -8493,7 +8495,7 @@ void *fireproof_cheat(int calltype, int keypress, bool defaultstatus) {
           locked_bool = false;
           status = false;
         } else status = true;
-        
+
         setFireproofStatus(status);
       }
 
@@ -9747,7 +9749,7 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
           /// mark_model_as_no_longer_needed
           0x4E, 0x02,
           0x08, // type = short
-          0x00, 0x00, // vehicle id 
+          0x00, 0x00, // vehicle id
 
           /// terminate_this_script
           0x4E, 0x00 // Opcode: 004E
@@ -9789,7 +9791,7 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
         id = (uint16)defaultval;
       else
         id = 172;
-      
+
       break;
   }
 
@@ -9814,7 +9816,7 @@ if( no destination icons && pay'n'spray icon is global map visible bool )  ?
 /// vcs races: blue arrows over other cars before destination sphere
 
 void teleport_next_sub() {
-  uint32 i; 
+  uint32 i;
   int type, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   array_uidx slot;
 
@@ -10029,8 +10031,6 @@ void freeze_all_targets() {
   }
 }
 
-
-
 static const u8string buttonCheatNames[] = {
   "Spawn selected Vehicle",
   "Toggle Hover Bike & Car",
@@ -10052,7 +10052,7 @@ static const u8string buttonCheatNames[] = {
   //Zoom out minimap
   //
   //
- };
+};
 
 extern bool alt_gravity_button_pressed; // ugly solution for Reverse Gravity
 
@@ -10678,7 +10678,7 @@ void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) 
         if( j == 0 && i > 0) // pickups
           i--;
         //removeAllCustomMapIcons();
-      } else if( keypress == PSP_CTRL_RIGHT /* && i < something */ ) { // TODO: 
+      } else if( keypress == PSP_CTRL_RIGHT /* && i < something */ ) { // TODO:
         if( j == 0 && i < (LCS ? lcs_pickupsize : vcs_pickupsize) ) // pickups
           i++;
         //removeAllCustomMapIcons();
@@ -11096,7 +11096,7 @@ void *policechaseheli(int calltype, int keypress, bool defaultstatus, int defaul
       }
       strcpy(retbuf, LCS ? getGxtIdentifierForVehicleViaID(list_value_lcs[pos]) : getRealVehicleNameViaID(list_value_vcs[pos])); // LCS doesn't have translations for all vehicles so we use the GXT name here
       if( pos == 1 ) strcat(retbuf, " (default)");
-      
+
       return (void*)retbuf;
 
     case FUNC_CHANGE_VALUE:
@@ -11600,7 +11600,7 @@ void CHud_DrawHealthBar_LCS_Patched(int16 value)
   {
     value = getMaxHealthMultiplier(); // Clamp value to max health
   }
-  
+
   CHud_DrawHealthBar_LCS(value);
 }
 

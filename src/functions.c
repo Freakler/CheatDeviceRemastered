@@ -8,7 +8,7 @@
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
- * 
+ *
  *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
@@ -2008,7 +2008,7 @@ bool getPedDrowning(uaddr ped_base_adr) { // not in car!
     return (getInt(ped_base_adr + 0x19c) & 0x10000) != 0;
   if( VCS )
     return getInt(ped_base_adr + 0x8b4) == 0x44; // 0x3A if drowned ?!
-  
+
   return false;
 }
 
@@ -2128,7 +2128,7 @@ float getVehicleSpeed() {
 uint8 getVehicleCurrentGear(uaddr vehicle_base_adr) {
   if( LCS && mod_text_size == 0x0031F854 ) // ULUX v0.02
     return getByte(vehicle_base_adr + 0x26C);
-  
+
   return getByte(vehicle_base_adr + (LCS ? 0x270 : 0x284));
 }
 
@@ -2391,7 +2391,7 @@ usize getMapiconsActiveObjects(uaddr mapicon_base, usize mapicons_max, usize map
 
   for( array_uidx i = 0; i < mapicons_max; mapicon_base+=mapicons_size, i++ )
     if( getMapiconIsActive(mapicon_base) ) ret++;
-  
+
   return ret;
 }
 
@@ -2545,10 +2545,10 @@ usize createCustomMapIconsForPickupsWithID(uint16 id, uint8 icon, CRGBA color) {
 usize createCustomMapIconsForWeaponsInRange(float range) {
   usize counter = 0;
   CRGBA color;
-  
+
   float px = getFloat(pobj+0x30);
   float py = getFloat(pobj+0x34);
-  
+
   uaddr addr = global_pickups;
   for( uaddr i = 0; i < var_pickupslots; i++, addr+= var_pickupslotsize ) {
     if( getPickupID(addr) <= (LCS ? 0x124 : 0x16F ) && getPickupIsCollectable(addr) ) { // check if active
@@ -2706,7 +2706,7 @@ bool getDisplaySettingsToggleRadar() {
 
   if( VCS && getInt(global_displaysettings+gp) > 0)
     return !getByte(getInt(global_displaysettings+gp)+0x13);
-  
+
   return false;
 }
 
@@ -2783,7 +2783,7 @@ void setTimedTextbox(u8string sentence, float duration) {
 bool isTextboxShowing() {
   if( LCS ) return getByte(global_helpbox_displaybool);
   if( VCS ) return getByte(getInt(global_helpbox+gp) + 0x2a44);
-  
+
   return false;
 }
 
@@ -2871,7 +2871,7 @@ void resetWaterLevel() {
 void setLastButtonPressedInHistory(uint8 button) {
   for( int i = 11; i >= 0; i-- )
     setByte(global_buttoninput + (LCS ? 0x95 : 0xA9) + i, getByte(global_buttoninput + (LCS ? 0x95 : 0xA9) + i - 1)); // move previous
-  
+
   setByte(global_buttoninput + (LCS ? 0x95 : 0xA9), button); // write newest
 }
 

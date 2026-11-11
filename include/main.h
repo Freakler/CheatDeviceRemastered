@@ -8,7 +8,7 @@
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
- * 
+ *
  *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
@@ -32,8 +32,8 @@
 
 /** FEATURE-FLAGS *****************************************************************************************************/
 
-// #define DEBUG    // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
-// #define PREVIEW  // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
+#define DEBUG    // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
+#define PREVIEW  // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
 #define LITE      OFF // 'Lite' version with less features for more memory on PSP-1000
 #define LOGGING   OFF  // General Logging (DEBUG, INFO, WARNING, ERROR)

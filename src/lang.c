@@ -8,7 +8,7 @@
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
- * 
+ *
  *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
@@ -85,7 +85,7 @@ static u8string langTableSearch(LangHashTable *ht, const u8string original_strin
   if ( !ht || !original_string ) return (u8string)original_string;
 
   array_uidx index = (array_uidx)(hash(original_string, strlen(original_string), MURMURMASH_3_SEED) % TABLE_SIZE);
-  
+
   string_lang *current = ht->table[index];
 
   while (current) {
@@ -284,10 +284,10 @@ static int ReadTranslationEntry(const char *section, const char *key, const char
   TranslationBrowseData *data = (TranslationBrowseData *)user_data;
   if ( translatedStringsLength >= TRANSLATED_STRINGS_LIMIT ) return 0; // We've reached the limit!
   if ( data->section[0] != section[0] ) return 1; // Not needed
-  
+
   // Empty or english string
   if ( STR_EMPTY(value) || !strcmp(key, value) ) return 1;
-  
+
   langTableInsert(data->table, (const u8string)key, (const u8string)value);
   translatedStringsLength++;
   return 1;
@@ -301,7 +301,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const u8string INISect
   SceInt64 curr_time = sceKernelGetSystemTimeWide();
   (void)curr_time; // Dumb compiler
   #endif
-  
+
   u8char lang_path[128];
   snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->path);
 
@@ -309,7 +309,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const u8string INISect
   DEBUG_LOG("Reading Section '%s' from INI file '%s'", INISection, lang_path);
   #endif
 
-  ini_browse(ReadTranslationEntry, &(TranslationBrowseData){ 
+  ini_browse(ReadTranslationEntry, &(TranslationBrowseData){
       .table = table,
       .section = INISection,
     },
