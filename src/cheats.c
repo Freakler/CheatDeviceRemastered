@@ -743,9 +743,9 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   } // TODO: ULUX-002 OK but ugly (functions are quite different)?
 
   /// disable Button Input --> same as VCS
-  if( !buttonsToAction && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {  //not save
-    PATCH_LOG("0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
-    HIJACK_FUNCTION(addr, buttonsToActionPatched, buttonsToAction); // 0x00294E88
+  if( !CPad_Update && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {  //not save
+    PATCH_LOG("0x%08X (0x%08X) --> CPad::Update()", addr-text_addr, addr);
+    HIJACK_FUNCTION(addr, CPad_UpdatePatched, CPad_Update); // 0x00294E88
     return true;
   }
 
@@ -2422,9 +2422,9 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    * ULJM-05297 v1.01 |  |
    * ULET-00417 v0.06 | 0x0018A8D8 | OK!
    **************************************/
-  if( !buttonsToAction && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {
-    PATCH_LOG("[0] 0x%08X (0x%08X) --> buttonsToAction()", addr-text_addr, addr);
-    HIJACK_FUNCTION(addr, buttonsToActionPatched, buttonsToAction); // 0x0018A288
+  if( !CPad_Update && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {
+    PATCH_LOG("[0] 0x%08X (0x%08X) --> CPad::Update()", addr-text_addr, addr);
+    HIJACK_FUNCTION(addr, CPad_UpdatePatched, CPad_Update); // 0x0018A288
     return true;
   }
 
@@ -3701,7 +3701,7 @@ usize memory_main_free = 0;
 
 SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   SceInt64 cur_micros = sceKernelGetSystemTimeWide();
-  if( cur_micros >= (last_micros + usec(0.5f)) ) { // every second
+  if( cur_micros >= (last_micros + usec(0.5f)) ) { // every half second
     delta_micros = cur_micros - last_micros;
     last_micros = cur_micros;
     fps = (frames / (double)delta_micros) * (float)usec(1.0f);
@@ -3711,11 +3711,11 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
   memory_main_free = (usize)getInt(ptr_memory_main + 0x10) - (usize)getInt(ptr_memory_main + 0xC) - (usize)getInt(ptr_memory_main + 0x14); // basically what FUN_0029febc does
 
-  static int debug_skgstwp = 1;
-  static int debug_skgstwp2 = 1;
-  if( debug_skgstwp2 && debug_skgstwp == 0 ) {
+  static bool debug_skgstwp   = true;
+  static bool debug_skgstwp2  = true;
+  if( debug_skgstwp2 && !debug_skgstwp ) {
     DEBUG_LOG("%lu: sceKernelGetSystemTimeWidePatched() ran the SECOND time", getGametime());
-    debug_skgstwp2 = 0;
+    debug_skgstwp2 = false;
   }
   if( debug_skgstwp ) {
     DEBUG_LOG("%lu: sceKernelGetSystemTimeWidePatched() ran the FIRST time", getGametime());
@@ -3731,7 +3731,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
       load_config(main_menu, menu_size); // load config
     #endif
 
-    debug_skgstwp = 0;
+    debug_skgstwp = false;
   }
 
 
@@ -3791,7 +3791,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
     0xFFFFC1B4 -B-> ptr_audioscriptobj
     */
 
-  int temp;
+  uaddr temp;
 
   /// Pedestrians
   temp = getInt(ptr_pedestriansobj + gp_);
@@ -3902,7 +3902,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
 
   /// patch some things once after spawn (custom vehicle colors, make rc vehicles driveable etc..)
-  static int once = 1;
+  static bool once = true;
   if( gametimer < menuopendelay*2 && gametimer >= menuopendelay ) { // window between gametime 2000 to 4000
     if( once ) {
       applyOnce();
@@ -3913,9 +3913,9 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
       load_config_block(LCS ? "LPTC" : "VPTC", getInt(ptr_particleCFG + (LCS ? 0 : gp))); // particles
       load_config_block(LCS ? "LPST" : "VPST", getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp)))); // Pedstats
       load_config_block(LCS ? "LWPN" : "VWPN", getInt(getInt(ptr_weaponTable+(LCS?0x0:gp)) + 4)); // Weapon.dat
-      } */ once = 0; // has been applied
+      } */ once = false; // has been applied
     }
-  } else once = 1; // re-set to 1 for next time (out of window at this point)
+  } else once = true; // re-set to 1 for next time (out of window at this point)
 
   /// apply cheats FUNC_APPLY
   if( gametimer >= menuopendelay )
@@ -3929,42 +3929,33 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   return cur_micros;
 }
 
-int (* buttonsToAction)(void *a1);
-int buttonsToActionPatched(void *a1) { // LCS & VCS
-  int res = buttonsToAction(a1);
+void (* CPad_Update)(CPad *this, int16 pad);
+void CPad_UpdatePatched(CPad *this, int16 pad) { // LCS & VCS
+  CPad_Update(this, pad);
 
-  //((short *)a1)[5] = 0xFF;   // Simulate L trigger
-  //((short *)a1)[7] = 0xFF;   // Simulate R trigger
-  //((short *)a1)[32] = 0xFF; // Simulate R trigger (second pad thingy)
-
-  static int debug_btap = 1;
+  static bool debug_btap = true;
   if( debug_btap ) {
-    DEBUG_LOG("%lu: buttonsToActionPatched() ran the first time", getGametime() );
-    debug_btap = 0;
+    DEBUG_LOG("%lu: CPad_UpdatePatched() ran the first time", getGametime() );
+    debug_btap = false;
   }
 
   /// process button inputs
   buttonInput();
 
   /// block button inputs for game
-  if( flag_keys_disable == 1 ) {
-    //((short *)a1)[1] = 0; // ANALOG LEFT & RIGHT
-    //((short *)a1)[2] = 0; // ANALOG UP & DOWN
-    ((short *)a1)[5] = 0; // L-TRIGGER
-    ((short *)a1)[7] = 0; // R-TRIGGER
-    ((short *)a1)[9] = 0; // UP
-    ((short *)a1)[10] = 0; // DOWN
-    ((short *)a1)[11] = 0; // LEFT
-    ((short *)a1)[12] = 0; // RIGHT
-    //((short *)a1)[17] = 0; // START
-    ((short *)a1)[18] = 0; // SELECT
-    ((short *)a1)[19] = 0; // SQUARE
-    ((short *)a1)[20] = 0; // TRIANGLE
-    ((short *)a1)[21] = 0; // CROSS
-    ((short *)a1)[22] = 0; // CIRCLE
+  if( flag_keys_disable ) {
+    this->NewState.LeftShoulder1   = 0;
+    this->NewState.RightShoulder1  = 0;
+    this->NewState.DPadUp          = 0;
+    this->NewState.DPadDown        = 0;
+    this->NewState.DPadLeft        = 0;
+    this->NewState.DPadRight       = 0;
+    this->NewState.Select          = 0;
+    this->NewState.Square          = 0;
+    this->NewState.Triangle        = 0;
+    this->NewState.Cross           = 0;
+    this->NewState.Circle          = 0;
   }
-
-  return res;
 }
 
 

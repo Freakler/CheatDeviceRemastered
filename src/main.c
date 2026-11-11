@@ -5818,7 +5818,7 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
 }
 
 
-void menu_ctrl(const CDRMenuItem *menu_list, usize menu_max) { // for blocked buttons check "buttonsToActionPatched()" in cheats.c
+void menu_ctrl(const CDRMenuItem *menu_list, usize menu_max) { // for blocked buttons check "CPad_UpdatePatched()" in cheats.c
   static int keypress;
   int last_sel = 0;
 

@@ -25,6 +25,7 @@
 #define __CHEATS_H__
 
 #include <psptypes.h>
+#include "storiesrwsdk.h"
 
 #include "main.h"
 
@@ -106,8 +107,8 @@ extern int LoadStringFromGXT_patched(int gxt_adr,char *string, int param_3, int 
 extern int (* GetTEST)(); // for testing
 
 /// Hijacks
-extern int (* buttonsToAction)(void *a1);
-extern int buttonsToActionPatched(void *a1);
+extern void (* CPad_Update)(CPad *this, int16 pad);
+extern void CPad_UpdatePatched(CPad *this, int16 pad);
 
 extern void (* cWorldStream_Render)(void *this, int mode);
 extern void cWorldStream_Render_Patched(void *this, int mode);
