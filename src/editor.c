@@ -1025,7 +1025,7 @@ static const u8string vcs_modelflags[] = {"FLAG_1A",      "FLAG_1B",      "FLAG_
                                           "IS_BIKE",      "IS_HELI",      "IS_PLANE",    "IS_BOAT",
                                           "FLAG_8A",      "FLAG_8B",      "FLAG_8C",     "FLAG_8D" };
 
-void *model_flag(int calltype, int keypress, uaddr base_address UNUSED, uaddr address UNUSED, int arg) { // ".steps" is alienated here to identify the position as "arg"
+void *model_flag(int calltype, int keypress, uaddr base_address UNUSED, uaddr address, int arg) { // ".steps" is alienated here to identify the position as "arg"
   static u8char buffer[64];
   uint8 nibble = (arg % 2 ? getNibbleHigh(address) : getNibbleLow(address));
 
@@ -1036,16 +1036,16 @@ void *model_flag(int calltype, int keypress, uaddr base_address UNUSED, uaddr ad
       snprintf(buffer, sizeof(buffer), "NONE");
     }
     if( 0x1 & nibble ) { // 0001
-      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0], nibble);
     }
     if( 0x2 & nibble ) { // 0010
-      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1], nibble);
     }
     if( 0x4 & nibble ) { // 0100
-      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2], nibble);
     }
     if( 0x8 & nibble ) { // 1000
-      snprintf(buffer, sizeof(buffer), "%s", LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3], nibble);
     }
 
     return (void *)buffer;
@@ -1087,16 +1087,16 @@ void *handling_flag(int calltype, int keypress, uaddr base_address UNUSED, uaddr
       snprintf(buffer, sizeof(buffer), "NONE");
     }
     if( 0x1 & nibble ) { // 0001
-      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 0]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", vcs_handlingflags[(arg * 4) + 0], nibble);
     }
     if( 0x2 & nibble ) { // 0010
-      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 1]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", vcs_handlingflags[(arg * 4) + 1], nibble);
     }
     if( 0x4 & nibble ) { // 0100
-      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 2]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", vcs_handlingflags[(arg * 4) + 2], nibble);
     }
     if( 0x8 & nibble ) { // 1000
-      snprintf(buffer, sizeof(buffer), "%s", vcs_handlingflags[(arg * 4) + 3]);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", vcs_handlingflags[(arg * 4) + 3], nibble);
     }
 
     return (void *)buffer;
@@ -1145,9 +1145,8 @@ void *vehicle_enginetype(int calltype, int keypress, uaddr base_address UNUSED, 
       if( keypress ) {
         if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
-          if( LCS && i < list_size-1 )
-            i++;
+        } else if( keypress == PSP_CTRL_RIGHT && i < list_size-1 ) { // RIGHT
+          i++;
         }
         if(i >= 0)
           setByte(address, list_val[i]);
@@ -1183,9 +1182,8 @@ void *vehicle_lights_front(int calltype, int keypress, uaddr base_address UNUSED
       if( keypress ) {
         if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
-          if( LCS && i < list_size-1 )
-            i++;
+        } else if( keypress == PSP_CTRL_RIGHT && i < list_size-1 ) { // RIGHT
+          i++;
         }
         if(i >= 0)
           setByte(address, list_val[i]);
@@ -1221,9 +1219,8 @@ void *vehicle_lights_rear(int calltype, int keypress, uaddr base_address UNUSED,
       if( keypress ) {
         if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
-          if( LCS && i < list_size-1 )
-            i++;
+        } else if( keypress == PSP_CTRL_RIGHT && i < list_size-1 ) { // RIGHT
+          i++;
         }
         if(i >= 0)
           setByte(address, list_val[i]);
@@ -1258,9 +1255,8 @@ void *vehicle_transtype(int calltype, int keypress, uaddr base_address UNUSED, u
       if( keypress ) {
         if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
           i--;
-        } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
-          if( LCS && i < list_size-1 )
-            i++;
+        } else if( keypress == PSP_CTRL_RIGHT && i < list_size-1) { // RIGHT
+          i++;
         }
         if(i >= 0)
           setByte(address, list_val[i]);
