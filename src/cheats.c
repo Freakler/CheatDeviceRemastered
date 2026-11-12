@@ -3726,8 +3726,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
 
     #ifdef CONFIG
-    extern char config[128];
-    if( doesFileExist(config) )
+    if( doesFileExist(PLUGIN_CONFIG_FILE) )
       load_config(main_menu, menu_size); // load config
     #endif
 
@@ -4869,7 +4868,7 @@ void *cdr_changelang(int calltype, int keypress, bool defaultstatus, int default
       }
 
       // Versions don't match (probably old)
-      if ( !STR_EMPTY(main_file_table->lang_files[langID]->version) && strcmp(main_file_table->lang_files[langID]->version, VERSION) != 0 ) {
+      if ( !STR_EMPTY(main_file_table->lang_files[langID]->version) && strcmp(main_file_table->lang_files[langID]->version, PLUGIN_VERSION) != 0 ) {
         snprintf(langBuf, sizeof(langBuf), "%s (%s)", main_file_table->lang_files[langID]->lang_name, main_file_table->lang_files[langID]->version);
         return (void*)langBuf;
       }

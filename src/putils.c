@@ -462,8 +462,8 @@ uint32 hash(const u8string key, usize len, uint32 seed)
 
 // TODO: Remove this (it's here cause of newlib math -_-)
 // Don't take this off, otherwise plugin bloats by like 20KB (annoying linker)
-int errno;
-int *__errno (void)
+static int errno;
+static int *__errno (void)
 {
   return &errno;
 }

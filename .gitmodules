@@ -1,5 +1,5 @@
-[submodule "SCRIPTS"]
-	path = SCRIPTS
+[submodule "assets/userscripts"]
+	path = assets/userscripts
 	url = https://github.com/Freakler/CheatDeviceRemastered-UserScripts
 
 [submodule "lib/minIni-PSP"]

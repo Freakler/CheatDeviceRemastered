@@ -70,23 +70,23 @@ typedef struct {
   const uint8 precision; // float accuracy after dot / bitflag position
   void *value;
   const float step;
-} Editor_pack;
+} EditorItem;
 
 
-extern const Editor_pack lcs_ide_menu[];
-extern const Editor_pack lcs_ide_obj_menu[];
-extern const Editor_pack lcs_ide_tobj_menu[];
-extern const Editor_pack lcs_ide_weap_menu[];
-extern const Editor_pack lcs_ide_hier_menu[];
-extern const Editor_pack lcs_ide_cars_menu[];
-extern const Editor_pack lcs_ide_ped_menu[];
-extern const Editor_pack vcs_ide_menu[];
-extern const Editor_pack vcs_ide_obj_menu[];
-extern const Editor_pack vcs_ide_tobj_menu[];
-extern const Editor_pack vcs_ide_weap_menu[];
-extern const Editor_pack vcs_ide_hier_menu[];
-extern const Editor_pack vcs_ide_cars_menu[];
-extern const Editor_pack vcs_ide_ped_menu[];
+extern const EditorItem lcs_ide_menu[];
+extern const EditorItem lcs_ide_obj_menu[];
+extern const EditorItem lcs_ide_tobj_menu[];
+extern const EditorItem lcs_ide_weap_menu[];
+extern const EditorItem lcs_ide_hier_menu[];
+extern const EditorItem lcs_ide_cars_menu[];
+extern const EditorItem lcs_ide_ped_menu[];
+extern const EditorItem vcs_ide_menu[];
+extern const EditorItem vcs_ide_obj_menu[];
+extern const EditorItem vcs_ide_tobj_menu[];
+extern const EditorItem vcs_ide_weap_menu[];
+extern const EditorItem vcs_ide_hier_menu[];
+extern const EditorItem vcs_ide_cars_menu[];
+extern const EditorItem vcs_ide_ped_menu[];
 
 
 extern void *editor_garage(int calltype, int value);

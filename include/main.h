@@ -25,15 +25,14 @@
 #define __MAIN_H__
 
 #include "mctypes.h"
+#include "versioning.h"
 
 #include "editor.h"
 
-#define VERSION "v1.0h4" // displayed in title
-
 /** FEATURE-FLAGS *****************************************************************************************************/
 
-#define DEBUG    // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
-#define PREVIEW  // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
+// #define DEBUG    // Debug mode  ("Debug" watermark, extra monitor, lang stuff, options etc)
+// #define PREVIEW  // Preview mode ("Preview" watermark, WIP cheats & custom spawn-teleport etc)
 
 #define LITE      OFF // 'Lite' version with less features for more memory on PSP-1000
 #define LOGGING   OFF  // General Logging (DEBUG, INFO, WARNING, ERROR)
@@ -58,11 +57,42 @@
 #endif
 
 #if LOGGING
- #define PATCH_LOGGING       OFF  // debug logging for detected patch locations only
- #define MEMORY_LOGGING      OFF  // logging bad memory access to console
- #define USERSCRIPT_LOGGING  OFF  // debug logging for userscripts only
- #define GAME_LOGGING        OFF  // display developer logs on screen + to file (LCS US v3.00 only)
- #define CONFIG_LOGGING      OFF
+ #define PATCH_LOGGING       ON  // debug logging for detected patch locations only
+ #define MEMORY_LOGGING      ON  // logging bad memory access to console
+ #define USERSCRIPT_LOGGING  ON  // debug logging for userscripts only
+ #define GAME_LOGGING        ON  // display developer logs on screen + to file (LCS US v3.00 only)
+ #define CONFIG_LOGGING      ON
+#endif
+
+/**********************************************************************************************************************/
+
+/** PATHS *************************************************************************************************************/
+
+#define PLUGIN_BASE_PATH              "ms0:/PSP/PLUGINS/" PLUGIN_NAME "/"
+#define PLUGIN_ASSETS_PATH            PLUGIN_BASE_PATH        "assets/"
+
+#ifdef USERSCRIPTS
+#define PLUGIN_USERSCRIPTS_PATH       PLUGIN_ASSETS_PATH      "userscripts/"
+#define PLUGIN_USERSCRIPTS_GAME_PATH  PLUGIN_USERSCRIPTS_PATH "%s/" // LCS or VCS is added at runtime
+#endif
+
+#ifdef LANG
+#define PLUGIN_LANG_PATH              PLUGIN_ASSETS_PATH      "translations/"
+#endif
+
+#ifdef PREVIEW
+#define PLUGIN_USERCHEATS_PATH        PLUGIN_ASSETS_PATH      "cheats/"
+#define PLUGIN_USERCHEATS_GAME_PATH   PLUGIN_USERCHEATS_PATH  "%s/" // LCS or VCS is added at runtime
+#define PLUGIN_TEXTURES_PATH          PLUGIN_ASSETS_PATH      "textures/"
+#endif
+
+#ifdef CONFIG
+#define PLUGIN_CONFIG_FILE            PLUGIN_ASSETS_PATH      PLUGIN_NAME ".cfg"
+#endif
+
+#ifdef NAMERESOLV
+#define PLUGIN_NAMES_PATH             PLUGIN_ASSETS_PATH      "names/"
+#define PLUGIN_NAMES_GAME_FILE        PLUGIN_NAMES_PATH       "%s.ini" // LCS or VCS is added at runtime
 #endif
 
 /**********************************************************************************************************************/
@@ -70,19 +100,19 @@
 extern bool ADRENALINE, PPSSPP, LCS, VCS;
 
 typedef struct {
-  const u8string path;
-  const uint8 cat;
-  const uint8 type;
-  const bool LC; // for Liberty City Stories
-  const bool VC; // for Vice City Stories
-  const bool SP; // for Singleplayer
-  const bool MP; // for Multiplayer
-  const uint16 conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
-  const int8 def_stat;
+  u8string path;
+  uint8 cat;
+  uint8 type;
+  bool8 LC : 2; // for Liberty City Stories
+  bool8 VC : 2; // for Vice City Stories
+  bool8 SP : 2; // for Singleplayer
+  bool8 MP : 2; // for Multiplayer
+  uint16 conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
+  int8 def_stat;
   void *value;
-  const u8string msg1;
-  const u8string msg2;
-  const u8string desc;
+  u8string msg1;
+  u8string msg2;
+  u8string desc;
 } CDRMenuItem;
 
 
@@ -182,7 +212,7 @@ extern const array_size menu_size;
 
 /////////////////////////////////////////////
 
-extern void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const Editor_pack *editor_menu, uaddr first_obj, usize block_size, usize blocks);
+extern void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const EditorItem *editor_menu, uaddr first_obj, usize block_size, usize blocks);
 
 #ifdef PREVIEW
 extern void usercheats_create();

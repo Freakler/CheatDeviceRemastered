@@ -122,7 +122,7 @@ extern const array_size vcs_pickupsize;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/*const Editor_pack stats_menu[] = {
+/*const EditorItem stats_menu[] = {
   //name                           //postfix    //address   //edit_bool  //type       //precision  //value    //steps   //min    //max
   {"Tires popped with gunfire"      , ""        , 0x08B5E058  , true    , TYPE_INTEGER  , DEC    , 0          , 1      , 0      , 999999999 },
   {"Property destroyed"             , " $"      , 0x08B5E074  , true    , TYPE_INTEGER  , DEC    , 0          , 1      , 0      , 999999999 },
@@ -132,7 +132,7 @@ extern const array_size vcs_pickupsize;
 };*/
 
 
-const Editor_pack lcs_garage_menu[] = {
+const EditorItem lcs_garage_menu[] = {
 // name                               postfix     address     edit_bool type            precis   *value                steps
   {"Vehicle Identifier"             , ""        , 0x00      , true    , TYPE_INTEGER  , DEC    , garage_vehicle      , 1      },
 
@@ -199,7 +199,7 @@ const Editor_pack lcs_garage_menu[] = {
 };
 
 
-const Editor_pack vcs_garage_menu[] = {
+const EditorItem vcs_garage_menu[] = {
 // name                           postfix     address     edit_bool type            precis   *value                steps
   {"Vehicle Identifier"         , ""        , 0x00      , true    , TYPE_INTEGER  , DEC      , garage_vehicle     , 1       },
 
@@ -331,7 +331,7 @@ void *pedstatname(int calltype, int keypress, uaddr base_address UNUSED, uaddr a
 }
 
 
-const Editor_pack lcs_pedobj_menu[] = {
+const EditorItem lcs_pedobj_menu[] = {
   //name                          //postfix    //address     //edit_bool  //type   //precision  //*value    //steps
   {"World Coord X"              , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"              , ""      , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -431,7 +431,7 @@ const Editor_pack lcs_pedobj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_pedobj_menu[] = {
+const EditorItem vcs_pedobj_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value         //steps      //min    //max
   {"World Coord X"             , ""       , 0x30      , true    , TYPE_FLOAT      , 2      , 0            , 0.1    },
   {"World Coord Y"             , ""       , 0x34      , true    , TYPE_FLOAT      , 2      , 0            , 0.1    },
@@ -487,7 +487,7 @@ const Editor_pack vcs_pedobj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_vehicleobj_menu[] = {
+const EditorItem lcs_vehicleobj_menu[] = {
 
   //name                      //postfix    //address     //edit_bool  //type   //precision  //*value      //steps      //min    //max
   {"World Coord X"            , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -572,7 +572,7 @@ const Editor_pack lcs_vehicleobj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_vehicleobj_menu[] = {
+const EditorItem vcs_vehicleobj_menu[] = {
   //name                  //postfix     //address     //edit_bool  //type      //precision  //*value     //steps    //min    //max
   {"World Coord X"        , ""        , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"        , ""        , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -591,7 +591,7 @@ const Editor_pack vcs_vehicleobj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_worldobj_menu[] = {
+const EditorItem lcs_worldobj_menu[] = {
   //name                  //postfix     //address     //edit_bool  //type      //precision  //*value      //steps    //min    //max
   {"World Coord X"        , ""        , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"        , ""        , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -608,7 +608,7 @@ const Editor_pack lcs_worldobj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_worldobj_menu[] = {
+const EditorItem vcs_worldobj_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type      //precision  //*value    //steps      //min    //max
   {"World Coord X"        , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"        , ""      , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -619,7 +619,7 @@ const Editor_pack vcs_worldobj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_pickups_menu[] = {
+const EditorItem lcs_pickups_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value    //steps    //min    //max
   {"World Coord X"          , ""      , 0x00      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"          , ""      , 0x04      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -637,7 +637,7 @@ const Editor_pack lcs_pickups_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_pickups_menu[] = {
+const EditorItem vcs_pickups_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type     //precision  //*value      //steps    //min    //max
   {"World Coord X"          , ""      , 0x00      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"          , ""      , 0x04      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -674,7 +674,7 @@ icon  Color  "0x4"  "0x8"
 018F add blip for coordinate        ->  FUN_00163e40(4,    &local_b0,  4)
 018E blip with sphere to coordinate ->  FUN_00163e40(5,    &local_b0,  5);
 ****/
-const Editor_pack lcs_mapicons_menu[] = {
+const EditorItem lcs_mapicons_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value         //steps      //min    //max
   {"Color"                             , ""      , 0x00      , true    , TYPE_INTEGER  , 0      , mapicon_color, 0      }, // RGBA!!!
   {"Linked Object Type"                , ""      , 0x04      , false   , TYPE_INTEGER  , 0      , mapicon_type , 0      }, // 1 = car, 2 = Ped, 3 = world obj, 4 = coordinate, 5 = sphere to coordinate
@@ -703,7 +703,7 @@ const Editor_pack lcs_mapicons_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_mapicons_menu[] = {
+const EditorItem vcs_mapicons_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value         //steps    //min    //max
   {"Color"                             , ""      , 0x00      , true    , TYPE_INTEGER  , 0     , mapicon_color , 0      }, // OK
   {"Linked Object Type"                , ""      , 0x04      , false   , TYPE_INTEGER  , 0     , mapicon_type  , 0      }, // 1 = car, 2 = Ped, 3 = world obj,
@@ -850,7 +850,7 @@ typedef struct lcs_handling_item {
     byte        padding[18];
   };
 ***********************************************************************************************************************************/
-const Editor_pack lcs_handlingcfg_menu[] = {
+const EditorItem lcs_handlingcfg_menu[] = {
   //name                               //postfix  //address   //edit_bool    //type    //precision  //*value              //steps    //min    //max
   {"fMass"                              , " Kg"   , 0x00      , true    , TYPE_FLOAT      , 2      , 0                    , 1.00f    }, // B - OK
   {"fTurnMass"                          , " Kg"   , 0x04      , true    , TYPE_FLOAT      , 2      , 0                    , 1.00f    }, // C - OK
@@ -925,7 +925,7 @@ const Editor_pack lcs_handlingcfg_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_handlingcfg_menu[] = {
+const EditorItem vcs_handlingcfg_menu[] = {
   //name                              //postfix   //address   //edit_bool    //type  //precision  //*value              //steps
   {"fMass"                             , " Kg"    , 0xBC      , true    , TYPE_FLOAT   , 2      , 0                    , 1.00f    }, // B
   {"fTurnMass"                         , " Kg"    , 0xC0      , true    , TYPE_FLOAT   , 2      , 0                    , 1.00f    }, // C
@@ -1267,7 +1267,7 @@ void *vehicle_transtype(int calltype, int keypress, uaddr base_address UNUSED, u
 
 
 
-const Editor_pack lcs_vehiclespawns_menu[] = {
+const EditorItem lcs_vehiclespawns_menu[] = {
   //name                        //postfix    //address   //edit_bool  //type      //precision  //*value      //steps    //min    //max
   {"Identifier"                     , ""      , 0x00      , true    , TYPE_INTEGER  , DEC    , 0            , 1      /*, 0x82      , 0xD8  */   },
 
@@ -1298,7 +1298,7 @@ const Editor_pack lcs_vehiclespawns_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_vehiclespawns_menu[] = {
+const EditorItem vcs_vehiclespawns_menu[] = {
   //name                          //postfix    //address     //edit_bool  //type   //precision  //*value   //steps    //min    //max
   {"Identifier"                     , ""      , 0x00      , true    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"World Coord X"                  , ""      , 0x04      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -1325,7 +1325,7 @@ const Editor_pack vcs_vehiclespawns_menu[] = {
 };
 
 
-const Editor_pack lcs_colsdat_menu[] = {
+const EditorItem lcs_colsdat_menu[] = {
   //name                    //postfix    //address    //edit_bool //type        //precision  //*value     //steps    //min    //max
   {"Red value"              , "/255"    , 0x00      , true    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {"Green value"            , "/255"    , 0x01      , true    , TYPE_BYTE      , DEC    , 0            , 0x1    },
@@ -1333,7 +1333,7 @@ const Editor_pack lcs_colsdat_menu[] = {
   {"Alpha value"            , "/255"    , 0x03      , true    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {NULL,NULL,0,0,0,0,0,0}
 };
-const Editor_pack vcs_colsdat_menu[] = {
+const EditorItem vcs_colsdat_menu[] = {
   //name                    //postfix    //address    //edit_bool //type        //precision  //*value      //steps    //min    //max
   {"Red value"              , "/255"    , 0x00      , true    , TYPE_BYTE      , DEC    , 0            , 0x1    },
   {"Green value"            , "/255"    , 0x01      , true    , TYPE_BYTE      , DEC    , 0            , 0x1    },
@@ -1341,7 +1341,7 @@ const Editor_pack vcs_colsdat_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_ipl_menu[] = { // TODO: rotation : https://gtamods.com/wiki/Game.dtz#Generating_IPL_in_text_format
+const EditorItem lcs_ipl_menu[] = { // TODO: rotation : https://gtamods.com/wiki/Game.dtz#Generating_IPL_in_text_format
   //name                  //postfix       //address     //edit_bool  //type     //precision  //*value      //steps    //min    //max
   {"World Coord X"          , ""        , 0x30       , true    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
   {"World Coord Y"          , ""        , 0x34       , true    , TYPE_FLOAT    , 2      , 0            , 0.1f    },
@@ -1355,7 +1355,7 @@ const Editor_pack lcs_ipl_menu[] = { // TODO: rotation : https://gtamods.com/wik
 };
 
 
-const Editor_pack lcs_ide_menu[] = {
+const EditorItem lcs_ide_menu[] = {
   //name                                 //postfix   //address  //edit_bool  //type        //precision  //*value    //steps
   {"Name (CRC32 hashed)"                   , ""      , 0x08      , true    , TYPE_INTEGER   , HEX    , 0            , 1      },
   {"Type"                                  , ""      , 0x10      , true    , TYPE_BYTE      , DEC    , 0            , 1      },
@@ -1370,7 +1370,7 @@ const Editor_pack lcs_ide_menu[] = {
   {"Offset to model in .DTZ"               , ""      , 0x24      , true    , TYPE_INTEGER   , HEX    , 0            , 1      },
   {NULL,NULL,0,0,0,0,0,0}
 };
-const Editor_pack lcs_ide_obj_menu[] = {  /// 1 - obj
+const EditorItem lcs_ide_obj_menu[] = {  /// 1 - obj
   {"Drawdistance 1"                        , ""      , 0x28      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
   {"Drawdistance 2"                        , ""      , 0x2C      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
   {"Drawdistance 3 / (Disap-dist. if LOD)" , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
@@ -1382,7 +1382,7 @@ const Editor_pack lcs_ide_obj_menu[] = {  /// 1 - obj
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_ide_tobj_menu[] = {  /// 3 - tobj
+const EditorItem lcs_ide_tobj_menu[] = {  /// 3 - tobj
   {"Drawdistance 1"                        , ""      , 0x28      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
   {"Drawdistance 2"                        , ""      , 0x2C      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
   {"Drawdistance 3 / (Disap-dist. if LOD)" , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
@@ -1396,7 +1396,7 @@ const Editor_pack lcs_ide_tobj_menu[] = {  /// 3 - tobj
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_ide_weap_menu[] = {  /// 4 - weap
+const EditorItem lcs_ide_weap_menu[] = {  /// 4 - weap
   {"Drawdistance 1"                        , ""      , 0x28      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
   {"Drawdistance 2"                        , ""      , 0x2C      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
   {"Drawdistance 3 / (Disap-dist. if LOD)" , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f    },
@@ -1409,12 +1409,12 @@ const Editor_pack lcs_ide_weap_menu[] = {  /// 4 - weap
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_ide_hier_menu[] = {  /// 5 - hier
+const EditorItem lcs_ide_hier_menu[] = {  /// 5 - hier
   // unused
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_ide_cars_menu[] = {  /// 6 - cars
+const EditorItem lcs_ide_cars_menu[] = {  /// 6 - cars
   {"Primary Color"                        , ""      , 0x2C      , true    , TYPE_BYTE     , DEC    , 0            , 1      },
   {"Secondary Color"                      , ""      , 0x2D      , true    , TYPE_BYTE     , DEC    , 0            , 1      },
 
@@ -1445,7 +1445,7 @@ const Editor_pack lcs_ide_cars_menu[] = {  /// 6 - cars
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack lcs_ide_ped_menu[] = {  /// 7 - ped
+const EditorItem lcs_ide_ped_menu[] = {  /// 7 - ped
   {"?"                                    , ""      , 0x2C      , true    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"Threat (ped.dat)"                     , ""      , 0x30      , true    , TYPE_INTEGER  , DEC    , 0            , 1      },
   {"Behaviour (pedstat.dat)"              , ""      , 0x34      , true    , TYPE_INTEGER  , 0      , pedstatname  , 0      },
@@ -1456,7 +1456,7 @@ const Editor_pack lcs_ide_ped_menu[] = {  /// 7 - ped
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_ide_menu[] = {
+const EditorItem vcs_ide_menu[] = {
   //name                               //postfix    //address  //edit_bool  //type        //precision  //*value  //steps
   {"Name (CRC32 hashed)"                  , ""      , 0x08      , true    , TYPE_INTEGER  , HEX    , 0            , 1      },
   {"Type"                                 , ""      , 0x10      , true    , TYPE_BYTE     , DEC    , 0            , 1      },
@@ -1472,7 +1472,7 @@ const Editor_pack vcs_ide_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_ide_obj_menu[] = {
+const EditorItem vcs_ide_obj_menu[] = {
   {"Drawdistance 1"                       , ""      , 0x2C      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   {"Drawdistance 2"                       , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   {"Drawdistance 3 / (Disap-dist. if LOD)", ""      , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
@@ -1484,7 +1484,7 @@ const Editor_pack vcs_ide_obj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_ide_tobj_menu[] = {
+const EditorItem vcs_ide_tobj_menu[] = {
   {"Drawdistance 1"                       , ""      , 0x2C      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   {"Drawdistance 2"                       , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   {"Drawdistance 3 / (Disap-dist. if LOD)", ""      , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
@@ -1498,7 +1498,7 @@ const Editor_pack vcs_ide_tobj_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_ide_weap_menu[] = {
+const EditorItem vcs_ide_weap_menu[] = {
   {"Drawdistance 1"                       , ""      , 0x2C      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   {"Drawdistance 2"                       , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
   {"Drawdistance 3 / (Disap-dist. if LOD)", ""      , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 1.0f   },
@@ -1509,12 +1509,12 @@ const Editor_pack vcs_ide_weap_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_ide_hier_menu[] = {
+const EditorItem vcs_ide_hier_menu[] = {
 //{"Unknown"                 , ""      , 0x34      , true    , TYPE_INTEGER    , DEC    , 0            , 1      , INT_MIN  , INT_MAX   },
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_ide_cars_menu[] = {
+const EditorItem vcs_ide_cars_menu[] = {
   {"Collision Model Pointer"  , ""           , 0x14      , false   , TYPE_INTEGER  , HEX    , 0            , 1      },
 /*{"Colouring R"              , " of 255"    , 0x30      , true    , TYPE_BYTE     , DEC    , 0            , 1      },
   {"Colouring G"              , " of 255"    , 0x31      , true    , TYPE_BYTE     , DEC    , 0            , 1      },
@@ -1548,7 +1548,7 @@ const Editor_pack vcs_ide_cars_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_ide_ped_menu[] = {
+const EditorItem vcs_ide_ped_menu[] = {
   {"?"                        , ""           , 0x30      , true    , TYPE_INTEGER   , DEC   , 0            , 1      },
   {"Threat (ped.dat)"         , ""           , 0x34      , true    , TYPE_INTEGER   , DEC   , 0            , 1      },
   {"Behaviour (pedstat.dat)"  , ""           , 0x38      , true    , TYPE_INTEGER   , 0     , pedstatname  , 0      },
@@ -1559,7 +1559,7 @@ const Editor_pack vcs_ide_ped_menu[] = {
 };
 
 
-const Editor_pack lcs_particlecfg_menu[] = {
+const EditorItem lcs_particlecfg_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value         //steps    //min    //max
   {"Particle Type Name"                   , ""        , 0x04      , true    , TYPE_STRING    , 20    , 0            , 0      }, // A
 
@@ -1635,7 +1635,7 @@ const Editor_pack lcs_particlecfg_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_particlecfg_menu[] = {
+const EditorItem vcs_particlecfg_menu[] = {
   //name                                 //postfix    //address     //edit_bool  //type      //precision  //*value  //steps    //min    //max
   {"Particle Type Name"                   , ""        , 0x04      , true    , TYPE_STRING   , 20    , 0            , 0       },
 
@@ -1704,7 +1704,7 @@ const Editor_pack vcs_particlecfg_menu[] = {
 
 
 
-const Editor_pack lcs_pedstatsdat_menu[] = {
+const EditorItem lcs_pedstatsdat_menu[] = {
   //name                  //postfix   //address     //edit_bool  //type   //precision //*value  //steps    //min    //max
 //{"No"                    , ""      , 0x00      , false   , TYPE_INTEGER  , DEC   , 0            , 1      , INT_MIN  , INT_MAX  },
   {"PedStat Type Name"     , ""      , 0x04      , true    , TYPE_STRING   , 20    , 0            , 0      }, // A:  PedStat type name
@@ -1732,7 +1732,7 @@ const Editor_pack lcs_pedstatsdat_menu[] = {
 };
 
 
-const Editor_pack vcs_pedstatsdat_menu[] = {
+const EditorItem vcs_pedstatsdat_menu[] = {
   //name                     //postfix    //address //edit_bool  //type  //precision  //*value     //steps    //min    //max
 //  {"No"                     , ""      , 0x00      , false   , TYPE_INTEGER  , DEC   , 0            , 1      , INT_MIN , INT_MAX  },
   {"PedStat Type Name"        , ""      , 0x1A      , true    , TYPE_STRING   , 20    , 0            , 0      }, // A:  PedStat type name
@@ -1762,7 +1762,7 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
 
 
 
-/*const Editor_pack vcs_businessobj_menu[] = {
+/*const EditorItem vcs_businessobj_menu[] = {
   //name                  //postfix    //address  //edit_bool  //type  //precision  // *value       //steps    //min    //max
   {"World Coord X"      , ""      , 0x30      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
   {"World Coord Y"      , ""      , 0x34      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    },
@@ -1776,7 +1776,7 @@ const Editor_pack vcs_pedstatsdat_menu[] = {
 
 
 
-const Editor_pack lcs_weapondat_menu[] = {
+const EditorItem lcs_weapondat_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type        //precision  //*value  //steps    //min    //max
   {"Fire type"              , ""      , 0x00      , true    , TYPE_INTEGER  , DEC    , 0            , 0      }, // B: Fire type
   {"Range"                  , ""      , 0x04      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    }, // C: Range
@@ -1818,7 +1818,7 @@ const Editor_pack lcs_weapondat_menu[] = {
   {NULL,NULL,0,0,0,0,0,0}
 };
 
-const Editor_pack vcs_weapondat_menu[] = {
+const EditorItem vcs_weapondat_menu[] = {
   //name                  //postfix    //address     //edit_bool  //type  //precision  //*value  //steps    //min    //max
   {"Fire type"             , ""      , 0x04      , true    , TYPE_INTEGER  , DEC    , 0            , 0      }, // B: Fire type
   {"Range"                 , ""      , 0x08      , true    , TYPE_FLOAT    , 2      , 0            , 0.1    }, // C: Range
@@ -1864,7 +1864,7 @@ const Editor_pack vcs_weapondat_menu[] = {
 // GTA3 AMB        XXXX      XXXX      XXXX        DIR        SKY TOP    SKY BOT    SUNCORE   SUNCORONA  SUNSZ    SPRSZ  SPRBGHT   SHDW  LIGHTSHD  TREESHD    FARCLP    FOGST  LIGHTONGROUND  LOWCLOUDSRGB  TOPCLOUDRGB    BOTTOMCLOUDRGB  XXXX      WATERRGBA
 //    55 55 45     95 95 95   55 55 45  55 55 45  255 255 255    0 0 5    05 05 05   255 255 0  5 0 0    1.0    1.0    1.0      200    100      0      2000.0    100.0  1.0        30 20 0      23 32 33    3 3 3      056  038  000  85  85  65  192
 
-const Editor_pack timecycdat_menu[] = {  // ~3KB
+const EditorItem timecycdat_menu[] = {  // ~3KB
   //name                  //postfix //address   //edit_bool  //type        //precision  //value   //steps    //min     //max
   {"Amb R"                , ""      ,  0x180     , true    , TYPE_BYTE      , DEC    , 0           , 1       }, // Amb
   {"Amb G"                , ""      ,   0xC0     , true    , TYPE_BYTE      , DEC    , 0           , 1       }, //
@@ -2012,7 +2012,7 @@ float LightsOnGroundBrightness = char LightsOnGroundBrightness / 10;
 */
 
 
-const Editor_pack vcs_empire_menu[] = {
+const EditorItem vcs_empire_menu[] = {
   //name             //postfix    //address  //edit_bool  //type  //precision  //*value                //steps
   {"Ownership"          , ""       , 0x0      , true    , TYPE_INTEGER    , DEC      , empire_owner     , 1    }, // 373
   {"Type"               , ""       , 0xF0     , true    , TYPE_INTEGER    , DEC      , empire_type      , 1    }, // 433

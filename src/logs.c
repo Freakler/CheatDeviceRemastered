@@ -52,7 +52,7 @@ void Log(LogLevel level, const char *fileName, uint32 lineNumber, u8string messa
   vsnprintf(finalMessage, sizeof(finalMessage), message, args);
   va_end(args);
 
-  snprintf(formattedMessage, sizeof(formattedMessage), "[%s] [%s:%lu, %s]: %s\n", PLUGIN_NAME, fileName, lineNumber, LogTypeToString[level], finalMessage);
+  snprintf(formattedMessage, sizeof(formattedMessage), "[" PLUGIN_NAME "] [%s:%lu, %s]: %s\n", fileName, lineNumber, LogTypeToString[level], finalMessage);
 
   SceUID stdoutFileno = (level == LOG_ERROR) ? sceKernelStderr() : sceKernelStdout();
 	sceIoWrite(stdoutFileno, formattedMessage, strlen(formattedMessage));

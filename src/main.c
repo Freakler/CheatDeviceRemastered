@@ -53,39 +53,15 @@
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
 
 /// settings
-const uint32 menuopendelay = msec(2);  // wait ~2 seconds before showing menu & applying after spawning
-uint16 showoptions = 12;    // the number of options / lines that should be displayed at once
-static const float row_spacing = 15.0f; // pixels between rows
+const uint32 menuopendelay        = msec(2);  // wait ~2 seconds before showing menu & applying after spawning
+uint16 showoptions                = 12;    // the number of options / lines that should be displayed at once
+static const float row_spacing    = 15.0f; // pixels between rows
 static const uint32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
 static const uint32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
-static const u8string welcomemsg = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
+static const u8string welcomemsg  = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
 
 #if !LITE
 static const u8string memwarning = "~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!";
-#endif
-
-const u8string basefolder  = "ms0:/PSP/PLUGINS/cheatdevice_remastered/";
-
-#ifdef CONFIG
-static const u8string file_config = "cheatdevice_remastered.cfg";
-#endif
-
-#ifdef NAMERESOLV
-static const u8string file_names_lcs = "cheatdevice_names_lcs.ini";
-static const u8string file_names_vcs = "cheatdevice_names_vcs.ini";
-#endif
-
-#ifdef USERSCRIPTS
-static const u8string folder_scripts = "SCRIPTS/"; // inside basefolder
-#endif
-
-#ifdef PREVIEW
-static const u8string folder_cheats = "CHEATS/"; // inside basefolder
-// static const u8string folder_textures = "TEXTURES/"; // inside basefolder
-#endif
-
-#ifdef LANG
-const u8string folder_translations = "TRANSLATIONS/"; // inside basefolder
 #endif
 
 
@@ -174,10 +150,6 @@ bool LCS        = false;
 bool VCS        = false;
 
 u8char buffer[256];
-
-#ifdef CONFIG
-u8char config[128];
-#endif
 
 bool category_index[CAT_COUNTER] = {[0 ... CAT_COUNTER-1] = true}; // true = visible/expanded/enabled (init by module_start)
 
@@ -614,7 +586,7 @@ void usercheats_draw() {
   char local_buff[512];
   u8char filename[64];
 
-  snprintf(buffer, sizeof(buffer), "%s%s%s/", basefolder, folder_cheats, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
+  snprintf(buffer, sizeof(buffer), PLUGIN_USERCHEATS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
 
   /// draw title
   drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS, "User Cheats");
@@ -2033,7 +2005,7 @@ void userscripts_create() {
   userscript_readtxtneeded = true; // now
   //userscript_readfolderneeded = 1; // now
 
-  snprintf(script_workfldr, sizeof(script_workfldr), "%s%s%s/%s%s", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs, ( STR_EMPTY(script_subfldrs) ) ? "" : "/");
+  snprintf(script_workfldr, sizeof(script_workfldr), PLUGIN_USERSCRIPTS_GAME_PATH "%s%s", BOOLSTRCUSTOM(LCS, "VCS", "LCS"), script_subfldrs, BOOLSTRCUSTOM(!STR_EMPTY(script_subfldrs), "", "/"));
   userscripts_update_array();
 
   flag_userscripts = true; // only set here!
@@ -2058,13 +2030,13 @@ static void userscripts_draw() { // this is the worst code and I'm not proud of 
     // no longer needed as we auto-create the path and folder
     /* if( userscript_options == 0x80010002 ) { // no folder (doesn't work like this anymore since + countFolder... anyways)
       drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT, "No user scripts folder found!");
-      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"));
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
       return FUNC_ERROR; // no cheats folder
     } */
 
     if( userscript_cd_scripts_count == 0 ) { // folder found but empty
       drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT, "No UserScript files found!");
-      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Place User Scripts to '%s%s%s/'", basefolder, folder_scripts, LCS ? "LCS" : "VCS");
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Place User Scripts to '" PLUGIN_USERSCRIPTS_GAME_PATH "'", BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
       return; // no cheats folder
     }
     else if ( !userscript_currentdir_scripts ) { // No memory???
@@ -2275,7 +2247,7 @@ static void userscripts_draw() { // this is the worst code and I'm not proud of 
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED, "userscript_showoptions = %i", userscript_showoptions);
 
     // drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "userscript_draw_lower = %i", userscript_draw_lower);
-    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "scripts_folder = %s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"));
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "scripts_folder = " PLUGIN_USERSCRIPTS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 235.0f, RED, "script_workfldr = %s", script_workfldr);
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 250.0f, RED, "currentfile = %s", currentfile);
   }
@@ -2368,7 +2340,7 @@ static void userscripts_ctrl() {
   }
 
   if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
-    snprintf(buffer, sizeof(buffer), "%s%s%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS")); // "../CHEATS/xCS/"
+    snprintf(buffer, sizeof(buffer), PLUGIN_USERSCRIPTS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); // "../scripts/xCS/"
     if( strcmp(buffer, script_workfldr) != 0 || script_subfldrs[0] != 0x00) { // we are not yet back in root..
 
       /// remove last folder from working path string
@@ -2400,7 +2372,7 @@ static void userscripts_ctrl() {
         if ( script_subfldrs[0] ) strcat(script_subfldrs, "/");
         strncat(script_subfldrs, currentfile, strlen(currentfile));
 
-        snprintf(script_workfldr, sizeof(script_workfldr), "%s%s%s/%s/", basefolder, folder_scripts, (LCS ? "LCS" : "VCS"), script_subfldrs);
+        snprintf(script_workfldr, sizeof(script_workfldr), PLUGIN_USERSCRIPTS_GAME_PATH "%s/", BOOLSTRCUSTOM(LCS, "VCS", "LCS"), script_subfldrs);
         userscripts_update_array();
 
         userscript_selected_val = 0;
@@ -2437,7 +2409,7 @@ static void userscripts_ctrl() {
 
 static uint16 flag_editor = 0;
 static u8char editor_titlebuffer[64];
-static const Editor_pack *editor_curmenu;
+static const EditorItem *editor_curmenu;
 
 static uint8 editor_menumode      = 0;
 static array_size editor_toptions = 0;
@@ -2499,7 +2471,7 @@ static void optionAdjust() {
     editor_showoptions = editor_options; // adjust editor_showoptions (there can't be more "editor_showoptions" than "editor_options" itself)
 }
 
-void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const Editor_pack *editor_menu, uaddr first_obj, usize block_size, usize blocks) {
+void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const EditorItem *editor_menu, uaddr first_obj, usize block_size, usize blocks) {
   DEBUG_LOG("%lu: editor_create() ..'%s'", getGametime(), editortitle);
 
   snprintf(editor_titlebuffer, sizeof(editor_titlebuffer), "Editor - %s", _t(editortitle));
@@ -5615,9 +5587,9 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
 
   /// title
   #if LITE
-  drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE, "%s %s Lite by %s", PLUGIN_NAME, VERSION, PLUGIN_AUTHOR);
+  drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE, PLUGIN_NAME " " PLUGIN_VERSION " Lite by " PLUGIN_AUTHOR);
   #else
-  drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE, "%s %s by %s", PLUGIN_NAME, VERSION, PLUGIN_AUTHOR);
+  drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_ON, 8.0f, 5.0f, COLOR_TITLE, PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR);
   #endif
 
   /// GameID & version
@@ -6023,7 +5995,7 @@ int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
   while( true ) {
     if( hash_to_check != last_hash ) {
       snprintf(hashstr, sizeof(hexeditor_infobuffer), "0x%08lX", hash_to_check); //0x%08X
-      snprintf(buffer, sizeof(buffer), "%s%s", basefolder, LCS ? file_names_lcs: file_names_vcs); //ini file
+      snprintf(buffer, sizeof(buffer), PLUGIN_NAMES_GAME_FILE, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); //ini file
 
       ini_gets( LCS ? "NAMES_LCS" : "NAMES_VCS", hashstr, "unknown", hashbuffer, 32, buffer); //
 
@@ -6169,7 +6141,7 @@ static func_stat patch() {
 
   /// create sub folders for the noobs
   #ifdef PREVIEW
-  snprintf(buffer, sizeof(buffer), "%s%s%s", basefolder, folder_cheats, LCS ? "LCS" : "VCS"); // "../CHEATS/xCS"
+  snprintf(buffer, sizeof(buffer), PLUGIN_USERCHEATS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); // "../cheats/xCS"
   sceIoMkdir(buffer, 0777);
 
   // snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_textures); // "../TEXTURES/"
@@ -6177,19 +6149,19 @@ static func_stat patch() {
   #endif
 
   #ifdef USERSCRIPTS
-  snprintf(buffer, sizeof(buffer), "%s%s%s", basefolder, folder_scripts, LCS ? "LCS" : "VCS"); // "../SCRIPTS/xCS"
+  snprintf(buffer, sizeof(buffer), PLUGIN_USERSCRIPTS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); // "../scripts/xCS"
   makedirs(buffer);
   #endif
 
   #ifdef LANG
-  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_translations); // "../TRANSLATIONS/"
+  snprintf(buffer, sizeof(buffer), PLUGIN_LANG_PATH); // "../translations/"
   makedirs(buffer);
   #endif
 
 
   /// create name resolver thread (if .ini found)
   #ifdef NAMERESOLV
-  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, LCS ? file_names_lcs: file_names_vcs);
+  snprintf(buffer, sizeof(buffer), PLUGIN_NAMES_GAME_FILE, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
   if( doesFileExist(buffer) ) {
 
     DEBUG_LOG("%s found! Starting name_resolver thread", buffer);
@@ -6305,24 +6277,23 @@ int OnModuleStart(SceModule *mod) {
 int module_start(SceSize args UNUSED, void *argp UNUSED) {
   sceCtrlPeekBufferPositive(&pad, 1);
 
-  /// create basefolder to be save (for logfile this early)
-  makedirs(basefolder); // recursively create "ms0:/PSP/PLUGINS/cheatdevice_remastered/"
+  /// create basefolder
+  makedirs(PLUGIN_ASSETS_PATH); // recursively create the path until "assets/"
 
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
 
-  INFO_LOG("Starting %s %s", PLUGIN_NAME, VERSION);
+  INFO_LOG("Starting" PLUGIN_NAME " " PLUGIN_VERSION);
   DEBUG_LOG("args: %i, argp: %s", args, (u8string)argp);
 
   /// config init
   #ifdef CONFIG
-  snprintf(config, sizeof(config), "%s%s", basefolder, file_config); // always use the basefolder path
-  if ( doesFileExist(config) )
+  if ( doesFileExist(PLUGIN_CONFIG_FILE) )
   {
-    INFO_LOG("Config .ini found! (%s)", config);
+    INFO_LOG("Config .ini found! (%s)", PLUGIN_CONFIG_FILE);
   }
   #endif
 
- /// check PPSSPP
+  /// check PPSSPP
   if( sceIoDevctl("kemulator:", EMULATOR_DEVCTL__IS_EMULATOR, NULL, 0, NULL, 0) == 0 ) {
     PPSSPP = true;
     INFO_LOG("PPSSPP detected!");
@@ -6345,8 +6316,8 @@ int module_start(SceSize args UNUSED, void *argp UNUSED) {
   /// startup key combos
   #ifdef CONFIG
   if( pad.Buttons & PSP_CTRL_RTRIGGER ) { //delete config .ini file
-    sceIoRemove(config);
-    INFO_LOG("> R-TRIGGER: '%s' deleted!", config);
+    sceIoRemove(PLUGIN_CONFIG_FILE);
+    INFO_LOG("> R-TRIGGER: '%s' deleted!", PLUGIN_CONFIG_FILE);
   }
   #endif
 

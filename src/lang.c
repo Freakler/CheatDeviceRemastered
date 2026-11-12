@@ -36,10 +36,6 @@
 #include "minIni.h"
 
 #ifdef LANG
-
-extern u8string folder_translations;
-extern const u8string basefolder;
-
 static LangHashTable *langTableCreate()
 {
   LangHashTable *ht = (LangHashTable *)malloc(sizeof(LangHashTable));
@@ -220,12 +216,10 @@ static void langFileTableSearch()
   if ( !main_file_table ) return;
 
   // Create an english default
-  langFileTableAppend(main_file_table, VERSION, "Freakler", "English (United States)", "");
+  langFileTableAppend(main_file_table, PLUGIN_VERSION, "Freakler", "English (United States)", "");
 
   // Open Directory
-  u8char buffer[128];
-  snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_translations);
-  SceUID dir = sceIoDopen(buffer);
+  SceUID dir = sceIoDopen(PLUGIN_LANG_PATH);
   if ( dir < 0 ) return;
 
   SceIoDirent dirent;
@@ -263,9 +257,9 @@ void GetLangINIInfo(LangFileTable *table, const u8string filename)
   u8char lang[32];
   u8char path[256];
 
-  snprintf(path, sizeof(path), "%s%s%s", basefolder, folder_translations, filename);
+  snprintf(path, sizeof(path), PLUGIN_LANG_PATH "%s", filename);
 
-  ini_gets("INFO", "Translate Version", VERSION, version, sizeof(version), path);
+  ini_gets("INFO", "Translate Version", PLUGIN_VERSION, version, sizeof(version), path);
   ini_gets("INFO", "Translate Author", "unknown", author, sizeof(author), path);
   ini_gets("INFO", "Translate Language", "unknown", lang, sizeof(lang), path);
 
@@ -303,7 +297,7 @@ static void ReadTranslationsFromINI(LangHashTable *table, const u8string INISect
   #endif
 
   u8char lang_path[128];
-  snprintf(lang_path, sizeof(lang_path), "%s%s%s", basefolder, folder_translations, main_file_table->lang_files[index]->path);
+  snprintf(lang_path, sizeof(lang_path), PLUGIN_LANG_PATH "%s", main_file_table->lang_files[index]->path);
 
   #ifdef LANG_DEBUG
   DEBUG_LOG("Reading Section '%s' from INI file '%s'", INISection, lang_path);
@@ -355,7 +349,7 @@ void langTableSetup(LangID langID)
   if ( langID == LANG_ENGLISH ) return;
 
   ReadTranslationsFromINI(main_lang_table, "GENERAL", langID);
-  ReadTranslationsFromINI(main_lang_table, LCS ? "LCS" : "VCS", langID);
+  ReadTranslationsFromINI(main_lang_table, BOOLSTRCUSTOM(LCS, "VCS", "LCS"), langID);
 }
 
 #endif

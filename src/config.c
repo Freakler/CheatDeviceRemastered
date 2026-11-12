@@ -37,7 +37,6 @@
 extern int gp_; // a thread has its own gp register obviously
 extern int gametimer;
 
-extern char config[128];
 extern const CDRMenuItem main_menu[];
 
 extern const array_size menu_size;
@@ -116,7 +115,7 @@ static int save_thread(SceSize args UNUSED, void *argp UNUSED) {
   usize menu_max = menu_size;
 
   /// the easy way
-  if( !doesFileExist(config) ) { // no config file yet
+  if( !doesFileExist(PLUGIN_CONFIG_FILE) ) { // no config file yet
     int ret = create_config(menu_list, menu_max); // fully generate it (SETT + Lxxx OR Vxxx parts only this way!)
     DEBUG_LOG("save_thread done easy way");
     saveing = false;
@@ -127,15 +126,15 @@ static int save_thread(SceSize args UNUSED, void *argp UNUSED) {
   char tempfig[256];
 
   /// there is a config file! -> rename it to copy from later
-  snprintf(tempfig, sizeof(tempfig), "%s_", config);
-  sceIoRename(config, tempfig);
-  sceIoRemove(config); // to be sure?!
+  snprintf(tempfig, sizeof(tempfig), PLUGIN_CONFIG_FILE "_");
+  sceIoRename(PLUGIN_CONFIG_FILE, tempfig);
+  sceIoRemove(PLUGIN_CONFIG_FILE); // to be sure?!
 
   /// generate a new one
   create_config(menu_list, menu_max); // for current game (LCS or VCS)
 
   /// copy the other category parts from the backup and append to the new file (IF there are any!) (if Liberty City: append VCAT, VCHT etc..)
-  SceUID f1 = sceIoOpen(config, PSP_O_WRONLY | PSP_O_APPEND, 0777);
+  SceUID f1 = sceIoOpen(PLUGIN_CONFIG_FILE, PSP_O_WRONLY | PSP_O_APPEND, 0777);
   SceUID f2 = sceIoOpen(tempfig, PSP_O_RDONLY, 0777);
   if( f1 < 0 ) {
     ERROR_LOG("sceIoOpen f1 error (0x%08X)", f1);
@@ -224,7 +223,7 @@ static int save_thread(SceSize args UNUSED, void *argp UNUSED) {
 }
 
 func_stat save_config() {
-  DEBUG_LOG("%lu: save_config(%s)", getGametime(), config);
+  DEBUG_LOG("%lu: save_config(%s)", getGametime(), PLUGIN_CONFIG_FILE);
 
   ///////////////////////
   if( !saveing ) { // only start thread if not running already
@@ -331,11 +330,11 @@ static int writeMemory(SceUID file, int start, int slots, int size) {
   */
 
 func_stat create_config(const CDRMenuItem *menu_list, usize menu_max) {
-  DEBUG_LOG("%lu: create_config(%s)", getGametime(), config);
+  DEBUG_LOG("%lu: create_config(%s)", getGametime(), PLUGIN_CONFIG_FILE);
 
   int ret, counter;
 
-  SceUID file = sceIoOpen(config, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+  SceUID file = sceIoOpen(PLUGIN_CONFIG_FILE, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
   if( file < 0 ) {
     ERROR_LOG("sceIoOpen error (0x%08X)", file);
     return FUNC_ERROR; // error
@@ -499,11 +498,11 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
   CONFIG_LOG("load_config()");
 
   char tempfig[256];
-  snprintf(tempfig, sizeof(tempfig), "%s_", config);
+  snprintf(tempfig, sizeof(tempfig), PLUGIN_CONFIG_FILE "_");
   if( doesFileExist(tempfig) ) { // if this (sill) exists, user probably exited game before saving was done
     ERROR_LOG("found bad config");
     sceIoRemove(tempfig);
-    sceIoRemove(config);
+    sceIoRemove(PLUGIN_CONFIG_FILE);
     return FUNC_ERROR;
   }
 
@@ -511,9 +510,9 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
   static int keypress = -2;
   void (* func)(int calltype, int keypress, bool defaultstatus, int defaultval);
 
-  SceUID file = sceIoOpen(config, PSP_O_RDONLY, 0777);
+  SceUID file = sceIoOpen(PLUGIN_CONFIG_FILE, PSP_O_RDONLY, 0777);
   if( file < 0 ) {
-    ERROR_LOG("sceIoOpen(%s) error 0x%08X", config, file);
+    ERROR_LOG("sceIoOpen(%s) error 0x%08X", PLUGIN_CONFIG_FILE, file);
     return FUNC_ERROR; // error
   }
 
@@ -629,7 +628,7 @@ func_stat load_config_block(const u8string magic, uaddr address) {
   if( !isInMemBounds(address) )
     return FUNC_ERROR;
 
-  SceUID file = sceIoOpen(config, PSP_O_RDONLY, 0777);
+  SceUID file = sceIoOpen(PLUGIN_CONFIG_FILE, PSP_O_RDONLY, 0777);
   if( file < 0 ) {
     ERROR_LOG("sceIoOpen error (0x%08X)", file);
     return FUNC_ERROR; // error

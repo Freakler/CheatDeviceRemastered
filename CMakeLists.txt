@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 
 project(
   CheatDeviceRemastered
-  VERSION 1.0
+  VERSION 1.8.4 # v1.0h4
   DESCRIPTION "A Cheat Device for Grand Theft Auto Liberty & Vice City Stories for PlayStation Portable."
   HOMEPAGE_URL "http://cheatdeviceremastered.com"
   LANGUAGES C ASM
@@ -13,13 +13,8 @@ include("$ENV{PSPDEV}/psp/share/pspdev.cmake")
 
 set(PROJECT_AUTHOR "Freakler")
 
-add_definitions(-DNDEBUG -DINI_READONLY)
-
-add_subdirectory(lib/minIni-PSP)
-add_subdirectory(lib/StoriesRWSDK)
-add_subdirectory(src)
-
-add_prx_module(${PROJECT_NAME} ${MAIN_SOURCES})
+# Versioning stuff
+set(PROJECT_VERSION "v1.0h4")
 
 # Get version info from cmake to project
 configure_file(
@@ -27,6 +22,14 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/versioning.h
   @ONLY # Only replace vars with this "@syntax@"
 )
+
+add_definitions(-DNDEBUG -DINI_READONLY)
+
+add_subdirectory(lib/minIni-PSP)
+add_subdirectory(lib/StoriesRWSDK)
+add_subdirectory(src)
+
+add_prx_module(${PROJECT_NAME} ${MAIN_SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
