@@ -311,7 +311,8 @@ extern bool isHudDisabledWhileCutsceneCamera();
 extern int32 getIsland();
 extern int32 getLanguage();
 
-extern bool isPedCrouching();
+extern bool isPedInAir(uaddr ped_base_addr);
+extern bool isPedCrouching(uaddr ped_base_addr);
 extern void TaskDuck();
 
 extern void setRandomPedCheat(int8 id);

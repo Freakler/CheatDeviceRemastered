@@ -3204,8 +3204,15 @@ float getGamespeed() {
   return getFloat(global_timescale + (LCS ? 0 : gp));
 }
 
-bool isPedCrouching() {
-  return getInt( pplayer + (LCS ? 0x198 : 0x1CC)) & (LCS ? 0x10 : 0x2000);
+bool isPedInAir(uaddr ped_base_addr) {
+  if ( LCS ) return getBit(ped_base_addr + 0x195, 3);
+
+  // We have to check if ped is in water as well as "IsInAir" is false there, just to replicate LCS
+  /* if VCS */ return getBit(ped_base_addr + 0x1C9, 4) || getBit(ped_base_addr + 0xED, 0);
+}
+
+bool isPedCrouching(uaddr ped_base_addr) {
+  return getInt( ped_base_addr + (LCS ? 0x198 : 0x1CC)) & (LCS ? 0x10 : 0x2000);
 }
 
 void TaskDuck() {

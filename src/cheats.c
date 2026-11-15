@@ -4573,7 +4573,8 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, CYAN, "health = %.2f", getPedHealth(pplayer));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, CYAN, "armor = %.2f", getPedArmor(pplayer));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, CYAN, "facing = %.2f", getPedFacingDirectionInDegree(pplayer));
-            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, CYAN, "drowning = %d", getPedDrowning(pplayer));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, CYAN, "drowning = %s", BOOLSTR(getPedDrowning(pplayer)));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 160.0f, CYAN, "isPedInAir = %s", BOOLSTR(isPedInAir(pplayer)));
           }
 
 
@@ -10102,8 +10103,8 @@ void buttonApplyOnce(int i) { // apply once on button press
     camera_topdown(FUNC_CHANGE_VALUE, PSP_CTRL_CROSS, 0);
 
   } else if( i == 9 ) { // crouch
-    if( !pcar && ((current_buttons & PSP_CTRL_RTRIGGER) == 0) ) { // R-Trigger is fix for manual aiming
-      if( isPedCrouching() )
+    if( !pcar && !isPedInAir(pplayer) && ((current_buttons & PSP_CTRL_RTRIGGER) == 0) ) { // R-Trigger is fix for manual aiming
+      if( isPedCrouching(pplayer) )
         TaskUnDuck(pplayer, 0x1);
       else TaskDuck();
     }
