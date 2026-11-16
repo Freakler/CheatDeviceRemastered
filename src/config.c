@@ -260,7 +260,7 @@ void writeBool(SceUID file, int16 id, bool boolean) {
   sceIoWrite(file, &boolean, sizeof(boolean));
 }
 
-func_stat writeCategoryHeader(SceUID file, u8string magic) {
+func_stat writeCategoryHeader(SceUID file, u8str magic) {
   //DEBUG_LOG("category %s", magic);
   u8char buffer[16]; memset(buffer, 0, sizeof(buffer));
   snprintf(buffer, sizeof(buffer), "%s", magic);
@@ -619,7 +619,7 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
   return FUNC_OK; // success
 }
 
-func_stat load_config_block(const u8string magic, uaddr address) {
+func_stat load_config_block(const u8str magic, uaddr address) {
   CONFIG_LOG("load_config_block(%s, 0x%08X)", magic, address);
 
   //if( !flag_use_advaconfig )

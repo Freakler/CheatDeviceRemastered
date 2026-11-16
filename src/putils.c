@@ -34,11 +34,11 @@
 #include "main.h"
 #include "logs.h"
 
-extern u8string file_log;
-extern const u8string basefolder;
+extern u8str file_log;
+extern const u8str basefolder;
 
 // Check if file exists
-bool doesFileExist(const u8string path)
+bool doesFileExist(const u8str path)
 {
   SceIoStat stat; memset(&stat, 0, sizeof(SceIoStat));
 
@@ -53,7 +53,7 @@ bool doesFileExist(const u8string path)
 }
 
 // Check if dir exists
-bool doesDirExist(const u8string path)
+bool doesDirExist(const u8str path)
 {
   SceIoStat stat; memset(&stat, 0, sizeof(SceIoStat));
 
@@ -67,7 +67,7 @@ bool doesDirExist(const u8string path)
   return FIO_SO_ISDIR(stat.st_attr);
 }
 
-usize countFilesInFolder(const u8string path) {
+usize countFilesInFolder(const u8str path) {
   SceIoDirent d_dir; memset(&d_dir, 0, sizeof(SceIoDirent)); // prevents a crash
   usize file_count = 0;
 
@@ -83,7 +83,7 @@ usize countFilesInFolder(const u8string path) {
   return file_count;
 }
 
-usize countFoldersInFolder(const u8string path) {
+usize countFoldersInFolder(const u8str path) {
   usize folder_count = 0;
   SceUID fd;
   SceIoDirent d_dir; memset(&d_dir,0,sizeof(SceIoDirent)); // prevents a crash
@@ -100,7 +100,7 @@ usize countFoldersInFolder(const u8string path) {
 }
 
 #ifdef SAVEDITOR
-func_stat setFolderModificationDateNow(const u8string folder)
+func_stat setFolderModificationDateNow(const u8str folder)
 {
   DEBUG_LOG("setFolderModificationDateNow('%s')", folder);
 
@@ -129,7 +129,7 @@ func_stat setFolderModificationDateNow(const u8string folder)
   return ret;
 }
 
-u8string getFolderModificationDate(const u8string folder, u8string out, usize size)
+u8str getFolderModificationDate(const u8str folder, u8str out, usize size)
 {
   DEBUG_LOG("getFolderModificationDate('%s')", folder);
 
@@ -143,11 +143,6 @@ u8string getFolderModificationDate(const u8string folder, u8string out, usize si
   return out;
 }
 #endif
-
-bool adrenalineCheck()
-{
-  return doesFileExist("flash1:/config.adrenaline");
-}
 
 void clearICacheFor(uaddr address)
 {
@@ -188,7 +183,7 @@ void writeFloat(byte *address, float value)
   memcpy(address, &value, sizeof(value));
 }
 
-u8string _fgets(u8string s, usize size, SceUID stream) {
+u8str _fgets(u8str s, usize size, SceUID stream) {
   int read = sceIoRead(stream, s, size - 1);
   if( read <= 0 )
     return NULL;
@@ -205,9 +200,9 @@ u8string _fgets(u8string s, usize size, SceUID stream) {
 }
 
 // recursively create path
-void makedirs(const u8string path)
+void makedirs(const u8str path)
 {
-  u8string sep = strrchr(path, '/');
+  u8str sep = strrchr(path, '/');
 
   if( sep != NULL )
   {
@@ -358,12 +353,12 @@ float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float
  * @param outStringSize Output string size.
  * @returns `outString` on success, `NULL` otherwise.
  */
-u8string SizeToStrUnits(usize size, u8string outString, usize outStringSize)
+u8str SizeToStrUnits(usize size, u8str outString, usize outStringSize)
 {
   if ( STR_NULL(outString) || outStringSize == 0 ) return NULL;
 
   // Yes I'm using the correct metric unit (which is a power of 2)
-  static const u8string sizeUnits[] = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+  static const u8str sizeUnits[] = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
 
   // Unrealistically large, probably negative
   if ( size > 4000000000 ) size = 0;
@@ -382,7 +377,7 @@ u8string SizeToStrUnits(usize size, u8string outString, usize outStringSize)
 }
 
 // Check if filename (or path) ends with extension
-bool stringEndsWith(const u8string string, const u8string endswith)
+bool stringEndsWith(const u8str string, const u8str endswith)
 {
   if ( STR_NULL(string) || STR_NULL(endswith) || STR_EMPTY(string) || STR_EMPTY(endswith) ) return 0;
 
@@ -390,18 +385,18 @@ bool stringEndsWith(const u8string string, const u8string endswith)
 }
 
 // Get extension length
-usize getExtensionLength(const u8string path)
+usize getExtensionLength(const u8str path)
 {
   if ( STR_NULL(path) || STR_EMPTY(path) ) return 0;
 
-  const u8string dot = strrchr(path, '.'); // Find last dot
+  const u8str dot = strrchr(path, '.'); // Find last dot
   if ( !dot ) return 0;
 
   return strlen(path) - (usize)(dot - path);
 }
 
 // FUNC: MurmurHash3 hash function
-uint32 hash(const u8string key, usize len, uint32 seed)
+uint32 hash(const u8str key, usize len, uint32 seed)
 {
   uint32 c1 = 0xcc9e2d51;
   uint32 c2 = 0x1b873593;

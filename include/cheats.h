@@ -313,8 +313,8 @@ extern void *test_switch(int calltype, int keypress, bool defaultstatus);
 #endif
 
 #ifdef GAME_LOGGING
-extern void (*debugprint)(const u8string text, ...);
-extern void debugprint_patched(const u8string text, ...);
+extern void (*debugprint)(const u8str text, ...);
+extern void debugprint_patched(const u8str text, ...);
 extern void drawGameLog();
 #endif
 

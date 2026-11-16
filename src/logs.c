@@ -36,12 +36,12 @@
 
 #if LOGGING
 
-static u8string LogTypeToString[] =
+static u8str LogTypeToString[] =
 {
   "DEBUG", "INFO ", "WARNG", "ERROR", "PATCH", "MEMRY", "USRSC", "GAME ", "CONFG"
 };
 
-void Log(LogLevel level, const char *fileName, uint32 lineNumber, u8string message, ...)
+void Log(LogLevel level, const char *fileName, uint32 lineNumber, u8str message, ...)
 {
   if ( STR_EMPTY(message) ) return;
 

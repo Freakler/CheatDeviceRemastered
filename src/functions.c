@@ -146,11 +146,11 @@ const byte NONE     = 0x20;
 uint32 key_to_pad; // for custom button trigger (only cheats currently)
 
 
-const u8string lcs_garagenames[] = { "Portland", "Staunton Island", "Shoreside Vale" };
-const u8string vcs_garagenames[] = { "101 Bayshore Avenue", "The Compound", "Clymenus Suite" };
+const u8str lcs_garagenames[] = { "Portland", "Staunton Island", "Shoreside Vale" };
+const u8str vcs_garagenames[] = { "101 Bayshore Avenue", "The Compound", "Clymenus Suite" };
 
-const u8string weather_vcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Ultra Sunny", "8", "9", "10", "11", "12", "13", "14", "15"};
-const u8string weather_lcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Snow", "8", "9", "10", "11", "12", "13", "14", "15"};
+const u8str weather_vcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Ultra Sunny", "8", "9", "10", "11", "12", "13", "14", "15"};
+const u8str weather_lcs[] = { "Sunny", "Cloudy", "Rainy", "Foggy", "Extra Sunny", "Hurricane", "Extra Colours", "Snow", "8", "9", "10", "11", "12", "13", "14", "15"};
 
 
 const GTAWorldLocation lcs_teleports[] = { // z value + 0.20
@@ -1654,7 +1654,7 @@ float getFloat(uaddr adr) { // 32bit
 
 #define MAX_STRING_SIZE 256
 
-void setString(uaddr adr, u8string string, bool unicode) { // unicode -> (where every second is a char)
+void setString(uaddr adr, u8str string, bool unicode) { // unicode -> (where every second is a char)
   #if MEMCHECK
   if( adr >= pluginMemory.LowestMemoryAddr && adr+MAX_STRING_SIZE < pluginMemory.HighestMemoryAddr ) {
   #endif
@@ -1671,7 +1671,7 @@ void setString(uaddr adr, u8string string, bool unicode) { // unicode -> (where 
   #endif
 }
 
-u8string getString(uaddr adr, bool unicode) { // mode = 1 (where every second is a char)
+u8str getString(uaddr adr, bool unicode) { // mode = 1 (where every second is a char)
   static char str[MAX_STRING_SIZE];
   CLEAR_STR(str);
 
@@ -2293,7 +2293,7 @@ float getPickupCoordZ(uaddr pickup_base_adr) {
   return getFloat(pickup_base_adr+0x08);
 }
 
-u8string getPickupNameByID(uint16 id) {
+u8str getPickupNameByID(uint16 id) {
   for( array_uidx i = 0; i <= (LCS ? lcs_pickupsize : vcs_pickupsize); i++ ) {
     if( id == (LCS ? lcs_pickups[i].id : vcs_pickups[i].id) )
       return LCS ? lcs_pickups[i].name : vcs_pickups[i].name;
@@ -2399,7 +2399,7 @@ uint8 getMapiconID(uaddr mapicon_base_adr) {
   return getByte(mapicon_base_adr+(LCS?0x40:0x29));
 }
 
-u8string getMapiconNameByID(uint16 id) {
+u8str getMapiconNameByID(uint16 id) {
   static char ret[32];
   uaddr offset = 0;
 
@@ -2418,7 +2418,7 @@ int getMapiconType(uaddr mapicon_base_adr) {
   return getInt(mapicon_base_adr+0x04);
 }
 
-u8string getMapiconTypeName(uaddr mapicon_base_adr) { // TODO: VCS
+u8str getMapiconTypeName(uaddr mapicon_base_adr) { // TODO: VCS
   switch( getMapiconType(mapicon_base_adr) ) {
     case 0: return "Business"; // VCS only
     case 1: return "Vehicle";
@@ -2434,7 +2434,7 @@ uint8 getMapiconColor(uaddr mapicon_base_adr) {
   return getInt(mapicon_base_adr);
 }
 
-u8string getMapiconColorName(uaddr mapicon_base_adr) {
+u8str getMapiconColorName(uaddr mapicon_base_adr) {
   // char buf[16];
   switch( getMapiconColor(mapicon_base_adr) ) {
     case 0: return "Red";
@@ -2757,7 +2757,7 @@ bool getMapLegendToggle() {
 
  * Calling the game function crashes so i made it this way..
  */
-void setTimedTextbox(u8string sentence, float duration) {
+void setTimedTextbox(u8str sentence, float duration) {
   uaddr base = 0;
 
   if( LCS ) base = global_helpbox_string; // DAT_00649dc0_string (0x8E4DDC0)
@@ -3015,7 +3015,7 @@ int8 getIdeType(array_uidx id) {
   return FUNC_ERROR;
 }
 
-u8string getIdeTypeName(uint8 no) {
+u8str getIdeTypeName(uint8 no) {
   switch( no ) {
     case 1: return "obj";
     case 3: return "tobj"; // timed object
@@ -3086,7 +3086,7 @@ iaddr getAddressOfHandlingSlotForID(array_uidx id) { // via IDE-table
   return FUNC_ERROR; // error
 }
 
-u8string getModelNameViaHash(uint32 hash, uint32 time) {
+u8str getModelNameViaHash(uint32 hash, uint32 time) {
   /*
   for( int i = 0; i < (LCS ? lcs_namesize : vcs_namesize); i++) {
     if( hash == (LCS ? lcs_names[i].hash : vcs_names[i].hash) )
@@ -3120,7 +3120,7 @@ u8string getModelNameViaHash(uint32 hash, uint32 time) {
   //return "unknown";
 }
 
-u8string getModelNameViaID(uint32 id, uint32 time) {
+u8str getModelNameViaID(uint32 id, uint32 time) {
   //int slots = getInt(ptr_IDEs+(LCS?0x0:gp));
   uaddr idetable = getInt(ptr_IDETable+(LCS?0x0:gp));
   return getModelNameViaHash( getInt( getInt(idetable+(id*0x4))+0x8), time); // time = 0 means resolve immediately
@@ -3128,30 +3128,30 @@ u8string getModelNameViaID(uint32 id, uint32 time) {
 
 //extern int (* LoadStringFromGXT)(int gxt_adr,char *string,int param_3,int param_4,int param_5, int param_6,int param_7,int param_8); // hooked
 
-u8string getGxtTranslation(u8string identifier) { // entering "MAFIACR" returns "Leone Sentinel"
+u8str getGxtTranslation(u8str identifier) { // entering "MAFIACR" returns "Leone Sentinel"
   // TODO: understand ARGS??
   return getString(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 0x00000002, 0x000000FF, 0x000000FF, 0x00000000, 0x00FF0000, 0x00FFFFFF), 1); // mode 1 -> wide char
 }
 
-u8string getRealVehicleNameViaID(uint16 id) { // 0x82 "Deimos", 0x83 "Landstalker" ...
+u8str getRealVehicleNameViaID(uint16 id) { // 0x82 "Deimos", 0x83 "Landstalker" ...
   return getGxtTranslation(getGxtIdentifierForVehicleViaID(id));
 }
 
-u8string getGxtIdentifierForVehicleViaID(uint16 id) { // eg: returns "MAFIACR" for entered id 172 (Leone Sentinel)
+u8str getGxtIdentifierForVehicleViaID(uint16 id) { // eg: returns "MAFIACR" for entered id 172 (Leone Sentinel)
   uaddr idetable = getInt(ptr_IDETable+(LCS?0x0:gp));
   return getString( getInt(idetable+(id*0x4)) + (LCS ? 0x2E : 0x158), 0 ); //gxt name is inside IDE
 }
 
-u8string vcs_getNameForPedViaID(uint16 id) { // eg: returns "PHCOL" for entered id 0x92 (Phil Collins)
+u8str vcs_getNameForPedViaID(uint16 id) { // eg: returns "PHCOL" for entered id 0x92 (Phil Collins)
   uaddr idetable = getInt(ptr_IDETable+gp);
   return getString( getInt(idetable+(id*0x4)) + 0xE4, 0 ); //name is inside IDE
 }
 
-u8string removeColor(u8string string) { // fix - sindacco chronicles gave radio stations a custom color ("~Y~XYZ")
+u8str removeColor(u8str string) { // fix - sindacco chronicles gave radio stations a custom color ("~Y~XYZ")
   return STR_STARTSWITH_CHAR(string, '~') ? &string[3] : string;
 }
 
-u8string getRadioStationName(uint32 no) { // for LCS: 0 = Head Radio, 1 = Double Clef, .... 10 = Radio Off
+u8str getRadioStationName(uint32 no) { // for LCS: 0 = Head Radio, 1 = Double Clef, .... 10 = Radio Off
   static u8char buf[32];
 
   if( no == var_radios ) // highest possible is "radio off"
@@ -3165,7 +3165,7 @@ u8string getRadioStationName(uint32 no) { // for LCS: 0 = Head Radio, 1 = Double
   }
 }
 
-/* void setPedSkin(int ped_handle, u8string name) {
+/* void setPedSkin(int ped_handle, u8str name) {
   SetActorSkinTo(ped_handle, name); //SetActorSkinTo
   LoadAllModelsNow(0); //LoadAllModelsNow
   RefreshActorSkin(ped_handle); //RefreshActorSkin
@@ -3249,7 +3249,7 @@ usize removeIPLObjectsCollision(uint16 id) {
 }
 
 
-uaddr getParticleOffsetFor(const u8string name) {
+uaddr getParticleOffsetFor(const u8str name) {
   uaddr offset = getInt(ptr_particleCFG+(LCS?0x0:gp)); // PARTICLE.CFG
   for( uaddr i = 0; i < var_particleCFGslots; i++, offset += var_particleCFGslotsize ) {
     if( strcmp(name, getString(offset+0x4, 0)) == 0 ){
@@ -3259,7 +3259,7 @@ uaddr getParticleOffsetFor(const u8string name) {
   return 0; // error not found
 }
 
-u8string getPedstatName(uint32 no) {
+u8str getPedstatName(uint32 no) {
   uaddr adr = getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp))) + (no * var_pedstatDATslotsize);
   if( no > var_pedstatDATslots - 1 ) {
     return "ERROR";

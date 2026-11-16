@@ -88,7 +88,6 @@ typedef struct menu_blit_box
 #define CHDVC_YELLOW  COLOR32(0xFF66ffff)
 #define CHDVC_ORANGE  COLOR32(0xFF05AFFF)
 #define CHDVC_MAGENTA COLOR32(0xFF5C00A2)
-#define CHDVC_MAGENTA COLOR32(0xFF5C00A2)
 #define CHDVC_AZURE   COLOR32(0xFFAEE223)
 #define CHDVC_GREEN   COLOR32(0xFF00FF00)
 
@@ -102,14 +101,14 @@ typedef struct menu_blit_box
 extern void drawBox(float x, float y, float width, float height, CRGBA color);
 extern void drawUiBox(float x, float y, float width, float height, float bordersize, CRGBA bordercolor, CRGBA bgcolor);
 
-extern void drawStringNoTVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8string string);
-extern void drawStringNoT(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8string string, ...);
-extern void drawStringNoVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8string string);
-extern void drawString(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8string string, ...);
-extern void drawStringLCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8string string, ...);
-extern void drawStringVCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8string string, ...);
+extern void drawStringNoTVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8str string);
+extern void drawStringNoT(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8str string, ...);
+extern void drawStringNoVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8str string);
+extern void drawString(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8str string, ...);
+extern void drawStringLCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8str string, ...);
+extern void drawStringVCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8str string, ...);
 
-extern void Utf8ToGameEncoding(const u8string in, wstring out);
+extern void Utf8ToGameEncoding(const u8str in, wstring out);
 
 // extern void cWorldStream_Render_LCS_Patched(void *this, int mode);
 // extern void cWorldStream_Render_VCS_Patched(void *this, int mode);

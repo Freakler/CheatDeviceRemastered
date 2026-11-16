@@ -194,9 +194,9 @@ typedef char      u8char;
 #define __u8char_defined
 #endif
 
-#ifndef __u8string_defined
-typedef char *    u8string;
-#define __u8string_defined
+#ifndef __u8str_defined
+typedef char *    u8str;
+#define __u8str_defined
 #endif
 
 #ifndef __cchar_defined
@@ -204,9 +204,9 @@ typedef char      cchar;
 #define __cchar_defined
 #endif
 
-#ifndef __cstring_defined
-typedef char *    cstring;
-#define __cstring_defined
+#ifndef __cstr_defined
+typedef char *    cstr;
+#define __cstr_defined
 #endif
 
 #ifndef __wchar_defined

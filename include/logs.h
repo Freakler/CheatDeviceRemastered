@@ -47,7 +47,7 @@ typedef enum LogLevel
 
 #if LOGGING
 
-extern void Log(LogLevel level, const char *fileName, uint32 lineNumber, u8string message, ...) __attribute__ ((format(printf, 4, 5)));
+extern void Log(LogLevel level, const char *fileName, uint32 lineNumber, u8str message, ...) __attribute__ ((format(printf, 4, 5)));
 
 #define LOG(type, s, ...) \
   Log(type, __FILE_NAME__, __LINE__, s __VA_OPT__(,) __VA_ARGS__)

@@ -60,7 +60,7 @@
  #define PATCH_LOGGING       ON  // debug logging for detected patch locations only
  #define MEMORY_LOGGING      ON  // logging bad memory access to console
  #define USERSCRIPT_LOGGING  ON  // debug logging for userscripts only
- #define GAME_LOGGING        ON  // display developer logs on screen + to file (LCS US v3.00 only)
+ #define GAME_LOGGING        ON  // display developer logs on screen + to console (LCS US v3.00 only)
  #define CONFIG_LOGGING      ON
 #endif
 
@@ -97,10 +97,10 @@
 
 /**********************************************************************************************************************/
 
-extern bool ADRENALINE, PPSSPP, LCS, VCS;
+extern bool LCS, VCS;
 
 typedef struct {
-  u8string path;
+  u8str path;
   uint8 cat;
   uint8 type;
   bool8 LC : 2; // for Liberty City Stories
@@ -110,9 +110,9 @@ typedef struct {
   uint16 conf_id; // previously: char *configname;    0x1xxx = Cheat, 0x2xxx = Category, 0x3xxx = Setting, 0x4xxx = Editor
   int8 def_stat;
   void *value;
-  u8string msg1;
-  u8string msg2;
-  u8string desc;
+  u8str msg1;
+  u8str msg2;
+  u8str desc;
 } CDRMenuItem;
 
 
@@ -212,7 +212,7 @@ extern const array_size menu_size;
 
 /////////////////////////////////////////////
 
-extern void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const EditorItem *editor_menu, uaddr first_obj, usize block_size, usize blocks);
+extern void editor_create(uint8 mode, array_size toptions, const u8str editortitle, const EditorItem *editor_menu, uaddr first_obj, usize block_size, usize blocks);
 
 #ifdef PREVIEW
 extern void usercheats_create();
@@ -224,7 +224,7 @@ extern void usercheats_ctrl();
 
 typedef struct userscript_entry
 {
-  u8string path; // Allocated when needed
+  u8str path; // Allocated when needed
   uint32 attr;
   usize files_folders_count;
 } userscript_entry;
@@ -249,7 +249,7 @@ extern void freecam_create();
 
 #ifdef HEXEDITOR
 extern void address_create();
-extern void hexeditor_create(uaddr hexadr, int hexmode, uaddr lowbound, uaddr highbound, const u8string infostring);
+extern void hexeditor_create(uaddr hexadr, int hexmode, uaddr lowbound, uaddr highbound, const u8str infostring);
 extern void hex_marker_addx(uaddr address, usize size);
 extern void hex_marker_clear();
 

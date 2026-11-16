@@ -26,7 +26,7 @@ You can display MAX_TEXTS messages with a length of MSGLENGTH characters!
 Call "initTextBlit()" with the GTA modules' text_addr
 
 Then blit text to screen via:
-  drawString(short style, float scale, float x, float y, CRGBA color, u8string string);
+  drawString(short style, float scale, float x, float y, CRGBA color, u8str string);
 
 Draw Rectangles via:
   void drawBox(float x, float y, float width, float height, CRGBA color);
@@ -243,7 +243,7 @@ static void PutReplacementChar(wstring *out)
   *(*out)++ = REPLACEMENT_CHAR;
 }
 
-void Utf8ToGameEncoding(u8string in, wstring out)
+void Utf8ToGameEncoding(u8str in, wstring out)
 {
   if (gta_version != 0 && gta_version != 1) {
     *out = '\0';
@@ -365,7 +365,7 @@ void drawUiBox(float x, float y, float width, float height, float bordersize, CR
   drawBox(x+width, y, bordersize, height, bordercolor); // right
 }
 
-void drawStringNoTVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8string string) {
+void drawStringNoTVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8str string) {
 
   for( array_uidx i = 0; i < MAX_TEXTS; i++ )
   {
@@ -387,7 +387,7 @@ void drawStringNoTVarg(int origin, int16 style, float scale, int16 shadow, float
 
 }
 
-void drawStringNoT(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8string string, ...)
+void drawStringNoT(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8str string, ...)
 {
   u8char finalstr[MAX_TEXT_SIZE];
   va_list args;
@@ -398,12 +398,12 @@ void drawStringNoT(int origin, int16 style, float scale, int16 shadow, float x, 
   drawStringNoTVarg(origin, style, scale, shadow, x, y, color, finalstr);
 }
 
-void drawStringNoVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8string string)
+void drawStringNoVarg(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, const u8str string)
 {
   drawStringNoTVarg(origin, style, scale, shadow, x, y, color, _t(string));
 }
 
-void drawString(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8string string, ...) {
+void drawString(int origin, int16 style, float scale, int16 shadow, float x, float y, CRGBA color, u8str string, ...) {
 
   string = _t(string); /* Translate text */
 
@@ -416,7 +416,7 @@ void drawString(int origin, int16 style, float scale, int16 shadow, float x, flo
   drawStringNoTVarg(origin, style, scale, shadow, x, y, color, finalstr);
 }
 
-void drawStringLCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8string string, ...) {
+void drawStringLCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8str string, ...) {
   wchar str[MSGLENGTH] = {' '};
 
   string = _t(string); /* Translate text */
@@ -448,7 +448,7 @@ void drawStringLCS(int origin, int16 style, float scale, float x, float y, CRGBA
   CFont_PrintStringLCS(x, y, str, NULL);
 }
 
-void drawStringVCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8string string, ...) {
+void drawStringVCS(int origin, int16 style, float scale, float x, float y, CRGBA color, u8str string, ...) {
   wchar str[MSGLENGTH] = {' '};
 
   string = _t(string); /* Translate text */

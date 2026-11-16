@@ -37,6 +37,7 @@
 #include "blitn.h"
 #include "lang.h"
 #include "logs.h"
+#include "platform.h"
 
 register uaddr gp __asm__("gp"); // for VCS
 uaddr gp_ = 0; // helper (also used in configs extern)
@@ -72,7 +73,7 @@ void  (*SetBridgeState)(int state);
 /* FUNCTIONS ****************************************************************************/
 
 /// externs
-extern bool LCS, VCS, PPSSPP, ADRENALINE;
+extern bool LCS, VCS;
 
 extern uint32 menuopendelay;
 extern uaddr mod_text_addr;
@@ -124,8 +125,8 @@ extern bool flag_swapxr;
 extern uint8 L,R,UP,DOWN,LEFT,RIGHT,CROSS,CIRCLE,SQUARE,TRIANGLE,NONE;
 extern uint32 key_to_pad;
 
-extern const u8string weather_lcs[];
-extern const u8string weather_vcs[];
+extern const u8str weather_lcs[];
+extern const u8str weather_vcs[];
 
 
 /// globals
@@ -497,7 +498,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
     /// GTA native additions (LCS 3.00 only)
-    if( ADRENALINE ) { //ULUS-10041_v3.00
+    if( PlatformManager.Platform.type == PLTF_PSVITA ) { //ULUS-10041_v3.00
 
       /// Fix Stats
       //_sw(0x34050000 | 480, text_addr + 0x2DF9F0); //stats values
@@ -1958,7 +1959,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     addr_heliheight = addr; // 0x0009F778
-    if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
+    if( PlatformManager.Platform.type == PLTF_PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
     return true;
   }
 
@@ -3527,7 +3528,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     *******************************************************************/
     PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
     addr_heliheight = addr; // 0x002FDDA0
-    if( PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
+    if( PlatformManager.Platform.type == PLTF_PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
     return true;
   }
 
@@ -3622,8 +3623,8 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
 #define LOG_STRING_SIZE 128
 static u8char logstr[LOG_LINES][LOG_STRING_SIZE] = { 0 };
 
-void (*debugprint)(const u8string text, ...);
-void debugprint_patched(const u8string text, ...) {
+void (*debugprint)(const u8str text, ...);
+void debugprint_patched(const u8str text, ...) {
   va_list list;
   u8char finalstring[LOG_STRING_SIZE];
 
@@ -4053,7 +4054,7 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, uint32 pa
     int new = -1;
 
     usize whitelist_size = 12;
-    const u8string whitelist[] = { "loadsc0", // replace if matches one of these
+    const u8str whitelist[] = { "loadsc0", // replace if matches one of these
                   "loadsc1",
                   "loadsc2",
                   "loadsc3",
@@ -4067,7 +4068,7 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, uint32 pa
                   "loadsc11" }; // VCS
 
     usize lcs_replacers_size = 12;
-    const u8string lcs_replacers[] = { "loadsc0", // the replacements to use for LCS
+    const u8str lcs_replacers[] = { "loadsc0", // the replacements to use for LCS
                     "loadsc1",
                     "loadsc2",
                     "loadsc3",
@@ -4081,7 +4082,7 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, uint32 pa
                     "mpload7" };
 
     usize vcs_replacers_size = 22;
-    const u8string vcs_replacers[] = { "loadsc0", // the replacements to use for VCS
+    const u8str vcs_replacers[] = { "loadsc0", // the replacements to use for VCS
                     "loadsc1",
                     "loadsc2",
                     "loadsc3",
@@ -4495,7 +4496,7 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
 
   static bool status;
   static array_uidx i = 0; // default position
-  static const u8string list_names[] = {"General",  // 0
+  static const u8str list_names[] = {"General",  // 0
                                         "Globals",  // 1
                                         "Player",   // 2
                                         "Vehicle",  // 3
@@ -4531,11 +4532,8 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
           /// Global Pointer Register
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE, "$gp = 0x%08X (0x%08lX)", gp, gp-mod_text_addr);
 
-          /// PPSSPP
-          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, WHITE, "PPSSPP %d", PPSSPP);
-
-          /// ADRENALINE
-          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 140.0f, WHITE, "ADRENALINE %d", ADRENALINE);
+          /// Current Platform
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, WHITE, "Platform: %s", PlatformManager.fullName);
 
         } else if( i == 1 ) { // Globals
           drawStringNoT(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "Globals");
@@ -5415,11 +5413,11 @@ void *teleporter(int calltype, int keypress, bool defaultstatus UNUSED, int defa
 
  ******************************************************************************************************************************************************/
 
-int strToInt(const u8string str) {
+int strToInt(const u8str str) {
   return (int)strtol(str, NULL, 0);
 }
 
-u8string readMissionNameFromSCM(int mission_number) {
+u8str readMissionNameFromSCM(int mission_number) {
   static int previous = -1;
   static u8char ret[8] = "UNSET";
   u8char buf[256] = "";
@@ -7629,7 +7627,7 @@ void *driveonwalls(int calltype, int keypress, bool defaultstatus) {
   return NULL;
 }
 
-static const u8string vehicle_color_strings[sizeof(CRGBA) - 1] =
+static const u8str vehicle_color_strings[sizeof(CRGBA) - 1] =
 {
   "R: >%u< | G:  %u | B:  %u",
   "R:  %u | G: >%u< | B:  %u",
@@ -10031,7 +10029,7 @@ void freeze_all_targets() {
   }
 }
 
-static const u8string buttonCheatNames[] = {
+static const u8str buttonCheatNames[] = {
   "Spawn selected Vehicle",
   "Toggle Hover Bike & Car",
   "Teleport Destination",
@@ -10316,7 +10314,7 @@ void *down_button(int calltype, int keypress, bool defaultstatus, int defaultval
 void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
   static array_uidx i = 0; // default position
-  static const u8string list_names[] = {"kill instantly",    // 0
+  static const u8str list_names[] = {"kill instantly",    // 0
                                         "replenish Health",  // 1
                                         "freeze position",   // 2
                                         "unfreeze position", // 3
@@ -10404,7 +10402,7 @@ void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defau
 void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
   static array_uidx i = 0; // default position
-  static const u8string list_names[] = {"make it float away",     // 0
+  static const u8str list_names[] = {"make it float away",     // 0
                                         "set it on fire",         // 1
                                         "make it explode",        // 2
                                         "unload it",              // 3
@@ -10529,7 +10527,7 @@ void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultv
 void *touch_object(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
   static array_uidx i = 0; // default position
-  static const u8string list_names[] = {"unload it",
+  static const u8str list_names[] = {"unload it",
                                         #ifdef HEXEDITOR
                                         "open in HexEditor"
                                         #endif

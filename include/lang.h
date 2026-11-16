@@ -42,8 +42,8 @@ enum
 typedef struct string_lang
 {
   struct string_lang *next; // Pointer to the next node (for chaining)
-  u8string original_string;
-  u8string trans_string;
+  u8str original_string;
+  u8str trans_string;
 } string_lang;
 
 typedef struct LangHashTable
@@ -55,10 +55,10 @@ void langTableFree(LangHashTable* ht);
 
 typedef struct
 {
-  u8string lang_name;
-  u8string author_name;
-  u8string version;
-  u8string path;
+  u8str lang_name;
+  u8str author_name;
+  u8str version;
+  u8str path;
 } LanguageFile;
 
 typedef struct
@@ -70,17 +70,17 @@ typedef struct
 typedef struct
 {
   LangHashTable *table;
-  const u8string section;
+  const u8str section;
 } TranslationBrowseData;
 
-extern u8string _t(const u8string string);
+extern u8str _t(const u8str string);
 
 extern void langTableSetup(LangID langID);
 extern void langTableUpdate(LangID langID);
 
 extern void langFileTableFree(LangFileTable *table);
 
-extern void GetLangINIInfo(LangFileTable *table, const u8string filename);
+extern void GetLangINIInfo(LangFileTable *table, const u8str filename);
 
 extern LangHashTable *main_lang_table;
 extern LangFileTable *main_file_table;

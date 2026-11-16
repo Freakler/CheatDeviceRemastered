@@ -34,11 +34,11 @@ extern func_stat save_config();
 extern func_stat load_config(const CDRMenuItem *menu_list, usize menu_max);
 extern func_stat create_config(const CDRMenuItem *menu_list, usize menu_max);
 
-extern func_stat load_config_block(const u8string magic, uaddr address);
+extern func_stat load_config_block(const u8str magic, uaddr address);
 
 extern void writeBool(SceUID file, int16 id, bool boolean);
 extern void writeValue(SceUID file, int16 id, int value);
-extern func_stat writeCategoryHeader(SceUID file, u8string magic);
+extern func_stat writeCategoryHeader(SceUID file, u8str magic);
 
 extern int setValueInConfigFor(short id UNUSED, int value UNUSED);
 

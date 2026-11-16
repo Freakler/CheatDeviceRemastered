@@ -108,16 +108,14 @@
   static_assert(offsetof(struc, member) == (offset), "Offset of " #member " in " #struc " is not " #offset)
 #endif
 
-extern bool doesFileExist(const u8string path);
-extern bool doesDirExist(const u8string path);
+extern bool doesFileExist(const u8str path);
+extern bool doesDirExist(const u8str path);
 
-extern usize countFilesInFolder(const u8string path);
-extern usize countFoldersInFolder(const u8string path);
+extern usize countFilesInFolder(const u8str path);
+extern usize countFoldersInFolder(const u8str path);
 
-extern func_stat setFolderModificationDateNow(const u8string folder);
-extern u8string getFolderModificationDate(const u8string folder, u8string out, usize size);
-
-extern bool adrenalineCheck();
+extern func_stat setFolderModificationDateNow(const u8str folder);
+extern u8str getFolderModificationDate(const u8str folder, u8str out, usize size);
 
 extern void clearICacheFor(uaddr address);
 
@@ -125,9 +123,9 @@ extern void writeShort(byte *address, short value);
 extern void writeInteger(byte *address, int value);
 extern void writeFloat(byte *address, float value);
 
-extern u8string _fgets(u8string s, usize size, SceUID stream);
+extern u8str _fgets(u8str s, usize size, SceUID stream);
 
-extern void makedirs(const u8string path);
+extern void makedirs(const u8str path);
 
 typedef enum
 {
@@ -157,14 +155,14 @@ extern void GetMemConfig(CFWMemory *memory);
 extern bool checkCoordinateInsideArea(float a, float b, float c, float x, float y, float z, float radius);
 extern float distanceBetweenCoordinates3d(float x1, float y1, float z1, float x2, float y2, float z2);
 
-extern u8string SizeToStrUnits(usize size, u8string outString, usize outStringSize);
+extern u8str SizeToStrUnits(usize size, u8str outString, usize outStringSize);
 
 #define SIZESTR(size) \
   SizeToStrUnits((size), (cchar[16]){ 0 }, 16)
 
-extern bool stringEndsWith(const u8string path, const u8string extension);
-extern usize getExtensionLength(const u8string path);
+extern bool stringEndsWith(const u8str path, const u8str extension);
+extern usize getExtensionLength(const u8str path);
 
-extern uint32 hash(const u8string key, usize len, uint32 seed);
+extern uint32 hash(const u8str key, usize len, uint32 seed);
 
 #endif /* __PUTILS_H__ */

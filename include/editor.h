@@ -62,8 +62,8 @@ enum {
 };
 
 typedef struct {
-  const u8string name;
-  const u8string postfix;
+  const u8str name;
+  const u8str postfix;
   const uaddr addr_offset;
   const bool edit_bool; // can be edited in editor (if false it will be greyed out, only for info)
   const uint8 type;

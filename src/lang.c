@@ -46,7 +46,7 @@ static LangHashTable *langTableCreate()
   return ht;
 }
 
-static func_stat langTableInsert(LangHashTable *ht, const u8string original_string, const u8string trans_string)
+static func_stat langTableInsert(LangHashTable *ht, const u8str original_string, const u8str trans_string)
 {
   if ( !ht || !main_file_table || !original_string || !trans_string ) return FUNC_ERROR;
 
@@ -76,9 +76,9 @@ static func_stat langTableInsert(LangHashTable *ht, const u8string original_stri
   return FUNC_OK;
 }
 
-static u8string langTableSearch(LangHashTable *ht, const u8string original_string)
+static u8str langTableSearch(LangHashTable *ht, const u8str original_string)
 {
-  if ( !ht || !original_string ) return (u8string)original_string;
+  if ( !ht || !original_string ) return (u8str)original_string;
 
   array_uidx index = (array_uidx)(hash(original_string, strlen(original_string), MURMURMASH_3_SEED) % TABLE_SIZE);
 
@@ -92,7 +92,7 @@ static u8string langTableSearch(LangHashTable *ht, const u8string original_strin
   }
 
   // If not found, return the original string
-  return (u8string)original_string;
+  return (u8str)original_string;
 }
 
 void langTableFree(LangHashTable *ht)
@@ -135,7 +135,7 @@ static LangFileTable *langFileTableInit()
 LangID currLanguageID = LANG_ENGLISH;
 
 // Append a LanguageFile to the LangFileTable
-static void langFileTableAppend(LangFileTable *table, const u8string version, const u8string author, const u8string language, const u8string filename)
+static void langFileTableAppend(LangFileTable *table, const u8str version, const u8str author, const u8str language, const u8str filename)
 {
   if ( !table || !filename || table->size >= LANG_FILES_LIMIT ) return;
 
@@ -248,7 +248,7 @@ static void langFileTableSearch()
   return;
 }
 
-void GetLangINIInfo(LangFileTable *table, const u8string filename)
+void GetLangINIInfo(LangFileTable *table, const u8str filename)
 {
   if ( !table || !filename ) return;
 
@@ -282,12 +282,12 @@ static int ReadTranslationEntry(const char *section, const char *key, const char
   // Empty or english string
   if ( STR_EMPTY(value) || !strcmp(key, value) ) return 1;
 
-  langTableInsert(data->table, (const u8string)key, (const u8string)value);
+  langTableInsert(data->table, (const u8str)key, (const u8str)value);
   translatedStringsLength++;
   return 1;
 }
 
-static void ReadTranslationsFromINI(LangHashTable *table, const u8string INISection, array_uidx index)
+static void ReadTranslationsFromINI(LangHashTable *table, const u8str INISection, array_uidx index)
 {
   if ( !table || !main_file_table || !INISection || *INISection == '\0' || index >= main_file_table->size ) return;
 
@@ -355,11 +355,11 @@ void langTableSetup(LangID langID)
 #endif
 
 // Get translated string from .ini file
-u8string _t(const u8string string)
+u8str _t(const u8str string)
 {
   #ifdef LANG
   if ( currLanguageID != 0 ) return langTableSearch(main_lang_table, string);
   #endif
 
-  return (u8string)string;
+  return (u8str)string;
 }

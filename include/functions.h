@@ -29,36 +29,36 @@
 #include "storiesrwsdk.h"
 
 typedef struct {
-  u8string name;
+  u8str name;
   Vector3D position;
 } GTAWorldLocation;
 
 typedef struct { // vehicles struct
   uint16    id;
   int16     type;
-  u8string  GXTname;   // like internal name
-  u8string  name;      // In-Game name
+  u8str  GXTname;   // like internal name
+  u8str  name;      // In-Game name
   int16     hndlng_no; // number of vehicle in handling order (@ 0x52 in vehicle style block)
   bool16    spawnsave; // bool crashes game when spawned
 } GTAVehicle;
 
 typedef struct { // character struct
   uint8     id;
-  u8string  model;   // model name
-  u8string  name;    // Real name
+  u8str  model;   // model name
+  u8str  name;    // Real name
   int16     row;
   bool32    spawnsave; // bool crashes game when spawned
 } GTACharacter;
 
 typedef struct {
-  u8string  name;
+  u8str  name;
   uint16    id;
   uint8     type;    // LCS: 00 clothes?? | 03 save_cd, rampage | 08 money | 0F weapons, health, adrenaline    -> 0xF are re-appearing ones? rest one-time pickups
   uint16    amount; // standard value for ammo / money object holds
 } GTAPickup;
 
 typedef struct {
-  u8string  name;
+  u8str  name;
   uint8     id;   // short in LCS, char in VCS
   uint8     color;
 } GTAMapIcon;
@@ -126,8 +126,8 @@ extern uint8 getNibbleHigh(uaddr adr);
 extern void setFloat(uaddr adr, float value);
 extern float getFloat(uaddr adr);
 
-extern void setString(uaddr adr, u8string string, bool unicode);
-extern u8string getString(uaddr adr, bool unicode);
+extern void setString(uaddr adr, u8str string, bool unicode);
+extern u8str getString(uaddr adr, bool unicode);
 
 #ifdef SAVEDITOR
 extern u8char *getSavedataKey();
@@ -246,7 +246,7 @@ extern usize getWorldActiveObjects(uaddr worldobjs_base, usize worldobjs_max, us
 /// pickups
 extern bool getPickupIsActive(uaddr pickup_base_adr);
 extern uint16 getPickupID(uaddr pickup_base_adr);
-extern u8string getPickupNameByID(uint16 id);
+extern u8str getPickupNameByID(uint16 id);
 extern usize getPickupsActiveObjects(uaddr pickups_base, usize pickups_max, usize pickups_size);
 extern usize getPickupsActiveObjectsWithID(uint16 id);
 extern iaddr spawnPickup(uint16 id, uint8 type, int16 amount, float x, float y, float z);
@@ -255,12 +255,12 @@ extern iaddr spawnPickup(uint16 id, uint8 type, int16 amount, float x, float y, 
 extern bool getMapiconIsActive(uaddr mapicon_base_adr);
 extern bool getMapiconIsVisible(uaddr mapicon_base_adr);
 extern usize getMapiconsActiveObjects(uaddr mapicon_base, usize mapicons_max, usize mapicons_size);
-extern u8string getMapiconNameByID(uint16 id);
+extern u8str getMapiconNameByID(uint16 id);
 extern uint8 getMapiconID(uaddr mapicon_base_adr);
 extern int getMapiconType(uaddr mapicon_base_adr);
-extern u8string getMapiconTypeName(uaddr mapicon_base_adr);
+extern u8str getMapiconTypeName(uaddr mapicon_base_adr);
 extern uint8 getMapiconColor(uaddr mapicon_base_adr);
-extern u8string getMapiconColorName(uaddr mapicon_base_adr);
+extern u8str getMapiconColorName(uaddr mapicon_base_adr);
 extern array_uidx getMapiconLinkedObjectSlotNumber(uaddr mapicon_base_adr);
 
 extern void removeMapIcon(uaddr mapicon_base_adr);
@@ -300,7 +300,7 @@ extern void setFreezeGame(bool boolean);
 extern void setMapLegendToggle(bool boolean);
 extern bool getMapLegendToggle();
 
-extern void setTimedTextbox(u8string sentence, float duration);
+extern void setTimedTextbox(u8str sentence, float duration);
 extern bool isTextboxShowing();
 extern void blockTextBox();
 extern bool isDialogShowing();
@@ -333,31 +333,31 @@ extern void createGarageVehicle(uaddr garage_base_adr, uint16 id, float x, float
 extern int8 getIdeType(array_uidx id);
 extern array_idx getFirstIdeOfType(int8 type);
 extern int getLastIdeOfType(int8 type);
-extern u8string getIdeTypeName(uint8 no);
+extern u8str getIdeTypeName(uint8 no);
 extern uaddr getAddressOfIdeSlotForID(array_uidx id);
 extern usize getIdeSlotSizeByType(uint8 no);
 
-extern u8string getModelNameViaHash(uint32 hash, uint32 time);
-extern u8string getModelNameViaID(uint32 id, uint32 time);
-extern u8string getGxtTranslation(u8string identifier);
-extern u8string getRealVehicleNameViaID(uint16 id);
-extern u8string getGxtIdentifierForVehicleViaID(uint16 id);
-extern u8string vcs_getNameForPedViaID(uint16 id);
+extern u8str getModelNameViaHash(uint32 hash, uint32 time);
+extern u8str getModelNameViaID(uint32 id, uint32 time);
+extern u8str getGxtTranslation(u8str identifier);
+extern u8str getRealVehicleNameViaID(uint16 id);
+extern u8str getGxtIdentifierForVehicleViaID(uint16 id);
+extern u8str vcs_getNameForPedViaID(uint16 id);
 
-extern u8string getRadioStationName(uint32 no);
+extern u8str getRadioStationName(uint32 no);
 
-extern u8string removeColor(u8string string);
+extern u8str removeColor(u8str string);
 
 /// Camera
 extern void setCameraCenterBehindPlayer();
 extern void setFieldOfView(float fov);
 extern float getFieldOfView();
 
-extern void setPedSkin(int ped_handle, const u8string name);
+extern void setPedSkin(int ped_handle, const u8str name);
 extern usize removeIPLObjectsCollision(uint16 id);
 
-extern uaddr getParticleOffsetFor(const u8string name);
-extern u8string getPedstatName(uint32 no);
+extern uaddr getParticleOffsetFor(const u8str name);
+extern u8str getPedstatName(uint32 no);
 
 
 /// SCM

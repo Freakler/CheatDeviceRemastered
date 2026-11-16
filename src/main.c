@@ -32,11 +32,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include <pspsysmem.h>
+#include <pspiofilemgr.h>
+#include <pspiofilemgr_dirent.h>
+#include <pspiofilemgr_stat.h>
 
 #include "main.h"
-#include "pspiofilemgr.h"
-#include "pspiofilemgr_dirent.h"
-#include "pspiofilemgr_stat.h"
 #include "putils.h"
 #include "cheats.h"
 #include "blitn.h"
@@ -49,8 +49,9 @@
 #include "putils.h"
 #include "minIni.h"
 #include "mctypes.h"
+#include "platform.h"
 
-PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR); // user
+PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR);
 
 /// settings
 const uint32 menuopendelay        = msec(2);  // wait ~2 seconds before showing menu & applying after spawning
@@ -58,12 +59,6 @@ uint16 showoptions                = 12;    // the number of options / lines that
 static const float row_spacing    = 15.0f; // pixels between rows
 static const uint32 open_key      = PSP_CTRL_LTRIGGER | PSP_CTRL_UP;   // eat buttons mode
 static const uint32 open_key_alt  = PSP_CTRL_LTRIGGER | PSP_CTRL_DOWN; // don't eat mode
-static const u8string welcomemsg  = "~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"; // LCS ~y~ = yellow | VCS ~y~ = violet
-
-#if !LITE
-static const u8string memwarning = "~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!";
-#endif
-
 
 /// flags (shouldn't be set here)
 uint8 flag_menu_start    = 0;     // menu will be started automatically like the original (2 for don't-eat-keys mode)
@@ -115,7 +110,7 @@ static const CRGBA COLOR_USERCHEATS   = DARKGREEN;
 
 #ifdef HEXEDITOR
 static const CRGBA COLOR_HEX          = CHDVC_AZURE;
-static const CRGBA COLOR_HEX_MARKER     = COLOR_CURSOR; // add alpha
+static const CRGBA COLOR_HEX_MARKER   = COLOR_CURSOR; // add alpha
 #endif
 
 #ifdef EDITORS
@@ -144,8 +139,6 @@ register uaddr gp __asm__("gp");
 
 static STMOD_HANDLER previous;
 
-bool ADRENALINE = false;
-bool PPSSPP     = false;
 bool LCS        = false;
 bool VCS        = false;
 
@@ -160,7 +153,6 @@ float xstick, ystick, xstick_, ystick_;
 
 uaddr hex_adr = 0; // mem address for HexEditor
 
-
 /// some externs
 extern uaddr pplayer;
 extern uaddr pcar;
@@ -168,15 +160,14 @@ extern uaddr pobj;
 extern bool multiplayer;
 extern u8char speed[];
 extern u8char gear[];
-extern u8string lcs_garagenames[];
-extern u8string vcs_garagenames[];
+extern u8str lcs_garagenames[];
+extern u8str vcs_garagenames[];
 extern uint16 pcar_id;
 extern float fps;
 extern float fps_deltaTime;
 extern usize memory_main_free;
-extern const u8string weather_lcs[];
-extern const u8string weather_vcs[];
-
+extern const u8str weather_lcs[];
+extern const u8str weather_vcs[];
 
 /// main menu //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -466,11 +457,11 @@ void drawLegendBox(int rows, CRGBA color) {
   drawBox(15.0f, 266.0f - (rows * 12.0f), 450.0f, 4.0f + (rows * 12.0f), color);
 }
 
-void drawLegendMessageNoTVarg(int side, int pos, CRGBA color, u8string str) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
+void drawLegendMessageNoTVarg(int side, int pos, CRGBA color, u8str str) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
   drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, side ? 240.0f : 20.0f, 256.0f - (pos * 12.0f), color, str);
 }
 
-void drawLegendMessageNoT(int side, int pos, CRGBA color, u8string str, ...) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
+void drawLegendMessageNoT(int side, int pos, CRGBA color, u8str str, ...) { // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
 
   u8char finalstr[MAX_TEXT_SIZE];
   va_list args;
@@ -482,13 +473,13 @@ void drawLegendMessageNoT(int side, int pos, CRGBA color, u8string str, ...) { /
 }
 
 // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
-void drawLegendMessageNoVarg(int side, int pos, CRGBA color, u8string str)
+void drawLegendMessageNoVarg(int side, int pos, CRGBA color, u8str str)
 {
   drawLegendMessageNoTVarg(side, pos, color, _t(str));
 }
 
 // side: 0 = LEFT, 1 = RIGHT & pos: 0 = bottom, 1 = second last, 2 = "first text when three rows" etc
-void drawLegendMessage(int side, int pos, CRGBA color, u8string str, ...)
+void drawLegendMessage(int side, int pos, CRGBA color, u8str str, ...)
 {
   str = _t(str);
 
@@ -1058,11 +1049,11 @@ static userscript_entry* userscript_currentdir_scripts = NULL; // Array where sc
 static usize userscript_cd_scripts_count = 0;     // Number of scripts / folder in array
 static usize currentdir_files_folders_count = 0;  // Files & Folders count on current dir
 
-static const u8string userscript_valid_extensions[] = { ".txt", ".sc" }; // Valid extensions for userscripts
+static const u8str userscript_valid_extensions[] = { ".txt", ".sc" }; // Valid extensions for userscripts
 static const array_size userscript_valid_extensions_num = ARRAY_SIZE(userscript_valid_extensions);
 
 // Checks file extension to see if it is a valid userscript file
-static bool is_file_userscript(const u8string path)
+static bool is_file_userscript(const u8str path)
 {
   if ( STR_NULL(path) || STR_EMPTY(path) ) return false;
 
@@ -1159,7 +1150,7 @@ this is not how it should be done! :D
 
 TODO: rewrite this
 ****************************************************************/
-static void userscript_run(u8string currentfile)
+static void userscript_run(u8str currentfile)
 {
   USERSCRIPT_LOG("UserScript: %s", currentfile);
 
@@ -1257,10 +1248,10 @@ static void userscript_run(u8string currentfile)
       if( readbuf[i] == '\t' ) readbuf[i] = ' ';
 
       /// remove following comments
-      if( readbuf[i] == '/' && readbuf[i+1] == '/' ) readbuf[i] = '\0';
+      else if( readbuf[i] == '/' && readbuf[i+1] == '/' ) readbuf[i] = '\0';
 
       /// remove new line
-      if( readbuf[i] == '\r' || readbuf[i] == '\n') readbuf[i] = '\0';
+      else if( readbuf[i] == '\r' || readbuf[i] == '\n') readbuf[i] = '\0';
     }
 
     /// check type of row
@@ -1270,7 +1261,7 @@ static void userscript_run(u8string currentfile)
       usize counter = 0;
       int8 isfuncall = -1;
       u8char *saveptr;
-      u8string token = strtok_r(linehandle, " ", &saveptr); // get the first token
+      u8str token = strtok_r(linehandle, " ", &saveptr); // get the first token
       while( token != NULL ) // walk through other tokens
       {
         // // // // // // // // // // // // // // //
@@ -1330,7 +1321,7 @@ static void userscript_run(u8string currentfile)
               u8char *saveptrsub = NULL;
               usize subcounter = 0;
               int tempint = 0;
-              u8string utoken = strtok_r(token, " ", &saveptrsub); // get the first sub token
+              u8str utoken = strtok_r(token, " ", &saveptrsub); // get the first sub token
               while( utoken ) // walk through other sub tokens
               {
                 //DEBUG_LOG("utoken '%s'", utoken);
@@ -1456,7 +1447,7 @@ static void userscript_run(u8string currentfile)
                 uaddr script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
                 for( address = script_space; address < script_space + main_size; address++ )
                 {
-                  u8string curr_string = (u8string)address;
+                  u8str curr_string = (u8str)address;
                   if( curr_string[0] == token[0] && curr_string[1] == token[1] ) // first because faster
                   {
                     //DEBUG_LOG("'%s' vs '%s'", token, getString(address, 0));
@@ -1811,7 +1802,7 @@ static void userscript_run(u8string currentfile)
     } else if( STR_STARTSWITH_CHAR(linehandle, ':') ) { // label (eg ":DONS4_12258")
       linehandle++; // skip the ":"
 
-      u8string token = strtok(strtok(linehandle, "  "), " "); // get rid of whitespace and tabs
+      u8str token = strtok(strtok(linehandle, "  "), " "); // get rid of whitespace and tabs
 
       /// error check: SUPPORT_LABEL count
       if( label_pos_cur >= SUPPORT_LABEL ) { //label matches
@@ -2471,7 +2462,7 @@ static void optionAdjust() {
     editor_showoptions = editor_options; // adjust editor_showoptions (there can't be more "editor_showoptions" than "editor_options" itself)
 }
 
-void editor_create(uint8 mode, array_size toptions, const u8string editortitle, const EditorItem *editor_menu, uaddr first_obj, usize block_size, usize blocks) {
+void editor_create(uint8 mode, array_size toptions, const u8str editortitle, const EditorItem *editor_menu, uaddr first_obj, usize block_size, usize blocks) {
   DEBUG_LOG("%lu: editor_create() ..'%s'", getGametime(), editortitle);
 
   snprintf(editor_titlebuffer, sizeof(editor_titlebuffer), "Editor - %s", _t(editortitle));
@@ -2551,7 +2542,7 @@ static void editor_draw() {
         // if( STR_EMPTY(buffer_top1) ) // some vehicles don't have translations..
         //   snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr))); // ..use the GXT identifier-name then
 
-        u8string vehicle_name = getRealVehicleNameViaID(getVehicleID(editor_base_adr));
+        u8str vehicle_name = getRealVehicleNameViaID(getVehicleID(editor_base_adr));
         if ( !vehicle_name || !(*vehicle_name) ) vehicle_name = getGxtIdentifierForVehicleViaID(getVehicleID(editor_base_adr));
 
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr), _t("Name"), vehicle_name); // block menu
@@ -2650,7 +2641,7 @@ static void editor_draw() {
       editor_block_current = editor_vehiclespawn_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getVehicleWorldSpawnSlotIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
-        u8string vehicle_name = getRealVehicleNameViaID(getInt(editor_base_adr));
+        u8str vehicle_name = getRealVehicleNameViaID(getInt(editor_base_adr));
         if ( STR_EMPTY(vehicle_name) ) vehicle_name = getGxtIdentifierForVehicleViaID(getInt(editor_base_adr)); // some vehicles don't have translations ..use the GXT identifier-name then
 
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getInt(editor_base_adr), _t("Name"), vehicle_name);
@@ -2929,7 +2920,7 @@ static void editor_draw() {
       #endif
 
       ///Name selected
-      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP, (u8string)editor_curmenu[i].name);
+      drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEMP, (u8str)editor_curmenu[i].name);
 
       if( editor_curmenu[i].value != 0 ) { // use the function to take care of everything
         func = editor_curmenu[i].value;
@@ -2939,7 +2930,7 @@ static void editor_draw() {
       } else { // plain value editing
         uaddr adr = editor_curmenu[i].addr_offset+editor_base_adr;
         char pre = editor_curmenu[i].precision;
-        const u8string fix = editor_curmenu[i].postfix;
+        const u8str fix = editor_curmenu[i].postfix;
         switch( editor_curmenu[i].type ) {
           case TYPE_BYTE:
             snprintf(buffer, sizeof(buffer), pre ? "%i%s" : "0x%02X%s", *(byte*)(adr), fix);
@@ -4522,7 +4513,7 @@ void hex_marker_clear() {
     hex_markers[i] = 0;
 }
 
-void hexeditor_create(uaddr address, int mode, uaddr low, uaddr high, const u8string infostring) { // init HexEditor
+void hexeditor_create(uaddr address, int mode, uaddr low, uaddr high, const u8str infostring) { // init HexEditor
   DEBUG_LOG("%lu: hexeditor_create(%s)", getGametime(), infostring);
 
   if( isInMemBounds(address) )
@@ -5020,7 +5011,7 @@ void draw() { // called by hijacked game function
   /// draw welcome message in textbox (only when menu autostart is disabled!)
   if( flag_draw_welcomsg ) {
     DEBUG_LOG("%lu: drawing welcome message", getGametime());
-    setTimedTextbox(_t(welcomemsg), 7.00f);
+    setTimedTextbox(_t("~y~CheatDevice Remastered ~w~is now ready! Press ~h~L + UP ~w~to open the menu. Happy cheating!"), 7.00f);
     flag_draw_welcomsg = false;
   }
 
@@ -5028,7 +5019,7 @@ void draw() { // called by hijacked game function
   #if !LITE
   if( flag_draw_memwarn && !flag_menu_running && !isTextboxShowing() && getGametime() > 14000 && memory_main_free < KiB(120) ) { // only show after 14 seconds into game & when there is less than 120 KiB
     DEBUG_LOG("%lu: drawing memory message", getGametime());
-    setTimedTextbox(_t(memwarning), 10.00f);
+    setTimedTextbox(_t("~r~Warning! ~w~The Game is running low on memory and may crash soon. Enable 'Extra Memory' in the CFW Settings or use the 'lite' version!"), 10.00f);
     flag_draw_memwarn = false;
   }
   #endif
@@ -5479,7 +5470,7 @@ void applyOnce() { //called by hijacked game function
 
 
   /// heli height limit (also planes in VCS)
-  if( !PPSSPP ) setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
+  if( PlatformManager.Platform.type != PLTF_PPSSPP ) setHeliHeightLimit(996.0f); // 996.0f = 0x4479 (original is 0x42A0 = 80.0f)  addr_heliheight
   // -> for PPSSPP this is set in Patch function(s) so that its being set as early as possible so that PPSSPP doesn't crash (for some strange jit bug reason)
 
   ///Custom Vehicle Spawns in World
@@ -5580,7 +5571,7 @@ static uint16 toption = 0; // the option on top when there are more options than
 static uint16 hidden = 0;  // skipping menu draw with disabled entries
 
 void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
-  u8string val;
+  u8str val;
   static CRGBA color;
   static float x, y;
   void *(* surrent_get)(int, int);
@@ -5715,7 +5706,7 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
       //if( menu_list[i].type != MENU_DUMMY ) {
         memset(&buffer[0], 0, sizeof(buffer));
 
-        const u8string buffer_menu_path = menu_list[i].path;
+        const u8str buffer_menu_path = menu_list[i].path;
 
         if ( STR_ENDSWITH_CHAR(buffer_menu_path, ':') )
           snprintf(buffer, sizeof(buffer), "%s %s", _t(menu_list[i].path), _t(val));
@@ -5738,8 +5729,8 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
       /// draw message
       if( flag_use_legend ) {
         if( i == menu_sel ) {
-          drawLegendMessageNoVarg(0, 1, COLOR_TEXT, (u8string)menu_list[i].msg1); // left side, second row
-          drawLegendMessageNoVarg(1, 1, COLOR_TEXT, (u8string)menu_list[i].msg2); // right side, second row
+          drawLegendMessageNoVarg(0, 1, COLOR_TEXT, (u8str)menu_list[i].msg1); // left side, second row
+          drawLegendMessageNoVarg(1, 1, COLOR_TEXT, (u8str)menu_list[i].msg2); // right side, second row
 
           if (strlen(menu_list[i].desc) > 0) {
             char desc_formatted[128];
@@ -6119,7 +6110,7 @@ static func_stat patch() {
 
   /// decide draw "low memory warning"
   #if !LITE
-  if( !PPSSPP )
+  if( PlatformManager.Platform.type != PLTF_PPSSPP )
     flag_draw_memwarn = true;
   #endif
 
@@ -6250,7 +6241,7 @@ static void CheckModules() { // PPSSPP only
 
 
 int OnModuleStart(SceModule *mod) {
-  const u8string modname = mod->modname;
+  const u8str modname = mod->modname;
 
   if( !strcmp(modname, "GTA3") ) {
     mod_text_addr = mod->text_addr;
@@ -6283,7 +6274,7 @@ int module_start(SceSize args UNUSED, void *argp UNUSED) {
   /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
 
   INFO_LOG("Starting" PLUGIN_NAME " " PLUGIN_VERSION);
-  DEBUG_LOG("args: %i, argp: %s", args, (u8string)argp);
+  DEBUG_LOG("args: %i, argp: %s", args, (u8str)argp);
 
   /// config init
   #ifdef CONFIG
@@ -6293,11 +6284,14 @@ int module_start(SceSize args UNUSED, void *argp UNUSED) {
   }
   #endif
 
+  PlatformManager.Initialise();
+
+  INFO_LOG("Running on %s", PlatformManager.fullName);
+
   /// check PPSSPP
-  if( sceIoDevctl("kemulator:", EMULATOR_DEVCTL__IS_EMULATOR, NULL, 0, NULL, 0) == 0 ) {
-    PPSSPP = true;
-    INFO_LOG("PPSSPP detected!");
-	  sceKernelDelayThread(msec(10)); // 10ms (bad fix for invalid memory crash with lite version?!)
+  if ( PlatformManager.Platform.type == PLTF_PPSSPP )
+  {
+    sceKernelDelayThread(msec(10)); // 10ms (bad fix for invalid memory crash with lite version?!)
   }
 
   /// check available memory (high memory layout)
@@ -6305,13 +6299,6 @@ int module_start(SceSize args UNUSED, void *argp UNUSED) {
 
   DEBUG_LOG("Memory Setting: %s", SIZESTR(pluginMemory.MemoryConfig));
   DEBUG_LOG("Extra Memory: %s", BOOLSTR(pluginMemory.ExtraMemory));
-
-  /// check Adrenaline eCFW
-  if( !PPSSPP && adrenalineCheck() ) {
-    ADRENALINE = true;
-    INFO_LOG("Adrenaline eCFW detected");
-  }
-
 
   /// startup key combos
   #ifdef CONFIG
@@ -6322,7 +6309,7 @@ int module_start(SceSize args UNUSED, void *argp UNUSED) {
   #endif
 
 
-  if( PPSSPP )
+  if( PlatformManager.Platform.type == PLTF_PPSSPP )
     CheckModules(); // scan the modules using normal/official syscalls (https://github.com/hrydgard/ppsspp/pull/13335#issuecomment-689026242)
   else // PSP
     previous = sctrlHENSetStartModuleHandler(OnModuleStart);

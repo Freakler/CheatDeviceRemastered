@@ -1007,7 +1007,7 @@ example modelflag LCS: "Idaho"
 0x 21 43 65 87
 ************************************/
 
-static const u8string lcs_modelflags[] = {"1G_BOOST",        "2G_BOOST",      "REV_BONNET",     "HANGING_BOOT",
+static const u8str lcs_modelflags[] = {"1G_BOOST",        "2G_BOOST",      "REV_BONNET",     "HANGING_BOOT",
                                           "NO_DOORS",        "IS_VAN",        "IS_BUS",         "IS_LOW",
                                           "DBL_EXHAUST",     "TAILGATE_BOOT", "NOSWING_BOOT",   "NONPLAYER_STABILISER",
                                           "NEUTRALHANDLING", "HAS_NO_ROOF",   "IS_BIG",         "HALOGEN_LIGHTS",
@@ -1016,7 +1016,7 @@ static const u8string lcs_modelflags[] = {"1G_BOOST",        "2G_BOOST",      "R
                                           "FAT_REARW",       "NARROW_FRONTW", "GOOD_INSAND",    "FLAG_7D",
                                           "FORCE_GRND_CLR",  "FLAG_8B",       "FLAG_8C",        "FLAG_8D" };
 
-static const u8string vcs_modelflags[] = {"FLAG_1A",      "FLAG_1B",      "FLAG_1C",     "FLAG_1D",
+static const u8str vcs_modelflags[] = {"FLAG_1A",      "FLAG_1B",      "FLAG_1C",     "FLAG_1D",
                                           "FLAG_2A",      "FLAG_2B",      "FLAG_2C",     "FLAG_2D",
                                           "FLAG_3A",      "FLAG_3B",      "FLAG_3C",     "FLAG_3D",
                                           "FLAG_4A",      "FLAG_4B",      "FLAG_4C",     "FLAG_4D",
@@ -1066,7 +1066,7 @@ void *model_flag(int calltype, int keypress, uaddr base_address UNUSED, uaddr ad
   return NULL;
 }
 
-static const u8string vcs_handlingflags[] = { "FLAG_1A",      "FLAG_1B",          "FLAG_1C",   "FLAG_1D",
+static const u8str vcs_handlingflags[] = { "FLAG_1A",      "FLAG_1B",          "FLAG_1C",   "FLAG_1D",
                                               "NO_HANDBRAKE", "STEER_REARWHEELS", "FLAG_2C",   "FLAG_2D",
                                               "FLAG_3A",      "NARROW_FRONTW",    "FLAG_3C",   "FLAG_3D",
                                               "FLAG_4A",      "FLAG_4B",          "FAT_REARW", "FLAG_4D",
@@ -1119,7 +1119,7 @@ void *handling_flag(int calltype, int keypress, uaddr base_address UNUSED, uaddr
 
 
 void *vehicle_enginetype(int calltype, int keypress, uaddr base_address UNUSED, uaddr address UNUSED) {
-  static const u8string list_name[] = { "Diesel", "Electro", "Petrol"};
+  static const u8str list_name[] = { "Diesel", "Electro", "Petrol"};
   const uint8 list_val[] = { 0x44, 0x45, 0x50 };
   static array_size list_size = ARRAY_SIZE(list_val);
   static short i = 0;
@@ -1156,7 +1156,7 @@ void *vehicle_enginetype(int calltype, int keypress, uaddr base_address UNUSED, 
 }
 
 void *vehicle_lights_front(int calltype, int keypress, uaddr base_address UNUSED, uaddr address UNUSED) {
-  static const u8string list_name[] = { "Long", "Small", "Big", "Tall"};
+  static const u8str list_name[] = { "Long", "Small", "Big", "Tall"};
   const uint8 list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
   static array_size list_size = ARRAY_SIZE(list_val);
   static short i = 0;
@@ -1193,7 +1193,7 @@ void *vehicle_lights_front(int calltype, int keypress, uaddr base_address UNUSED
 }
 
 void *vehicle_lights_rear(int calltype, int keypress, uaddr base_address UNUSED, uaddr address ) {
-  static const u8string list_name[] = { "Long", "Small", "Big", "Tall"};
+  static const u8str list_name[] = { "Long", "Small", "Big", "Tall"};
   const uint8 list_val[] = { 0x00, 0x01, 0x02, 0x03 }; // 0 = long, 1 = small, 2 = big, 3 = tall
   static array_size list_size = ARRAY_SIZE(list_val);
   static short i = 0;
@@ -1230,7 +1230,7 @@ void *vehicle_lights_rear(int calltype, int keypress, uaddr base_address UNUSED,
 }
 
 void *vehicle_transtype(int calltype, int keypress, uaddr base_address UNUSED, uaddr address ) {
-  static const u8string list_name[] = { "Rear", "Front", "4-Wheel"};
+  static const u8str list_name[] = { "Rear", "Front", "4-Wheel"};
   const uint8 list_val[] = { 0x52, 0x46, 0x34 };
   static array_size list_size = ARRAY_SIZE(list_val);
   static short i = 0;
@@ -2032,7 +2032,7 @@ static byte empire_script[] = {
   0x23, 0x00
 };
 
-u8string empire_owner_name(int16 val) {
+u8str empire_owner_name(int16 val) {
 /* switch(val) {
 	case -1: return "None";
 	case 0: return "Umbertos Guys"; // PR_GAN1
@@ -2096,7 +2096,7 @@ void *empire_owner(int calltype, int keypress, uaddr base_address UNUSED, uaddr 
 }
 
 
-u8string empire_type_name(int16 val) {
+u8str empire_type_name(int16 val) {
 /* switch(val) {
 	case -1: return "Random";
 	case 0: return "Un-Developed"; // PROP_T1
@@ -2148,7 +2148,7 @@ void *empire_type(int calltype, int keypress, uaddr base_address UNUSED, uaddr a
 }
 
 
-u8string empire_state_name(int16 val) {
+u8str empire_state_name(int16 val) {
  switch(val) {
     case 0: return getGxtTranslation("PROPST1"); // "Normal";
     case 1: return getGxtTranslation("PROPST2"); // "For Sale"
@@ -2190,7 +2190,7 @@ void *empire_state(int calltype, int keypress, uaddr base_address UNUSED, uaddr 
   return NULL;
 }
 
-u8string empire_scale_name(int16 val) {
+u8str empire_scale_name(int16 val) {
 /*switch(val) {
 	case 1: return "Small-time";
 	case 2: return "Medium Venture";
