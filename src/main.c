@@ -50,6 +50,7 @@
 #include "minIni.h"
 #include "mctypes.h"
 #include "platform.h"
+#include "game.h"
 
 PSP_MODULE_INFO(PLUGIN_NAME, PSP_MODULE_USER, PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR);
 
@@ -129,18 +130,9 @@ float SIZE_BIG    = 1.00f;
 float SIZE_HUGE   = 1.00f;
 float SIZE_HEXEDIT= 1.00f;
 
-
-/// more globals
-uaddr mod_text_addr;
-usize mod_text_size;
-usize mod_data_size;
-
 register uaddr gp __asm__("gp");
 
 static STMOD_HANDLER previous;
-
-bool LCS        = false;
-bool VCS        = false;
 
 u8char buffer[256];
 
@@ -577,7 +569,7 @@ void usercheats_draw() {
   char local_buff[512];
   u8char filename[64];
 
-  snprintf(buffer, sizeof(buffer), PLUGIN_USERCHEATS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
+  snprintf(buffer, sizeof(buffer), PLUGIN_USERCHEATS_GAME_PATH, BOOLGTA_NAME());
 
   /// draw title
   drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_BIG, SHADOW_OFF, 8.0f, 5.0f, COLOR_USERCHEATS, "User Cheats");
@@ -1169,12 +1161,14 @@ static void userscript_run(u8str currentfile)
   -
   ***************/
 
+  extern uaddr gp_;
+
   /// relative offset where script will be placed to MAIN = 0 (important for calculating label jumps!)
-  uaddr roff = getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)) - SCRIPT_SIZE;
+  uaddr roff = getInt(global_MainScriptSize + gp_) + getInt(global_LargestMissionScriptSize + gp_) - SCRIPT_SIZE;
   //DEBUG_LOG("roff: 0x%08X", roff);
 
   /// physical address where script will be placed
-  uaddr addr = (uaddr)getInt(global_ScriptSpace + (LCS ? 0 : gp)) + roff;
+  uaddr addr = (uaddr)getInt(global_ScriptSpace + gp_) + roff;
   //DEBUG_LOG("addr: 0x%08X", addr);
 
 
@@ -1332,7 +1326,7 @@ static void userscript_run(u8str currentfile)
                   tempint = strtol(utoken, NULL, 0); // convert
 
                   if( subcounter == 0 ) { // OUTSIDE  X@( , )
-                    script[pos++] = (byte)tempint + (LCS ? 0x6C : 0x6D); // because 0@ is 0xC (for LCS)
+                    script[pos++] = (byte)GTA_ADDR(tempint, 0x6C, 0x6D); // because 0@ is 0xC (for LCS)
                   } else { // INSIDE  (X@, )
                     script[pos++] = (byte)tempint;
                   }
@@ -1387,15 +1381,15 @@ static void userscript_run(u8str currentfile)
               if( !strcmp(token, "PLAYER_SKIN") ) { // LCS only
                 tempint = 533;
               } else if( !strcmp(token, "PLAYER_CHAR") ) {
-                tempint = (LCS ? 536 : 782);
-                if( VCS && mod_text_size == 0x00377D30 ) tempint = 759; // for ULUS v1.01
-                if( LCS && mod_text_size == 0x00320A34 ) tempint = 534; // for ULUS v1.02
+                tempint = (GameManager.game == GTA_LCS ? 536 : 782);
+                if( GameManager.gameEboot == GTA_VCS_ULUS10160_1_01 ) tempint = 759;
+                else if( GameManager.gameEboot == GTA_LCS_ULUS10041_1_02 ) tempint = 534;
               } else if( !strcmp(token, "PLAYER_ACTOR") ) { // LCS only
                 tempint = 540;
               } else if( !strcmp(token, "ONMISSION") ) {
-                tempint = (LCS ? 560 : 789);
-                if( VCS && mod_text_size == 0x00377D30 ) tempint = 766; // for ULUS v1.01
-                if( LCS && mod_text_size == 0x00320A34 ) tempint = 558; // for ULUS v1.02
+                tempint = (GameManager.game == GTA_LCS ? 560 : 789);
+                if( GameManager.gameEboot == GTA_VCS_ULUS10160_1_01 ) tempint = 766; // for ULUS v1.01
+                else if( GameManager.gameEboot == GTA_LCS_ULUS10041_1_02 ) tempint = 558; // for ULUS v1.02
               } else {
                 tempint = strtol(token, NULL, 0); // convert
               }
@@ -1404,7 +1398,7 @@ static void userscript_run(u8str currentfile)
               uaddr addr_tempint = (uaddr)&tempint;
 
               //eg LCS: $500  -> 0x01F4  -> 0xF4CD in script
-              script[pos++] = (*(byte*)(addr_tempint+1)) + (LCS ? 0xCC : 0xCD);  // 0x01 + 0xCD = 0xCE
+              script[pos++] = GTA_ADDR((*(byte*)(addr_tempint+1)), 0xCC, 0xCD);  // 0x01 + 0xCD = 0xCE
               script[pos++] = *(byte*)addr_tempint; // 0xF4
 
             } else if ( STR_STARTSWITH_CHAR(token, '#') ) //"#...."  alias
@@ -1422,7 +1416,7 @@ static void userscript_run(u8str currentfile)
               //DEBUG_LOG("Label = '%s'", token);
 
               /// error
-              if ( VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
+              if ( GameManager.game == GTA_VCS && strlen(token) < 3 ) { // labels with less than 3 chars sometimes crash the game
                 snprintf(buffer, sizeof(buffer), _t("~r~Error: Label '%s' in line %i needs to be 3 or more chars!"), token, line);
                 setTimedTextbox(buffer, 7.00f);
                 sceIoClose(file);
@@ -1443,8 +1437,8 @@ static void userscript_run(u8str currentfile)
               if( tempint == 0 ) { // not found
                 /// check if this is a script name in MAIN maybe //////////////////// experimental ////////////////
                 uaddr address = 0;
-                usize main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
-                uaddr script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+                usize main_size = getInt(global_MainScriptSize + gp_);
+                uaddr script_space = getInt(global_ScriptSpace + gp_);
                 for( address = script_space; address < script_space + main_size; address++ )
                 {
                   u8str curr_string = (u8str)address;
@@ -1456,7 +1450,7 @@ static void userscript_run(u8str currentfile)
                       USERSCRIPT_LOG("string '%s' found @ 0x%08X in mainscript", token, address - script_space);
 
                       tempint = address - script_space - 2; // 2 is opcode length
-                      if( VCS ) tempint--; // vcs has additional 0xA as string identifier
+                      if( GameManager.game == GTA_VCS ) tempint--; // vcs has additional 0xA as string identifier
 
                       goto skip_found;
                     }
@@ -1504,7 +1498,7 @@ static void userscript_run(u8str currentfile)
               ***********/
               token[strlen(token)-1] = '\0'; // remove the @
               tempint = strtol(token, NULL, 0); // convert
-              script[pos++] = tempint + (LCS ? 0xC : 0xD); // because 0@ is 0xC (for LCS)
+              script[pos++] = GTA_ADDR(tempint, 0xC, 0xD); // because 0@ is 0xC (for LCS)
             } else if( STR_STARTSWITH_CHAR(token, '\'') ) // "'xyz'" string
             {
               token++; // remove ' at the beginning
@@ -1523,7 +1517,7 @@ static void userscript_run(u8str currentfile)
               extern uaddr ptr_gxtloadadr;
 
               // not found in GXT
-              if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) )
+              if( strlen(identifier) > 7 || (getShort(LoadStringFromGXT(getInt(ptr_gxtloadadr + gp_), identifier, 2, 0xFF, 0xFF, 0, 0x00FF0000, 0x00FFFFFF)) == 0x0000) )
               {
                 USERSCRIPT_LOG("not found in GXT.."); // could be custom string or special string at this point
 
@@ -1576,7 +1570,7 @@ static void userscript_run(u8str currentfile)
               }
 
               /// write GXT name to script
-              if( VCS ) script[pos++] = 0x0A;
+              if( GameManager.game == GTA_VCS ) script[pos++] = 0x0A;
 
               usize ctr = 0;
               while( identifier[ctr] != '\0' )
@@ -1591,7 +1585,7 @@ static void userscript_run(u8str currentfile)
                   return;
                 }
               }
-              if( LCS ) {
+              if( GameManager.game == GTA_LCS ) {
                 while( ctr < 8 ) {
                   script[pos++] = '\0'; // odd? + 00
                   ctr++;
@@ -1741,7 +1735,7 @@ static void userscript_run(u8str currentfile)
                 }
               }
 
-              if( VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
+              if( GameManager.game == GTA_VCS && opcode == 0x0482 ) { // VCS "building_swap_for_model"
                 if( strcmp(token, "enable") == 0 ) {
                   break; // ignore "enable 1"
                 }
@@ -1876,8 +1870,8 @@ static void userscript_run(u8str currentfile)
         ///patch the debug menu scroll for LCS
         if( LCS && strcmp(linehandle, "patchDBGMENU") == 0 ) {
           uaddr address = 0;
-          int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
-          int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+          int main_size = getInt(global_MainScriptSize + gp_);
+          int script_space = getInt(global_ScriptSpace + gp_);
           for(address = script_space; address < script_space + main_size; address++) {
             if( *(byte*)(address) == 0x4D &&
               *(byte*)(address+15) == 0x0F &&
@@ -1996,7 +1990,7 @@ void userscripts_create() {
   userscript_readtxtneeded = true; // now
   //userscript_readfolderneeded = 1; // now
 
-  snprintf(script_workfldr, sizeof(script_workfldr), PLUGIN_USERSCRIPTS_GAME_PATH "%s%s", BOOLSTRCUSTOM(LCS, "VCS", "LCS"), script_subfldrs, BOOLSTRCUSTOM(!STR_EMPTY(script_subfldrs), "", "/"));
+  snprintf(script_workfldr, sizeof(script_workfldr), PLUGIN_USERSCRIPTS_GAME_PATH "%s%s", BOOLGTA_NAME(), script_subfldrs, BOOLSTRCUSTOM(!STR_EMPTY(script_subfldrs), "/", ""));
   userscripts_update_array();
 
   flag_userscripts = true; // only set here!
@@ -2021,13 +2015,13 @@ static void userscripts_draw() { // this is the worst code and I'm not proud of 
     // no longer needed as we auto-create the path and folder
     /* if( userscript_options == 0x80010002 ) { // no folder (doesn't work like this anymore since + countFolder... anyways)
       drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, COLOR_TEXT, "No user scripts folder found!");
-      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Create '%s%s%s/' and place .txt there", basefolder, folder_scripts, BOOLGTA_NAME());
       return FUNC_ERROR; // no cheats folder
     } */
 
     if( userscript_cd_scripts_count == 0 ) { // folder found but empty
       drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - userscript_row_spacing, COLOR_TEXT, "No UserScript files found!");
-      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Place User Scripts to '" PLUGIN_USERSCRIPTS_GAME_PATH "'", BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
+      drawString(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + userscript_row_spacing, COLOR_TEXT, "Place User Scripts to '" PLUGIN_USERSCRIPTS_GAME_PATH "'", BOOLGTA_NAME());
       return; // no cheats folder
     }
     else if ( !userscript_currentdir_scripts ) { // No memory???
@@ -2238,7 +2232,7 @@ static void userscripts_draw() { // this is the worst code and I'm not proud of 
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 200.0f, RED, "userscript_showoptions = %i", userscript_showoptions);
 
     // drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "userscript_draw_lower = %i", userscript_draw_lower);
-    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "scripts_folder = " PLUGIN_USERSCRIPTS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 220.0f, RED, "scripts_folder = " PLUGIN_USERSCRIPTS_GAME_PATH, BOOLGTA_NAME());
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 235.0f, RED, "script_workfldr = %s", script_workfldr);
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 440.0f, 250.0f, RED, "currentfile = %s", currentfile);
   }
@@ -2331,7 +2325,7 @@ static void userscripts_ctrl() {
   }
 
   if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
-    snprintf(buffer, sizeof(buffer), PLUGIN_USERSCRIPTS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); // "../scripts/xCS/"
+    snprintf(buffer, sizeof(buffer), PLUGIN_USERSCRIPTS_GAME_PATH, BOOLGTA_NAME()); // "../scripts/xCS/"
     if( strcmp(buffer, script_workfldr) != 0 || script_subfldrs[0] != 0x00) { // we are not yet back in root..
 
       /// remove last folder from working path string
@@ -2363,7 +2357,7 @@ static void userscripts_ctrl() {
         if ( script_subfldrs[0] ) strcat(script_subfldrs, "/");
         strncat(script_subfldrs, currentfile, strlen(currentfile));
 
-        snprintf(script_workfldr, sizeof(script_workfldr), PLUGIN_USERSCRIPTS_GAME_PATH "%s/", BOOLSTRCUSTOM(LCS, "VCS", "LCS"), script_subfldrs);
+        snprintf(script_workfldr, sizeof(script_workfldr), PLUGIN_USERSCRIPTS_GAME_PATH "%s/", BOOLGTA_NAME(), script_subfldrs);
         userscripts_update_array();
 
         userscript_selected_val = 0;
@@ -2441,8 +2435,8 @@ static array_uidx editor_block_current;
 static uaddr editor_base_adr;
 static usize editor_options;       // available options (set later)
 static usize editor_showoptions;   // the number of value rows that should be displayed at once (0 to 2 possible)
-static int editor_draw_lower;    // some have no data in slots -> those can be disabled here
-static int editor_selector;      // is 1 if cursor in topmenu --- 0 when in values
+static bool editor_draw_lower;    // some have no data in slots -> those can be disabled here
+static bool editor_selector;      // is 1 if cursor in topmenu --- 0 when in values
 static uint32 editor_selection_top; // selected topmenu option
 static uint32 editor_selection_val; // selected option in values number
 static usize editor_top;           // the values option on top when there are more options than editor_showoptions
@@ -2475,8 +2469,8 @@ void editor_create(uint8 mode, array_size toptions, const u8str editortitle, con
   editor_firstobj = first_obj;
   editor_lastobj = editor_firstobj + (editor_blocks * editor_blocksize);
   editor_base_adr = 0;
-  editor_draw_lower = 0;
-  editor_selector = 1;
+  editor_draw_lower = false;
+  editor_selector = true;
   editor_selection_top = editor_toptions-1;
   editor_selection_val = 0;
   editor_top = 0;
@@ -2526,11 +2520,11 @@ static void editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPedObjectIsActive(editor_base_adr) ) {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPedID(editor_base_adr), _t("Name"), getModelNameViaID(getPedID(editor_base_adr), waittime)); // block menu(getPedModelByID was replaced)
-        editor_draw_lower = 1; // there is a PED here
+        editor_draw_lower = true; // there is a PED here
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks); // block menu
-        editor_draw_lower = 0;  // no active PED -> not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false;  // no active PED -> not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2547,11 +2541,11 @@ static void editor_draw() {
 
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getVehicleID(editor_base_adr), _t("Name"), vehicle_name); // block menu
 
-        editor_draw_lower = 1; // there is a Vehicle here
+        editor_draw_lower = true; // there is a Vehicle here
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
-        editor_draw_lower = 0; // no active Vehicle here -> not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // no active Vehicle here -> not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2560,11 +2554,11 @@ static void editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); // block menu
-        editor_draw_lower = 1; // there is a obj here
+        editor_draw_lower = true; // there is a obj here
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
-        editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // no active obj here -> not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2573,11 +2567,11 @@ static void editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getWorldObjectIsActive(editor_base_adr) ){
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime) ); // block menu
-        editor_draw_lower = 1; // there is a obj here
+        editor_draw_lower = true; // there is a obj here
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
-        editor_draw_lower = 0; // no active obj here -> not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // no active obj here -> not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;*/
 
@@ -2586,11 +2580,11 @@ static void editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getPickupIsActive(editor_base_adr) ){ // getPickupIsCollectable() alternative
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i    %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("ID"), getPickupID(editor_base_adr), _t("Name"), getPickupNameByID(getPickupID(editor_base_adr))); // block menu
-        editor_draw_lower = 1;
+        editor_draw_lower = true;
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
-        editor_draw_lower = 0; // not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2604,11 +2598,11 @@ static void editor_draw() {
         }
         else
           snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %s", _t("Slot"), editor_block_current+1, editor_blocks, _t("Icon"), getMapiconNameByID(getMapiconID(editor_base_adr)) ); // block menu
-        editor_draw_lower = 1;
+        editor_draw_lower = true;
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
-        editor_draw_lower = 0; // not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2627,14 +2621,14 @@ static void editor_draw() {
         if( STR_EMPTY(buffer_top1) ) // some vehicles don't have translations..
           snprintf(buffer_top1, sizeof(buffer_top1), "%s", getGxtIdentifierForVehicleViaID(getShort(editor_base_adr))); // ..use the GXT identifier-name then
         snprintf(buffer_top0, sizeof(buffer_top0), "%s     '%s'", buffer_top0, buffer_top1);*/
-        editor_draw_lower = 1; // allowed
+        editor_draw_lower = true; // allowed
 
       } else {
-        editor_draw_lower = 0; // no active -> not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // no active -> not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
 
-      snprintf(buffer_top1, sizeof(buffer_top1), "%s: %s", _t("Garage"), LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
+      snprintf(buffer_top1, sizeof(buffer_top1), "%s: %s", _t("Garage"), GameManager.game == GTA_LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current]);
       break;
 
     case EDITOR_VEHWORLDSPAWNS:
@@ -2650,11 +2644,11 @@ static void editor_draw() {
         if( isCustomParkedVehicleSpawnViaSlot(editor_block_current) )
           strcat(buffer_top0, " (custom)");
 
-        editor_draw_lower = 1;
+        editor_draw_lower = true;
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Slot"), editor_block_current+1, editor_blocks ); // block menu
-        editor_draw_lower = 0; // not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2662,7 +2656,7 @@ static void editor_draw() {
       editor_block_current = editor_empire_current;
       editor_base_adr = editor_firstobj + (editor_block_current * 4); // calc base address //
       snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Business"), editor_block_current+1, editor_blocks); // block menu
-      editor_draw_lower = 1;
+      editor_draw_lower = true;
       break;
 
 
@@ -2674,31 +2668,31 @@ static void editor_draw() {
 
       if( getInt(editor_base_adr) ){ // there is a pointer here
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: '%s'   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("Type"), getIdeTypeName(getByte(getInt(editor_base_adr)+0x10)), _t("Name"), getModelNameViaHash(getInt(getInt(editor_base_adr)+0x8), waittime)); //block menu
-        editor_draw_lower = 1;
+        editor_draw_lower = true;
 
         editor_base_adr = getInt(editor_base_adr);
         char ide_type = getByte(editor_base_adr+0x10);
         editor_temp_blocksize = getIdeSlotSizeByType(ide_type); // hardcoded though
         if( ide_type == 0x01 ) // obj
-          editor_curmenu = LCS ? lcs_ide_obj_menu : vcs_ide_obj_menu;
+          editor_curmenu = GameManager.game == GTA_LCS ? lcs_ide_obj_menu : vcs_ide_obj_menu;
         else if( ide_type == 0x03 ) // tobj
-          editor_curmenu = LCS ? lcs_ide_tobj_menu : vcs_ide_tobj_menu;
+          editor_curmenu = GameManager.game == GTA_LCS ? lcs_ide_tobj_menu : vcs_ide_tobj_menu;
         else if( ide_type == 0x04 ) // weap
-          editor_curmenu = LCS ? lcs_ide_weap_menu : vcs_ide_weap_menu;
+          editor_curmenu = GameManager.game == GTA_LCS ? lcs_ide_weap_menu : vcs_ide_weap_menu;
         else if( ide_type == 0x05 ) { // hier
-          //editor_curmenu = LCS ? lcs_ide_hier_menu : vcs_ide_hier_menu; // empty
-          editor_curmenu = LCS ? lcs_ide_menu : vcs_ide_menu; //don't replace - use base
+          //editor_curmenu = GameManager.game == GTA_LCS ? lcs_ide_hier_menu : vcs_ide_hier_menu; // empty
+          editor_curmenu = GameManager.game == GTA_LCS ? lcs_ide_menu : vcs_ide_menu; //don't replace - use base
         } else if( ide_type == 0x06 ) // cars
-          editor_curmenu = LCS ? lcs_ide_cars_menu : vcs_ide_cars_menu;
+          editor_curmenu = GameManager.game == GTA_LCS ? lcs_ide_cars_menu : vcs_ide_cars_menu;
         else if( ide_type == 0x07 ) // ped
-          editor_curmenu = LCS ? lcs_ide_ped_menu : vcs_ide_ped_menu;
+          editor_curmenu = GameManager.game == GTA_LCS ? lcs_ide_ped_menu : vcs_ide_ped_menu;
 
         optionAdjust(); // "re-adjust"
 
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
-        editor_draw_lower = 0; // not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
         editor_temp_blocksize = 0x4; // size of pointer
       }
       break;
@@ -2717,13 +2711,13 @@ static void editor_draw() {
 
         if( getInt(editor_base_adr) && getByte( getInt(editor_base_adr) + 0x10 ) == MODELINFO_VEHICLE ) { // there is a pointer here AND its vehicle type
           snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u    %s: %s    %s: %s", _t("ID"), editor_block_current, _t("GXT"), getGxtIdentifierForVehicleViaID(editor_block_current), _t("Name"), getRealVehicleNameViaID(editor_block_current));
-          editor_temp_blocksize = LCS ? 0xF0 : 0xE0; // TODO: (var_handlingcfgslotsize)
+          editor_temp_blocksize = GameManager.game == GTA_LCS ? 0xF0 : 0xE0; // TODO: (var_handlingcfgslotsize)
           editor_base_adr = getAddressOfHandlingSlotForID(editor_block_current);
-          editor_draw_lower = 1;
+          editor_draw_lower = true;
         } else {
           snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks ); // block menu
-          editor_draw_lower = 0; // not allowed to draw lower menu
-          editor_selector = 1; // don't allow going to down_menu
+          editor_draw_lower = false; // not allowed to draw lower menu
+          editor_selector = true; // don't allow going to down_menu
           editor_temp_blocksize = 0x4; // back to size of pointer
           editor_block_current++;
         }
@@ -2734,11 +2728,11 @@ static void editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
-        editor_draw_lower = 1;
+        editor_draw_lower = true;
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
-        editor_draw_lower = 0; // not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2747,11 +2741,11 @@ static void editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
-        editor_draw_lower = 1;
+        editor_draw_lower = true;
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
-        editor_draw_lower = 0; // not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2760,11 +2754,11 @@ static void editor_draw() {
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       if( getShort(editor_base_adr+0x58) ){
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x58), _t("Name"), getModelNameViaID(getShort(editor_base_adr+0x58), waittime)); //block menu
-        editor_draw_lower = 1;
+        editor_draw_lower = true;
       } else {
         snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1 ); // block menu
-        editor_draw_lower = 0; // not allowed to draw lower menu
-        editor_selector = 1; // don't allow going to down_menu
+        editor_draw_lower = false; // not allowed to draw lower menu
+        editor_selector = true; // don't allow going to down_menu
       }
       break;
 
@@ -2772,11 +2766,11 @@ static void editor_draw() {
       editor_block_current = editor_carcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Color"), editor_block_current, editor_blocks-1); // block menu
-      editor_draw_lower = 1;
+      editor_draw_lower = true;
 
       /// draw color box
-      if( LCS ) cur_color.color32 = getInt(editor_base_adr);
-      if( VCS ) {
+      if( GameManager.game == GTA_LCS ) cur_color.color32 = getInt(editor_base_adr);
+      if( GameManager.game == GTA_VCS ) {
         cur_color.color32 = getByte(editor_base_adr);
         cur_color.color32 += getByte(editor_base_adr+0x1) * 0x100;
         cur_color.color32 += getByte(editor_base_adr+0x2) * 0x10000;
@@ -2789,7 +2783,7 @@ static void editor_draw() {
       editor_block_current = editor_pedcolsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("Color"), editor_block_current, editor_blocks-1); // block menu
-      editor_draw_lower = 1;
+      editor_draw_lower = true;
 
       /// draw color box
       cur_color.color32 = getByte(editor_base_adr);
@@ -2803,21 +2797,21 @@ static void editor_draw() {
       editor_block_current = editor_particleCFG_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1); // block menu
-      editor_draw_lower = 1;
+      editor_draw_lower = true;
       break;
 
     case EDITOR_PEDSTATSDAT:
       editor_block_current = editor_pedstatsDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u", _t("No."), editor_block_current, editor_blocks-1); // block menu
-      editor_draw_lower = 1;
+      editor_draw_lower = true;
       break;
 
     case EDITOR_WEAPONDAT:
       editor_block_current = editor_weaponDAT_current;
       editor_base_adr = editor_firstobj + (editor_block_current * editor_blocksize); // calc base address
       snprintf(buffer_top0, sizeof(buffer_top0), "%s: %u/%u      %s: %i   %s: %s", _t("No."), editor_block_current, editor_blocks-1, _t("ID"), getShort(editor_base_adr+0x60), _t("Name"), (getShort(editor_base_adr+0x60) > 0) ? getModelNameViaID(getShort(editor_base_adr+0x60), waittime) : "Unarmed"); //block menu
-      editor_draw_lower = 1;
+      editor_draw_lower = true;
       break;
 
   case EDITOR_TIMECYCDAT:
@@ -2825,8 +2819,8 @@ static void editor_draw() {
       int weather = editor_block_current / 24;
       int time = editor_block_current % 24;
       editor_base_adr = editor_firstobj + (8 * time) + weather;
-      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %s   %s: %02i:00", _t("Weather"), _t( LCS ? weather_lcs[weather] : weather_vcs[weather] ), _t("Time"), time); //block menu
-      editor_draw_lower = 1;
+      snprintf(buffer_top0, sizeof(buffer_top0), "%s: %s   %s: %02i:00", _t("Weather"), _t( GameManager.game == GTA_LCS ? weather_lcs[weather] : weather_vcs[weather] ), _t("Time"), time); //block menu
+      editor_draw_lower = true;
 
       // LCS & VCS!
       editor_temp_blocksize = 0x2bf0; // TODO: ???
@@ -3009,7 +3003,7 @@ static void editor_draw() {
         // on VCS the vehicles are loaded into the garage on spawn!!!!!
         // TODO: can this be checked elsewhere?
         drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, COLOR_TEXT, "No vehicle found or garage open!");
-        if( VCS ) drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT, "Info: Vehicles are loaded on spawn! Open & close garage once.");
+        if( GameManager.game == GTA_VCS ) drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y+30, COLOR_TEXT, "Info: Vehicles are loaded on spawn! Open & close garage once.");
         break;
 
       case EDITOR_PEDOBJ:
@@ -3126,7 +3120,7 @@ static void editor_draw() {
       }
     }
     if( editor_menumode == EDITOR_MAPICONS  ) {
-      if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
+      if( editor_selector && getMapiconIsActive(editor_base_adr) && (getFloat(GTA_ADDR(editor_base_adr, 0x14, 0x18)) != 0.0f || getMapiconType(editor_base_adr) < 4) ) {
         drawLegendMessageNoVarg(0, 1, COLOR_TEXT, "SQUARE: Teleport there"); // left side, second row
       }
     }
@@ -3182,7 +3176,7 @@ static void editor_ctrl() {
 
     if( hold_buttons & PSP_CTRL_DOWN ) {
       if( editor_selection_top <= 0 ) {
-        if(editor_draw_lower) editor_selector = 0; // switch to values
+        if(editor_draw_lower) editor_selector = false; // switch to values
         editor_selection_top = 0; // to be sure
       } else editor_selection_top--;
     }
@@ -3212,7 +3206,7 @@ static void editor_ctrl() {
       if( (editor_menumode == EDITOR_PICKUPS) && getFloat(editor_base_adr) != 0 && getPickupIsActive(editor_base_adr) ) {
         editor_trigger = 1; // trigger teleport
       }
-      if( (editor_menumode == EDITOR_MAPICONS) && getMapiconIsActive(editor_base_adr) && (getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) != 0 || getMapiconType(editor_base_adr) < 4) ) {
+      if( (editor_menumode == EDITOR_MAPICONS) && getMapiconIsActive(editor_base_adr) && (getFloat(GTA_ADDR(editor_base_adr, 0x14, 0x18)) != 0 || getMapiconType(editor_base_adr) < 4) ) {
         editor_trigger = 1; // trigger teleport
       }
       if( editor_menumode == EDITOR_GARAGE && getFloat(editor_base_adr+0x4) != 0 ) {
@@ -3294,28 +3288,28 @@ static void editor_ctrl() {
       }
 
       if( editor_menumode == EDITOR_GARAGE && getShort(editor_base_adr) == 0 && editor_garageslot_current == 0 ) {
-        if( LCS && editor_garage_current == 0 ) // Portland
+        if( GameManager.game == GTA_LCS && editor_garage_current == 0 ) // Portland
           createGarageVehicle(editor_base_adr, 0xAC, 1158.56f, -270.16f, 17.10f, 0.01f, 0.99f, 0.002f, 0x00, 0x00, 0xA, 0xFF, 0xFF);
 
-        else if( LCS && editor_garage_current == 1 ) // Staunton
+        else if( GameManager.game == GTA_LCS && editor_garage_current == 1 ) // Staunton
           createGarageVehicle(editor_base_adr, 0xAC, 297.59f, -427.37f, 26.20f, -0.01f, -0.99f, -0.002f, 0x00, 0x00, 0xA, 0xFF, 0xFF);
 
-        else if( LCS && editor_garage_current == 2 ) // SSV
+        else if( GameManager.game == GTA_LCS && editor_garage_current == 2 ) // SSV
           createGarageVehicle(editor_base_adr, 0xAC, -789.25f, 289.82f, 48.60f, 0.32f, 0.94f, -0.001f, 0x00, 0x00, 0xA, 0xFF, 0xFF);
 
-        else if( VCS && editor_garage_current == 0 ) // 101 Bayshore Ave
+        else if( GameManager.game == GTA_VCS && editor_garage_current == 0 ) // 101 Bayshore Ave
           createGarageVehicle(editor_base_adr, 0xBB, -835.40f, -1196.73f, 11.30f, 0.94f, 0.31f, -0.04f, 0x00, 0x00, 0x9, 0xFF, 0xFF);
 
-        else if( VCS && editor_garage_current == 1 ) // The Compound
+        else if( GameManager.game == GTA_VCS && editor_garage_current == 1 ) // The Compound
           createGarageVehicle(editor_base_adr, 0xBB, -1104.85f, 361.10f, 10.90f, 0.99f, -0.007f, -0.001f, 0x00, 0x00, 0x9, 0xFF, 0xFF);
 
-        else if( VCS && editor_garage_current == 2 ) // Clymenus Suite
+        else if( GameManager.game == GTA_VCS && editor_garage_current == 2 ) // Clymenus Suite
           createGarageVehicle(editor_base_adr, 0xBB, 262.48f, -142.74f, 11.40f, 0.90f, -0.42f, 0.01f, 0x00, 0x00, 0x9, 0xFF, 0xFF);
       }
 
       if( editor_menumode == EDITOR_VEHWORLDSPAWNS ) {
         if( pcar )
-          createParkedVehicleSpawnViaSlot( editor_block_current, pcar_id, getFloat(pcar+0x30), getFloat(pcar+0x34), getFloat(pcar+0x38), (180.0f / M_PI) * getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + ((getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f),  lcs_getVehicleColorBase(pcar), lcs_getVehicleColorStripe(pcar), 0, 0);
+          createParkedVehicleSpawnViaSlot( editor_block_current, pcar_id, getFloat(pcar+0x30), getFloat(pcar+0x34), getFloat(pcar+0x38), (180.0f / M_PI) * getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + ((getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) < 0.00f) ?  360.0f : 0.0f),  lcs_getVehicleColorBase(pcar), lcs_getVehicleColorStripe(pcar), 0, 0);
       }
       //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     }
@@ -3366,7 +3360,7 @@ static void editor_ctrl() {
       /// Navigation UP ////////////////////////////
       if( hold_buttons & PSP_CTRL_UP ) {
         if( editor_selection_val <= 0 ) {
-          if( editor_toptions ) editor_selector = 1; // switch to top menu
+          if( editor_toptions ) editor_selector = true; // switch to top menu
         } else editor_selection_val--;
 
         if ( editor_top > 1 ) { // scroll
@@ -3616,7 +3610,7 @@ static void editor_ctrl() {
     //+//+//+//+//+/+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//+//
     switch( editor_menumode ) {
       case EDITOR_GARAGE:
-        snprintf(buffer, sizeof(buffer), "Garage Data (%s - Slot: %i)", LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current], editor_garageslot_current+1);
+        snprintf(buffer, sizeof(buffer), "Garage Data (%s - Slot: %i)", GameManager.game == GTA_LCS ? lcs_garagenames[editor_garage_current] : vcs_garagenames[editor_garage_current], editor_garageslot_current+1);
         break;
 
       case EDITOR_PEDOBJ:
@@ -3655,7 +3649,7 @@ static void editor_ctrl() {
 
       case EDITOR_HANDLINGCFG:
         //snprintf(buffer, sizeof(buffer), "handling.cfg (ID: %i  Name: %s)", lcs_vehicles[editor_block_current].id, lcs_vehicles[editor_block_current].name); //editor_block_current, editor_blocks
-        // if( LCS )
+        // if( GameManager.game == GTA_LCS )
           // snprintf(buffer, sizeof(buffer), "handling.cfg (Slot %i)", lcs_vehicles[editor_block_current].hndlng_no); //alternative
         snprintf(buffer, sizeof(buffer), "Handling.cfg");
         break;
@@ -3699,7 +3693,7 @@ static void editor_ctrl() {
         break;
 
       case EDITOR_TIMECYCDAT:
-        snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02u:00 - %s", LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
+        snprintf(buffer, sizeof(buffer), "Timecyc.dat - %s / %02u:00 - %s", GameManager.game == GTA_LCS ? weather_lcs[editor_block_current / 24] : weather_vcs[editor_block_current / 24], editor_block_current % 24, editor_curmenu[editor_selection_val].name);
         break;
 
       default:
@@ -3821,7 +3815,7 @@ static void editor_ctrl() {
           }
 
         } else { // use coordinates in blip slot
-          SetPlayerPosition(getFloat(editor_base_adr+(LCS ? 0xC : 0x10)), getFloat(editor_base_adr+(LCS ? 0x10 : 0x14)), getFloat(editor_base_adr+(LCS ? 0x14 : 0x18)) + 2.00f);
+          SetPlayerPosition(getFloat(GTA_ADDR(editor_base_adr, 0xC, 0x10)), getFloat(GTA_ADDR(editor_base_adr, 0x10, 0x14)), getFloat(GTA_ADDR(editor_base_adr, 0x14, 0x18)) + 2.00f);
         }
         //closeMenu(); // close menugetFloat(editor_base_adr+)
         editor_trigger = 0;
@@ -3838,9 +3832,9 @@ static void editor_ctrl() {
       break;
 
     case EDITOR_HANDLINGCFG:
-      //if( LCS )
+      //if( GameManager.game == GTA_LCS )
       //  editor_vehicle_current = lcs_vehicles[editor_block_current].id;
-      //if( VCS )
+      //if( GameManager.game == GTA_VCS )
         editor_vehicle_current = editor_block_current;
 
       if( editor_trigger ) {
@@ -3958,7 +3952,7 @@ static void editor_ctrl() {
 *
 *********************************************************************************************************/
 #ifdef FREECAM
-short flag_freecam = 0;
+bool flag_freecam = false;
 
 static float camera_x, camera_y, camera_z; // camera xyz position in world
 static float fov;
@@ -3966,23 +3960,23 @@ static float cam_coord_x1, cam_coord_y1, cam_coord_z1;
 static float cam_coord_x2, cam_coord_y2, cam_coord_z2;
 static float radius, inclination, azimuth;
 static float movespeed = 0.40, turnspeed = 0.05;
-static int printinfo = 1;
+static bool printinfo = true;
 static int protofix = 0, protofix2 = 0; // TODO: make dynamic?!
 extern uaddr global_camera;
 
 void freecam_create() {
   DEBUG_LOG("%lu: freecam_create()", getGametime());
 
-  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) // ULUX v0.02 & ULUS v1.02
+  if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 || GameManager.gameEboot == GTA_LCS_ULUS10041_1_02 ) // ULUX v0.02 & ULUS v1.02
     protofix = -0x10;
 
-  if( VCS && mod_text_size == 0x00377D30 ) // ULUS v1.01
+  if( GameManager.gameEboot == GTA_VCS_ULUS10160_1_01 ) // ULUS v1.01
     protofix2 = 0x4;
 
-  flag_freecam = 1; // only set here!
-  printinfo = 1;
-  setByte(pplayer + (LCS ? 0x560 : 0x550) + protofix2, 1); // unbind camera from player
-  setFloat(global_camera + (LCS ? 0xCC : 0x798), 4.0f); // unbind camera from vehicle (by setting camera mode to "4")
+  flag_freecam = true; // only set here!
+  printinfo = true;
+  setByte(GTA_ADDR(pplayer, 0x560, 0x550) + protofix2, 1); // unbind camera from player
+  setFloat(GTA_ADDR(global_camera, 0xCC, 0x798), 4.0f); // unbind camera from vehicle (by setting camera mode to "4")
 }
 
 static void freecam_draw() {
@@ -3991,30 +3985,30 @@ static void freecam_draw() {
   float player_z = getFloat(pplayer+0x38);
 
   /// get camera values
-  if( getByte(global_camera + (LCS ? 0x6B+protofix : 0x81A) ) == 0x1) { // cutscene
-    camera_x = getFloat(global_camera + (LCS ? 0x9C0+protofix : 0x7F0));
-    camera_y = getFloat(global_camera + (LCS ? 0x9C4+protofix : 0x7F4));
-    camera_z = getFloat(global_camera + (LCS ? 0x9C8+protofix : 0x7F8));
+  if( getByte(GTA_ADDR(global_camera, 0x6B+protofix, 0x81A)) == 0x1) { // cutscene
+    camera_x = getFloat(GTA_ADDR(global_camera, 0x9C0+protofix, 0x7F0));
+    camera_y = getFloat(GTA_ADDR(global_camera, 0x9C4+protofix, 0x7F4));
+    camera_z = getFloat(GTA_ADDR(global_camera, 0x9C8+protofix, 0x7F8));
   } else {
-    camera_x = getFloat(global_camera + (LCS ? 0x340+protofix : 0x90));
-    camera_y = getFloat(global_camera + (LCS ? 0x344+protofix : 0x94));
-    camera_z = getFloat(global_camera + (LCS ? 0x348+protofix : 0x98));
+    camera_x = getFloat(GTA_ADDR(global_camera, 0x340+protofix, 0x90));
+    camera_y = getFloat(GTA_ADDR(global_camera, 0x344+protofix, 0x94));
+    camera_z = getFloat(GTA_ADDR(global_camera, 0x348+protofix, 0x98));
   }
-  fov = getFloat(global_camera + (LCS ? 0x254+protofix : 0x198));
-  cam_coord_x1 = getFloat(global_camera + (LCS ? 0x330+protofix : 0x80));
-  cam_coord_y1 = getFloat(global_camera + (LCS ? 0x334+protofix : 0x84));
-  cam_coord_z1 = getFloat(global_camera + (LCS ? 0x338+protofix : 0x88));
+  fov =          getFloat(GTA_ADDR(global_camera, 0x254+protofix, 0x198));
+  cam_coord_x1 = getFloat(GTA_ADDR(global_camera, 0x330+protofix, 0x80));
+  cam_coord_y1 = getFloat(GTA_ADDR(global_camera, 0x334+protofix, 0x84));
+  cam_coord_z1 = getFloat(GTA_ADDR(global_camera, 0x338+protofix, 0x88));
 
 
   /// calculate
-  radius = 1.00; // root( a^2 + b^2 + c^2 )
+  radius = 1.00f; // root( a^2 + b^2 + c^2 )
   inclination = acosf(cam_coord_z1 / radius); // theta
   azimuth = atanf(cam_coord_y1 / cam_coord_x1); // phi
 
   azimuth     -= (xstick_ * turnspeed);
   inclination += (ystick_ * turnspeed);
-  if( inclination < 0.20 ) inclination = 0.20; // set bound
-  if( inclination > 3.00 ) inclination = 3.00; // set bound
+  if( inclination < 0.20f ) inclination = 0.20f; // set bound
+  if( inclination > 3.00f ) inclination = 3.00f; // set bound
 
   /// camera turning via keys combo
   if( current_buttons & PSP_CTRL_CROSS ) {
@@ -4036,16 +4030,16 @@ static void freecam_draw() {
   cam_coord_z2 = radius * sinf(inclination);                // z2  OK
 
   /// TODO: ugly quick fix
-  if( back_x1 > 0.00 && back_y1 > 0.00 ) { // direction 1
+  if( back_x1 > 0.00f && back_y1 > 0.00f ) { // direction 1
     cam_coord_x2 = -cam_coord_x2;
     cam_coord_y2 = -cam_coord_y2;
-  } else if( back_x1 < 0.00 && back_y1 > 0.00 ) { // direction 2
+  } else if( back_x1 < 0.00f && back_y1 > 0.00f ) { // direction 2
     cam_coord_x1 = -cam_coord_x1;
     cam_coord_y1 = -cam_coord_y1;
-  } else if( back_x1 < 0.00 && back_y1 < 0.00 ) { // direction 3
+  } else if( back_x1 < 0.00f && back_y1 < 0.00f ) { // direction 3
     cam_coord_x1 = -cam_coord_x1;
     cam_coord_y1 = -cam_coord_y1;
-  } else if( back_x1 > 0.00 && back_y1 < 0.00 ) { // direction 4
+  } else if( back_x1 > 0.00f && back_y1 < 0.00f ) { // direction 4
     cam_coord_x2 = -cam_coord_x2;
     cam_coord_y2 = -cam_coord_y2;
   }
@@ -4107,25 +4101,25 @@ static void freecam_draw() {
   /////////////////////////////////////////////////////////////////////////////////////
 
   /// write back new values
-  if( getByte(global_camera + (LCS ? 0x6B+protofix : 0x81A)) == 0x1 ) { // cutscene
-    setFloat(global_camera + (LCS ? 0x9C0+protofix : 0x7F0), camera_x);
-    setFloat(global_camera + (LCS ? 0x9C4+protofix : 0x7F4), camera_y);
-    setFloat(global_camera + (LCS ? 0x9C8+protofix : 0x7F8), camera_z);
+  if( getByte(GTA_ADDR(global_camera, 0x6B+protofix, 0x81A)) == 0x1 ) { // cutscene
+    setFloat(GTA_ADDR(global_camera, 0x9C0+protofix, 0x7F0), camera_x);
+    setFloat(GTA_ADDR(global_camera, 0x9C4+protofix, 0x7F4), camera_y);
+    setFloat(GTA_ADDR(global_camera, 0x9C8+protofix, 0x7F8), camera_z);
   } else {
-    setFloat(global_camera + (LCS ? 0x340+protofix : 0x90), camera_x);
-    setFloat(global_camera + (LCS ? 0x344+protofix : 0x94), camera_y);
-    setFloat(global_camera + (LCS ? 0x348+protofix : 0x98), camera_z);
+    setFloat(GTA_ADDR(global_camera, 0x340+protofix,  0x90), camera_x);
+    setFloat(GTA_ADDR(global_camera, 0x344+protofix,  0x94), camera_y);
+    setFloat(GTA_ADDR(global_camera, 0x348+protofix,  0x98), camera_z);
   }
 
-  setFloat(global_camera + (LCS ? 0x254+protofix : 0x198), fov);
+  setFloat(GTA_ADDR(global_camera, 0x254+protofix, 0x198), fov);
 
-  setFloat(global_camera + (LCS ? 0x330+protofix : 0x80), cam_coord_x1);
-  setFloat(global_camera + (LCS ? 0x334+protofix : 0x84), cam_coord_y1);
-  setFloat(global_camera + (LCS ? 0x338+protofix : 0x88), cam_coord_z1);
+  setFloat(GTA_ADDR(global_camera, 0x330+protofix, 0x80), cam_coord_x1);
+  setFloat(GTA_ADDR(global_camera, 0x334+protofix, 0x84), cam_coord_y1);
+  setFloat(GTA_ADDR(global_camera, 0x338+protofix, 0x88), cam_coord_z1);
 
-  setFloat(global_camera + (LCS ? 0x360+protofix : 0xD0), cam_coord_x2);
-  setFloat(global_camera + (LCS ? 0x364+protofix : 0xD4), cam_coord_y2);
-  setFloat(global_camera + (LCS ? 0x368+protofix : 0xD8), cam_coord_z2);
+  setFloat(GTA_ADDR(global_camera, 0x360+protofix, 0xD0), cam_coord_x2);
+  setFloat(GTA_ADDR(global_camera, 0x364+protofix, 0xD4), cam_coord_y2);
+  setFloat(GTA_ADDR(global_camera, 0x368+protofix, 0xD8), cam_coord_z2);
 
 
   /////////////////////////////////////////////////////////////////////////////////////
@@ -4162,8 +4156,8 @@ static void freecam_draw() {
     drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 160.0f, 130.0f, COLOR_VALUE, "cam_coord_z2 = %.2f", cam_coord_z2);
     */
 
-    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY, "cutscene: %X", getByte( global_camera + (LCS ? 0x6B+protofix : 0x81A)));
-    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY, "camera: %X", getByte( global_camera + (LCS ? 0x64+protofix : 0x816)));
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 30.0f, GREY, "cutscene: %X", getByte(GTA_ADDR(global_camera, 0x6B+protofix, 0x81A)));
+    drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 50.0f, GREY, "camera: %X", getByte(GTA_ADDR(global_camera, 0x64+protofix, 0x816)));
 
     drawString(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, GREY, "FOV: %.2f", fov);
 
@@ -4190,9 +4184,9 @@ static void freecam_draw() {
 static void freecam_ctrl()
 {
   if( pressed_buttons & PSP_CTRL_CIRCLE ) {
-    flag_freecam = 0;
-    setByte(pplayer + (LCS ? 0x560 : 0x550) + protofix2, 0); // rebind camera to player
-    setFloat(global_camera + (LCS ? 0xCC : 0x798 ), 2.0f); // rebind camera to vehicle
+    flag_freecam = false;
+    setByte(GTA_ADDR(pplayer, 0x560, 0x550) + protofix2, 0); // rebind camera to player
+    setFloat(GTA_ADDR(global_camera, 0xCC, 0x798), 2.0f); // rebind camera to vehicle
   }
 
   if( pressed_buttons & PSP_CTRL_TRIANGLE ) {
@@ -4236,7 +4230,7 @@ void address_create() {
 
 static void address_draw() {
   drawUiBox(120.0f, 82.0f, 240.0f,  22.0f, 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // header (x, y, width, height, border, color, color)
-  drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > mod_text_addr) ? (LCS ? 130.0f : 175.0f) : (LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
+  drawUiBox(120.0f, 82.0f, 240.0f, (tempaddress > GameManager.modInfo.TextAddr) ? (GameManager.game == GTA_LCS ? 130.0f : 175.0f) : (GameManager.game == GTA_LCS ? 85.0f : 130.0f), 2.0f, COLOR_UIBORDER, COLOR_UIBACKGROUND); // main
 
   drawStringNoVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, SCREEN_WIDTH/2, 85.0f, COLOR_TITLE, "Enter Address");
   //drawBox(197.0f, 100.0f, 100.0f, 1.0f, COLOR_TITLE); // x, y, width, height, color
@@ -4254,8 +4248,8 @@ static void address_draw() {
 
 
   /// draw text_addr depending address
-  if( tempaddress > mod_text_addr ) {
-    i = 0, x = 320, y += 45, temp = tempaddress - mod_text_addr;
+  if( tempaddress > GameManager.modInfo.TextAddr ) {
+    i = 0, x = 320, y += 45, temp = FROMTEXTADDR(tempaddress);
     drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, YELLOW, "text_addr:");
     while( temp ) {
       drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-=10), (float)y, YELLOW, "%X", temp % 0x10);
@@ -4268,7 +4262,7 @@ static void address_draw() {
 
 
   /// draw $gp depending address
-  if( VCS ) {
+  if( GameManager.game == GTA_VCS ) {
     i = 0, x = 320, y += 45, temp = tempaddress - gp;
     drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)(x-170), (float)y, ORANGE, "To $gp:");
     while( temp ) {
@@ -4286,8 +4280,8 @@ static void address_draw() {
     /// draw info
     drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 100.0f, RED, "addresspos = %lu", addresspos);
     drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 140.0f, RED, "phy: 0x%08lX", tempaddress);
-    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 160.0f, RED, "mod: 0x%08lX", tempaddress - mod_text_addr);
-    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 180.0f, RED, "$gp: 0x%08lX", tempaddress  - gp);
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 160.0f, RED, "mod: 0x%08lX", FROMTEXTADDR(tempaddress));
+    drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 350.0f, 180.0f, RED, "$gp: 0x%08lX", tempaddress - gp);
 
 
     /// draw history
@@ -4330,7 +4324,7 @@ static void address_ctrl() {
   }
 
   if( pressed_buttons & PSP_CTRL_SQUARE ) {
-    tempaddress = mod_text_addr + mod_text_size + mod_data_size;
+    tempaddress = TEXTADDR(GameManager.modInfo.TextSize + GameManager.modInfo.DataSize);
     history_position = 0;
   }
 
@@ -4391,7 +4385,7 @@ static void editbyte_draw() {
 
   drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, (float)x, (float)y, COLOR_TEXT, "0x%02X", editbyte_current);
 
-  if( LCS ) // graphical fix
+  if( GameManager.game == GTA_LCS ) // graphical fix
     x += 2;
 
   drawStringNoTVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x+(editbyte_pos*10)+14, y-15, COLOR_TEXT, "v");
@@ -4635,7 +4629,7 @@ static void hexeditor_draw() {
     /// draw current address
     COLOR_TEMP = RED;
     if( hex_addressmode == 1 ) {
-      snprintf(buffer, sizeof(buffer), "%X", hex_adr - mod_text_addr);
+      snprintf(buffer, sizeof(buffer), "%X", FROMTEXTADDR(hex_adr));
       COLOR_TEMP = YELLOW;
     } else if( hex_addressmode == 2 ) {
       snprintf(buffer, sizeof(buffer), "%X", hex_adr - gp);
@@ -4660,7 +4654,7 @@ static void hexeditor_draw() {
 
      } else {
         if( hex_addressmode == 1 )
-          snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - mod_text_addr ); // display real address "0x%08X" [mod_text_addr]
+          snprintf(buffer, sizeof(buffer), "0x%08X", FROMTEXTADDR((hexeditor_address+(counter*0x10))) ); // display real address "0x%08X" [TextAddr]
         else if( hex_addressmode == 2 )
           snprintf(buffer, sizeof(buffer), "0x%08X", (hexeditor_address+(counter*0x10)) - gp ); // display real address "0x%08X" [gp register]
         else
@@ -4703,7 +4697,7 @@ static void hexeditor_draw() {
         /// check if pointer (for different color)
         } else if( isInMemBounds(current2) ) {
 
-          if( current2 >= mod_text_addr && current2 <= mod_text_addr + mod_text_size ) //pointer to TEXT area
+          if( current2 >= TEXTADDR(0x0) && current2 <= TEXTADDR(GameManager.modInfo.TextSize) ) //pointer to TEXT area
             SOMECOLOR = ORANGE;
           else
             SOMECOLOR = YELLOW;
@@ -4716,7 +4710,7 @@ static void hexeditor_draw() {
       /// draw markers
       for( array_uidx i = 0; i < MARKERS; i++ ) {
         if( hex_markers[i] == ((hexeditor_address+(counter*0x10))+scounter)) {
-          drawBox(x1-2.0f, y + (LCS ? 0 : 1.5f), 18, 11, COLOR_HEX_MARKER); // on hex
+          drawBox(x1-2.0f, y + (GameManager.game == GTA_LCS ? 0 : 1.5f), 18, 11, COLOR_HEX_MARKER); // on hex
           //drawBox(x2-2, y, 8, 11, COLOR_HEX_MARKER); // on ascii
           break;
         }
@@ -4898,7 +4892,7 @@ static void hexeditor_ctrl() {
 
 
   if( pressed_buttons & PSP_CTRL_SELECT ) {
-    if( hex_addressmode < (LCS ? 1 : 2) )
+    if( hex_addressmode < (GameManager.game == GTA_LCS ? 1 : 2) )
       hex_addressmode++;
     else hex_addressmode = 0;
   }
@@ -5397,23 +5391,23 @@ void applyCheats() { // called by hijacked game function
   menu_apply(main_menu, menu_size); // FUNC_GET_STATUS & FUNC_APPLY
 
   /// make Dodo flyable
-  if( LCS && pcar_id == 0xA4 && !flag_menu_running ) {
+  if( GameManager.game == GTA_LCS && pcar_id == 0xA4 && !flag_menu_running ) {
     if( current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS) ) {  // thrust
-      setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * (getVehicleSpeed() + 5.0f) * 0.001f );
-      setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * (getVehicleSpeed() + 5.0f) * 0.001f );
-      setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * (getVehicleSpeed() + 5.0f) * 0.002f );
+      setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(GTA_ADDR(pcar, 0x70, 0x140)) + getFloat(pcar+0x10) * (getVehicleSpeed() + 5.0f) * 0.001f );
+      setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(GTA_ADDR(pcar, 0x74, 0x144)) + getFloat(pcar+0x14) * (getVehicleSpeed() + 5.0f) * 0.001f );
+      setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(GTA_ADDR(pcar, 0x78, 0x148)) + getFloat(pcar+0x18) * (getVehicleSpeed() + 5.0f) * 0.002f );
 
     } else if(current_buttons & PSP_CTRL_SQUARE ) { // brake/reverse
-      setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - getFloat(pcar+0x10) * 0.002f );
-      setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - getFloat(pcar+0x14) * 0.002f );
-      setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - getFloat(pcar+0x18) * 0.005f );
+      setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(GTA_ADDR(pcar, 0x70, 0x140)) - getFloat(pcar+0x10) * 0.002f );
+      setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(GTA_ADDR(pcar, 0x74, 0x144)) - getFloat(pcar+0x14) * 0.002f );
+      setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(GTA_ADDR(pcar, 0x78, 0x148)) - getFloat(pcar+0x18) * 0.005f );
     }
   }
 
   #ifdef SPECIAL_VEHICLES
   // temporary controls
   // TODO: create custom physics like for dodo
-  if( pcar && ((LCS && (pcar_id == 0xC8 || pcar_id == 0xC9)) || (VCS && pcar_id == 0x118)) ){ // AEROPL & (Dead)DODO
+  if( pcar && ((GameManager.game == GTA_LCS && (pcar_id == 0xC8 || pcar_id == 0xC9)) || (GameManager.game == GTA_VCS && pcar_id == 0x118)) ){ // AEROPL & (Dead)DODO
     hover_vehicle(FUNC_APPLY, -1, -1); // apply hover cheat in loop
   }
   #endif
@@ -5423,17 +5417,17 @@ void applyOnce() { //called by hijacked game function
   DEBUG_LOG("%lu: applyOnce()", getGametime());
 
   #ifdef PREVIEW
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     SetPlayerPosition(918.f, 194.f, 5.f); // Portland ferry area ocean ramp
   }
-  //if( VCS ) {
+  //if( GameManager.game == GTA_VCS ) {
   //  createParkedVehicleSpawnViaSlot(65, 187, -807.20f, -1187.13f, 12.0f, 300.0f,  -1,  -1,  0,  0); // Deluxo in front of Safehouse
   //  teleport(-811, -1179.2, 14); // Bayshore
   //}
   #endif
 
   /// make RC Cars drivable (this sets "model flag 2" in handling.cfg to "NO_DOORS")
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     setByte(getAddressOfHandlingSlotForID(0xC7) + 0xD0, 16); // HELI (tiny inv. heli)
     setByte(getAddressOfHandlingSlotForID(0xA9) + 0xD0, 16); // RCBANDIT
     setByte(getAddressOfHandlingSlotForID(0xD3) + 0xD0, 16); // RCGOBLIN
@@ -5442,12 +5436,12 @@ void applyOnce() { //called by hijacked game function
   }
 
   /// make "TOPFUN" spawnable (this sets the missing colision model of "TOPFUN" to the "PONY" one)
-  if( VCS ) {
+  if( GameManager.game == GTA_VCS ) {
     setInt(getAddressOfIdeSlotForID(0xF2) + 0x14, getInt(getAddressOfIdeSlotForID(0xD2) + 0x14));
   }
 
   /// set unused gang colors
-  if( VCS ) {
+  if( GameManager.game == GTA_VCS ) {
     static byte empire_gang_colors[] = {
       0x86, 0x04, 0x07, 0, 0x07, 228, 0x07, 125, 0x07,  69, 0x07, 0, // (0, 228, 125,  69, 0); // Umberto's guys
       0x86, 0x04, 0x07, 3, 0x07,   0, 0x07, 139, 0x07, 139, 0x07, 3, // (3,   0, 139, 139, 3); // Army
@@ -5462,7 +5456,7 @@ void applyOnce() { //called by hijacked game function
   setMapLegendToggle(OFF);
 
   /// remove ocean pipe's collision(s)
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     removeIPLObjectsCollision(0x1C5); // disables ocean blockades by removing object collision (inside buildings.ipl id: 453)
   }
 
@@ -5474,7 +5468,7 @@ void applyOnce() { //called by hijacked game function
   // -> for PPSSPP this is set in Patch function(s) so that its being set as early as possible so that PPSSPP doesn't crash (for some strange jit bug reason)
 
   ///Custom Vehicle Spawns in World
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     //Portland 000 - 063:   19, 31
     //Staunton 064 - 135:   81, 89, 104, 109, 120
     //Shoresid 136 - 177:   147, 153, 161, 165, 175
@@ -5509,7 +5503,7 @@ void applyOnce() { //called by hijacked game function
     }
   }
 
-  if( VCS ) {
+  if( GameManager.game == GTA_VCS ) {
 
     /***
     64  always
@@ -5526,7 +5520,7 @@ void applyOnce() { //called by hijacked game function
   }
 
   ///Custom pickup spawns in world
-  //if( LCS )
+  //if( GameManager.game == GTA_LCS )
     //spawnPickup(0x10F, 0x3, 0xA, float x, float y, float z); // teargas in ssv pool like in alpha
 
   DEBUG_LOG("%lu: applyOnce() done!", getGametime());
@@ -5556,8 +5550,8 @@ void *category_toggle(int type, int cat, int set) {
 
 static int checkMenuEntryAllowedToBeDisplayed(const CDRMenuItem *menu_list, int entry) {
   if( (menu_list[entry].type != MENU_CATEGORY && !category_index[(int)menu_list[entry].cat]) ||
-    (LCS && !menu_list[entry].LC) ||
-    (VCS && !menu_list[entry].VC) ||
+    (GameManager.game == GTA_LCS && !menu_list[entry].LC) ||
+    (GameManager.game == GTA_VCS && !menu_list[entry].VC) ||
     (!multiplayer && !menu_list[entry].SP) ||
     (multiplayer && !menu_list[entry].MP) ) {
       return 0; // nope
@@ -5715,7 +5709,7 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
 
 
         if( flag_use_cataltfont && menu_list[i].type == MENU_CATEGORY ) // alternative font
-          drawStringNoVarg(ALIGN_FREE, FONT_GTA, LCS ? 0.9f : 0.33f, SHADOW_ON, x, y, color, buffer);
+          drawStringNoVarg(ALIGN_FREE, FONT_GTA, GameManager.game == GTA_LCS ? 0.9f : 0.33f, SHADOW_ON, x, y, color, buffer);
         else
           drawStringNoVarg(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, x, y, color, buffer);
 
@@ -5775,7 +5769,7 @@ void menu_draw(const CDRMenuItem *menu_list, usize menu_max) {
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 120.0f, RED, "menu_sel: %i", menu_sel);
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 140.0f, RED, "hidden: %i", hidden);
     drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 160.0f, RED, "menu_size: %i", menu_size);
-    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 252.0f, RED, "mod_text_addr: 0x%08lX", mod_text_addr);
+    drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 460.0f, 252.0f, RED, "TextAddr: 0x%08lX", GameManager.modInfo.TextAddr);
   }
   #endif
 }
@@ -5937,7 +5931,7 @@ void menu_check(const CDRMenuItem *menu_list, usize menu_max) {
   void *(* surrent_get)(int);
 
   for( array_uidx i = 0; i < menu_max; i++ ) {
-    if( menu_list[i].cat != CAT_ALIAS && (((LCS && menu_list[i].LC) || (VCS && menu_list[i].VC)) && ((!multiplayer && menu_list[i].SP) || (multiplayer && menu_list[i].MP))) ) { // do not check anything for copies of already exisitng cheat functions & disabled
+    if( menu_list[i].cat != CAT_ALIAS && (((GameManager.game == GTA_LCS && menu_list[i].LC) || (GameManager.game == GTA_VCS && menu_list[i].VC)) && ((!multiplayer && menu_list[i].SP) || (multiplayer && menu_list[i].MP))) ) { // do not check anything for copies of already exisitng cheat functions & disabled
       surrent_get = menu_list[i].value;
       switch( menu_list[i].type )  {
         case MENU_VALUE:     // value list
@@ -5954,7 +5948,7 @@ void menu_apply(const CDRMenuItem *menu_list, usize menu_max) {
   void *(* surrent_get)(int);
 
   for( array_uidx i = 0; i < menu_max; i++ ) {
-    if( menu_list[i].cat != CAT_ALIAS && (((LCS && menu_list[i].LC) || (VCS && menu_list[i].VC)) && ((!multiplayer && menu_list[i].SP) || (multiplayer && menu_list[i].MP))) ) { // do not apply anything for copies of already exisitng cheat functions & disabled
+    if( menu_list[i].cat != CAT_ALIAS && (((GameManager.game == GTA_LCS && menu_list[i].LC) || (GameManager.game == GTA_VCS && menu_list[i].VC)) && ((!multiplayer && menu_list[i].SP) || (multiplayer && menu_list[i].MP))) ) { // do not apply anything for copies of already exisitng cheat functions & disabled
       surrent_get = menu_list[i].value;
       switch( menu_list[i].type )  {
         case MENU_VALUE:  // value list
@@ -5986,9 +5980,9 @@ int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
   while( true ) {
     if( hash_to_check != last_hash ) {
       snprintf(hashstr, sizeof(hexeditor_infobuffer), "0x%08lX", hash_to_check); //0x%08X
-      snprintf(buffer, sizeof(buffer), PLUGIN_NAMES_GAME_FILE, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); //ini file
+      snprintf(buffer, sizeof(buffer), PLUGIN_NAMES_GAME_FILE, BOOLGTA_NAME()); //ini file
 
-      ini_gets( LCS ? "NAMES_LCS" : "NAMES_VCS", hashstr, "unknown", hashbuffer, 32, buffer); //
+      ini_gets(BOOLSTRCUSTOM(GameManager.game == GTA_LCS, "NAMES_LCS", "NAMES_VCS"), hashstr, "unknown", hashbuffer, 32, buffer); //
 
       DEBUG_LOG("%lu: name_resolver(0x%08lX) loaded '%s'", getGametime(), hash_to_check, hashbuffer);
 
@@ -6002,106 +5996,38 @@ int name_resolver(SceSize args UNUSED, void *argp UNUSED) {
 }
 #endif
 
+static PatchFunc const GamePatchFuncs[GTA_TOTAL_GAMES] =
+{
+  PatchLCS,
+  PatchVCS,
+};
+
 static func_stat patch() {
-  INFO_LOG("Found 'GTA3' module! mod_text_addr = 0x%08X, text_size = 0x%08X, data_size = 0x%08X", mod_text_addr, mod_text_size, mod_data_size);
+  INFO_LOG("Found 'GTA3' module! Text Addr = 0x%08X, Text Size = 0x%08X, Data Size = 0x%08X", GameManager.modInfo.TextAddr, GameManager.modInfo.TextSize, GameManager.modInfo.DataSize);
 
   /// blacklist
-  if( mod_text_size == 0x00386750 && mod_data_size == 0x0001F7E0) { // ULJM-05297_v1.01
-    ERROR_LOG("unsupported game version");
-    return FUNC_ERROR; //exit out
-
-  } else if( mod_text_size == 0x0033388C && mod_data_size == 0x0002FEB0) { // ULJM-05255_v1.01
-    ERROR_LOG("unsupported game version");
-    return FUNC_ERROR; //exit out
-
+  if( GameManager.gameEboot == GTA_VCS_ULJM05297_1_01 || GameManager.gameEboot == GTA_LCS_ULJM05255_1_01 )
+  {
+    ERROR_LOG("Unsupported game version!");
+    return FUNC_ERROR; // exit out
   }
-
-  /*****************************************************************
-  * - USA ----------
-  * ULUS-10041_v1.02  text_size = 0x00320A34, data_size = 0x0002DBE4
-  * ULUS-10041_v1.05  text_size = 0x0032BEDC, data_size = 0x0002E0F8
-  * ULUS-10041_v3.00  text_size = 0x0032BFC4, data_size = 0x0002E110
-  *
-  * - GER ----------
-  * ULES-00182_v1.00 text_size = 0x0032BE8C, data_size = 0x0002E0F8
-  * ULES-00182_v2.00 text_size = 0x0032BF74, data_size = 0x0002E110
-  *
-  * - EU -----------
-  * ULES-00151_v1.05  text_size = 0x0032BF6C, data_size = 0x0002E0F8
-  * ULES-00151_v2.00  text_size = 0x0032BF6C, data_size = 0x0002E0F8
-  * ULES-00151_v3.00  text_size = 0x0032C044, data_size = 0x0002E110
-  * ULES-00151_v4.00  text_size = 0x0032C044, data_size = 0x0002E110
-  *
-  * - JP -----------
-  * ULJM-05255_v1.01  text_size = 0x0033388C, data_size = 0x0002FEB0
-  *
-  * - PROTOTYPE ----
-  * ULUX-80146_v0.02  text_size = 0x0031F854, data_size = 0x0002DEC8
-  * ULUX-80146_v0.03  text_size = 0x0033205C, data_size = 0x0002E1E0
-  * ULET-00361_v0.02  text_size = 0x0032C044, data_size = 0x0002E110 (EU)
-  * ULET-00362_v0.01  text_size = 0x0032BF74, data_size = 0x0002E110 (GER)
-  *
-  *****************************************************************
-  *
-  * - USA ----------
-  * ULUS-10160_v1.01  text_size = 0x00377D30, data_size = 0x00020E34
-  * ULUS-10160_v1.02  text_size =
-  * ULUS-10160_v1.03  text_size = 0x003864DC, data_size = 0x0001F85C
-  *
-  * - EU -----------
-  * ULES-00502_v1.02  text_size = 0x003868BC, data_size = 0x0001F85C
-  *
-  * - GER ----------
-  * ULES-00503_v1.02  text_size = 0x0038673C, data_size = 0x0001F85C
-  *
-  * - JP -----------
-  * ULJM-05297_v1.01  text_size = 0x00386750, data_size = 0x0001F7E0
-  *
-  * - PROTOTYPE ----
-  * ULET-00417_v0.06  text_size = 0x0038664C, data_size = 0x0001F86C
-  * ULET-00417_v0.07  text_size = 0x003868BC, data_size = 0x0001F85C
-  *****************************************************************/
 
   DEBUG_LOG("> searching & patching EBOOT..");
-  usize lcs_counter = 0, vcs_counter = 0;
-  for( uaddr i = 0; i < mod_text_size; i += sizeof(uaddr) ) {
-    uaddr addr = mod_text_addr + i;
 
-    // first hit decides on version -> yes, potentially dangerous
-    if( (LCS || (LCS == VCS)) && PatchLCS(addr, mod_text_addr) ) {
-      lcs_counter++;
-      LCS = true;
-      continue;
-    }
-    if( (VCS || (LCS == VCS)) && PatchVCS(addr, mod_text_addr) ) {
-      vcs_counter++;
-      VCS = true;
-      continue;
-    }
+  for( uaddr offset = 0; offset < GameManager.modInfo.TextSize; offset += sizeof(uaddr) ) {
+    ((GamePatchFuncs[GameManager.game]))(TEXTADDR(offset));
   }
-
-  /// error check
-  DEBUG_LOG(" %u LCS & %u VCS locations found", lcs_counter, vcs_counter);
-  if( lcs_counter > 0 && vcs_counter > 0 ) { // error check
-    ERROR_LOG("both counters found something");
-    return FUNC_ERROR;
-  }
-  if( LCS == VCS ) { // error check
-    ERROR_LOG("LCS == VCS");
-    return FUNC_ERROR;
-  }
-
 
   /// set default cheat text color
   DEBUG_LOG("> setting default color..");
-  COLOR_CHEAT_OFF = LCS ? CHDVC_ORANGE : CHDVC_AZURE;
+  COLOR_CHEAT_OFF = GameManager.game == GTA_LCS ? CHDVC_ORANGE : CHDVC_AZURE;
 
 
   /// set default start address for HexEditor
   #ifdef HEXEDITOR
   DEBUG_LOG("> setting default hexeditor address..");
-  hex_adr = mod_text_addr + mod_text_size + mod_data_size;
-  add_adr_to_history(mod_text_addr); //
+  hex_adr = TEXTADDR(GameManager.modInfo.TextSize + GameManager.modInfo.DataSize);
+  add_adr_to_history(TEXTADDR(0x0));
   #endif
 
   /// decide draw "welcome helpbox"
@@ -6115,11 +6041,11 @@ static func_stat patch() {
   #endif
 
   /// set text draw sizes
-  SIZE_SMALL    = LCS ? SIZE_LCS_SMALL  : SIZE_VCS_SMALL;
-  SIZE_HEXEDIT  = LCS ? SIZE_LCS_SMALL  : 0.5f;
-  SIZE_NORMAL   = LCS ? SIZE_LCS_NORMAL : SIZE_VCS_NORMAL;
-  SIZE_BIG      = LCS ? SIZE_LCS_BIG    : SIZE_VCS_BIG;
-  SIZE_HUGE     = LCS ? SIZE_LCS_HUGE   : SIZE_VCS_HUGE;
+  SIZE_SMALL    = GameManager.game == GTA_LCS ? SIZE_LCS_SMALL  : SIZE_VCS_SMALL;
+  SIZE_HEXEDIT  = GameManager.game == GTA_LCS ? SIZE_LCS_SMALL  : 0.5f;
+  SIZE_NORMAL   = GameManager.game == GTA_LCS ? SIZE_LCS_NORMAL : SIZE_VCS_NORMAL;
+  SIZE_BIG      = GameManager.game == GTA_LCS ? SIZE_LCS_BIG    : SIZE_VCS_BIG;
+  SIZE_HUGE     = GameManager.game == GTA_LCS ? SIZE_LCS_HUGE   : SIZE_VCS_HUGE;
 
 
   /// (temporary) move everything from old location "ms0:/CDR/.." to "ms0:/PSP/PLGUINS/cheatdevice_remastered/.."
@@ -6132,7 +6058,7 @@ static func_stat patch() {
 
   /// create sub folders for the noobs
   #ifdef PREVIEW
-  snprintf(buffer, sizeof(buffer), PLUGIN_USERCHEATS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); // "../cheats/xCS"
+  snprintf(buffer, sizeof(buffer), PLUGIN_USERCHEATS_GAME_PATH, BOOLGTA_NAME()); // "../cheats/xCS"
   sceIoMkdir(buffer, 0777);
 
   // snprintf(buffer, sizeof(buffer), "%s%s", basefolder, folder_textures); // "../TEXTURES/"
@@ -6140,7 +6066,7 @@ static func_stat patch() {
   #endif
 
   #ifdef USERSCRIPTS
-  snprintf(buffer, sizeof(buffer), PLUGIN_USERSCRIPTS_GAME_PATH, BOOLSTRCUSTOM(LCS, "VCS", "LCS")); // "../scripts/xCS"
+  snprintf(buffer, sizeof(buffer), PLUGIN_USERSCRIPTS_GAME_PATH, BOOLGTA_NAME()); // "../scripts/xCS"
   makedirs(buffer);
   #endif
 
@@ -6152,7 +6078,7 @@ static func_stat patch() {
 
   /// create name resolver thread (if .ini found)
   #ifdef NAMERESOLV
-  snprintf(buffer, sizeof(buffer), PLUGIN_NAMES_GAME_FILE, BOOLSTRCUSTOM(LCS, "VCS", "LCS"));
+  snprintf(buffer, sizeof(buffer), PLUGIN_NAMES_GAME_FILE, BOOLGTA_NAME());
   if( doesFileExist(buffer) ) {
 
     DEBUG_LOG("%s found! Starting name_resolver thread", buffer);
@@ -6203,30 +6129,35 @@ static void CheckModules() { // PPSSPP only
       if (sceKernelQueryModuleInfo(modules[i], &info) < 0) continue;
 
       if ( !strcmp(info.name, "GTA3") ) {
-        mod_text_addr = info.text_addr;
-        mod_text_size = info.text_size;
-        mod_data_size = info.data_size;
+        GameManager.modInfo.TextAddr = info.text_addr;
+        GameManager.modInfo.TextSize = info.text_size;
+        GameManager.modInfo.DataSize = info.data_size;
 
         /// with this approach the game continues to run when patch() is still in progress
 
+        GameManager.Initialise();
+
+        if ( GameManager.gameEboot == GTA_EBOOT_UNKNOWN ) // unknnown gta
+          return;
+
         // SKIP INTRO MOVIES /////////// for PPSSPP /// TEMP ///
         #ifdef PREVIEW
-        if( mod_text_size == 0x0031F854 ) { // ULUX
-          MAKE_DUMMY_FUNCTION(mod_text_addr + 0x00076000, 0);
-          clearICacheFor(mod_text_addr + 0x00076000);
-          clearICacheFor(mod_text_addr + 0x00076004);
+        if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 ) { // ULUX
+          MAKE_DUMMY_FUNCTION(TEXTADDR(0x00076000), 0);
+          clearICacheFor(TEXTADDR(0x00076000));
+          clearICacheFor(TEXTADDR(0x00076004));
         }
-        if( mod_text_size == 0x0032BFC4 ) { // LCS US v3.00
-          MAKE_DUMMY_FUNCTION(mod_text_addr + 0x001BCFD0, 0);
-          clearICacheFor(mod_text_addr + 0x001BCFD0);
-          clearICacheFor(mod_text_addr + 0x001BCFD4);
+        else if( GameManager.gameEboot == GTA_LCS_ULUS10041_3_00 ) { // LCS US v3.00
+          MAKE_DUMMY_FUNCTION(TEXTADDR(0x001BCFD0), 0);
+          clearICacheFor(TEXTADDR(0x001BCFD0));
+          clearICacheFor(TEXTADDR(0x001BCFD4));
         }
         #endif
         ////////////////////////////////////////////////////////
 
-        sceKernelDelayThread(10000); // small delay to fix blackscreen for LCS (mostly slow android devices)
+        sceKernelDelayThread(msec(10)); // small delay to fix blackscreen for LCS (mostly slow android devices)
 
-        initTextBlit(mod_text_addr, mod_text_size);  // see blit.c (HAS ITS OWN SEARCHING LOOP!)
+        initTextBlit();
 
         func_stat ret = patch();
         if( ret != FUNC_OK ) // patching returned error
@@ -6244,11 +6175,15 @@ int OnModuleStart(SceModule *mod) {
   const u8str modname = mod->modname;
 
   if( !strcmp(modname, "GTA3") ) {
-    mod_text_addr = mod->text_addr;
-    mod_text_size = mod->text_size;
-    mod_data_size = mod->data_size;
+    GameManager.modInfo.TextAddr = mod->text_addr;
+    GameManager.modInfo.TextSize = mod->text_size;
+    GameManager.modInfo.DataSize = mod->data_size;
 
-    initTextBlit(mod_text_addr, mod_text_size); // see blit.c (HAS ITS OWN SEARCHING LOOP!)
+    GameManager.Initialise();
+    if ( GameManager.gameEboot == GTA_EBOOT_UNKNOWN ) // unknnown gta
+      return 0;
+
+    initTextBlit();
 
     func_stat ret = patch();
     if( ret != FUNC_OK ) // patching returned error

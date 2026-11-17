@@ -26,14 +26,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "main.h"
-#include "lang.h"
 #include <pspiofilemgr.h>
 #include <pspsysmem.h>
+
+#include "main.h"
+#include "lang.h"
 #include <malloc.h>
 #include "putils.h"
 #include "logs.h"
 #include "minIni.h"
+#include "game.h"
 
 #ifdef LANG
 static LangHashTable *langTableCreate()
@@ -349,7 +351,7 @@ void langTableSetup(LangID langID)
   if ( langID == LANG_ENGLISH ) return;
 
   ReadTranslationsFromINI(main_lang_table, "GENERAL", langID);
-  ReadTranslationsFromINI(main_lang_table, BOOLSTRCUSTOM(LCS, "VCS", "LCS"), langID);
+  ReadTranslationsFromINI(main_lang_table, BOOLGTA_NAME(), langID);
 }
 
 #endif

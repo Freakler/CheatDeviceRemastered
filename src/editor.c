@@ -32,11 +32,12 @@
 #include "functions.h"
 #include "putils.h"
 #include "lang.h"
+#include "game.h"
 
 #ifdef EDITORS
 register uaddr gp __asm__("gp");
 
-extern bool LCS, VCS;
+extern uaddr gp_;
 extern bool multiplayer;
 
 /// from cheats.c
@@ -1036,16 +1037,16 @@ void *model_flag(int calltype, int keypress, uaddr base_address UNUSED, uaddr ad
       snprintf(buffer, sizeof(buffer), "NONE");
     }
     if( 0x1 & nibble ) { // 0001
-      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0], nibble);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", GameManager.game == GTA_LCS ? lcs_modelflags[(arg * 4) + 0] : vcs_modelflags[(arg * 4) + 0], nibble);
     }
     if( 0x2 & nibble ) { // 0010
-      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1], nibble);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", GameManager.game == GTA_LCS ? lcs_modelflags[(arg * 4) + 1] : vcs_modelflags[(arg * 4) + 1], nibble);
     }
     if( 0x4 & nibble ) { // 0100
-      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2], nibble);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", GameManager.game == GTA_LCS ? lcs_modelflags[(arg * 4) + 2] : vcs_modelflags[(arg * 4) + 2], nibble);
     }
     if( 0x8 & nibble ) { // 1000
-      snprintf(buffer, sizeof(buffer), "%s (%u)", LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3], nibble);
+      snprintf(buffer, sizeof(buffer), "%s (%u)", GameManager.game == GTA_LCS ? lcs_modelflags[(arg * 4) + 3] : vcs_modelflags[(arg * 4) + 3], nibble);
     }
 
     return (void *)buffer;
@@ -2282,7 +2283,7 @@ void *editor_garage(int calltype, int value) {
     return 0;
   }
 
-  editor_create(EDITOR_GARAGE, 2, "Garage", (LCS ? lcs_garage_menu : vcs_garage_menu), global_garagedata, var_garageslotsize, var_garageslots);
+  editor_create(EDITOR_GARAGE, 2, "Garage", (GameManager.game == GTA_LCS ? lcs_garage_menu : vcs_garage_menu), global_garagedata, var_garageslotsize, var_garageslots);
   return NULL;
 }
 
@@ -2300,7 +2301,7 @@ void *editor_pedobj(int calltype, int value) {
     editor_pedobj_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_PEDOBJ, 1, "People Objects", (LCS ? lcs_pedobj_menu : vcs_pedobj_menu), peds_base, var_pedobjsize, peds_max);
+  editor_create(EDITOR_PEDOBJ, 1, "People Objects", (GameManager.game == GTA_LCS ? lcs_pedobj_menu : vcs_pedobj_menu), peds_base, var_pedobjsize, peds_max);
   return NULL;
 }
 
@@ -2317,7 +2318,7 @@ void *editor_vehicleobj(int calltype, int value) {
     editor_vehicleobj_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_VEHICLEOBJ, 1, "Vehicle Objects", (LCS ? lcs_vehicleobj_menu : vcs_vehicleobj_menu), vehicles_base, var_vehobjsize, vehicles_max);
+  editor_create(EDITOR_VEHICLEOBJ, 1, "Vehicle Objects", (GameManager.game == GTA_LCS ? lcs_vehicleobj_menu : vcs_vehicleobj_menu), vehicles_base, var_vehobjsize, vehicles_max);
   return NULL;
 }
 
@@ -2335,7 +2336,7 @@ void *editor_worldobj(int calltype, int value) {
     editor_worldobj_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_WORLDOBJ, 1, "World Objects", (LCS ? lcs_worldobj_menu : vcs_worldobj_menu), worldobjs_base, var_wldobjsize, worldobjs_max);
+  editor_create(EDITOR_WORLDOBJ, 1, "World Objects", (GameManager.game == GTA_LCS ? lcs_worldobj_menu : vcs_worldobj_menu), worldobjs_base, var_wldobjsize, worldobjs_max);
   return NULL;
 }
 
@@ -2370,7 +2371,7 @@ void *editor_pickups(int calltype, int value) {
     editor_pickup_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_PICKUPS, 1, "Pickups", (LCS ? lcs_pickups_menu : vcs_pickups_menu), global_pickups, var_pickupslotsize, var_pickupslots);
+  editor_create(EDITOR_PICKUPS, 1, "Pickups", (GameManager.game == GTA_LCS ? lcs_pickups_menu : vcs_pickups_menu), global_pickups, var_pickupslotsize, var_pickupslots);
   return NULL;
 }
 
@@ -2388,7 +2389,7 @@ void *editor_mapicons(int calltype, int value) {
     editor_mapicon_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_MAPICONS, 1, "Mapicons", (LCS ? lcs_mapicons_menu : vcs_mapicons_menu), (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)), var_radarblipslotsize, var_radarblipslots);
+  editor_create(EDITOR_MAPICONS, 1, "Mapicons", (GameManager.game == GTA_LCS ? lcs_mapicons_menu : vcs_mapicons_menu), (GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)), var_radarblipslotsize, var_radarblipslots);
   return NULL;
 }
 
@@ -2406,7 +2407,7 @@ void *editor_vehspawns(int calltype, int value) {
     editor_vehiclespawn_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_VEHWORLDSPAWNS, 1, "Parked Vehicle Spawns", (LCS ? lcs_vehiclespawns_menu : vcs_vehiclespawns_menu), addr_vehiclesworldspawn, var_vehiclesworldspawnslotsize, var_vehiclesworldspawnslots);
+  editor_create(EDITOR_VEHWORLDSPAWNS, 1, "Parked Vehicle Spawns", (GameManager.game == GTA_LCS ? lcs_vehiclespawns_menu : vcs_vehiclespawns_menu), addr_vehiclesworldspawn, var_vehiclesworldspawnslotsize, var_vehiclesworldspawnslots);
   return NULL;
 }
 
@@ -2446,7 +2447,7 @@ void *editor_ide(int calltype, int value) {
     return 0;
   }
 
-  editor_create(EDITOR_IDE, 1, "IDEs", (LCS ? lcs_ide_menu : vcs_ide_menu), getInt(ptr_IDETable+(LCS?0x0:gp)), 0x4, getInt(ptr_IDEs+(LCS?0x0:gp))); // this is special as its a pointer table thus 0x4 for one pointer
+  editor_create(EDITOR_IDE, 1, "IDEs", (GameManager.game == GTA_LCS ? lcs_ide_menu : vcs_ide_menu), getInt(ptr_IDETable+gp_), 0x4, getInt(ptr_IDEs+gp_)); // this is special as its a pointer table thus 0x4 for one pointer
   return NULL;
 }
 
@@ -2511,7 +2512,7 @@ void *editor_carcolsdat(int calltype, int value) {
     editor_carcolsDAT_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_CARCOLSDAT, 1, "Carcols.dat", LCS ? lcs_colsdat_menu : vcs_colsdat_menu, carcolsDAT_base, var_carcolsdatslotsize, var_carcolsdatslots);
+  editor_create(EDITOR_CARCOLSDAT, 1, "Carcols.dat", GameManager.game == GTA_LCS ? lcs_colsdat_menu : vcs_colsdat_menu, carcolsDAT_base, var_carcolsdatslotsize, var_carcolsdatslots);
   return NULL;
 }
 
@@ -2527,7 +2528,7 @@ void *editor_pedcolsdat(int calltype, int value) {
     editor_pedcolsDAT_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_PEDCOLSDAT, 1, "Pedcols.dat", LCS ? lcs_colsdat_menu : vcs_colsdat_menu, pedcolsDAT_base, var_carcolsdatslotsize, var_carcolsdatslots);
+  editor_create(EDITOR_PEDCOLSDAT, 1, "Pedcols.dat", GameManager.game == GTA_LCS ? lcs_colsdat_menu : vcs_colsdat_menu, pedcolsDAT_base, var_carcolsdatslotsize, var_carcolsdatslots);
   return NULL;
 }
 
@@ -2543,7 +2544,7 @@ void *editor_handlingcfg(int calltype, int value) { // for VCS there is no link 
     editor_vehicle_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_HANDLINGCFG, 1, "Handling.cfg", (LCS ? lcs_handlingcfg_menu : vcs_handlingcfg_menu), getInt(ptr_IDETable + (LCS ? 0 : gp)), 0x4, getInt(ptr_IDEs + (LCS ? 0 : gp)) ); // this is special because we need to loop through IDE table
+  editor_create(EDITOR_HANDLINGCFG, 1, "Handling.cfg", (GameManager.game == GTA_LCS ? lcs_handlingcfg_menu : vcs_handlingcfg_menu), getInt(ptr_IDETable + gp_), 0x4, getInt(ptr_IDEs + gp_) ); // this is special because we need to loop through IDE table
   return NULL;
 }
 
@@ -2560,7 +2561,7 @@ void *editor_particlecfg(int calltype, int value) {
     return 0;
   }
 
-  editor_create(EDITOR_PARTICLECFG, 1, "Particle.cfg", (LCS ? lcs_particlecfg_menu : vcs_particlecfg_menu), getInt(ptr_particleCFG+(LCS?0x0:gp)), var_particleCFGslotsize, var_particleCFGslots);
+  editor_create(EDITOR_PARTICLECFG, 1, "Particle.cfg", (GameManager.game == GTA_LCS ? lcs_particlecfg_menu : vcs_particlecfg_menu), getInt(ptr_particleCFG+gp_), var_particleCFGslotsize, var_particleCFGslots);
   return NULL;
 }
 
@@ -2576,7 +2577,7 @@ void *editor_pedstatsdat(int calltype, int value) {
     editor_pedstatsDAT_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_PEDSTATSDAT, 1, "Pedstats.dat", (LCS ? lcs_pedstatsdat_menu : vcs_pedstatsdat_menu), getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp))), var_pedstatDATslotsize, var_pedstatDATslots);
+  editor_create(EDITOR_PEDSTATSDAT, 1, "Pedstats.dat", (GameManager.game == GTA_LCS ? lcs_pedstatsdat_menu : vcs_pedstatsdat_menu), getInt(getInt(ptr_pedstatTable+gp_)), var_pedstatDATslotsize, var_pedstatDATslots);
   return NULL;
 }
 
@@ -2592,7 +2593,7 @@ void *editor_weapondat(int calltype, int value) {
     editor_weaponDAT_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_WEAPONDAT, 1, "Weapon.dat", (LCS ? lcs_weapondat_menu : vcs_weapondat_menu), getInt(getInt(ptr_weaponTable+(LCS?0x0:gp)) + (multiplayer ? 0 : 4)), var_weaponDATslotsize, var_weaponDATslots);
+  editor_create(EDITOR_WEAPONDAT, 1, "Weapon.dat", (GameManager.game == GTA_LCS ? lcs_weapondat_menu : vcs_weapondat_menu), getInt(getInt(ptr_weaponTable+gp_) + (multiplayer ? 0 : 4)), var_weaponDATslotsize, var_weaponDATslots);
   return NULL;
 }
 
@@ -2608,7 +2609,7 @@ void *editor_timecycdat(int calltype, int value) {
     editor_timecycDAT_current = (array_uidx)value;
     return 0;
   }
-  editor_create(EDITOR_TIMECYCDAT, 1, "Timecyc.dat", timecycdat_menu, getInt(ptr_timecycDAT+(LCS?0x0:gp)) + 0x280, -1, 8 * 24);
+  editor_create(EDITOR_TIMECYCDAT, 1, "Timecyc.dat", timecycdat_menu, getInt(ptr_timecycDAT+gp_) + 0x280, -1, 8 * 24);
   return NULL;
 }
 #endif

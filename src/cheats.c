@@ -38,6 +38,7 @@
 #include "lang.h"
 #include "logs.h"
 #include "platform.h"
+#include "game.h"
 
 register uaddr gp __asm__("gp"); // for VCS
 uaddr gp_ = 0; // helper (also used in configs extern)
@@ -73,12 +74,7 @@ void  (*SetBridgeState)(int state);
 /* FUNCTIONS ****************************************************************************/
 
 /// externs
-extern bool LCS, VCS;
-
 extern uint32 menuopendelay;
-extern uaddr mod_text_addr;
-extern usize mod_text_size;
-extern usize mod_data_size;
 
 extern float SIZE_SMALL, SIZE_NORMAL, SIZE_BIG, SIZE_HUGE; // for drawString()
 
@@ -333,7 +329,7 @@ uaddr saveprefix   = 0;
 
   int test = 0;
   int runfunc = 0;
-  int patchonce = 1;
+  bool patchonce = true;
   int TESTVAL1 = -1;
   int TESTVAL2 = -1;
   int TESTVAL3 = -1;
@@ -454,28 +450,28 @@ SceSize sceKernelMaxFreeMemSize_patched(void)
   else return memory_available; /* No extra memory (32 MiB)? -> well, bad luck then */
 }
 
-bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
+bool PatchLCS(uaddr addr) { //Liberty City Stories
 
   #ifdef PREVIEW
-  if( LCS && patchonce ) { // FOR TESTING ONLY
+  if( patchonce ) { // FOR TESTING ONLY
 
-    ///MAKE_DUMMY_FUNCTION(text_addr + 0xea5c0, 0); //
+    ///MAKE_DUMMY_FUNCTION(TEXTADDR(0xea5c0), 0); //
 
-    ///testfunc = (void*)(text_addr + 0x182ae0); //make function call-able
+    ///testfunc = (void*)(TEXTADDR(0x182ae0)); //make function call-able
 
-    ///HIJACK_FUNCTION(text_addr + 0x182ae0, testfunc_patched, testfunc); //replace funtion
+    ///HIJACK_FUNCTION(TEXTADDR(0x182ae0), testfunc_patched, testfunc); //replace funtion
 
-    ///_sw(0x00000000, text_addr + 0x290ea4); //write to mem
+    ///_sw(0x00000000, TEXTADDR(0x290ea4)); //write to mem
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
 
     /// Example ///// open trunk  /////////////////////////////////////
-    // FUN_00008bd0 = (void*)(text_addr + 0x08bd0); // opcode - open trunk?
+    // FUN_00008bd0 = (void*)(TEXTADDR(0x08bd0)); // opcode - open trunk?
 
 
     /// Example ///// play Credits Cheat -> calling works //////////////
-    // FUN_0028a9b8_CHEAT_ShowCredits = (void*)(text_addr + 0x28a9b8);
+    // FUN_0028a9b8_CHEAT_ShowCredits = (void*)(TEXTADDR(0x28a9b8));
 
 
     /// Example ///// give player an AK47 //////////////////////////////
@@ -487,13 +483,13 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
     /// Example ///// loadscreen bar color (like alpha txd) ///////////
     ///red-ish loading bar
-    // setByte(text_addr + 0x1bde30 + 0x00, 0x47 ); //R
-    // setByte(text_addr + 0x1bde30 + 0x04, 0x0E ); //G
-    // setByte(text_addr + 0x1bde30 + 0x08, 0x00 ); //B
+    // setByte(TEXTADDR(0x1bde30) + 0x00, 0x47 ); //R
+    // setByte(TEXTADDR(0x1bde30) + 0x04, 0x0E ); //G
+    // setByte(TEXTADDR(0x1bde30) + 0x08, 0x00 ); //B
     ///yellow background
-    // setByte(text_addr + 0x1bddbc + 0x00, 0xB3 ); //R
-    // setByte(text_addr + 0x1bddbc + 0x04, 0x8D ); //G
-    // setByte(text_addr + 0x1bddbc + 0x08, 0x00 ); //B
+    // setByte(TEXTADDR(0x1bddbc) + 0x00, 0xB3 ); //R
+    // setByte(TEXTADDR(0x1bddbc) + 0x04, 0x8D ); //G
+    // setByte(TEXTADDR(0x1bddbc) + 0x08, 0x00 ); //B
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
@@ -501,24 +497,24 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     if( PlatformManager.Platform.type == PLTF_PSVITA ) { //ULUS-10041_v3.00
 
       /// Fix Stats
-      //_sw(0x34050000 | 480, text_addr + 0x2DF9F0); //stats values
-      //_sw(0x34050000 | 480, text_addr + 0x2DFC2C); //stats rating value
-      //_sw(0x34040000 | 480, text_addr + 0x2DFC50); //stats rating name
+      //_sw(0x34050000 | 480, TEXTADDR(0x2DF9F0)); //stats values
+      //_sw(0x34050000 | 480, TEXTADDR(0x2DFC2C)); //stats rating value
+      //_sw(0x34040000 | 480, TEXTADDR(0x2DFC50)); //stats rating name
 
       /// Multiplayer Character & Lightbeam
       /*
-      _sh(0x441B, text_addr + 0xB4AB8); //lightbeam x (to 620.0)
-      _sh(0x4348, text_addr + 0xB4AC0); //lightbeam y (to 200.0)
-      _sh(0x41C0, text_addr + 0xB4AC8); //lightbeam (to 24.0)
-      _sh(0x42C8, text_addr + 0xB4AD0); //lightbeam scale (to 100.0)
-      _sh(0x437A, text_addr + 0xB4AD8); //lightbeam scale (to 250.0)
-      _sh(0x3E2A, text_addr + 0xB4AE0); //lightbeam (to 0.1666..)
+      _sh(0x441B, TEXTADDR(0xB4AB8)); //lightbeam x (to 620.0)
+      _sh(0x4348, TEXTADDR(0xB4AC0)); //lightbeam y (to 200.0)
+      _sh(0x41C0, TEXTADDR(0xB4AC8)); //lightbeam (to 24.0)
+      _sh(0x42C8, TEXTADDR(0xB4AD0)); //lightbeam scale (to 100.0)
+      _sh(0x437A, TEXTADDR(0xB4AD8)); //lightbeam scale (to 250.0)
+      _sh(0x3E2A, TEXTADDR(0xB4AE0)); //lightbeam (to 0.1666..)
 
-      //_sh(0xC2B4, text_addr + 0xb4C8C); //  [0xC2B40000 = -90.0f] to ???
+      //_sh(0xC2B4, TEXTADDR(0xb4C8C)); //  [0xC2B40000 = -90.0f] to ???
 
-      //_sh(0xBFF0, text_addr + 0xb4bbc); //character view angle [0xbf70a3d7 = -0.939999997616]
-      //_sh(0xC014, text_addr + 0xb4bcc); //character view scale [0xc094cccd = -4.65000009537] (to -2.325 is twice the size)
-      //_sh(0xBE4C, text_addr + 0xb4bdc); //character view angle [0xbdcca3d7 = -0.099921874702]
+      //_sh(0xBFF0, TEXTADDR(0xb4bbc)); //character view angle [0xbf70a3d7 = -0.939999997616]
+      //_sh(0xC014, TEXTADDR(0xb4bcc)); //character view scale [0xc094cccd = -4.65000009537] (to -2.325 is twice the size)
+      //_sh(0xBE4C, TEXTADDR(0xb4bdc)); //character view angle [0xbdcca3d7 = -0.099921874702]
       */
 
       /******************************************************************
@@ -528,10 +524,10 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
       0x3404___ '...4' - li         $a0, 0x___
 
       Examples:
-      _sw(0x34040000 | 480, text_addr + 0x002DB7A8);  -> li $a0 (param_1), 480
-      _sw(0x34050000 | 272, text_addr + 0x002db7b0);  -> li $a1 (param_2), 272
-      _sw(0x34090000 | 480, text_addr + 0x00AAAAAA);  -> li $t1, 480
-      _sw(0x340A0000 | 272, text_addr + 0x00AAAAAA);  -> li $t2, 272
+      _sw(0x34040000 | 480, TEXTADDR(0x002DB7A8));  -> li $a0 (param_1), 480
+      _sw(0x34050000 | 272, TEXTADDR(0x002db7b0));  -> li $a1 (param_2), 272
+      _sw(0x34090000 | 480, TEXTADDR(0x00AAAAAA));  -> li $t1, 480
+      _sw(0x340A0000 | 272, TEXTADDR(0x00AAAAAA));  -> li $t2, 272
 
       li
         $a0  = 0x34040000 (param_1)
@@ -559,73 +555,73 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     }
 
 
-    //FUN_001a1174 = (void*)(text_addr + 0x1a1174); //setActorSkinTo
-    //FUN_001c6f64 = (void*)(text_addr + 0x1c6f64); //loadAllModelsNow
-    //FUN_001a1210 = (void*)(text_addr + 0x1a1210); //resfreshActorSkin
+    //FUN_001a1174 = (void*)(TEXTADDR(0x1a1174)); //setActorSkinTo
+    //FUN_001c6f64 = (void*)(TEXTADDR(0x1c6f64)); //loadAllModelsNow
+    //FUN_001a1210 = (void*)(TEXTADDR(0x1a1210)); //resfreshActorSkin
 
-//  _sw(0x0C02b570, text_addr + 0x00ad86c); //mode 4
-//  _sw(0x34040004, text_addr + 0xad500); //m
+//  _sw(0x0C02b570, TEXTADDR(0x00ad86c)); //mode 4
+//  _sw(0x34040004, TEXTADDR(0xad500)); //m
 
     //MAKE_DUMMY_FUNCTION(0x89C0FD0, 0); //for test
 
-    //testoffs = text_addr + 0x0385da0; //can use here with  setVal(testoffs, xyz);
+    //testoffs = TEXTADDR(0x0385da0); //can use here with  setVal(testoffs, xyz);
 
-    //FUN_001621e8 = (void*)(text_addr + 0x2c302c);  //
-    //HIJACK_FUNCTION(text_addr + 0x2c302c, FUN_001621e8_patched, FUN_001621e8); //replace funtion
+    //FUN_001621e8 = (void*)(TEXTADDR(0x2c302c));  //
+    //HIJACK_FUNCTION(TEXTADDR(0x2c302c), FUN_001621e8_patched, FUN_001621e8); //replace funtion
 
     ///print loaded files from UMD
 
 
 
-  //testfunc2 = (void*)(text_addr + 0x19a1a0);
+  //testfunc2 = (void*)(TEXTADDR(0x19a1a0));
 
 
-  //MAKE_DUMMY_FUNCTION(text_addr + 0x0020a0e8, 0); //FUN_0020a0e8_CPhysical_ApplyMoveForce        Only when on ground
-  //MAKE_DUMMY_FUNCTION(text_addr + 0x0020a1e4, 0); //FUN_0020a1e4_CPhysical_ApplyTurnForce        Only when on ground
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0x0020a0e8), 0); //FUN_0020a0e8_CPhysical_ApplyMoveForce        Only when on ground
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0x0020a1e4), 0); //FUN_0020a1e4_CPhysical_ApplyTurnForce        Only when on ground
 
-  //MAKE_DUMMY_FUNCTION(text_addr + 0xce30, 0); //FUN_0000ce30_CAutomobile_ProcessControl
-  //MAKE_DUMMY_FUNCTION(text_addr + 0x9138, 0); //FUN_00009138_CAutomobile_DoHoverSuspensionRatios    drive on water
-  //MAKE_DUMMY_FUNCTION(text_addr + 0xbfc8, 0); //FUN_0000bfc8_CAutomobile_ProcessBuoyancy
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0xce30), 0); //FUN_0000ce30_CAutomobile_ProcessControl
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0x9138), 0); //FUN_00009138_CAutomobile_DoHoverSuspensionRatios    drive on water
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0xbfc8), 0); //FUN_0000bfc8_CAutomobile_ProcessBuoyancy
 
 
 
   /// fake swimming
-  //HIJACK_FUNCTION(text_addr + 0xe7d70, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0); // FUN_000e7d70_CCam_IsTargetInWater
-  //FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(text_addr + 0x109dac); // needs to be called
-  //HIJACK_FUNCTION(text_addr + 0x1a8d9c, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
+  //HIJACK_FUNCTION(TEXTADDR(0xe7d70), FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(TEXTADDR(0xe7d70), 0); // FUN_000e7d70_CCam_IsTargetInWater
+  //FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(TEXTADDR(0x109dac)); // needs to be called
+  //HIJACK_FUNCTION(TEXTADDR(0x1a8d9c), FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
 
 
   /// drive on water
-  //FUN_00009138_CAutomobile_DoHoverSuspensionRatios = (void*)(text_addr + 0x9138);  //drive on water (without hover wheels!) -- call with pcar obj
+  //FUN_00009138_CAutomobile_DoHoverSuspensionRatios = (void*)(TEXTADDR(0x9138));  //drive on water (without hover wheels!) -- call with pcar obj
 
 
   /// walk through water without effect
-  //MAKE_DUMMY_FUNCTION(text_addr + 0x1a8d9c, 0); //FUN_001a8d9c_CPed_ProcessBuoyancy
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0x1a8d9c), 0); //FUN_001a8d9c_CPed_ProcessBuoyancy
 
 
   ////////////// /////////////// //////////// /////////// ///////////
 
 
-  //testfunc2 = (void*)(text_addr + 0x16fcd0); //FUN_00....
+  //testfunc2 = (void*)(TEXTADDR(0x16fcd0)); //FUN_00....
 
-//  HIJACK_FUNCTION(text_addr + 0x16fcd0, testfunc2_patched, testfunc2); //replace funtion
-//  HIJACK_FUNCTION(text_addr + 0x7243c, testfunc_patched, testfunc); //replace funtion
+//  HIJACK_FUNCTION(TEXTADDR(0x16fcd0), testfunc2_patched, testfunc2); //replace funtion
+//  HIJACK_FUNCTION(TEXTADDR(0x7243c), testfunc_patched, testfunc); //replace funtion
 
-  //testoffs = text_addr + 0x1a853c; //can use here with  setVal(testoffs, xyz);
+  //testoffs = TEXTADDR(0x1a853c); //can use here with  setVal(testoffs, xyz);
 
-  //MAKE_DUMMY_FUNCTION(text_addr + 0x00ea37c, 0); //_camera_Using1stPersonWeaponMode
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0x00ea37c), 0); //_camera_Using1stPersonWeaponMode
 
-  //_sw(0x1200000C, text_addr + 0x0000FF30); //0x0000FF30: 0x1600000C '....' - bnez       $s0, loc_0000FF64
-  //clearICacheFor(text_addr + 0x0000FF30);
+  //_sw(0x1200000C, TEXTADDR(0x0000FF30)); //0x0000FF30: 0x1600000C '....' - bnez       $s0, loc_0000FF64
+  //clearICacheFor(TEXTADDR(0x0000FF30));
 
-  //setInt(text_addr + 0x0a23a4, 0);
-  //clearICacheFor(text_addr + 0x0a23a4);
+  //setInt(TEXTADDR(0x0a23a4), 0);
+  //clearICacheFor(TEXTADDR(0x0a23a4));
 
-  //FUN_123 = (void*)(text_addr + 0x11bbb8);
+  //FUN_123 = (void*)(TEXTADDR(0x11bbb8));
 
 
-  //MAKE_DUMMY_FUNCTION(text_addr + 0x10e8b4, 0); // calc waves
-  //MAKE_DUMMY_FUNCTION(text_addr + 0x2ae900, 0); // FUN_00
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0x10e8b4), 0); // calc waves
+  //MAKE_DUMMY_FUNCTION(TEXTADDR(0x2ae900), 0); // FUN_00
 
 
 
@@ -633,88 +629,91 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
     PATCH_LOG("patchonce() LCS ran!");
-    patchonce = 0;
+    patchonce = false;
   }
   #endif
 
 
   #if GAME_LOGGING
-  static int patchlogonce = 1;
-  if( LCS && patchlogonce && mod_text_size == 0x0032BFC4 && mod_data_size == 0x0002E110 ) { // ULUS-10041_v3.00
+  static int patchlogonce = true;
+  if( patchlogonce && GameManager.gameEboot == GTA_LCS_ULUS10041_3_00 ) { // ULUS-10041_v3.00
 
     /// Debug Prints ////////////////////////////////////////////
-    HIJACK_FUNCTION(text_addr + 0x2f6558, debugprint_patched, debugprint); // error in cpp
-    HIJACK_FUNCTION(text_addr + 0x2f59bc, debugprint_patched, debugprint); // general? opcodes etc?! 134
-    HIJACK_FUNCTION(text_addr + 0x2e2e48, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2d28d4, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2d1090, debugprint_patched, debugprint); // error mpeg
-    HIJACK_FUNCTION(text_addr + 0x2cc578, debugprint_patched, debugprint); // multiplayer
-    HIJACK_FUNCTION(text_addr + 0x2c2f2c, debugprint_patched, debugprint); // UMD File IO
-    HIJACK_FUNCTION(text_addr + 0x2bfdb8, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2b3148, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2b9664, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2aee08, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2a12d8, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x29f0b4, debugprint_patched, debugprint); // memory error prints HEAP
-    HIJACK_FUNCTION(text_addr + 0x299050, debugprint_patched, debugprint); // ped density
-    HIJACK_FUNCTION(text_addr + 0x28a378, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x288400, debugprint_patched, debugprint); // CGameLogic
-    HIJACK_FUNCTION(text_addr + 0x287dfc, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x27ccc0, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2566f8, debugprint_patched, debugprint); // entity
-    HIJACK_FUNCTION(text_addr + 0x2566cc, debugprint_patched, debugprint); // create xyz
-    HIJACK_FUNCTION(text_addr + 0x255a24, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x229bec, debugprint_patched, debugprint); // FindNthNodeClosestToCoor / CheckObjectSpawnPosition
-    HIJACK_FUNCTION(text_addr + 0x2297c8, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x207768, debugprint_patched, debugprint); // StreamingHeap
-    HIJACK_FUNCTION(text_addr + 0x203cc8, debugprint_patched, debugprint); // adhoc
-    HIJACK_FUNCTION(text_addr + 0x2035ec, debugprint_patched, debugprint); // frame
-    HIJACK_FUNCTION(text_addr + 0x1d15f4, debugprint_patched, debugprint); // car transfer / carjack
-    HIJACK_FUNCTION(text_addr + 0x1d1380, debugprint_patched, debugprint); // volatile ram
-    HIJACK_FUNCTION(text_addr + 0x1c15d8, debugprint_patched, debugprint); // anim, models "STREAM MODEL xyz"
-    HIJACK_FUNCTION(text_addr + 0x1bc8cc, debugprint_patched, debugprint); // Files, Loadscreen etc
-    HIJACK_FUNCTION(text_addr + 0x1bc098, debugprint_patched, debugprint); // cInterestZoneManager
-    HIJACK_FUNCTION(text_addr + 0x19af68, debugprint_patched, debugprint); // weapon model
-    HIJACK_FUNCTION(text_addr + 0x198dcc, debugprint_patched, debugprint); // ClearWaitState
-    HIJACK_FUNCTION(text_addr + 0x193810, debugprint_patched, debugprint); // splash screen
-    HIJACK_FUNCTION(text_addr + 0x1816b0, debugprint_patched, debugprint); // collision
-    HIJACK_FUNCTION(text_addr + 0x17e524, debugprint_patched, debugprint); // "  anim %i: blend %f %f time %f spd %f anm %i, %i flags %i"
-    HIJACK_FUNCTION(text_addr + 0x17e4f8, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x17b738, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x17149c, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x1708d4, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x16fecc, debugprint_patched, debugprint); // SCE Errors
-    HIJACK_FUNCTION(text_addr + 0x16af14, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x162528, debugprint_patched, debugprint); // marker
-    HIJACK_FUNCTION(text_addr + 0x152f0c, debugprint_patched, debugprint); // CTheScripts
-    HIJACK_FUNCTION(text_addr + 0x14bddc, debugprint_patched, debugprint); // cWorldStream
-    HIJACK_FUNCTION(text_addr + 0x131774, debugprint_patched, debugprint); //media mp?
-    HIJACK_FUNCTION(text_addr + 0x11bfb8, debugprint_patched, debugprint); // car transfer
-    HIJACK_FUNCTION(text_addr + 0x119080, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x1157b8, debugprint_patched, debugprint); // pickups
-    HIJACK_FUNCTION(text_addr + 0x109aac, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0xe635c, debugprint_patched, debugprint); //camera & fade screen
-    HIJACK_FUNCTION(text_addr + 0xd0484, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0xb65d4, debugprint_patched, debugprint); // custom tracks
-    HIJACK_FUNCTION(text_addr + 0xb4180, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0xb14a0, debugprint_patched, debugprint); // libwav
-    HIJACK_FUNCTION(text_addr + 0xac6c0, debugprint_patched, debugprint); // savedata stuff
-    HIJACK_FUNCTION(text_addr + 0xa7c34, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0xa2fc8, debugprint_patched, debugprint); // mp?
-    HIJACK_FUNCTION(text_addr + 0x80810, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x74e38, debugprint_patched, debugprint); // heap info
-    HIJACK_FUNCTION(text_addr + 0x6f1dc, debugprint_patched, debugprint); // "main: %i %i %i  streaming: %i %i  volatile: %i %i  kernel: %i  FPS: %.1f  GPU%%: %.1f  ptrnode: %i\n"
-    HIJACK_FUNCTION(text_addr + 0x690d8, debugprint_patched, debugprint); // Adhoc
-    HIJACK_FUNCTION(text_addr + 0x671a4, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x3f62c, debugprint_patched, debugprint); // audio stuff sound thread libwav
-    HIJACK_FUNCTION(text_addr + 0x3f23c, debugprint_patched, debugprint); // audio stuff
-    HIJACK_FUNCTION(text_addr + 0x38e64, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x35aac, debugprint_patched, debugprint); // cannot find with name
-    HIJACK_FUNCTION(text_addr + 0x340cc, debugprint_patched, debugprint);
-    HIJACK_FUNCTION(text_addr + 0x2786c, debugprint_patched, debugprint); // adhoc
+    HIJACK_FUNCTION(TEXTADDR(0x2f6558), debugprint_patched, debugprint); // error in cpp
+    HIJACK_FUNCTION(TEXTADDR(0x2f59bc), debugprint_patched, debugprint); // general? opcodes etc?! 134
+    HIJACK_FUNCTION(TEXTADDR(0x2e2e48), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x2d28d4), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x2d1090), debugprint_patched, debugprint); // error mpeg
+    HIJACK_FUNCTION(TEXTADDR(0x2cc578), debugprint_patched, debugprint); // multiplayer
+    HIJACK_FUNCTION(TEXTADDR(0x2c2f2c), debugprint_patched, debugprint); // UMD File IO
+    HIJACK_FUNCTION(TEXTADDR(0x2bfdb8), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x2b3148), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x2b9664), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x2aee08), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x2a12d8), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x29f0b4), debugprint_patched, debugprint); // memory error prints HEAP
+    HIJACK_FUNCTION(TEXTADDR(0x299050), debugprint_patched, debugprint); // ped density
+    HIJACK_FUNCTION(TEXTADDR(0x28a378), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x288400), debugprint_patched, debugprint); // CGameLogic
+    HIJACK_FUNCTION(TEXTADDR(0x287dfc), debugprint_patched, debugprint);
+
+    // Crashes game when grabbing pickup???
+    // HIJACK_FUNCTION(TEXTADDR(0x27ccc0), debugprint_patched, debugprint);
+
+    HIJACK_FUNCTION(TEXTADDR(0x2566f8), debugprint_patched, debugprint); // entity
+    HIJACK_FUNCTION(TEXTADDR(0x2566cc), debugprint_patched, debugprint); // create xyz
+    HIJACK_FUNCTION(TEXTADDR(0x255a24), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x229bec), debugprint_patched, debugprint); // FindNthNodeClosestToCoor / CheckObjectSpawnPosition
+    HIJACK_FUNCTION(TEXTADDR(0x2297c8), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x207768), debugprint_patched, debugprint); // StreamingHeap
+    HIJACK_FUNCTION(TEXTADDR(0x203cc8), debugprint_patched, debugprint); // adhoc
+    HIJACK_FUNCTION(TEXTADDR(0x2035ec), debugprint_patched, debugprint); // frame
+    HIJACK_FUNCTION(TEXTADDR(0x1d15f4), debugprint_patched, debugprint); // car transfer / carjack
+    HIJACK_FUNCTION(TEXTADDR(0x1d1380), debugprint_patched, debugprint); // volatile ram
+    HIJACK_FUNCTION(TEXTADDR(0x1c15d8), debugprint_patched, debugprint); // anim, models "STREAM MODEL xyz"
+    HIJACK_FUNCTION(TEXTADDR(0x1bc8cc), debugprint_patched, debugprint); // Files, Loadscreen etc
+    HIJACK_FUNCTION(TEXTADDR(0x1bc098), debugprint_patched, debugprint); // cInterestZoneManager
+    HIJACK_FUNCTION(TEXTADDR(0x19af68), debugprint_patched, debugprint); // weapon model
+    HIJACK_FUNCTION(TEXTADDR(0x198dcc), debugprint_patched, debugprint); // ClearWaitState
+    HIJACK_FUNCTION(TEXTADDR(0x193810), debugprint_patched, debugprint); // splash screen
+    HIJACK_FUNCTION(TEXTADDR(0x1816b0), debugprint_patched, debugprint); // collision
+    HIJACK_FUNCTION(TEXTADDR(0x17e524), debugprint_patched, debugprint); // "  anim %i: blend %f %f time %f spd %f anm %i, %i flags %i"
+    HIJACK_FUNCTION(TEXTADDR(0x17e4f8), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x17b738), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x17149c), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x1708d4), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x16fecc), debugprint_patched, debugprint); // SCE Errors
+    HIJACK_FUNCTION(TEXTADDR(0x16af14), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x162528), debugprint_patched, debugprint); // marker
+    HIJACK_FUNCTION(TEXTADDR(0x152f0c), debugprint_patched, debugprint); // CTheScripts
+    HIJACK_FUNCTION(TEXTADDR(0x14bddc), debugprint_patched, debugprint); // cWorldStream
+    HIJACK_FUNCTION(TEXTADDR(0x131774), debugprint_patched, debugprint); //media mp?
+    HIJACK_FUNCTION(TEXTADDR(0x11bfb8), debugprint_patched, debugprint); // car transfer
+    HIJACK_FUNCTION(TEXTADDR(0x119080), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x1157b8), debugprint_patched, debugprint); // pickups
+    HIJACK_FUNCTION(TEXTADDR(0x109aac), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0xe635c), debugprint_patched, debugprint); //camera & fade screen
+    HIJACK_FUNCTION(TEXTADDR(0xd0484), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0xb65d4), debugprint_patched, debugprint); // custom tracks
+    HIJACK_FUNCTION(TEXTADDR(0xb4180), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0xb14a0), debugprint_patched, debugprint); // libwav
+    HIJACK_FUNCTION(TEXTADDR(0xac6c0), debugprint_patched, debugprint); // savedata stuff
+    HIJACK_FUNCTION(TEXTADDR(0xa7c34), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0xa2fc8), debugprint_patched, debugprint); // mp?
+    HIJACK_FUNCTION(TEXTADDR(0x80810), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x74e38), debugprint_patched, debugprint); // heap info
+    HIJACK_FUNCTION(TEXTADDR(0x6f1dc), debugprint_patched, debugprint); // "main: %i %i %i  streaming: %i %i  volatile: %i %i  kernel: %i  FPS: %.1f  GPU%%: %.1f  ptrnode: %i\n"
+    HIJACK_FUNCTION(TEXTADDR(0x690d8), debugprint_patched, debugprint); // Adhoc
+    HIJACK_FUNCTION(TEXTADDR(0x671a4), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x3f62c), debugprint_patched, debugprint); // audio stuff sound thread libwav
+    HIJACK_FUNCTION(TEXTADDR(0x3f23c), debugprint_patched, debugprint); // audio stuff
+    HIJACK_FUNCTION(TEXTADDR(0x38e64), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x35aac), debugprint_patched, debugprint); // cannot find with name
+    HIJACK_FUNCTION(TEXTADDR(0x340cc), debugprint_patched, debugprint);
+    HIJACK_FUNCTION(TEXTADDR(0x2786c), debugprint_patched, debugprint); // adhoc
 
     PATCH_LOG("patchlogonce() LCS ran!");
-    patchlogonce = 0;
+    patchlogonce = false;
   }
   #endif
 
@@ -731,21 +730,21 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   *
   * Note:  */
   if( !cWorldStream_Render && _lw(addr + 0x50) == 0x0080A025 && _lw(addr + 0x5C) == 0x02002025 && _lw(addr + 0x88) == 0x2C840001 ) { // LCS US 3.00 -> 0x00150344
-    PATCH_LOG("0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> cWorldStream_Render()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, cWorldStream_Render_Patched, cWorldStream_Render);
     return true;
   }
 
   /// for stopMenu(); [in pause menu]
   if( !FUN_002db0c0 && ((_lw(addr + 0xC) == 0x00808025  && _lw(addr + 0x10) == 0x341101DD && _lw(addr + 0x28) == 0xAFB20018) || (_lw(addr + 0x8) == 0x00808025  && _lw(addr + 0xC) == 0x340401DD && _lw(addr + 0x28) == 0xAFBF0018)) ) { //0x002DB0C0 || 0x002433D0 for ulux
-    PATCH_LOG("0x%08X (0x%08X) --> FUN_002db0c0()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> FUN_002db0c0()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, FUN_002db0c0_patched, FUN_002db0c0); //
     return true;
   } // TODO: ULUX-002 OK but ugly (functions are quite different)?
 
   /// disable Button Input --> same as VCS
   if( !CPad_Update && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {  //not save
-    PATCH_LOG("0x%08X (0x%08X) --> CPad::Update()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> CPad::Update()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, CPad_UpdatePatched, CPad_Update); // 0x00294E88
     return true;
   }
@@ -755,13 +754,13 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     /*******************************************************************
      *  0x002AF378: 0x2C840002 '...,' - sltiu      $a0, $a0, 2
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_fpsCap", FROMTEXTADDR(addr-0x20), addr-0x20);
     addr_fpsCap = addr-0x20; // 0x002AF378
 
     /*******************************************************************
      *  0x002AF398: 0x0C0C1EF1 '....' - jal        ThreadManForUser_82BC5777
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", FROMTEXTADDR(addr), addr);
     MAKE_CALL(addr, sceKernelGetSystemTimeWidePatched); //LCS US 3.00 -> 0x002AF398
 
     return true;
@@ -773,14 +772,14 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// get pplayer function
   if( !GetPPLAYER && _lw(addr + 0x8) == 0x000429C0 && _lw(addr + 0xC) == 0x00A53021 && _lw(addr + 0x18) == 0x00A42023 && _lw(addr + 0x2C) == 0x8C820000 ) {  //0x1d18b0
-    PATCH_LOG("0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> GetPPLAYER()", FROMTEXTADDR(addr), addr);
     GetPPLAYER = (void*)(addr); //get pplayer
     return true;
   }
 
   /// get pobj function
   if( !GetPCAR && _lw(addr - 0x18) == 0x00000000 && _lw(addr + 0x8) == 0x000429C0 && _lw(addr + 0x24) == 0x00852021 && _lw(addr + 0x2C) == 0x10800006  ) {  //0x1d17b4
-    PATCH_LOG("0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> GetPCAR()", FROMTEXTADDR(addr), addr);
     GetPCAR = (void*)(addr); // get pcar
     return true;
   }
@@ -792,7 +791,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x001DB5F0: 0x8C84A144 'D...' - lw         $a0, -24252($a0)
     *******************************************************************/
     global_gametimer = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) --> global_gametimer 0x%08X", global_gametimer-text_addr, global_gametimer, addr-text_addr); // 0x35A144
+    PATCH_LOG("0x%08X (0x%08X) --> global_gametimer 0x%08X", FROMTEXTADDR(global_gametimer), global_gametimer, FROMTEXTADDR(addr)); // 0x35A144
 
     return true;
   }
@@ -804,7 +803,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      * 0x000E5FF0: 0xE4ADA158 'X...' - swc1       $fpr13, -24232($a1)
     *******************************************************************/
     global_timescale = (_lh(addr+0xC) * 0x10000) + (int16)_lh(addr+0x10); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) --> global_timescale 0x%08X", global_timescale-text_addr, global_timescale, addr-text_addr); // DAT_0035a158_TimeScale
+    PATCH_LOG("0x%08X (0x%08X) --> global_timescale 0x%08X", FROMTEXTADDR(global_timescale), global_timescale, FROMTEXTADDR(addr)); // DAT_0035a158_TimeScale
 
     return true;
   }
@@ -816,14 +815,14 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000ACA30: 0x8C84A46C 'l...' - lw         $a0, -23444($a0)
     *******************************************************************/
     global_currentisland = (_lh(addr+0x14) * 0x10000) + (int16)_lh(addr+0x18); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) --> global_currentisland", global_currentisland-text_addr, global_currentisland); // DAT_0035A46C
+    PATCH_LOG("0x%08X (0x%08X) --> global_currentisland", FROMTEXTADDR(global_currentisland), global_currentisland); // DAT_0035A46C
 
     /*******************************************************************
      *  0x000ACA40: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x000ACA48: 0x8CA45C9C '.\..' - lw         $a0, 23708($a1)
     *******************************************************************/
     global_systemlanguage = (_lh(addr+0x28) * 0x10000) + (int16)_lh(addr+0x30); //actual address!
-    PATCH_LOG("0x%08X (0x%08X) --> global_systemlanguage", global_systemlanguage-text_addr, global_systemlanguage); // DAT_00355c9c
+    PATCH_LOG("0x%08X (0x%08X) --> global_systemlanguage", FROMTEXTADDR(global_systemlanguage), global_systemlanguage); // DAT_00355c9c
 
     HIJACK_FUNCTION(addr, FUN_000B0A18_Patched, FUN_000B0A18);
 
@@ -840,7 +839,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_pedestriansobj = (_lh(addr+0x4) * 0x10000) + (int16)_lh(addr+0xC); // actual address!
     var_pedobjsize = (int16)_lh(addr+0x30); // 0xCB0
-    PATCH_LOG("0x%08X (0x%08X) --> ptr_pedestriansobj", ptr_pedestriansobj-text_addr, ptr_pedestriansobj); // DAT_0034853c
+    PATCH_LOG("0x%08X (0x%08X) --> ptr_pedestriansobj", FROMTEXTADDR(ptr_pedestriansobj), ptr_pedestriansobj); // DAT_0034853c
     PATCH_LOG("var_pedobjsize = 0x%X", var_pedobjsize); //
 
     /*******************************************************************
@@ -851,7 +850,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_vehiclesobj = (_lh(addr+0x84) * 0x10000) + (int16)_lh(addr+0x88); // actual address!
     var_vehobjsize = 0x10000 - _lh(addr+0x100); // 0x6E0
-    PATCH_LOG("0x%08X (0x%08X) --> ptr_vehiclesobj", ptr_vehiclesobj-text_addr, ptr_vehiclesobj); // DAT_00348540
+    PATCH_LOG("0x%08X (0x%08X) --> ptr_vehiclesobj", FROMTEXTADDR(ptr_vehiclesobj), ptr_vehiclesobj); // DAT_00348540
     PATCH_LOG("var_vehobjsize = 0x%X", var_vehobjsize); //
 
     /*******************************************************************
@@ -862,7 +861,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_worldobj = (_lh(addr+0x104) * 0x10000) + (int16)_lh(addr+0x108); // actual address!
     var_wldobjsize = 0x10000 - _lh(addr+0x170); // 0x220
-    PATCH_LOG("0x%08X (0x%08X) --> ptr_worldobj", ptr_worldobj-text_addr, ptr_worldobj); // DAT_0034854c
+    PATCH_LOG("0x%08X (0x%08X) --> ptr_worldobj", FROMTEXTADDR(ptr_worldobj), ptr_worldobj); // DAT_0034854c
     PATCH_LOG("var_wldobjsize = 0x%X", var_wldobjsize); //
 
     return true;
@@ -874,7 +873,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// skip intro movies
   if ( !addr_skipIntroMovie && _lw(addr + 0x8) == 0x3C05005A && _lw(addr + 0x24) == 0x00002825  ) {
-    PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", FROMTEXTADDR(addr), addr);
     addr_skipIntroMovie = addr; // 0x001BCFD0
     //MAKE_DUMMY_FUNCTION(0x89C0FD0, 0); //for test
     return true;
@@ -882,28 +881,28 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// never fall off bike.. when rolling backwards
   if ( !addr_neverFallOffBike_rollback && _lw(addr-0x18) == 0x45000012 && _lw(addr-0xC) == 0x3405002C && _lw(addr - 0x4) == 0x02403825 && _lw(addr + 0x8) == 0x8E0401FC ) {
-    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", FROMTEXTADDR(addr), addr);
     addr_neverFallOffBike_rollback = addr; // 0x000DEF44
     return true;
   }
 
   /// never fall off bike.. when hitting object
   if ( !addr_neverFallOffBike_hitobj && _lw(addr - 0x4) == 0x34050027 && _lw(addr + 0x4) == 0x00004025 && _lw(addr + 0xB8) == 0x00000000 ) { // last one is #hacky
-    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", FROMTEXTADDR(addr), addr);
     addr_neverFallOffBike_hitobj = addr; // 0x0023DBFC | ULUX -> 0x0020B2D8
     return true;
   }
 
   /// world gravity
   if ( !addr_worldgravity && _lw(addr - 0x18) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
-    PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", FROMTEXTADDR(addr), addr);
     addr_worldgravity = addr; // 0x0020A898
     return true;
   }
 
   /// set weather function(s)
   if( !CWeather_ForceWeather && _lw(addr + 0x1C) == 0x2404FFFF  && _lw(addr - 0x14) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x14) == 0x03E00008 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> CWeather_ForceWeather(), CWeather_ForceWeatherNow(), CWeather_ReleaseWeather()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> CWeather_ForceWeather(), CWeather_ForceWeatherNow(), CWeather_ReleaseWeather()", FROMTEXTADDR(addr), addr);
     CWeather_ForceWeather = (void*)(addr-0xC);  // 0x12EDB0
     CWeather_ForceWeatherNow  = (void*)(addr);      // 0x12edbc
     CWeather_ReleaseWeather = (void*)(addr+0x1C); // 0x12EDD8
@@ -912,7 +911,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *
     *******************************************************************/
     global_weather = (_lh(addr+0x8) * 0x10000) + (int16)_lh(addr + 0xC); // actual address!  (only to READ current weather)
-    PATCH_LOG("0x%08X (0x%08X) -> global_weather", global_weather-text_addr, global_weather); // 0x0035A484
+    PATCH_LOG("0x%08X (0x%08X) -> global_weather", FROMTEXTADDR(global_weather), global_weather); // 0x0035A484
     return true;
   }
 
@@ -924,7 +923,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *
     *******************************************************************/
     global_trafficdensity = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_trafficdensity", global_trafficdensity-text_addr, global_trafficdensity); // 0x00347CDC
+    PATCH_LOG("0x%08X (0x%08X) -> global_trafficdensity", FROMTEXTADDR(global_trafficdensity), global_trafficdensity); // 0x00347CDC
     return true;
   }
 
@@ -935,7 +934,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *
     *******************************************************************/
     global_peddensity = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_peddensity", global_peddensity-text_addr, global_peddensity); // 0x00352610
+    PATCH_LOG("0x%08X (0x%08X) -> global_peddensity", FROMTEXTADDR(global_peddensity), global_peddensity); // 0x00352610
     return true;
   }
 
@@ -943,13 +942,13 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   /// global settings toggles (radar, hud and more)
   if ( !global_hudbool && _lw(addr - 0x10) == 0x34040120 && _lw(addr - 0x3C) == 0x34040001 ){
     global_hudbool = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_hudbool", global_hudbool-text_addr, global_hudbool); // 0x00355C4A
+    PATCH_LOG("0x%08X (0x%08X) -> global_hudbool", FROMTEXTADDR(global_hudbool), global_hudbool); // 0x00355C4A
 
     global_radarbool = global_hudbool + 0x2; // hehe-hacky (actual address!)
-    PATCH_LOG("0x%08X (0x%08X) -> global_radarbool", global_radarbool-text_addr, global_radarbool); // DAT_00355c4c_ui_radar
+    PATCH_LOG("0x%08X (0x%08X) -> global_radarbool", FROMTEXTADDR(global_radarbool), global_radarbool); // DAT_00355c4c_ui_radar
 
     global_maplegendbool = global_hudbool + 0x23; // hehe-hacky (actual address!)
-    PATCH_LOG("0x%08X (0x%08X) -> global_maplegendbool", global_maplegendbool-text_addr, global_maplegendbool); // DAT_00355c6d_mapLegendBool
+    PATCH_LOG("0x%08X (0x%08X) -> global_maplegendbool", FROMTEXTADDR(global_maplegendbool), global_maplegendbool); // DAT_00355c6d_mapLegendBool
     return true;
   }
 
@@ -961,7 +960,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00192294: 0x90850167 'g...' - lbu        $a1, 359($a0)
     *******************************************************************/
     global_maxhealthmult = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x18) + _lh(addr+0x20); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x00385c77
+    PATCH_LOG("0x%08X (0x%08X) -> global_maxhealthmult", FROMTEXTADDR(global_maxhealthmult), global_maxhealthmult); // 0x00385c77
 
     /*******************************************************************
      *  0x001922EC: 0x3C050038 '8..<' - lui        $a1, 0x38
@@ -975,7 +974,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     #endif
 
     global_maxarmormult = (_lh(addr+0x78) * 0x10000) + (int16)_lh(addr+0x90) + _lh(addr+0x98); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x00385c78
+    PATCH_LOG("0x%08X (0x%08X) -> global_maxarmormult", FROMTEXTADDR(global_maxarmormult), global_maxarmormult); // 0x00385c78
     return true;
   }
 
@@ -988,7 +987,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0013F380: 0x90A52C7C '|,..' - lbu        $a1, 11388($a1)
     *******************************************************************/
     global_ismultiplayer = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_ismultiplayer", global_ismultiplayer-text_addr, global_ismultiplayer); // DAT_00352c7c_isMultiplayerActive
+    PATCH_LOG("0x%08X (0x%08X) -> global_ismultiplayer", FROMTEXTADDR(global_ismultiplayer), global_ismultiplayer); // DAT_00352c7c_isMultiplayerActive
 
     /*******************************************************************
      *  0x0013F3D8: 0x3C060038 '8..<' - lui        $a2, 0x38
@@ -998,28 +997,28 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     global_unlimtedsprint = (_lh(addr+0x5C) * 0x10000) + (int16)_lh(addr+0x60) + _lh(addr+0x68); //actual address!
     global_fireproof = global_unlimtedsprint + 0x2; // Only 2 bytes in front!
-    PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_00385c74_playerNeverGetsTired
+    PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", FROMTEXTADDR(global_unlimtedsprint), global_unlimtedsprint); // DAT_00385c74_playerNeverGetsTired
     return true;
   }
 
 
   /// SetWantedLevel function
   if( !SetWantedLevel && _lw(addr + 0x64) == 0x00409025 && _lw(addr - 0xE0) == 0x340400CA ) { // 0x00140DF4
-    PATCH_LOG("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> SetWantedLevel()", FROMTEXTADDR(addr), addr);
     SetWantedLevel = (void*)(addr);
     return true;
   }
 
   /// SetMaxWantedLevel function + global
   if( !SetMaxWantedLevel && _lw(addr + 0x10) == 0x2C850007 && _lw(addr + 0x90) == 0x34060005 ) { // 0x002C9570
-    PATCH_LOG("0x%08X (0x%08X) -> SetMaxWantedLevel()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> SetMaxWantedLevel()", FROMTEXTADDR(addr), addr);
     SetMaxWantedLevel = (void*)(addr);
     /*******************************************************************
      *  0x002C958C: 0x3C050035 '5..<' - lui        $a1, 0x35
      *  0x002C95B4: 0xACA64B9C '.K..' - sw         $a2, 19356($a1)
     *******************************************************************/
     global_maxwantedlevel = (_lh(addr+0x1C) * 0x10000) + (int16)_lh(addr+0x44); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_maxwantedlevel", global_maxwantedlevel-text_addr, global_maxwantedlevel); // DAT_00354b9c
+    PATCH_LOG("0x%08X (0x%08X) -> global_maxwantedlevel", FROMTEXTADDR(global_maxwantedlevel), global_maxwantedlevel); // DAT_00354b9c
     return true;
   }
 
@@ -1031,7 +1030,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00038350: 0xAC90A1A4 '....' - sw         $s0, -24156($a0)
     *******************************************************************/
     global_clockmultiplier = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_clockmultiplier", global_clockmultiplier-text_addr, global_clockmultiplier); // DAT_0035A1A4
+    PATCH_LOG("0x%08X (0x%08X) -> global_clockmultiplier", FROMTEXTADDR(global_clockmultiplier), global_clockmultiplier); // DAT_0035A1A4
     return true;
   }
 
@@ -1046,8 +1045,8 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     global_cheatusedboolean = (_lh(addr+0x4) * 0x10000) + (int16)_lh(addr+0xC); // actual address!
     global_cheatusedcounter = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_cheatusedboolean", global_cheatusedboolean-text_addr, global_cheatusedboolean); // DAT_00352432
-    PATCH_LOG("0x%08X (0x%08X) -> global_cheatusedcounter", global_cheatusedcounter-text_addr, global_cheatusedcounter); // DAT_0035A38C
+    PATCH_LOG("0x%08X (0x%08X) -> global_cheatusedboolean", FROMTEXTADDR(global_cheatusedboolean), global_cheatusedboolean); // DAT_00352432
+    PATCH_LOG("0x%08X (0x%08X) -> global_cheatusedcounter", FROMTEXTADDR(global_cheatusedcounter), global_cheatusedcounter); // DAT_0035A38C
     return true;
   }
 
@@ -1059,7 +1058,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000B8FE0: 0x9084A4F8 '....' - lbu        $a0, -23304($a0)
     *******************************************************************/
     global_freezegame = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_freezegame", global_freezegame-text_addr, global_freezegame); // DAT_0035A4F8
+    PATCH_LOG("0x%08X (0x%08X) -> global_freezegame", FROMTEXTADDR(global_freezegame), global_freezegame); // DAT_0035A4F8
     return true;
   }
 
@@ -1071,31 +1070,31 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00182EC8: 0x25089DC0 '...%' - addiu      $t0, $t0, -25152
     *******************************************************************/
     global_helpbox_string = (_lh(addr+0x20) * 0x10000) + (int16)_lh(addr+0x34); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_string", global_helpbox_string-text_addr, global_helpbox_string); // DAT_00649dc0
+    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_string", FROMTEXTADDR(global_helpbox_string), global_helpbox_string); // DAT_00649dc0
     /*******************************************************************
      *  0x00182EFC: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00182F00: 0xACA0A808 '....' - sw         $zr, -22520($a1)
     *******************************************************************/
     global_helpbox_timedisplayed = (_lh(addr+0x68) * 0x10000) + (int16)_lh(addr+0x6C); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_timedisplayed", global_helpbox_timedisplayed-text_addr, global_helpbox_timedisplayed); // DAT_0035a808
+    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_timedisplayed", FROMTEXTADDR(global_helpbox_timedisplayed), global_helpbox_timedisplayed); // DAT_0035a808
     /*******************************************************************
      *  0x00182F0C: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00182F10: 0xACA0A810 '....' - sw         $zr, -22512($a1)
     *******************************************************************/
     global_helpbox_displaybool = (_lh(addr+0x78) * 0x10000) + (int16)_lh(addr+0x7C); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_displaybool", global_helpbox_displaybool-text_addr, global_helpbox_displaybool); // DAT_0035a810
+    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_displaybool", FROMTEXTADDR(global_helpbox_displaybool), global_helpbox_displaybool); // DAT_0035a810
     /*******************************************************************
      *  0x00182F1C: 0x3C050036 '6..<' - lui        $a1, 0x36
      *  0x00182F20: 0xA0A0A815 '....' - sb         $zr, -22507($a1)
     *******************************************************************/
     global_helpbox_permboxbool = (_lh(addr+0x88) * 0x10000) + (int16)_lh(addr+0x8C); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_permboxbool", global_helpbox_permboxbool-text_addr, global_helpbox_permboxbool); // DAT_0035a815
+    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_permboxbool", FROMTEXTADDR(global_helpbox_permboxbool), global_helpbox_permboxbool); // DAT_0035a815
     /*******************************************************************
      *  0x00182F5C: 0x3C060036 '6..<' - lui        $a2, 0x36
      *  0x00182F64: 0xE4CCA818 '....' - swc1       $fpr12, -22504($a2)
     *******************************************************************/
     global_helpbox_duration = (_lh(addr+0xC8) * 0x10000) + (int16)_lh(addr+0xD0); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_duration", global_helpbox_duration-text_addr, global_helpbox_duration); // DAT_0035a818
+    PATCH_LOG("0x%08X (0x%08X) -> global_helpbox_duration", FROMTEXTADDR(global_helpbox_duration), global_helpbox_duration); // DAT_0035a818
 
 
     /** BONUS *****************************************************************
@@ -1103,7 +1102,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00182ED4: 0x24849BC0 '...$' - addiu      $a0, $a0, -25664
     *******************************************************************/
     global_dialog_string = (_lh(addr+0x2C) * 0x10000) + (int16)_lh(addr+0x40); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_dialog_string", global_dialog_string-text_addr, global_dialog_string); // DAT_00649bc0
+    PATCH_LOG("0x%08X (0x%08X) -> global_dialog_string", FROMTEXTADDR(global_dialog_string), global_dialog_string); // DAT_00649bc0
     return true;
   }
 
@@ -1115,7 +1114,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x001E1820: 0x2484F3A0 '...$' - addiu      $a0, $a0, -3168
     *******************************************************************/
     global_camera = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); //actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_0037F3A0
+    PATCH_LOG("0x%08X (0x%08X) -> global_camera", FROMTEXTADDR(global_camera), global_camera); // DAT_0037F3A0
     return true;
   }
 
@@ -1134,7 +1133,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   * - Rampages missing
   ****************************************************************************************************************************/
   if( _lw(addr+0x4) == 0xA4440082 && _lw(addr) == 0x34040002 && _lw(addr+0x8) == 0x34150002 ) { // 0x001BCE54 (in FUN_001BCDE8 called once at game startup)
-    PATCH_LOG("UNCENSOR GERMAN VERSION 1/2! (0x%08X)", addr-text_addr);
+    PATCH_LOG("UNCENSOR GERMAN VERSION 1/2! (0x%08X)", FROMTEXTADDR(addr));
 
     /// set "isUncut" flag to 0x1
     /*******************************************************************
@@ -1158,7 +1157,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     return true;
   }
   if( _lw(addr) == 0x34040994 && _lw(addr-0xDC) == 0x34150001 && (_lw(addr+0x40) == _lw(addr+0x90)) ) {  //0x002D695C (in FUN_002D6838 called when ???)
-    PATCH_LOG("UNCENSOR GERMAN VERSION 2/2! (0x%08X)", addr-text_addr);
+    PATCH_LOG("UNCENSOR GERMAN VERSION 2/2! (0x%08X)", FROMTEXTADDR(addr));
 
     /*******************************************************************
      *  0xA2C04C74  sb  $zr, 19572($s6)   ->  0xA2D54C74  sb   $s5 19572 $s6          [$s5 holds 0x1]
@@ -1190,7 +1189,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0016319C: 0x9084A214 '....' - lbu        $a0, -24044($a0)
     *******************************************************************/
     global_hudincutscene = (_lh(addr+0x3C) * 0x10000) + (int16)_lh(addr+0x40); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_0035a214
+    PATCH_LOG("0x%08X (0x%08X) -> global_hudincutscene", FROMTEXTADDR(global_hudincutscene), global_hudincutscene); // DAT_0035a214
     return true;
   }
 
@@ -1202,7 +1201,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00109AE8: 0xAC851FE0 '....' - sw         $a1, 8160($a0)
     *******************************************************************/
     global_ptr_water = (_lh(addr+0x4) * 0x10000) + (int16)_lh(addr+0x10); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_ptr_water", global_ptr_water-text_addr, global_ptr_water); // DAT_00331fe0_toWater
+    PATCH_LOG("0x%08X (0x%08X) -> global_ptr_water", FROMTEXTADDR(global_ptr_water), global_ptr_water); // DAT_00331fe0_toWater
     return true;
   }
 
@@ -1214,7 +1213,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0025A5C8: 0x24955DA0 '.].$' - addiu      $s5, $a0, 23968
     *******************************************************************/
     global_buttoninput = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x00385DA0
+    PATCH_LOG("0x%08X (0x%08X) -> global_buttoninput", FROMTEXTADDR(global_buttoninput), global_buttoninput); // 0x00385DA0
     return true;
   }
 
@@ -1223,7 +1222,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     /*******************************************************************
      *  0x00292B20: 0x10800004 '....' - beqz       $a0, loc_00292B34
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_buttoncheat", FROMTEXTADDR(addr), addr);
     addr_buttoncheat = addr; // 0x00292B20
     return true;
   }
@@ -1250,7 +1249,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x001376C0: 0x24A54A88 '.J.$' - addiu      $a1, $a1, 19080
     *******************************************************************/
     global_garagedata = (_lh(addr) * 0x10000) + (int16)_lh(addr+0xC); // actual address!
-    PATCH_LOG("0x%08X: 0x%08X -> global_garagedata", addr-text_addr, global_garagedata-text_addr); // 0x634A88
+    PATCH_LOG("0x%08X: 0x%08X -> global_garagedata", FROMTEXTADDR(addr), FROMTEXTADDR(global_garagedata)); // 0x634A88
 
     /*******************************************************************
      *  0x001376D4: 0x28E9000C '...(' - slti       $t1, $a3, 12
@@ -1285,7 +1284,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0027E688: 0x24424980 '.IB$' - addiu      $v0, $v0, 18816
     *******************************************************************/
     global_pickups = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00624980
+    PATCH_LOG("0x%08X (0x%08X) -> global_pickups", FROMTEXTADDR(global_pickups), global_pickups); // 0x00624980
 
     /*******************************************************************
      *
@@ -1315,7 +1314,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
    * ULUX-80142 v0.02 |
    **************************************/
   if( !_checkCustomTracksReady && _lw(addr + 0x2C) == 0x8C84000C && _lw(addr + 0x38) == 0x01094021 && _lw(addr + 0x64) == 0x00000000 ) {
-    PATCH_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, _checkCustomTracksReady_patched, _checkCustomTracksReady); // sub_00034A28
     return true;
   } // not for ULUX
@@ -1325,7 +1324,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00296960: 0x2484B4F8 '...$' - addiu      $a0, $a0, -19208
     *******************************************************************/
     global_radioarea = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x0038B4F8
+    PATCH_LOG("0x%08X (0x%08X) -> global_radioarea", FROMTEXTADDR(global_radioarea), global_radioarea); // 0x0038B4F8
     return true;
   }
 
@@ -1349,7 +1348,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000AD928: 0x8C846F70 'po..' - lw         $a0, 28528($a0)
     *******************************************************************/
     global_custrackarea = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_custrackarea", global_custrackarea-text_addr, global_custrackarea); // DAT_00356f70_CustomTracksArea
+    PATCH_LOG("0x%08X (0x%08X) -> global_custrackarea", FROMTEXTADDR(global_custrackarea), global_custrackarea); // DAT_00356f70_CustomTracksArea
     return true;
   }
 
@@ -1375,7 +1374,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00163E5C: 0x25296A20 ' j)%' - addiu      $t1, $t1, 27168
     *******************************************************************/
     global_radarblips = (_lh(addr+0x18) * 0x10000) + (int16)_lh(addr+0x1C); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_radarblips", global_radarblips-text_addr, global_radarblips); // DAT_00646A20
+    PATCH_LOG("0x%08X (0x%08X) -> global_radarblips", FROMTEXTADDR(global_radarblips), global_radarblips); // DAT_00646A20
 
     /*******************************************************************
      *  0x00163E6C: 0x2C48004B 'K.H,' - sltiu      $t0, $v0, 75
@@ -1416,7 +1415,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000673F0: 0x2484D640 '@..$' - addiu      $a0, $a0, -10688
     *******************************************************************/
     ptr_memory_main = (_lh(addr+0x28) * 0x10000) + (int16)_lh(addr+0x34);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_0037d640
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_memory_main", FROMTEXTADDR(ptr_memory_main), ptr_memory_main); // DAT_0037d640
 
 
      /*******************************************************************
@@ -1424,7 +1423,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000675BC: 0xACA41F14 '....' - sw         $a0, 7956($a1)
     *******************************************************************/
     ptr_handlingCFG = (_lh(addr+0x1FC) * 0x10000) + (int16)_lh(addr+0x200);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_handlingCFG", ptr_handlingCFG-text_addr, ptr_handlingCFG); // DAT_00351f14_PTR_handling.cfg
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_handlingCFG", FROMTEXTADDR(ptr_handlingCFG), ptr_handlingCFG); // DAT_00351f14_PTR_handling.cfg
     var_handlingcfgslots     = 80; // TODO: where to find?
     var_handlingcfgslotsize   = 0xF0; // TODO: where to find?
 
@@ -1435,7 +1434,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_buildingsIPL = (_lh(addr+0xE0) * 0x10000) + (int16)_lh(addr+0xE4);
     var_buildingsIPLslotsize = 0x60; // TODO:
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_buildingsIPL", ptr_buildingsIPL-text_addr, ptr_buildingsIPL); // DAT_00348544_PTR_toPTRtoMapParts1
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_buildingsIPL", FROMTEXTADDR(ptr_buildingsIPL), ptr_buildingsIPL); // DAT_00348544_PTR_toPTRtoMapParts1
 
 
     /*******************************************************************
@@ -1444,7 +1443,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_treadablesIPL = (_lh(addr+0xEC) * 0x10000) + (int16)_lh(addr+0xF0);
     var_treadablesIPLslotsize = 0x60; // TODO:
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_treadablesIPL", ptr_treadablesIPL-text_addr, ptr_treadablesIPL); // DAT_00348548_PTR_toPTRtoMapParts2
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_treadablesIPL", FROMTEXTADDR(ptr_treadablesIPL), ptr_treadablesIPL); // DAT_00348548_PTR_toPTRtoMapParts2
 
 
     /*******************************************************************
@@ -1453,7 +1452,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     ptr_dummysIPL = (_lh(addr+0xF8) * 0x10000) + (int16)_lh(addr+0xFC);
     var_dummysIPLslotsize = 0x60; // TODO:
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_dummysIPL", ptr_dummysIPL-text_addr, ptr_dummysIPL); // DAT_00348550_PTR_toPTRtoMapParts3
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_dummysIPL", FROMTEXTADDR(ptr_dummysIPL), ptr_dummysIPL); // DAT_00348550_PTR_toPTRtoMapParts3
 
 
     /*******************************************************************
@@ -1463,7 +1462,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     ptr_particleCFG = (_lh(addr+0x234) * 0x10000) + (int16)_lh(addr+0x238);
     var_particleCFGslots   = 82; // TODO: where to find?
     var_particleCFGslotsize = 0x94; // TODO: where to find?
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_particleCFG", ptr_particleCFG-text_addr, ptr_particleCFG); // DAT_0035a42c_particle.cfg
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_particleCFG", FROMTEXTADDR(ptr_particleCFG), ptr_particleCFG); // DAT_0035a42c_particle.cfg
 
 
     /*******************************************************************
@@ -1471,7 +1470,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000675D4: 0x8C841980 '....' - lw         $a0, 6528($a0)
     *******************************************************************/
     ptr_timecycDAT = (_lh(addr+0x214) * 0x10000) + (int16)_lh(addr+0x218);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_timecycDAT", ptr_timecycDAT-text_addr, ptr_timecycDAT); // PTR_DAT_00351980_timecyc.dat
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_timecycDAT", FROMTEXTADDR(ptr_timecycDAT), ptr_timecycDAT); // PTR_DAT_00351980_timecyc.dat
 
     // TODO: get more file locations here
 
@@ -1525,7 +1524,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00009750: 0x8CA5FC50 'P...' - lw         $a1, -944($a1)
     *******************************************************************/
     ptr_carcolsDAT = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_carcolsDAT", ptr_carcolsDAT-text_addr, ptr_carcolsDAT); // DAT_0032fc50_PTR_carcols.dat
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_carcolsDAT", FROMTEXTADDR(ptr_carcolsDAT), ptr_carcolsDAT); // DAT_0032fc50_PTR_carcols.dat
     var_carcolsdatslots   = 128; // TODO: where to find?
     var_carcolsdatslotsize   = 0x4; // TODO: where to find?
 
@@ -1553,7 +1552,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0017DBF0: 0x8CA5A14C 'L...' - lw         $a1, -24244($a1)
     *******************************************************************/
     ptr_pedstatTable = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_pedstatTable", ptr_pedstatTable-text_addr, ptr_pedstatTable); // DAT_0035a14c_pedstats.dat
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_pedstatTable", FROMTEXTADDR(ptr_pedstatTable), ptr_pedstatTable); // DAT_0035a14c_pedstats.dat
 
     var_pedstatDATslots   = 42; // TODO: where to find?
     var_pedstatDATslotsize = 0x34; // TODO: where to find?
@@ -1582,7 +1581,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00224B18: 0xAE84A140 '@...' - sw         $a0, -24256($s4)
     *******************************************************************/
     ptr_IDEs = (_lh(addr+0xC) * 0x10000) + (int16)_lh(addr+0x24);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDEs", ptr_IDEs-text_addr, ptr_IDEs); // DAT_0035a140_VAR_IDEoffsets
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDEs", FROMTEXTADDR(ptr_IDEs), ptr_IDEs); // DAT_0035a140_VAR_IDEoffsets
 
 
     /*******************************************************************
@@ -1590,7 +1589,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00224B28: 0xAE6593BC '..e.' - sw         $a1, -27716($s3)
     *******************************************************************/
     ptr_IDETable = (_lh(addr+0x10) * 0x10000) + (int16)_lh(addr+0x34);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDETable", ptr_IDETable-text_addr, ptr_IDETable); //DAT_003493bc_PTR_IDETable
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDETable", FROMTEXTADDR(ptr_IDETable), ptr_IDETable); //DAT_003493bc_PTR_IDETable
 
     return true;
   }
@@ -1631,7 +1630,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     var_vehiclesworldspawnslotsize = 0x2C; // TODO: get from code is complicated here
 
-    PATCH_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x64aac0
+    PATCH_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", FROMTEXTADDR(addr_vehiclesworldspawn), addr_vehiclesworldspawn); // 0x64aac0
     PATCH_LOG("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
     PATCH_LOG("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize);
 
@@ -1655,14 +1654,14 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
    * ULUX-80142 v0.02 |
    **************************************/
    /* if( _lw(addr + 0x9C) == 0x26A5FFE0 && _lw(addr + 0xFC) == 0x00000000 ) { // FUN_001bd8dc_loadSplashScreen
-    PATCH_LOG("0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> loadSplashScreen()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, loadSplashScreen_patched, loadSplashScreen);
     return true;
   } */
 
   /// loadStringFromGXT
   if( !LoadStringFromGXT && _lw(addr + 0x44) == 0x92240022 && _lw(addr + 0x70) == 0x03E00008 ) { // FUN_0010fad4_loadStringFromGXT aka CTextGet
-    PATCH_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", FROMTEXTADDR(addr), addr);
     LoadStringFromGXT = (void*)(addr); // FUN_0010fad4_loadStringFromGXT
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
     return true;
@@ -1673,7 +1672,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00028EE0: 0x8E84207C '| ..' - lw         $a0, 8316($s4)
     *******************************************************************/
     ptr_gxtloadadr = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_gxtloadadr", ptr_gxtloadadr-text_addr, ptr_gxtloadadr); //DAT_0033207c_gxtLoadAdr
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_gxtloadadr", FROMTEXTADDR(ptr_gxtloadadr), ptr_gxtloadadr); //DAT_0033207c_gxtLoadAdr
     return true;
   }
 
@@ -1684,7 +1683,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00162BD8: 0x2484A6C0 '...$' - addiu      $a0, $a0, -22848
     *******************************************************************/
     ptr_radarIconList = (_lh(addr+0x24) * 0x10000) + (int16)_lh(addr+0x2C);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_radarIconList", ptr_radarIconList-text_addr, ptr_radarIconList); // DAT_0035a6c0_radarIcon_0
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_radarIconList", FROMTEXTADDR(ptr_radarIconList), ptr_radarIconList); // DAT_0035a6c0_radarIcon_0
     return true;
   }
 
@@ -1720,7 +1719,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x001BEAA0: 0x8E247144 'Dq$.' - lw         $a0, 28996($s1)
     *******************************************************************/
     render = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> render", render-text_addr, render); //DAT_00357144_render
+    PATCH_LOG("0x%08X (0x%08X) -> render", FROMTEXTADDR(render), render); //DAT_00357144_render
     return true;
   }
 
@@ -1749,7 +1748,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
        *  0x000AEE78: 0x24A5017C '|..$' - addiu      $a1, $a1, 380
       *******************************************************************/
       savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16)_lh(addr+0xA0);
-      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (later)", savedatakey-text_addr, savedatakey); // DAT_0033017c_SAVEKEY
+      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (later)", FROMTEXTADDR(savedatakey), savedatakey); // DAT_0033017c_SAVEKEY
     }
     if( _lh(addr + 0x9C) == 0x0010 ) { // decryption key for initial versions (like US v1.05)
       /*******************************************************************
@@ -1757,7 +1756,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
        *  0x000AEF10: 0x24A5007C '|..$' - addiu      $a1, $a1, 124
       *******************************************************************/
       savedatakey = (_lh(addr+0x7C) * 0x10000) + (int16)_lh(addr+0xA4);
-      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (initial)", savedatakey-text_addr, savedatakey);
+      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (initial)", FROMTEXTADDR(savedatakey), savedatakey);
     }
 
     /*******************************************************************
@@ -1765,7 +1764,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000AEDDC: 0x2493DB7C '|..$' - addiu      $s3, $a0, -9348
     *******************************************************************/
     titleid = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> titleid", titleid-text_addr, titleid); //s_ULUS10041_0030db7c
+    PATCH_LOG("0x%08X (0x%08X) -> titleid", FROMTEXTADDR(titleid), titleid); //s_ULUS10041_0030db7c
 
     saveprefix = titleid + 0xC;
 
@@ -1779,7 +1778,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
        *  0x000AEEC0: 0x24A5003C '<..$' - addiu      $a1, $a1, 60
       *******************************************************************/
       savedatakey = (_lh(addr+0x84) * 0x10000) + (int16)_lh(addr+0xAC); // 0x0033003C
-      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v1.00)", savedatakey-text_addr, savedatakey);
+      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v1.00)", FROMTEXTADDR(savedatakey), savedatakey);
     }
     if( _lh(addr + 0xA0) == 0x0010 ) { //decryption key for GER v2.00
       /*******************************************************************
@@ -1787,7 +1786,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
        *  0x000AEEC0: 0x24A5003C '<..$' - addiu      $a1, $a1, 60
       *******************************************************************/
       savedatakey = (_lh(addr+0x84) * 0x10000) + (int16)_lh(addr+0xA8); // 0x0033003C
-      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v2.00)", savedatakey-text_addr, savedatakey);
+      PATCH_LOG("0x%08X (0x%08X) -> savedatakey (GERMAN v2.00)", FROMTEXTADDR(savedatakey), savedatakey);
     }
 
     /*******************************************************************
@@ -1796,7 +1795,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     *******************************************************************/
     titleid = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // 0x0030DBBC "ULES00182" v1.00 (0x30DAFC v2.00)
 
-    PATCH_LOG("0x%08X (0x%08X) -> titleid (GERMAN)", titleid-text_addr, titleid);
+    PATCH_LOG("0x%08X (0x%08X) -> titleid (GERMAN)", FROMTEXTADDR(titleid), titleid);
 
     saveprefix = titleid + 0xC; //"S"
 
@@ -1813,7 +1812,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0002E0A4: 0x9084010E '....' - lbu        $a0, 270($a0)
     *******************************************************************/
     global_developerflag = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> global_developerflag", global_developerflag-text_addr, global_developerflag); // DAT_0033010e_developerFlag
+    PATCH_LOG("0x%08X (0x%08X) -> global_developerflag", FROMTEXTADDR(global_developerflag), global_developerflag); // DAT_0033010e_developerFlag
 
     return true;
   }
@@ -1826,14 +1825,14 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00154408: 0xA080014D 'M...' - sb         $zr, 333($a0)
     *******************************************************************/
     global_freezetimers = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4) + (int16)_lh(addr+0x8);
-    PATCH_LOG("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_0038e4d5_freezeOnScreenTimer
+    PATCH_LOG("0x%08X (0x%08X) -> global_freezetimers", FROMTEXTADDR(global_freezetimers), global_freezetimers); // DAT_0038e4d5_freezeOnScreenTimer
     return true;
   }
 
 
   /// ped task function
   if( !TaskCharWith && _lw(addr + 0x30) == 0x34050037  && _lw(addr + 0x4C) == 0x8E040254 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TaskCharWith()", FROMTEXTADDR(addr), addr);
 
     /******************************
     * 0x8 = kill ped on foot
@@ -1867,58 +1866,58 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// warp ped to vehicle
   if( !WarpPedIntoVehicle && _lw(addr + 0x10) == 0x34120012  && _lw(addr + 0x3C) == 0x34040001 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", FROMTEXTADDR(addr), addr);
     WarpPedIntoVehicle = (void*)(addr); // 0x1b90ec
     return true;
   }
   /// warp ped to vehicle as passenger
   if( !WarpPedIntoVehicleAsPassenger && _lw(addr + 0x14) == 0x34080012  && _lw(addr + 0x3C) == 0x34040001 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", FROMTEXTADDR(addr), addr);
     WarpPedIntoVehicleAsPassenger = (void*)(addr); // 0x1b9470
     return true;
   }
 
   /// request model
   if( !RequestModel && _lw(addr + 0x14) == 0x28941324  && _lw(addr + 0x34) == 0x00102100 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> RequestModel()", FROMTEXTADDR(addr), addr);
     RequestModel = (void*)(addr); // 0x1c6c28
     return true;
   }
   /// GiveWeaponAndAmmo
   if( !GiveWeaponAndAmmo && _lw(addr + 0x6C) == 0x269205A0  && _lw(addr + 0x38) == 0x00132140 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", FROMTEXTADDR(addr), addr);
     GiveWeaponAndAmmo = (void*)(addr); // 0x19b2f4
     return true;
   }
 
   /// SetActorSkinTo (needs name to be lower case!)
   if( !SetActorSkinTo && _lw(addr + 0x28) == 0x340500A1  && _lw(addr + 0x44) == 0x24840040 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", FROMTEXTADDR(addr), addr);
     SetActorSkinTo = (void*)(addr);  // 0x001a1174
     return true;
   }
   /// LoadAllModelsNow
   if( !LoadAllModelsNow && (_lw(addr + 0x4) == 0x308400FF  && _lw(addr + 0x50) == 0x3C100002) /* || ULUX (func params diff) --> (_lw(addr + 0x4) == 0x308500FF  && _lw(addr + 0x44) == 0x0016B080) */ ) { // FUN_001c6f64_LoadAllRequestedModels
-    PATCH_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", FROMTEXTADDR(addr), addr);
     LoadAllModelsNow = (void*)(addr); // 0x001c6f64
     return true;
   }
   /// RefreshActorSkin
   if( !RefreshActorSkin && _lw(addr + 0x38) == 0xAE04034C  && _lw(addr + 0x10) == 0x2404FFFF ) {
-    PATCH_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", FROMTEXTADDR(addr), addr);
     RefreshActorSkin = (void*)(addr); // 0x001a1210
     return true;
   }
 
   /// TaskDuckLCS
   if( !TaskDuckLCS && _lw(addr + 0x18) == 0x34050099  && _lw(addr + 0x70) == 0x34840010 ) { // FUN_000835fc_taskDuck
-    PATCH_LOG("0x%08X (0x%08X) -> TaskDuckLCS()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TaskDuckLCS()", FROMTEXTADDR(addr), addr);
     TaskDuckLCS = (void*)(addr); // 0x000835fc
     return true;
   }
   /// TaskUnDuck
   if( !TaskUnDuck && _lw(addr + 0x20) == 0x34050099  && _lw(addr + 0x64) == 0x3C06C080 ) { // FUN_000837d0_unduck
-    PATCH_LOG("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TaskUnDuck()", FROMTEXTADDR(addr), addr);
     TaskUnDuck = (void*)(addr); // 0x000837d0
     return true;
   }
@@ -1940,12 +1939,12 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
    * ULUX-80142 v0.02 | func too different for my patch
    **************************************/
    if( !DrawLoadingBar && _lw(addr + 0x34) == 0x3C053E80 && _lw(addr + 0x18) == 0x3C044040 ) { // FUN_001bdbf8_DrawLoadingBar
-    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar); // ULUX OK!
     return true;
   }
   if( !Loadscreen && _lh(addr + 0x18) == 0x00FF && _lw(addr + 0x14) == 0x00C09825 ) { // FUN_001bde98_DrawLoadscreen
-    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, Loadscreen_patched, Loadscreen);
     return true;
   }
@@ -1957,7 +1956,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     /*******************************************************************
      *  0x0009F778: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0 (default 80.0f)
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", FROMTEXTADDR(addr), addr);
     addr_heliheight = addr; // 0x0009F778
     if( PlatformManager.Platform.type == PLTF_PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
     return true;
@@ -1966,7 +1965,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// StartNewScript
   if( !StartNewScript && _lw(addr - 0xC) == 0x2402FFFF  && _lw(addr + 0x30) == 0x24C70001 && _lw(addr + 0x58) == 0x34040001 ) { // FUN_015415c
-    PATCH_LOG("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> StartNewScript()", FROMTEXTADDR(addr), addr);
     StartNewScript = (void*)(addr); // 0x15415c
     return true;
   }
@@ -1977,22 +1976,22 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x000E0FA4: 0x8E054D7C '|M..' - lw         $a1, 19836($s0)
     *******************************************************************/
     global_ScriptSpace = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> global_ScriptSpace", global_ScriptSpace-text_addr, global_ScriptSpace); // DAT_00334d7c_ScriptSpace
+    PATCH_LOG("0x%08X (0x%08X) -> global_ScriptSpace", FROMTEXTADDR(global_ScriptSpace), global_ScriptSpace); // DAT_00334d7c_ScriptSpace
 
     /*******************************************************************
      *  0x000E0FA8: 0x3C110036 '6..<' - lui        $s1, 0x36
      *  0x000E0FAC: 0x8E27A4BC '..'.' - lw         $a3, -23364($s1)
     *******************************************************************/
     global_MainScriptSize = (_lh(addr+0x8) * 0x10000) + (int16)_lh(addr+0xC);
-    PATCH_LOG("0x%08X (0x%08X) -> global_MainScriptSize", global_MainScriptSize-text_addr, global_MainScriptSize); // DAT_0035a4bc_MainScriptSize
+    PATCH_LOG("0x%08X (0x%08X) -> global_MainScriptSize", FROMTEXTADDR(global_MainScriptSize), global_MainScriptSize); // DAT_0035a4bc_MainScriptSize
 
     /// TODO: ?
-    if( mod_text_size == 0x0031F854 )
+    if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 )
       global_LargestMissionScriptSize = global_MainScriptSize - 0x4;  // ULUX
     else
       global_LargestMissionScriptSize = global_MainScriptSize - 0x18;
 
-    PATCH_LOG("0x%08X (0x%08X) -> global_LargestMissionScriptSize", global_LargestMissionScriptSize-text_addr, global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
+    PATCH_LOG("0x%08X (0x%08X) -> global_LargestMissionScriptSize", FROMTEXTADDR(global_LargestMissionScriptSize), global_LargestMissionScriptSize); // DAT_0035a4a4_LargestMissionScriptSize
 
     return true;
   } // ULUX OK
@@ -2000,13 +1999,13 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// TankControl
   if( !TankControl && _lw(addr + 0x50) == 0x3C04BFB2  && _lw(addr + 0x78) == 0x3C04403C ) { // FUN_0001c7f8
-    PATCH_LOG("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TankControl()", FROMTEXTADDR(addr), addr);
     TankControl = (void*)(addr); //
     return true;
   }
   /// BlowupVehiclesInPath
   if( !BlowupVehiclesInPath && _lw(addr + 0x38) == 0x3C053DCC  && _lw(addr + 0x58) == 0x30840004 ) { // FUN_00008900
-    PATCH_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", FROMTEXTADDR(addr), addr);
     BlowupVehiclesInPath = (void*)(addr); //
     return true;
   }
@@ -2019,14 +2018,14 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00171108: 0x2484D768 'h..$' - addiu      $a0, $a0, -10392
     *******************************************************************/
     global_mp_parameters = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8);
-    PATCH_LOG("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_0037d768
+    PATCH_LOG("0x%08X (0x%08X) -> global_mp_parameters", FROMTEXTADDR(global_mp_parameters), global_mp_parameters); // DAT_0037d768
 
     /*******************************************************************
      *  0x00171134: 0x3C040035 '5..<' - lui        $a0, 0x35
      *  0x00171138: 0x8C846DF8 '.m..' - lw         $a0, 28152($a0)
     *******************************************************************/
     global_mp_1 = (_lh(addr+0x34) * 0x10000) + (int16)_lh(addr+0x38);
-    PATCH_LOG("0x%08X (0x%08X) -> global_mp_1", global_mp_1-text_addr, global_mp_1); // DAT_00356df8
+    PATCH_LOG("0x%08X (0x%08X) -> global_mp_1", FROMTEXTADDR(global_mp_1), global_mp_1); // DAT_00356df8
 
 
     return true;
@@ -2036,7 +2035,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// IsPlayerOnAMission
   if( !IsPlayerOnAMission && _lw(addr + 0x20) == 0x14860003 && _lw(addr + 0x2C) == 0x34020001  ) { // FUN_001541f0 _CTheScripts_IsPlayerOnAMission
-    PATCH_LOG("0x%08X (0x%08X) -> IsPlayerOnAMission()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> IsPlayerOnAMission()", FROMTEXTADDR(addr), addr);
     IsPlayerOnAMission = (void*)(addr); //
 
     /*******************************************************************
@@ -2044,14 +2043,14 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x001541F4: 0x8C84A48C '....' - lw         $a0, -23412($a0)
     *******************************************************************/
     global_OnAMissionFlag = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> global_OnAMissionFlag", global_OnAMissionFlag-text_addr, global_OnAMissionFlag); // DAT_0035a48c_OnAMissionFlag
+    PATCH_LOG("0x%08X (0x%08X) -> global_OnAMissionFlag", FROMTEXTADDR(global_OnAMissionFlag), global_OnAMissionFlag); // DAT_0035a48c_OnAMissionFlag
 
     return true;
   }
 
   /// SetBridgeState
   if( !SetBridgeState && _lw(addr + 0x3C) == 0x3C06C3A5 && _lw(addr + 0x4) == 0x308400FF ) { // FUN_001615e4_SetBridgeState
-    PATCH_LOG("0x%08X (0x%08X) -> SetBridgeState()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> SetBridgeState()", FROMTEXTADDR(addr), addr);
     SetBridgeState = (void*)(addr); //
 
     /*******************************************************************
@@ -2059,7 +2058,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x001615F8: 0xACA4A69C '....' - sw         $a0, -22884($a1)
     *******************************************************************/
     global_bridgeState = (_lh(addr+0x8) * 0x10000) + (int16)_lh(addr+0x14);
-    PATCH_LOG("0x%08X (0x%08X) -> global_bridgeState", global_bridgeState-text_addr, global_bridgeState); // DAT_0035a69c_bridgeState
+    PATCH_LOG("0x%08X (0x%08X) -> global_bridgeState", FROMTEXTADDR(global_bridgeState), global_bridgeState); // DAT_0035a69c_bridgeState
 
     return true;
   }
@@ -2073,10 +2072,10 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00187404: 0x8C84A81C '....' - lw         $a0, -22500($a0)
     *******************************************************************/
     global_m_pVehicleName = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4);
-    PATCH_LOG("0x%08X (0x%08X) -> global_m_pVehicleName", global_m_pVehicleName-text_addr, global_m_pVehicleName); // DAT_0035a81c_m_pVehicleName
+    PATCH_LOG("0x%08X (0x%08X) -> global_m_pVehicleName", FROMTEXTADDR(global_m_pVehicleName), global_m_pVehicleName); // DAT_0035a81c_m_pVehicleName
 
     global_m_pVehicleNameToPrint = global_m_pVehicleName + 0x10;
-    PATCH_LOG("0x%08X (0x%08X) -> global_m_pVehicleNameToPrint", global_m_pVehicleNameToPrint-text_addr, global_m_pVehicleNameToPrint); // DAT_0035a82c_m_pVehicleNameToPrint
+    PATCH_LOG("0x%08X (0x%08X) -> global_m_pVehicleNameToPrint", FROMTEXTADDR(global_m_pVehicleNameToPrint), global_m_pVehicleNameToPrint); // DAT_0035a82c_m_pVehicleNameToPrint
 
     return true;
   }
@@ -2084,7 +2083,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   /// CalculateNewVelocity
   if( !UpdatePosition && _lw(addr + 0x4) == 0x8C850194  && _lw(addr + 0x10) == 0x30A40001 ) { // FUN_001a88c4_UpdatePosition
   //if( _lw(addr + 0x60) == 0x3C044334  && _lw(addr + 0x2C) == 0x00808025 ) { // FUN_001a8368_CalculateNewVelocity
-    PATCH_LOG("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> UpdatePosition()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, UpdatePosition_patched, UpdatePosition); //
     return true;
   }
@@ -2111,7 +2110,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x00149990: 0x8CA5A660 '`...' - lw         $a1, -22944($a1)
     *******************************************************************/
     ptr_weaponTable = (_lh(addr+0x10) * 0x10000) + (int16)_lh(addr+0x14);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // DAT_0035a660_weapon.dat
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_weaponTable", FROMTEXTADDR(ptr_weaponTable), ptr_weaponTable); // DAT_0035a660_weapon.dat
 
     var_weaponDATslots   = 37; // TODO: where to find?
     var_weaponDATslotsize = 0x70;
@@ -2122,7 +2121,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
 
   /// DoHoverSuspensionRatios
   if( !DoHoverSuspensionRatios && _lw(addr + 0x60) == 0x84A40058  && _lw(addr + 0xB8) == 0x34160000 ) { // FUN_00009138
-    PATCH_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", FROMTEXTADDR(addr), addr);
     DoHoverSuspensionRatios = (void*)(addr); //
     return true;
   }
@@ -2135,14 +2134,14 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *  0x0013081C: 0xE490A1F8 '....' - swc1       $fpr16, -24072($a0)
     *******************************************************************/
     global_Wind = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x20);
-    PATCH_LOG("0x%08X (0x%08X) -> global_Wind", global_Wind-text_addr, global_Wind); // DAT_0035a1f8_Wind
+    PATCH_LOG("0x%08X (0x%08X) -> global_Wind", FROMTEXTADDR(global_Wind), global_Wind); // DAT_0035a1f8_Wind
 
     /*******************************************************************
      *  0x00130828: 0x3C040036 '6..<' - lui        $a0, 0x36
      *  0x0013082C: 0xE491A570 'p...' - swc1       $fpr17, -23184($a0)
     *******************************************************************/
     global_WindClipped = (_lh(addr+0x2C) * 0x10000) + (int16)_lh(addr+0x30);
-    PATCH_LOG("0x%08X (0x%08X) -> global_WindClipped", global_WindClipped-text_addr, global_WindClipped); // DAT_0035a570_WindClipped
+    PATCH_LOG("0x%08X (0x%08X) -> global_WindClipped", FROMTEXTADDR(global_WindClipped), global_WindClipped); // DAT_0035a570_WindClipped
     /// nop out to stop game from setting it on its own (we take care of it in the cheat function)
   _sw(0x00000000, addr + 0x2c);
   _sw(0x00000000, addr + 0x30);
@@ -2156,7 +2155,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     /*******************************************************************
      *  0x00290928: 0x1211FFDF '....' - beq        $s0, $s1, loc_002908A8
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_randompedcheat", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_randompedcheat", FROMTEXTADDR(addr), addr);
     addr_randompedcheat = addr; // 0
     return true;
   }
@@ -2164,18 +2163,18 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
   #ifdef SWIM
   /// swimming
   if( !FUN_000e7d70_CCam_IsTargetInWater && _lw(addr + 0x18) == 0x3C04C5BB && _lw(addr + 0x5C) == 0x3C04C5BB ) { // FUN_000e7d70_CCam_IsTargetInWater
-    HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(text_addr + 0xe7d70, 0);
-    PATCH_LOG("0x%08X (0x%08X) -> CCam_IsTargetInWater", addr-text_addr, addr); //
+    HIJACK_FUNCTION(addr, FUN_000e7d70_CCam_IsTargetInWater_patched, FUN_000e7d70_CCam_IsTargetInWater); // MAKE_DUMMY_FUNCTION(TEXTADDR(0xe7d70), 0);
+    PATCH_LOG("0x%08X (0x%08X) -> CCam_IsTargetInWater", FROMTEXTADDR(addr), addr); //
     return true;
   }
   if( !FUN_00109dac_CWaterLevel_GetWaterLevel && _lw(addr + 0x0) == 0x3C064500 && _lw(addr + 0x2C) == 0x340A0080 ) { // FUN_00109dac_CWaterLevel_GetWaterLevel
     FUN_00109dac_CWaterLevel_GetWaterLevel = (void*)(addr); // needs to be called in "ProcessBuoyancy"
-    PATCH_LOG("0x%08X (0x%08X) -> CWaterLevel_GetWaterLevel", addr-text_addr, addr); //
+    PATCH_LOG("0x%08X (0x%08X) -> CWaterLevel_GetWaterLevel", FROMTEXTADDR(addr), addr); //
     return true;
   }
   if( !FUN_001a8d9c_CPed_ProcessBuoyancy && _lw(addr + 0x4) == 0x3C063F8C && _lw(addr + 0x44) == 0x34050037 ) { // FUN_001a8d9c_CPed_ProcessBuoyancy
     HIJACK_FUNCTION(addr, FUN_001a8d9c_CPed_ProcessBuoyancy_patched, FUN_001a8d9c_CPed_ProcessBuoyancy);
-    PATCH_LOG("0x%08X (0x%08X) -> CPed_ProcessBuoyancy", addr-text_addr, addr); //
+    PATCH_LOG("0x%08X (0x%08X) -> CPed_ProcessBuoyancy", FROMTEXTADDR(addr), addr); //
     return true;
   }
   #endif
@@ -2203,8 +2202,8 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
 
-    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr-text_addr, addr);
-    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", REV_JAL(addr)-text_addr, REV_JAL(addr));
+    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", FROMTEXTADDR(addr), addr);
+    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", FROMTEXTADDR(REV_JAL(addr)), REV_JAL(addr));
 
     /* Allow me (@daniemun) to explain what I'm doing here:
      *  We're basically re-running a search through memory again and looking for 'jal sceKernelMaxFreeMemSize' instructions and patching those.
@@ -2219,10 +2218,10 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
      *
      * Anyways, I'm not a big fan of this implementation, if anyone has suggestions to improve this, lemme know ;)
      */
-    for( uaddr i = 0; i < mod_text_size; i += sizeof(uaddr) )
+    for( uaddr offset = 0; offset < GameManager.modInfo.TextSize; offset += sizeof(uaddr) )
     {
-      uaddr addr_i = i + text_addr;
-      if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
+      uaddr curr_addr = TEXTADDR(offset);
+      if ( _lw(curr_addr) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(curr_addr, sceKernelMaxFreeMemSize_patched);
     }
 
     return true;
@@ -2247,7 +2246,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
    **************************************/
   if ( _lw(addr + 0x98) == 0xC4ED04B8 )
   {
-    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawHealthBar", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawHealthBar", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, CHud_DrawHealthBar_LCS_Patched, CHud_DrawHealthBar_LCS);
     return true;
   }
@@ -2271,7 +2270,7 @@ bool PatchLCS(uaddr addr, uaddr text_addr) { //Liberty City Stories
    **************************************/
   if ( _lw(addr + 0x98) == 0xC4ED04BC )
   {
-    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawArmourBar", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawArmourBar", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, CHud_DrawArmourBar_LCS_Patched, CHud_DrawArmourBar_LCS);
     return true;
   }
@@ -2330,54 +2329,54 @@ void testfuncv_patched(int a UNUSED, int b UNUSED) {
   DEBUG_LOG("a: 0x%08X, b: 0x%08X", a, b);
 }
 
-bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
+bool PatchVCS(uaddr addr) { // Vice City Stories
   #ifdef PREVIEW
-  if( VCS && patchonce ) { // FOR TESTING ONLY
+  if( patchonce ) { // FOR TESTING ONLY
     /// fullscreen loading bar size (Like LCS) ///////
-    // setByte(text_addr + 0x13168c + 0x00, 0xD2 );
-    // setByte(text_addr + 0x13168c + 0x01, 0x43 );
-    // setByte(text_addr + 0x131620 + 0x00, 0xE1 );
-    // setByte(text_addr + 0x13158c + 0x00, 0xE1 );
-    // setByte(text_addr + 0x1314f0 + 0x00, 0xE3 );
+    // setByte(TEXTADDR(0x13168c) + 0x00, 0xD2 );
+    // setByte(TEXTADDR(0x13168c) + 0x01, 0x43 );
+    // setByte(TEXTADDR(0x131620) + 0x00, 0xE1 );
+    // setByte(TEXTADDR(0x13158c) + 0x00, 0xE1 );
+    // setByte(TEXTADDR(0x1314f0) + 0x00, 0xE3 );
 
     /// deactivate vehicle speed motion blur
-    //MAKE_DUMMY_FUNCTION(text_addr + 0x021a6c0, 0);
+    //MAKE_DUMMY_FUNCTION(TEXTADDR(0x021a6c0), 0);
 
     /// change Police-heli (0x113 = Hunter, 0 = disabled)
-    //setShort(text_addr + 0x02D4100, 0x113); // request model - addr_policechaseheli_1
-    //setShort(text_addr + 0x01ed254, 0x113); // check model
-    //setShort(text_addr + 0x01ed68c, 0x113); // call constructor
+    //setShort(TEXTADDR(0x02D4100), 0x113); // request model - addr_policechaseheli_1
+    //setShort(TEXTADDR(0x01ed254), 0x113); // check model
+    //setShort(TEXTADDR(0x01ed68c), 0x113); // call constructor
 
     /// drive on water
-    //FUN_00009138_CAutomobile_DoHoverSuspensionRatios = (void*)(text_addr + 0x2f358);  //drive on water (without hover wheels!) -- call with pcar obj
+    //FUN_00009138_CAutomobile_DoHoverSuspensionRatios = (void*)(TEXTADDR(0x2f358));  //drive on water (without hover wheels!) -- call with pcar obj
 
 
   // // Samples // // // // // // // // // // // // // // // // // // // // // // // // //
 
-    //FUN_002cf610 = (void*)(text_addr + 0x2cf610);
-    //testfunc3 = (void*)(text_addr + 0x1a71f0);
+    //FUN_002cf610 = (void*)(TEXTADDR(0x2cf610));
+    //testfunc3 = (void*)(TEXTADDR(0x1a71f0));
 
 
-    //testfunc = (void*)(text_addr + 0x131490);
-    //TankControl = (void*)(text_addr + 0x02eb18);
-    //HIJACK_FUNCTION(text_addr + 0x115cd8, testfunc_patched, testfunc);
+    //testfunc = (void*)(TEXTADDR(0x131490));
+    //TankControl = (void*)(TEXTADDR(0x02eb18));
+    //HIJACK_FUNCTION(TEXTADDR(0x115cd8), testfunc_patched, testfunc);
 
     //_sw(0x00000000, addr_neverFallOffBike_rollback);
 
-    //_sw(0x460d603e, text_addr + 0x1674c0); // c.le.s f12,f13
-    //clearICacheFor(text_addr + 0x1674c0);
+    //_sw(0x460d603e, TEXTADDR(0x1674c0)); // c.le.s f12,f13
+    //clearICacheFor(TEXTADDR(0x1674c0));
 
 
   // // Test Area // // // // // // // // // // // // // // // // // // // // // // // // //
 
-    //MAKE_DUMMY_FUNCTION(text_addr + 0x08c5f0, 0);
+    //MAKE_DUMMY_FUNCTION(TEXTADDR(0x08c5f0), 0);
 
 
 
   // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
     PATCH_LOG("patchonce() VCS ran!");
-    patchonce = 0;
+    patchonce = false;
   }
   #endif
 
@@ -2396,7 +2395,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    * ULET-00417 v0.07 |
    **************************************/
   if( !cWorldStream_Render && _lw(addr + 0x84) == 0x3C043F80 && _lw(addr + 0x70) == 0x3C043D4C  ) {
-    PATCH_LOG("[0] 0x%08X (0x%08X) --> cWorldStream_Render()", addr-text_addr, addr);
+    PATCH_LOG("[0] 0x%08X (0x%08X) --> cWorldStream_Render()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, cWorldStream_Render_Patched, cWorldStream_Render); // 0x00154D28
     return true;
   }
@@ -2410,7 +2409,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    * ULET-00417 v0.06 | 0x0031C168 | OK!
    **************************************/
   if( !FUN_002c22a0 && _lw(addr + 0x8) == 0x00808025  && _lw(addr + 0x1C) == 0x00000000 && _lw(addr + 0x3C) == 0x308400FF ) {
-    PATCH_LOG("[0] 0x%08X (0x%08X) --> FUN_002c22a0()", addr-text_addr, addr);
+    PATCH_LOG("[0] 0x%08X (0x%08X) --> FUN_002c22a0()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, FUN_002c22a0_patched, FUN_002c22a0); //
     return true;
   }
@@ -2424,7 +2423,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    * ULET-00417 v0.06 | 0x0018A8D8 | OK!
    **************************************/
   if( !CPad_Update && _lw(addr + 0x8) == 0x00808025 && _lw(addr + 0x14) == 0x26050034 ) {
-    PATCH_LOG("[0] 0x%08X (0x%08X) --> CPad::Update()", addr-text_addr, addr);
+    PATCH_LOG("[0] 0x%08X (0x%08X) --> CPad::Update()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, CPad_UpdatePatched, CPad_Update); // 0x0018A288
     return true;
   }
@@ -2439,10 +2438,10 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    **************************************/
 //if( _lw(addr - 0xC) == 0x1000FFF7 && _lw(addr + 0x4) == 0x00000000 && _lw(addr + 0x8) == 0x27A60010 && _lw(addr + 0x10) == 0x00602825 && _lw(addr + 0x1C) == 0x8FA40014 ) { // 0x002030D4
   if ( !addr_fpsCap && _lw(addr + 0x6C) == 0x34040006 && _lw(addr - 0x20) == 0x2C840002 ) { // 0x002030D4
-    PATCH_LOG("0x%08X (0x%08X) -> addr_fpsCap", addr-0x20-text_addr, addr-0x20);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_fpsCap", FROMTEXTADDR(addr-0x20), addr-0x20);
     addr_fpsCap = addr-0x20; // 0x002030B4
 
-    PATCH_LOG("[0] 0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", addr-text_addr, addr);
+    PATCH_LOG("[0] 0x%08X (0x%08X) --> sceKernelGetSystemTimeWide()", FROMTEXTADDR(addr), addr);
     MAKE_CALL(addr, sceKernelGetSystemTimeWidePatched); // 0x002030D4
 
     return true;
@@ -2461,7 +2460,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    * ULUS-10160 v1.01 | 0x00144a10 | OK!
    **************************************/
   if( !GetPPLAYER && _lw(addr + 0x8) == 0x00043200 && _lw(addr + 0x18) == 0x00C42021 && _lw(addr + 0x28) == 0x8C820000 ) {  // 0x0015c424
-    PATCH_LOG("[1] 0x%08X (0x%08X) --> GetPPLAYER()", addr-text_addr, addr);
+    PATCH_LOG("[1] 0x%08X (0x%08X) --> GetPPLAYER()", FROMTEXTADDR(addr), addr);
     GetPPLAYER = (void*)(addr); // get pplayer
     return true;
   }
@@ -2477,7 +2476,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    **************************************/
   if( !GetPCAR && ((_lw(addr + 0x1C) == 0x00042140 && _lw(addr + 0x8) == 0x00842821 && _lw(addr + 0x38) == 0x00000000) ||  // 0x0015C2C8
       (_lw(addr + 0x10) == 0x00042140 && _lw(addr + 0x4) == 0x00842821 && _lw(addr - 0xC) == 0x24820140)) ) {  // ULUS v1.01
-    PATCH_LOG("[1] 0x%08X (0x%08X) --> GetPCAR()", addr-text_addr, addr);
+    PATCH_LOG("[1] 0x%08X (0x%08X) --> GetPCAR()", FROMTEXTADDR(addr), addr);
     GetPCAR = (void*)(addr); // get pcar
     return true;
   }
@@ -2592,14 +2591,14 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
 
   /// skip intro movies --> (JP version black screen after patch)
   if ( !addr_skipIntroMovie && _lw(addr - 0x30) == 0x34050003 && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0x8) == 0xAFBF0000 ) { // JP version black screen after patch (0x08804000 + 0x001C7DD4)
-    PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_skipIntroMovie", FROMTEXTADDR(addr), addr);
     addr_skipIntroMovie = addr; // 0x001309A8
     return true;
   }
 
   /// never fall off bike.. when rolling backwards
   if ( !addr_neverFallOffBike_rollback && _lw(addr-0xC) == 0x3405002F && _lw(addr + 0x4) == 0x00004025 && _lw(addr - 0x28) == 0x3C04BF00 && _lw(addr - 0x68) == 0x00000000 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_rollback", FROMTEXTADDR(addr), addr);
     addr_neverFallOffBike_rollback = addr; // 0x000EBE8C - nop out function call
     return true;
   }
@@ -2609,7 +2608,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x002614D4: 0x0C0C0345 'E...' - jal        sub_00300D14
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_neverFallOffBike_hitobj", FROMTEXTADDR(addr), addr);
     addr_neverFallOffBike_hitobj = addr; // 0x002614D4 - nop out function call
     return true;
   }
@@ -2617,14 +2616,14 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
 
   /// world gravity
   if ( !addr_worldgravity && _lw(addr - 0x10) == 0x30A50002 && _lw(addr) == 0x3C053C03 && _lw(addr + 0x4) == 0x34A5126F ) {
-    PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_worldgravity", FROMTEXTADDR(addr), addr);
     addr_worldgravity = addr; // 0x00263690
     return true;
   }
 
   /// set weather function
   if( !CWeather_ForceWeather && _lw(addr - 0x10) == 0x03E00008 && _lw(addr - 0x8) == 0x03E00008 && _lw(addr+0x8) == 0x03E00008 && _lw(addr+0x10) == 0x2404FFFF && _lw(addr+0x14) == 0x03E00008 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> CWeather_ForceWeather(), CWeather_ForceWeatherNow(), CWeather_ReleaseWeather()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> CWeather_ForceWeather(), CWeather_ForceWeatherNow(), CWeather_ReleaseWeather()", FROMTEXTADDR(addr), addr);
     CWeather_ForceWeather = (void*)(addr-0x8);  // 0x2F74E0
     CWeather_ForceWeatherNow  = (void*)(addr);      // 0x2F74E8
     CWeather_ReleaseWeather = (void*)(addr+0x10); // 0x2F74F8
@@ -2678,7 +2677,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x00300400: 0x90840151 'Q...' - lbu        $a0, 337($a0)
     *******************************************************************/
     global_maxarmormult = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4) + _lh(addr+0x8); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_maxarmormult", global_maxarmormult-text_addr, global_maxarmormult); // 0x3DA601
+    PATCH_LOG("0x%08X (0x%08X) -> global_maxarmormult", FROMTEXTADDR(global_maxarmormult), global_maxarmormult); // 0x3DA601
 
     /*******************************************************************
      *  0x003003A0: 0x3C04003E '>..<' - lui        $a0, 0x3E
@@ -2686,7 +2685,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x003003A8: 0x90840150 'P...' - lbu        $a0, 336($a0)
     *******************************************************************/
     global_maxhealthmult = (_lh(addr-0x58) * 0x10000) + (int16)_lh(addr-0x54) + _lh(addr-0x50); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_maxhealthmult", global_maxhealthmult-text_addr, global_maxhealthmult); // 0x3DA600
+    PATCH_LOG("0x%08X (0x%08X) -> global_maxhealthmult", FROMTEXTADDR(global_maxhealthmult), global_maxhealthmult); // 0x3DA600
 
     return true;
   }
@@ -2717,7 +2716,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     global_unlimtedsprint = (_lh(addr+0x50) * 0x10000) + (int16)_lh(addr+0x58) + _lh(addr+0x60); // actual address!
     global_unlimtedswim = global_unlimtedsprint-1; // Yes, it is always 1 byte behind unlimited_sprinting bool
     global_fireproof = global_unlimtedsprint + 0x2; // Only 2 bytes in front!
-    PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", global_unlimtedsprint-text_addr, global_unlimtedsprint); // DAT_003da5fd_playerNeverGetsTired
+    PATCH_LOG("0x%08X (0x%08X) -> global_unlimtedsprint", FROMTEXTADDR(global_unlimtedsprint), global_unlimtedsprint); // DAT_003da5fd_playerNeverGetsTired
 
     return true;
   }
@@ -2725,7 +2724,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
   /// SetWantedLevel function
   if( !SetWantedLevel && _lw(addr + 0x84) == 0x3405000C && _lw(addr - 0x6C) == 0x34020001 ) { // 0x00143470
     SetWantedLevel = (void*)(addr);
-    PATCH_LOG("0x%08X (0x%08X) -> SetWantedLevel()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> SetWantedLevel()", FROMTEXTADDR(addr), addr);
 
     return true;
   }
@@ -2733,7 +2732,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
   if( !SetMaxWantedLevel && _lw(addr + 0xC) == 0x2C850007 && _lw(addr + 0x88) == 0x34040005 ) { // 0x002afe3c
 
     SetMaxWantedLevel = (void*)(addr);
-    PATCH_LOG("0x%08X (0x%08X) -> SetMaxWantedLevel()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> SetMaxWantedLevel()", FROMTEXTADDR(addr), addr);
 
     /*******************************************************************
      *  0x002AFE78: 0xAF84F6E8 '....' - sw         $a0, -2328($gp)
@@ -2803,7 +2802,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x00086CC0: 0x90840804 '....' - lbu        $a0, 2052($a0)
     *******************************************************************/
     global_hudincutscene = (_lh(addr+0x10) * 0x10000) + (int16)_lh(addr+0x14) + (int16)_lh(addr+0x18); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_hudincutscene", global_hudincutscene-text_addr, global_hudincutscene); // DAT_003c4634
+    PATCH_LOG("0x%08X (0x%08X) -> global_hudincutscene", FROMTEXTADDR(global_hudincutscene), global_hudincutscene); // DAT_003c4634
 
     return true;
   }
@@ -2828,7 +2827,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x002BFEE8: 0x26103E30 '0>.&' - addiu      $s0, $s0, 15920
     *******************************************************************/
     global_camera = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_camera", global_camera-text_addr, global_camera); // DAT_003C3E30
+    PATCH_LOG("0x%08X (0x%08X) -> global_camera", FROMTEXTADDR(global_camera), global_camera); // DAT_003C3E30
 
     return true;
   }
@@ -2847,7 +2846,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
   *
   ****************************************************************************************************************************/
   if( _lw(addr+0x54) == 0x34120002 && _lw(addr+0xA0) == 0x34040008 && _lw(addr+0x180) == 0x28850004 ) { // FUN_00132e84
-    PATCH_LOG("UNCENSOR GERMAN VERSION! (0x%08X)", addr-text_addr);
+    PATCH_LOG("UNCENSOR GERMAN VERSION! (0x%08X)", FROMTEXTADDR(addr));
 
     /// set "isUncut" flag to 0x1    [$s0 holds 0x1]
     //if( _lh(addr+0x7A) == 0xA380 ) _sh(0xA390, addr+0x2A); // one of these makes
@@ -2883,7 +2882,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x000C2938: 0x2495A610 '...$' - addiu      $s5, $a0, -23024
     *******************************************************************/
     global_buttoninput = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_buttoninput", global_buttoninput-text_addr, global_buttoninput); // 0x3da610
+    PATCH_LOG("0x%08X (0x%08X) -> global_buttoninput", FROMTEXTADDR(global_buttoninput), global_buttoninput); // 0x3da610
 
     return true;
   }
@@ -2893,7 +2892,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x00187A10: 0x10800004 '....' - beqz       $a0, loc_00187A24
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_buttoncheat", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_buttoncheat", FROMTEXTADDR(addr), addr);
 
     addr_buttoncheat = addr; // 0x00187A10
     return true;
@@ -2906,7 +2905,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x00168E90: 0x24A5F9B0 '...$' - addiu      $a1, $a1, -1616
     *******************************************************************/
     global_garagedata = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x10); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_garagedata", global_garagedata-text_addr, global_garagedata); //
+    PATCH_LOG("0x%08X (0x%08X) -> global_garagedata", FROMTEXTADDR(global_garagedata), global_garagedata); //
 
     var_garageslots = *(char*)(addr+0x24); // 0xC = 12 slots (4 in each garage)
     var_garageslotsize = *(char*)(addr+0x3C); // 0x30
@@ -2923,7 +2922,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x000EF888: 0x24423930 '09B$' - addiu      $v0, $v0, 14640
     *******************************************************************/
     global_pickups = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_pickups", global_pickups-text_addr, global_pickups); // 0x00463930
+    PATCH_LOG("0x%08X (0x%08X) -> global_pickups", FROMTEXTADDR(global_pickups), global_pickups); // 0x00463930
 
     var_pickupslots = (int16)_lh(addr+0x34);
     var_pickupslotsize = (int16)_lh(addr+0x3C);
@@ -2943,7 +2942,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    **************************************/
   if( !_checkCustomTracksReady && _lw(addr + 0x2C) == 0x8C84000C && _lw(addr + 0x38) == 0x01094821 && _lw(addr + 0x64) == 0x00000000 ) {
     HIJACK_FUNCTION(addr, _checkCustomTracksReady_patched, _checkCustomTracksReady); // sub_000B2860
-    PATCH_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> _checkCustomTracksReady()", FROMTEXTADDR(addr), addr);
 
     return true;
   }
@@ -2953,7 +2952,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x001B34AC: 0x2484BC10 '...$' - addiu      $a0, $a0, -17392
     *******************************************************************/
     global_radioarea = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8); // actual address!
-    PATCH_LOG("0x%08X (0x%08X) -> global_radioarea", global_radioarea-text_addr, global_radioarea); // 0x003CBC10
+    PATCH_LOG("0x%08X (0x%08X) -> global_radioarea", FROMTEXTADDR(global_radioarea), global_radioarea); // 0x003CBC10
 
     return true;
   }
@@ -3038,7 +3037,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     *******************************************************************/
     var_vehiclesworldspawnslotsize = 0x30; // TODO: get from code is complicated here
 
-    PATCH_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", addr_vehiclesworldspawn-text_addr, addr_vehiclesworldspawn); // 0x0067CA20
+    PATCH_LOG("0x%08X (0x%08X) -> addr_vehiclesworldspawn", FROMTEXTADDR(addr_vehiclesworldspawn), addr_vehiclesworldspawn); // 0x0067CA20
     PATCH_LOG("var_vehiclesworldspawnslots = 0x%08X", var_vehiclesworldspawnslots);
     PATCH_LOG("var_vehiclesworldspawnslotsize = 0x%08X", var_vehiclesworldspawnslotsize);
 
@@ -3054,7 +3053,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    * ULET-00417 v0.06 |
    **************************************/
   /*if( _lw(addr + 0x9C) == 0x30A50080 && _lw(addr + 0xD8) == 0x00402825 ) { // FUN_0013109c_loadSplashScreen
-    PATCH_LOG("[0] 0x%08X (0x%08X) --> loadSplashScreen()", addr-text_addr, addr);
+    PATCH_LOG("[0] 0x%08X (0x%08X) --> loadSplashScreen()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, loadSplashScreen_patched, loadSplashScreen);
     return true;
   }*/
@@ -3077,7 +3076,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x0024F72C: 0x24842500 '.%.$' - addiu      $a0, $a0, 9472
     *******************************************************************/
     ptr_memory_main = (_lh(addr+0x30) * 0x10000) + (int16)_lh(addr+0x3C);
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_memory_main", ptr_memory_main-text_addr, ptr_memory_main); // DAT_003c2500
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_memory_main", FROMTEXTADDR(ptr_memory_main), ptr_memory_main); // DAT_003c2500
 
     /*******************************************************************
      *  0x0024F940: 0xAF842700 '.'..' - sw         $a0, 9984($gp)
@@ -3154,13 +3153,13 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x002E8898: 0xAF841DE8 '....' - sw         $a0, 7656($gp)
     *******************************************************************/
     ptr_IDEs = (int16) _lh(addr+0x14); // WITHOUT GP!!
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDEs = 0x%08X", addr+0x14-text_addr, addr+0x14, ptr_IDEs); //uGp00001de8
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDEs = 0x%08X", FROMTEXTADDR(addr+0x14), addr+0x14, ptr_IDEs); //uGp00001de8
 
     /*******************************************************************
      *  0x002E88A8: 0xAF850018 '....' - sw         $a1, 24($gp)
     *******************************************************************/
     ptr_IDETable = (int16) _lh(addr+0x24); // WITHOUT GP!!
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDETable = 0x%08X", addr+0x24-text_addr, addr+0x24, ptr_IDETable); // iGp00000018
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_IDETable = 0x%08X", FROMTEXTADDR(addr+0x24), addr+0x24, ptr_IDETable); // iGp00000018
 
     return true;
   }
@@ -3181,7 +3180,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
 
   /// loadStringFromGXT
   if( !LoadStringFromGXT && _lw(addr + 0x3C) == 0x92240022 && _lw(addr + 0x64) == 0x03E00008 ) { // FUN_001f2390_loadStringFromGXT
-    PATCH_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> LoadStringFromGXT()", FROMTEXTADDR(addr), addr);
     LoadStringFromGXT = (void*)(addr); //FUN_0010fad4_loadStringFromGXT
     HIJACK_FUNCTION(addr, LoadStringFromGXT_patched, LoadStringFromGXT);
     return true;
@@ -3269,71 +3268,71 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x00060FF0: 0xA080014D 'M...' - sb         $zr, 333($a0)
     *******************************************************************/
     global_freezetimers = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x4) + (int16)_lh(addr+0x8);
-    PATCH_LOG("0x%08X (0x%08X) -> global_freezetimers", global_freezetimers-text_addr, global_freezetimers); // DAT_003f5c2d_freezeOnScreenTimer
+    PATCH_LOG("0x%08X (0x%08X) -> global_freezetimers", FROMTEXTADDR(global_freezetimers), global_freezetimers); // DAT_003f5c2d_freezeOnScreenTimer
 
     return true;
   }
 
   /// ped task function
   if( !TaskCharWith && _lw(addr + 0x38) == 0x3405003A  && _lw(addr + 0x70) == 0x30840200 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> TaskCharWith()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TaskCharWith()", FROMTEXTADDR(addr), addr);
     TaskCharWith = (void*)(addr);  // 0x002c9698
     return true;
   }
 
   /// warp ped to vehicle
   if( !WarpPedIntoVehicle && _lw(addr + 0x10) == 0x34120012 && _lw(addr + 0x14) == 0x00808825 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicle()", FROMTEXTADDR(addr), addr);
     WarpPedIntoVehicle = (void*)(addr);  // 0x00127a54
     return true;
   }
   /// warp ped to vehicle as passenger
   if( !WarpPedIntoVehicleAsPassenger && _lw(addr + 0x14) == 0x34080012 && _lw(addr + 0x1C) == 0x00809025 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> WarpPedIntoVehicleAsPassenger()", FROMTEXTADDR(addr), addr);
     WarpPedIntoVehicleAsPassenger = (void*)(addr);  // 0x00127dc4
     return true;
   }
   /// request model
   if( !RequestModel && _lw(addr + 0x4) == 0x00C03825 && _lw(addr + 0x40) == 0x00003025 && _lw(addr + 0xC) == _lw(addr + 0x30) ) {
-    PATCH_LOG("0x%08X (0x%08X) -> RequestModel()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> RequestModel()", FROMTEXTADDR(addr), addr);
     RequestModel = (void*)(addr); // 0x2cf258
     return true;
   }
   /// GiveWeaponAndAmmo
   if( !GiveWeaponAndAmmo && _lw(addr + 0x48) == 0x0204A021  && _lw(addr + 0xC) == 0x00A08825 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> GiveWeaponAndAmmo()", FROMTEXTADDR(addr), addr);
     GiveWeaponAndAmmo = (void*)(addr); // 0x001177DC
     return true;
   }
 
   /// SetActorSkinTo (needs name to be lower case!)
   if( !SetActorSkinTo && _lw(addr + 0x2C) == 0x340600A0  && _lw(addr + 0x48) == 0x24840048 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> SetActorSkinTo()", FROMTEXTADDR(addr), addr);
     SetActorSkinTo = (void*)(addr); // 0x0010ae04
     return true;
   }
   /// LoadAllModelsNow
   if( !LoadAllModelsNow && _lw(addr + 0x4) == 0x308600FF  && _lw(addr + 0x14) == 0x34050001  && _lw(addr - 0x10) == 0x00003025 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> LoadAllModelsNow()", FROMTEXTADDR(addr), addr);
     LoadAllModelsNow = (void*)(addr); //0x002cf610
     return true;
   }
   /// RefreshActorSkin
   if( !RefreshActorSkin && _lw(addr + 0x1C) == 0x24C40030  && _lw(addr + 0x3C) == 0x34050001 ) {
-    PATCH_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> RefreshActorSkin()", FROMTEXTADDR(addr), addr);
     RefreshActorSkin = (void*)(addr); // 0x0010af00
     return true;
   }
 
   /// TaskDuckVCS
   if( !TaskDuckVCS && _lw(addr + 0x34) == 0x34060099  && _lw(addr + 0x90) == 0x34842000 ) { // FUN_001a71f0_taskDuck
-    PATCH_LOG("0x%08X (0x%08X) -> TaskDuckVCS()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TaskDuckVCS()", FROMTEXTADDR(addr), addr);
     TaskDuckVCS = (void*)(addr); // 0x001a71f0
     return true;
   }
   /// TaskUnDuck
   if( !TaskUnDuck && _lw(addr + 0x20) == 0x34060099  && _lw(addr + 0x6C) == 0x3C06C080 ) { // FUN_001a74fc_unDuck
-    PATCH_LOG("0x%08X (0x%08X) -> TaskUnDuck()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TaskUnDuck()", FROMTEXTADDR(addr), addr);
     TaskUnDuck = (void*)(addr); // 0x001a74fc
     return true;
   }
@@ -3347,19 +3346,19 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    * ULET-00417 v0.06 |
    **************************************/
    if( !DrawLoadingBar && _lw(addr + 0x2C) == 0x3C043E80 && _lw(addr + 0x10) == 0x3C044040 ) { // FUN_00131490_DrawLoadingBar
-    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadingBar()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, DrawLoadingBar_patched, DrawLoadingBar);
     return true;
   }
   if( !Loadscreen && _lw(addr + 0x18) == 0x30F100FF && _lw(addr + 0x14) == 0x00C09025 ) { // FUN_0013170c_DrawLoadscreen
-    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) --> DrawLoadscreen()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, Loadscreen_patched, Loadscreen);
     return true;
   }
 
   /// StartNewScript
   if( !StartNewScript && _lw(addr - 0xC) == 0x2402FFFF  && _lw(addr + 0x28) == 0x24A60001 && _lw(addr + 0x4C) == 0x34040001 ) { // FUN_0005F470
-    PATCH_LOG("0x%08X (0x%08X) -> StartNewScript()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> StartNewScript()", FROMTEXTADDR(addr), addr);
     StartNewScript = (void*)(addr); // 0x0005F470
     return true;
   }
@@ -3388,13 +3387,13 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
 
   /// TankControl
   if( !TankControl && _lw(addr + 0x50) == 0x3C04BFB2  && _lw(addr + 0x78) == 0x3C04403C ) { // FUN_00043c68_TankControl
-    PATCH_LOG("0x%08X (0x%08X) -> TankControl()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> TankControl()", FROMTEXTADDR(addr), addr);
     TankControl = (void*)(addr); //
     return true;
   }
   /// BlowupVehiclesInPath
   if( !BlowupVehiclesInPath && _lw(addr + 0x38) == 0x3C053DCC  && _lw(addr + 0x58) == 0x30840080 ) { // FUN_0002eb18_blowupVehiclesInPath
-    PATCH_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> BlowupVehiclesInPath()", FROMTEXTADDR(addr), addr);
     BlowupVehiclesInPath = (void*)(addr); //
     return true;
   }
@@ -3407,7 +3406,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x0006CE80: 0x24844FC0 '.O.$' - addiu      $a0, $a0, 20416
     *******************************************************************/
     global_mp_parameters = (_lh(addr) * 0x10000) + (int16)_lh(addr+0x8);
-    PATCH_LOG("0x%08X (0x%08X) -> global_mp_parameters", global_mp_parameters-text_addr, global_mp_parameters); // DAT_003c4fc0
+    PATCH_LOG("0x%08X (0x%08X) -> global_mp_parameters", FROMTEXTADDR(global_mp_parameters), global_mp_parameters); // DAT_003c4fc0
 
 
     /*******************************************************************
@@ -3421,7 +3420,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
 
   /// IsPlayerOnAMission
   if( !IsPlayerOnAMission && _lw(addr + 0x1C) == 0x14860003 && _lw(addr + 0x28) == 0x34020001  ) { // FUN_0005f4f8 _CTheScripts_IsPlayerOnAMission
-    PATCH_LOG("0x%08X (0x%08X) -> IsPlayerOnAMission()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> IsPlayerOnAMission()", FROMTEXTADDR(addr), addr);
     IsPlayerOnAMission = (void*)(addr); //
 
     /*******************************************************************
@@ -3436,7 +3435,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
   /// CalculateNewVelocity
   if( !UpdatePosition && _lw(addr + 0x4) == 0x8C8501C8  && _lw(addr + 0x10) == 0x30A40001 ) { // FUN_00115cd8_UpdatePosition
   //if( _lw(addr + 0x118) == 0x3C044334  && _lw(addr + 0x28) == 0x00808025 ) { // FUN_00115480_CalculateNewVelocity
-    PATCH_LOG("0x%08X (0x%08X) -> UpdatePosition()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> UpdatePosition()", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, UpdatePosition_patched, UpdatePosition); //
     return true;
   }
@@ -3455,7 +3454,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
      *  0x0031BD7C: 0x8F852950 'P)..' - lw         $a1, 10576($gp)
     *******************************************************************/
     ptr_weaponTable = (int16)_lh(addr+0xC); // WITHOUT GP!!
-    PATCH_LOG("0x%08X (0x%08X) -> ptr_weaponTable", ptr_weaponTable-text_addr, ptr_weaponTable); // piGp00002950
+    PATCH_LOG("0x%08X (0x%08X) -> ptr_weaponTable", FROMTEXTADDR(ptr_weaponTable), ptr_weaponTable); // piGp00002950
 
     var_weaponDATslots   = 40; // TODO: where to find?
     var_weaponDATslotsize = 0x70;
@@ -3482,7 +3481,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x002D4100: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_1", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_1", FROMTEXTADDR(addr), addr);
     addr_policechaseheli_1 = addr;
     return true;
   }
@@ -3490,7 +3489,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x001ED254: 0x34040105 '...4' - li         $a0, 0x105
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_2", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_2", FROMTEXTADDR(addr), addr);
     addr_policechaseheli_2 = addr;
     return true;
   }
@@ -3498,7 +3497,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x001ED68C: 0x34050105 '...4' - li         $a1, 0x105
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_3", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_policechaseheli_3", FROMTEXTADDR(addr), addr);
     addr_policechaseheli_3 = addr;
     return true;
   }
@@ -3506,7 +3505,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
 
   /// DoHoverSuspensionRatios
   if( !DoHoverSuspensionRatios && _lw(addr + 0x60) == 0x84A40056  && _lw(addr + 0x90) == 0x8C950000 ) { // FUN_0002f358
-    PATCH_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> DoHoverSuspensionRatios()", FROMTEXTADDR(addr), addr);
     DoHoverSuspensionRatios = (void*)(addr); //
     return true;
   }
@@ -3516,7 +3515,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x002D0EF4: 0x0C05A8CE '....' - jal        sub_0016A338
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> 'garage bug fix'", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> 'garage bug fix'", FROMTEXTADDR(addr), addr);
     _sw(0x00000000, addr); // nop function
     return true;
   }
@@ -3526,7 +3525,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /*******************************************************************
      *  0x002FDDA0: 0x3C0442A0 '.B.<' - lui        $a0, 0x42A0
     *******************************************************************/
-    PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> addr_heliheight", FROMTEXTADDR(addr), addr);
     addr_heliheight = addr; // 0x002FDDA0
     if( PlatformManager.Platform.type == PLTF_PPSSPP ) setHeliHeightLimit(996.0f); // set as early as possible so that PPSSPP is happy (crash on real hardware)
     return true;
@@ -3569,14 +3568,14 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
     /* Get jal instruction */
     jalSceKernelMaxFreeMemSizeInstruction = _lw(addr);
 
-    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", addr-text_addr, addr);
-    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", REV_JAL(addr)-text_addr, REV_JAL(addr));
+    PATCH_LOG("0x%08X (0x%08X) -> jal sceKernelMaxFreeMemSize", FROMTEXTADDR(addr), addr);
+    PATCH_LOG("0x%08X (0x%08X) -> sceKernelMaxFreeMemSize Addr", FROMTEXTADDR(REV_JAL(addr)), REV_JAL(addr));
 
     /* Read this same code in PatchLCS for more info / context. */
-    for( uaddr i = 0; i < mod_text_size; i += sizeof(uaddr) )
+    for( uaddr offset = 0; offset < GameManager.modInfo.TextSize; offset += sizeof(uaddr) )
     {
-      uaddr addr_i = i + text_addr;
-      if ( _lw(addr_i) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(addr_i, sceKernelMaxFreeMemSize_patched);
+      uaddr curr_addr = TEXTADDR(offset);
+      if ( _lw(curr_addr) == jalSceKernelMaxFreeMemSizeInstruction ) MAKE_CALL(curr_addr, sceKernelMaxFreeMemSize_patched);
     }
 
     return true;
@@ -3593,7 +3592,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    **************************************/
   if ( _lw(addr + 0xA0) == 0xC4ED04E4 )
   {
-    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawHealthBar", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawHealthBar", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, CHud_DrawHealthBar_VCS_Patched, CHud_DrawHealthBar_VCS);
     return true;
   }
@@ -3609,7 +3608,7 @@ bool PatchVCS(uaddr addr, uaddr text_addr) { // Vice City Stories
    **************************************/
   if ( _lw(addr + 0x134) == 0xC4AC04E8 && _lw(addr + 0x4) == 0x90852431 )
   {
-    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawArmourBar", addr-text_addr, addr);
+    PATCH_LOG("0x%08X (0x%08X) -> CHud::DrawArmourBar", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, CHud_DrawArmourBar_VCS_Patched, CHud_DrawArmourBar_VCS);
     return true;
   }
@@ -3639,7 +3638,7 @@ void debugprint_patched(const u8str text, ...) {
   logstr[0][len_string] = '\0'; // Null-terminate
 
   /// output to console as well
-  GAME_LOG(finalstring);
+  GAME_LOG("%s", finalstring);
 }
 
 void drawGameLog() { // print log array
@@ -3669,22 +3668,22 @@ void drawMemoryUsage() {
   drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 20.0f, RED, "sceKernelTotalFreeMemSize = %s", SIZESTR(sceKernelTotalFreeMemSize()));
   drawStringNoT(ALIGN_RIGHT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 350.0f, 35.0f, RED, "sceKernelMaxFreeMemSize = %s", SIZESTR(sceKernelMaxFreeMemSize()));
 
-  FUN_0029febc = (void*)(mod_text_addr + 0x29febc); // calc "free"
-  FUN_0029fed4 = (void*)(mod_text_addr + 0x29fed4); // calc "largest free"
+  FUN_0029febc = (void*)(TEXTADDR(0x29febc)); // calc "free"
+  FUN_0029fed4 = (void*)(TEXTADDR(0x29fed4)); // calc "largest free"
 
-  int _main = mod_text_addr + 0x37d640; // DAT_0037d640 "ptr_memory_main"
+  uaddr _main = TEXTADDR(0x37d640); // DAT_0037d640 "ptr_memory_main"
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 40.0f, WHITE, "main");
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 50.0f, RED, "total: %s", SIZESTR(getInt(_main)));
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 60.0f, RED, "free: %s", SIZESTR(FUN_0029febc(_main)));
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 70.0f, RED, "largest: %s", SIZESTR(FUN_0029fed4(_main)));
 
-  int _streaming = mod_text_addr + 0x385870; // DAT_00385870
+  uaddr _streaming = TEXTADDR(0x385870); // DAT_00385870
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 90.0f, WHITE, "streaming");
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 100.0f, RED, "total: %s", SIZESTR(getInt(_streaming)));
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 110.0f, RED, "free: %s", SIZESTR(FUN_0029febc(_streaming)));
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 120.0f, RED, "largest: %s", SIZESTR(FUN_0029fed4(_streaming)));
 
-  int _volatile = mod_text_addr + 0x3859a0; // DAT_003859a0
+  uaddr _volatile = TEXTADDR(0x3859a0); // DAT_003859a0
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 30.0f, 140.0f, WHITE, "volatile");
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 150.0f, RED, "total: %s", SIZESTR(getInt(_volatile)));
   drawStringNoT(ALIGN_LEFT, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 40.0f, 160.0f, RED, "free: %s", SIZESTR(FUN_0029febc(_volatile)));
@@ -3701,6 +3700,10 @@ float fps_deltaTime = 0.0f;
 usize memory_main_free = 0;
 
 SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
+
+  /// Value Getter / Checker //////////////////
+  gp_ = GameManager.game == GTA_LCS ? 0x0 : gp; // helper: zero for LCS, $gp for VCS
+
   SceInt64 cur_micros = sceKernelGetSystemTimeWide();
   if( cur_micros >= (last_micros + usec(0.5f)) ) { // every half second
     delta_micros = cur_micros - last_micros;
@@ -3733,11 +3736,6 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
     debug_skgstwp = false;
   }
-
-
-  /// Value Getter / Checker //////////////////
-
-  gp_ = LCS ? 0 : gp; // helper: zero for LCS, $gp for VCS
 
   /// pplayer
   pplayer = GetPPLAYER();
@@ -3820,7 +3818,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
 
   /// Business Objects
-/*if( VCS ) {
+/*if( GameManager.game == GTA_VCS ) {
     temp = getInt(ptr_businessobj + gp);
     if( isInMemBounds(temp) ) {
       businessobjs_base = getInt(temp);
@@ -3837,7 +3835,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
   }
 
   /// Treadables.ipl
-  if( LCS ) { // missing ptr for VCS ? :/
+  if( GameManager.game == GTA_LCS ) { // missing ptr for VCS ? :/
     temp = getInt(ptr_treadablesIPL + gp_);
     if( isInMemBounds(temp) ) {
       treadablesIPL_base = getInt(temp);
@@ -3854,7 +3852,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
 
   /// pedcols.dat (VCS only) & carcols.dat
-  if( VCS )  {
+  if( GameManager.game == GTA_VCS )  {
     temp = getInt(ptr_carcolsDAT + gp);
     if( isInMemBounds(temp) ) {
       pedcolsDAT_base = getInt(temp + 0x8);
@@ -3867,7 +3865,7 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
 
   /// Currently used Objects
   pickups_cur   = getPickupsActiveObjects(global_pickups, var_pickupslots, var_pickupslotsize);
-  mapicons_cur  = getMapiconsActiveObjects(LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding), var_radarblipslots, var_radarblipslotsize);
+  mapicons_cur  = getMapiconsActiveObjects(GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding), var_radarblipslots, var_radarblipslotsize);
   vehspawns_cur = getVehicleWorldSpawnSlotActiveObjects(addr_vehiclesworldspawn);
   garage_cur    = getGarageVehicleActiveObjects(global_garagedata);
 
@@ -3907,12 +3905,12 @@ SceInt64 sceKernelGetSystemTimeWidePatched(void) { // LCS & VCS
     if( once ) {
       applyOnce();
       /* if( flag_use_advaconfig ) { // scrapped because config gets too big on PSP to handle :(
-      load_config_block(LCS ? "LVEH" : "VVEH", addr_vehiclesworldspawn); // custom spawns from config
-      load_config_block(LCS ? "LVCO" : "VVCO", carcolsDAT_base); // custom vehicle colors from config
-      if(LCS) load_config_block(LCS ? "LHND" : "VHND", getInt(ptr_handlingCFG + (LCS ? 0 : gp)) + 0x20); // TODO: VCS
-      load_config_block(LCS ? "LPTC" : "VPTC", getInt(ptr_particleCFG + (LCS ? 0 : gp))); // particles
-      load_config_block(LCS ? "LPST" : "VPST", getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp)))); // Pedstats
-      load_config_block(LCS ? "LWPN" : "VWPN", getInt(getInt(ptr_weaponTable+(LCS?0x0:gp)) + 4)); // Weapon.dat
+      load_config_block(GameManager.game == GTA_LCS ? "LVEH" : "VVEH", addr_vehiclesworldspawn); // custom spawns from config
+      load_config_block(GameManager.game == GTA_LCS ? "LVCO" : "VVCO", carcolsDAT_base); // custom vehicle colors from config
+      if(LCS) load_config_block(GameManager.game == GTA_LCS ? "LHND" : "VHND", getInt(ptr_handlingCFG + gp_) + 0x20); // TODO: VCS
+      load_config_block(GameManager.game == GTA_LCS ? "LPTC" : "VPTC", getInt(ptr_particleCFG + gp_)); // particles
+      load_config_block(GameManager.game == GTA_LCS ? "LPST" : "VPST", getInt(getInt(ptr_pedstatTable+gp_))); // Pedstats
+      load_config_block(GameManager.game == GTA_LCS ? "LWPN" : "VWPN", getInt(getInt(ptr_weaponTable+gp_) + 4)); // Weapon.dat
       } */ once = false; // has been applied
     }
   } else once = true; // re-set to 1 for next time (out of window at this point)
@@ -3979,7 +3977,7 @@ void cWorldStream_Render_Patched(void *this, int mode) { // World is rendered ->
   #endif
 
   #ifdef MEMORY
-  if( LCS && mode == 0 )
+  if( GameManager.game == GTA_LCS && mode == 0 )
     drawMemoryUsage(); // TODO: move to different hooked func
   #endif
 
@@ -4111,12 +4109,12 @@ void Loadscreen_patched(char * string1, char * string2, char *txdname, uint32 pa
       for( array_uidx i = 0; i < whitelist_size; i++ ) {
         if( strcmp(whitelist[i], txdname) == 0 ) {
           do {
-            new = rand() % (LCS ? lcs_replacers_size : vcs_replacers_size); // decide which to use
-            DEBUG_LOG("%lu: Loadscreen_patched() ..random new: %i aka '%s'", getGametime(), new, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
+            new = rand() % (GameManager.game == GTA_LCS ? lcs_replacers_size : vcs_replacers_size); // decide which to use
+            DEBUG_LOG("%lu: Loadscreen_patched() ..random new: %i aka '%s'", getGametime(), new, (GameManager.game == GTA_LCS ? lcs_replacers[new] : vcs_replacers[new]));
           } while( new == prev ); // don't use the same twice (generate new if it happoens to be the same)
           prev = new;
-          DEBUG_LOG("%lu: Loadscreen_patched() ..replacing '%s' with '%s'!", getGametime(), txdname, (LCS ? lcs_replacers[new] : vcs_replacers[new]));
-          txdname = (char *)(LCS ? lcs_replacers[new] : vcs_replacers[new]); // replace!!
+          DEBUG_LOG("%lu: Loadscreen_patched() ..replacing '%s' with '%s'!", getGametime(), txdname, (GameManager.game == GTA_LCS ? lcs_replacers[new] : vcs_replacers[new]));
+          txdname = (char *)(GameManager.game == GTA_LCS ? lcs_replacers[new] : vcs_replacers[new]); // replace!!
         }
       }
     }
@@ -4129,12 +4127,12 @@ void DrawLoadingBar_patched(float param_1) {
   DrawLoadingBar(param_1);
   if( debug_loadscreens(FUNC_GET_STATUS,-1,-1) ) { // only if CHEAT status is ON
     if( msg1 != NULL ) {
-      if(LCS) drawStringLCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 32.0f, 200.0f, WHITE, msg1);
-      if(VCS) drawStringVCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 25.0f,  25.0f, WHITE, msg1); // alt. 210.0f (right above bar)
+      if( GameManager.game == GTA_LCS ) drawStringLCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 32.0f, 200.0f, WHITE, msg1);
+      else drawStringVCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 25.0f,  25.0f, WHITE, msg1); // alt. 210.0f (right above bar)
     }
     if( msg2 != NULL ) {
-      if(LCS) drawStringLCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 32.0f, 215.0f, WHITE, msg2);
-      if(VCS) drawStringVCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 25.0f,  40.0f, WHITE, msg2); // alt. 225.0f (right above bar)
+      if( GameManager.game == GTA_LCS ) drawStringLCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 32.0f, 215.0f, WHITE, msg2);
+      else drawStringVCS(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, 25.0f,  40.0f, WHITE, msg2); // alt. 225.0f (right above bar)
     }
 
   }
@@ -4224,8 +4222,8 @@ void *FUN_001a8d9c_CPed_ProcessBuoyancy_patched(int param_1) {
     /// forward-thrust
     if( ystick < -0.25 ) { // stick forward
       extern float walkspd_mult; // to allow "Walking Speed" cheat have effect on swim speed as well
-      setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4)*fabsf(ystick*boost*walkspd_mult)); // thrust
-      setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer)*fabsf(ystick*boost*walkspd_mult));  // thrust
+      setFloat(GTA_ADDR(pplayer, 0x70, 0x140), -getFloat(pplayer+4)*fabsf(ystick*boost*walkspd_mult)); // thrust
+      setFloat(GTA_ADDR(pplayer, 0x74, 0x144), getFloat(pplayer)*fabsf(ystick*boost*walkspd_mult));  // thrust
     }
 
     /// adjust player height in water
@@ -4283,15 +4281,15 @@ void user_scripts(int calltype, int keypress, bool defaultstatus UNUSED) {
       }
       #ifdef HEXEDITOR
       else if( keypress == PSP_CTRL_SQUARE ) {
-        //hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace");
-        int scriptspace = getInt(global_ScriptSpace + (LCS ? 0 : gp));
-        hexeditor_create(scriptspace, 1, scriptspace, scriptspace + getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)), "> ScriptSpace");
+        //hexeditor_create(getInt(global_ScriptSpace + gp_), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace");
+        int scriptspace = getInt(global_ScriptSpace + gp_);
+        hexeditor_create(scriptspace, 1, scriptspace, scriptspace + getInt(global_MainScriptSize + gp_) + getInt(global_LargestMissionScriptSize + gp_), "> ScriptSpace");
 
       //} else if( keypress == PSP_CTRL_TRIANGLE ) {
-      //  hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace + MainScriptSize");
+      //  hexeditor_create(getInt(global_ScriptSpace + gp_) + getInt(global_MainScriptSize + gp_), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace + MainScriptSize");
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)) + getInt(global_LargestMissionScriptSize + (LCS ? 0 : gp)) - 4096, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace + MainScriptSize + LargestMission - 4096");
+        hexeditor_create(getInt(global_ScriptSpace + gp_) + getInt(global_MainScriptSize + gp_) + getInt(global_LargestMissionScriptSize + gp_) - 4096, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> ScriptSpace + MainScriptSize + LargestMission - 4096");
       }
       #endif
       break;
@@ -4305,12 +4303,12 @@ void hexeditor() {
 }
 
 void hexeditpplayer() {
-  hexeditor_create(pplayer, 1, pplayer, pplayer + var_pedobjsize, "> pplayer"); // (LCS ? 0xCB0 : 0xD10)
+  hexeditor_create(pplayer, 1, pplayer, pplayer + var_pedobjsize, "> pplayer"); // (GameManager.game == GTA_LCS ? 0xCB0 : 0xD10)
 }
 
 void hexeditpcar() {
   if( pcar )
-    hexeditor_create(pcar, 1, pcar, pcar + var_vehobjsize, "> pcar"); // (LCS ? 0x6E0 : 0x820)
+    hexeditor_create(pcar, 1, pcar, pcar + var_vehobjsize, "> pcar"); // (GameManager.game == GTA_LCS ? 0x6E0 : 0x820)
 }
 #endif
 
@@ -4326,21 +4324,21 @@ void freecam(int calltype, int keypress, bool defaultstatus UNUSED) {
         #ifdef HEXEDITOR
         hex_marker_clear();
 
-        hex_marker_addx(global_camera + (LCS ? 0x340 : 0x90), sizeof(float)); // camera_x
-        hex_marker_addx(global_camera + (LCS ? 0x344 : 0x94), sizeof(float)); // camera_y
-        hex_marker_addx(global_camera + (LCS ? 0x348 : 0x98), sizeof(float)); // camera_z
+        hex_marker_addx(GTA_ADDR(global_camera, 0x340, 0x90), sizeof(float)); // camera_x
+        hex_marker_addx(GTA_ADDR(global_camera, 0x344, 0x94), sizeof(float)); // camera_y
+        hex_marker_addx(GTA_ADDR(global_camera, 0x348, 0x98), sizeof(float)); // camera_z
 
-        hex_marker_addx(global_camera + (LCS ? 0x254 : 0x198), sizeof(float)); // fov
+        hex_marker_addx(GTA_ADDR(global_camera, 0x254, 0x198), sizeof(float)); // fov
 
-        hex_marker_addx(global_camera + (LCS ? 0x330 : 0x80), sizeof(float)); // cam_coord_x1
-        hex_marker_addx(global_camera + (LCS ? 0x334 : 0x84), sizeof(float)); // cam_coord_y1
-        hex_marker_addx(global_camera + (LCS ? 0x338 : 0x88), sizeof(float)); // cam_coord_z1
+        hex_marker_addx(GTA_ADDR(global_camera, 0x330, 0x80), sizeof(float)); // cam_coord_x1
+        hex_marker_addx(GTA_ADDR(global_camera, 0x334, 0x84), sizeof(float)); // cam_coord_y1
+        hex_marker_addx(GTA_ADDR(global_camera, 0x338, 0x88), sizeof(float)); // cam_coord_z1
 
-        hex_marker_addx(global_camera + (LCS ? 0x360 : 0xD0), sizeof(float)); // cam_coord_x2
-        hex_marker_addx(global_camera + (LCS ? 0x364 : 0xD4), sizeof(float)); // cam_coord_y2
-        hex_marker_addx(global_camera + (LCS ? 0x368 : 0xD8), sizeof(float)); // cam_coord_z2
+        hex_marker_addx(GTA_ADDR(global_camera, 0x360, 0xD0), sizeof(float)); // cam_coord_x2
+        hex_marker_addx(GTA_ADDR(global_camera, 0x364, 0xD4), sizeof(float)); // cam_coord_y2
+        hex_marker_addx(GTA_ADDR(global_camera, 0x368, 0xD8), sizeof(float)); // cam_coord_z2
 
-        hex_marker_addx(global_camera + (LCS ? 0xCC : 0x798 ), sizeof(float)); // in vehicle camera mode (used to unbind cam)
+        hex_marker_addx(GTA_ADDR(global_camera, 0xCC, 0x798), sizeof(float)); // in vehicle camera mode (used to unbind cam)
         hexeditor_create(global_camera, 1, global_camera, pluginMemory.HighestMemoryAddr, "> camera location");
         #endif
       }
@@ -4435,12 +4433,12 @@ void *speedometer_toggle(int calltype, int keypress, bool defaultstatus, int def
       return (int*)(int)unit;
 
     case FUNC_GET_STRING:
-      return (real ? BOOLSTRCUSTOM(unit == 0, "km/h (real)", "mph (real)") : BOOLSTRCUSTOM(unit == 0, "km/h", "mph"));
+      return (real ? BOOLSTRCUSTOM(unit == 0, "mph (real)", "km/h (real)") : BOOLSTRCUSTOM(unit == 0, "mph", "km/h"));
 
     case FUNC_APPLY:
       if( pcar ) {
         /// speed (Example: "ESPRIT" 1.065 (fMaxVelocity) * 180 * 1.2 = 230 km/h as set in beta handling.cfg)  See: https://github.com/guard3/g3DTZ/blob/e22a1a2295fe136e702153aabb391453be9f6305/source/core/HandlingMgr.cpp#L13
-        snprintf(speed, sizeof(speed), BOOLSTRCUSTOM(unit == 0, "%.0f km/h", "%.0f mph"), getVehicleSpeed() * 180.0f * (real ? 1 : 1.2f) * (unit == 1 ? 1 : 0.621371f)); // og CD used raw speed calculated from moving vector
+        snprintf(speed, sizeof(speed), BOOLSTRCUSTOM(unit == 0, "%.0f mph", "%.0f km/h"), getVehicleSpeed() * 180.0f * (real ? 1 : 1.2f) * (unit == 1 ? 1 : 0.621371f)); // og CD used raw speed calculated from moving vector
 
         /// gears
         snprintf(gear, sizeof(speed), _t("Gear: %X"), getVehicleCurrentGear( pcar ) );
@@ -4520,17 +4518,17 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
         if( i == 0 ) { // General
           drawStringNoTVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "General");
 
-          /// mod_text_addr
-          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "mod_text_addr = 0x%08lX", mod_text_addr);
+          /// Text Address
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "TextAddr = 0x%08lX", GameManager.modInfo.TextAddr);
 
-          /// mod_text_size
-          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, WHITE, "mod_text_size = 0x%08lX", mod_text_size);
+          /// Text Size
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, WHITE, "TextSize = 0x%08lX", GameManager.modInfo.TextSize);
 
-          /// mod_data_size
-          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, WHITE, "mod_data_size = 0x%08lX", mod_data_size);
+          /// Data Size
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, WHITE, "DataSize = 0x%08lX", GameManager.modInfo.DataSize);
 
           /// Global Pointer Register
-          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE, "$gp = 0x%08X (0x%08lX)", gp, gp-mod_text_addr);
+          drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, WHITE, "$gp = 0x%08X (0x%08lX)", gp, FROMTEXTADDR(gp));
 
           /// Current Platform
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, WHITE, "Platform: %s", PlatformManager.fullName);
@@ -4541,10 +4539,13 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
           /// gametimer
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, YELLOW, "gametimer = %i", gametimer);
 
+
           /// weather globals
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, YELLOW, "weather: %i, %i, %i",
-            LCS ? (getShort(global_weather), getShort(global_weather + 0x2), getShort(global_weather + 0x84))
-                : (getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp)));
+            GameManager.game == GTA_LCS
+                ? (getShort(global_weather), getShort(global_weather + 0x2), getShort(global_weather + 0x84))
+                : (getShort(global_weather + gp), getShort(global_weather + 0x8 + gp), getShort(global_weather + 0x794 + gp))
+          );
 
            /// global_currentisland
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, YELLOW, "island = %i", island);
@@ -4556,10 +4557,10 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
           drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, YELLOW, "multiplayer = %i", multiplayer);
 
 
-          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 70.0f, CYAN, "DAT_0035a288: 0x%X", getInt(mod_text_addr + 0x035a288));
-          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 90.0f, CYAN, "DAT_0035a28c: 0x%X", getInt(mod_text_addr + 0x035a28C));
-          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 110.0f, CYAN, "DAT_00354b9c: 0x%X (max)", getInt(mod_text_addr + 0x0354b9c));
-          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 130.0f, CYAN, "DAT_00354ba0: 0x%X (media max)", getInt(mod_text_addr + 0x0354ba0);
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 70.0f, CYAN, "DAT_0035a288: 0x%X", getInt(TEXTADDR(0x035a288)));
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 90.0f, CYAN, "DAT_0035a28c: 0x%X", getInt(TEXTADDR(0x035a28C)));
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 110.0f, CYAN, "DAT_00354b9c: 0x%X (max)", getInt(TEXTADDR(0x0354b9c)));
+          //drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 40.0f, 130.0f, CYAN, "DAT_00354ba0: 0x%X (media max)", getInt(TEXTADDR(0x0354ba0));
 
         } else if( i == 2 ) { // pplayer
           drawStringNoTVarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 5.0f, AZURE, "pplayer");
@@ -4567,7 +4568,7 @@ void *debug_monitor(int calltype, int keypress, bool defaultstatus, int defaultv
           if( pplayer ) {
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 20.0f, WHITE, "pplayer = 0x%08lX", pplayer);
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 40.0f, CYAN, "Mass = %.2f, %.2f", getFloat(pplayer+0xD0), getFloat(pplayer+0xD4));
-            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, CYAN, "animation: 0x%0X", getByte(pplayer + (LCS ? 0x250 : 0x894)));
+            drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 60.0f, CYAN, "animation: 0x%0X", getByte(GTA_ADDR(pplayer, 0x250, 0x894)));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 80.0f, CYAN, "health = %.2f", getPedHealth(pplayer));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 100.0f, CYAN, "armor = %.2f", getPedArmor(pplayer));
             drawStringNoT(ALIGN_FREE, FONT_DIALOG, SIZE_NORMAL, SHADOW_OFF, 10.0f, 120.0f, CYAN, "facing = %.2f", getPedFacingDirectionInDegree(pplayer));
@@ -4945,29 +4946,29 @@ void exit_game() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void bttncht_givehealth() {
-  if( LCS ) activateCheatCode(L, R, CROSS, L, R, SQUARE, L, R);
-  if( VCS ) activateCheatCode(UP, DOWN, LEFT, RIGHT, CIRCLE, CIRCLE, L, R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, R, CROSS, L, R, SQUARE, L, R);
+  else activateCheatCode(UP, DOWN, LEFT, RIGHT, CIRCLE, CIRCLE, L, R);
 }
 void bttncht_givearmor() {
-  if( LCS ) activateCheatCode(L, R, CIRCLE, L, R, CROSS, L, R);
-  if( VCS ) activateCheatCode(UP, DOWN, LEFT, RIGHT, SQUARE, SQUARE, L, R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, R, CIRCLE, L, R, CROSS, L, R);
+  else activateCheatCode(UP, DOWN, LEFT, RIGHT, SQUARE, SQUARE, L, R);
 }
 void bttncht_givemoney() { // int calltype, int keypress, bool defaultstatus
 
   /* switch( calltype ) {
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) {*/
-        if( LCS ) activateCheatCode(L, R, TRIANGLE, L, R, CIRCLE, L, R);
-        if( VCS ) activateCheatCode(UP, DOWN, LEFT, RIGHT, CROSS, CROSS, L, R);
+        if( GameManager.game == GTA_LCS ) activateCheatCode(L, R, TRIANGLE, L, R, CIRCLE, L, R);
+        else activateCheatCode(UP, DOWN, LEFT, RIGHT, CROSS, CROSS, L, R);
 
       /*} else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
 
-        hex_marker_addx(global_buttoninput + (LCS ? 0x95 : 0xA9), sizeof(int));
-        hex_marker_addx(global_buttoninput + (LCS ? 0x95 : 0xA9) + 0x4 , sizeof(int));
+        hex_marker_addx(GTA_ADDR(global_buttoninput, 0x95, 0xA9), sizeof(int));
+        hex_marker_addx(GTA_ADDR(global_buttoninput, 0x95, 0xA9) + 0x4 , sizeof(int));
 
-        hexeditor_create(global_buttoninput + (LCS ? 0x95 : 0xA9), 1, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_buttoninput");
+        hexeditor_create(GTA_ADDR(global_buttoninput, 0x95, 0xA9), 1, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_buttoninput");
         #endif
       }
       break;
@@ -4976,49 +4977,49 @@ void bttncht_givemoney() { // int calltype, int keypress, bool defaultstatus
 }
 
 void bttncht_weaponset1() {
-  if( LCS ) activateCheatCode(UP, SQUARE, SQUARE, DOWN, LEFT, SQUARE, SQUARE, RIGHT);
-  if( VCS ) activateCheatCode(LEFT, RIGHT, CROSS, UP, DOWN, SQUARE, LEFT, RIGHT);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(UP, SQUARE, SQUARE, DOWN, LEFT, SQUARE, SQUARE, RIGHT);
+  else activateCheatCode(LEFT, RIGHT, CROSS, UP, DOWN, SQUARE, LEFT, RIGHT);
 }
 
 void bttncht_weaponset2() {
-  if( LCS ) activateCheatCode(UP, CIRCLE, CIRCLE, DOWN, LEFT, CIRCLE, CIRCLE, RIGHT);
-  if( VCS ) activateCheatCode(LEFT, RIGHT, SQUARE, UP, DOWN, TRIANGLE, LEFT, RIGHT);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(UP, CIRCLE, CIRCLE, DOWN, LEFT, CIRCLE, CIRCLE, RIGHT);
+  else activateCheatCode(LEFT, RIGHT, SQUARE, UP, DOWN, TRIANGLE, LEFT, RIGHT);
 }
 
 void bttncht_weaponset3() {
-  if( LCS ) activateCheatCode(UP, CROSS, CROSS, DOWN, LEFT, CROSS, CROSS, RIGHT);
-  if( VCS ) activateCheatCode(LEFT, RIGHT, TRIANGLE, UP, DOWN, CIRCLE, LEFT, RIGHT);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(UP, CROSS, CROSS, DOWN, LEFT, CROSS, CROSS, RIGHT);
+  else activateCheatCode(LEFT, RIGHT, TRIANGLE, UP, DOWN, CIRCLE, LEFT, RIGHT);
 }
 
 void bttncht_carsonwater() {
-  if( LCS ) activateCheatCode(CIRCLE, CROSS, DOWN, CIRCLE, CROSS, UP, L, L);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(CIRCLE, CROSS, DOWN, CIRCLE, CROSS, UP, L, L);
 }
 
 void bttncht_blowupcars() {
-  if( LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, CROSS, SQUARE);
-  if( VCS ) activateCheatCode(L, R, R, LEFT, RIGHT, SQUARE, DOWN, R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, CROSS, SQUARE);
+  else activateCheatCode(L, R, R, LEFT, RIGHT, SQUARE, DOWN, R);
 }
 
 void bttncht_perftraction() {
-  if( LCS ) activateCheatCode(L, UP, LEFT, R, TRIANGLE, CIRCLE, DOWN, CROSS);
-  if( VCS ) activateCheatCode(DOWN, LEFT, UP, L, R, TRIANGLE, CIRCLE, CROSS);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, UP, LEFT, R, TRIANGLE, CIRCLE, DOWN, CROSS);
+  else activateCheatCode(DOWN, LEFT, UP, L, R, TRIANGLE, CIRCLE, CROSS);
 }
 
 void bttncht_unlockmult100() {
-  if( LCS ) activateCheatCode(UP, UP, UP, TRIANGLE, TRIANGLE, SQUARE, L, R );
-  if( VCS ) activateCheatCode(UP, UP, UP, TRIANGLE, TRIANGLE, CIRCLE, L, R );
+  if( GameManager.game == GTA_LCS ) activateCheatCode(UP, UP, UP, TRIANGLE, TRIANGLE, SQUARE, L, R );
+  else activateCheatCode(UP, UP, UP, TRIANGLE, TRIANGLE, CIRCLE, L, R );
 }
 
 void bttncht_spawnrhino() {
-  if( LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, TRIANGLE, CIRCLE);
-  if( VCS ) activateCheatCode(UP, L, DOWN, R, LEFT, L, RIGHT, R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, TRIANGLE, CIRCLE);
+  else activateCheatCode(UP, L, DOWN, R, LEFT, L, RIGHT, R);
 }
 
 void bttncht_playcredits() {
-  if( LCS ) activateCheatCode(L, R, L, R, UP, DOWN, L, R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, R, L, R, UP, DOWN, L, R);
 }
 /* void bttncht_randomplayer() {
-  if( LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, SQUARE, TRIANGLE);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, L, LEFT, L, L, RIGHT, SQUARE, TRIANGLE);
 } */
 void *bttncht_randomplayer(int calltype, int keypress, bool defaultstatus UNUSED, int defaultval) {
   static int model = -1;
@@ -5079,33 +5080,33 @@ void *bttncht_randomplayer(int calltype, int keypress, bool defaultstatus UNUSED
 }
 
 void bttncht_bubblehead() {
-  if( LCS ) activateCheatCode(DOWN,DOWN,DOWN,CIRCLE,CIRCLE,CROSS,L,R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(DOWN,DOWN,DOWN,CIRCLE,CIRCLE,CROSS,L,R);
 }
 
 
 void bttncht_pedsweapons() {
-  if( LCS ) activateCheatCode(R, R, L, R, R, L, RIGHT, CIRCLE);
-  if( VCS ) activateCheatCode(UP, L, DOWN, R, LEFT, CIRCLE, RIGHT, TRIANGLE);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(R, R, L, R, R, L, RIGHT, CIRCLE);
+  else activateCheatCode(UP, L, DOWN, R, LEFT, CIRCLE, RIGHT, TRIANGLE);
 }
 
 void bttncht_pedsattack() {
-  if( LCS ) activateCheatCode(L, L, R, L, L, R, UP, TRIANGLE);
-  if( VCS ) activateCheatCode(DOWN, TRIANGLE, UP, CROSS, L, R, L, R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, L, R, L, L, R, UP, TRIANGLE);
+  else activateCheatCode(DOWN, TRIANGLE, UP, CROSS, L, R, L, R);
 }
 
 void bttncht_pedsriot() {
-  if( LCS ) activateCheatCode(L, L, R, L, L, R, LEFT, SQUARE);
-  if( VCS ) activateCheatCode(R, L, L, DOWN, LEFT, CIRCLE, DOWN, L);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(L, L, R, L, L, R, LEFT, SQUARE);
+  else activateCheatCode(R, L, L, DOWN, LEFT, CIRCLE, DOWN, L);
 }
 
 void bttncht_agrodrivers() {
-  if( LCS ) activateCheatCode(SQUARE, SQUARE, R, CROSS, CROSS, L, CIRCLE, CIRCLE);
-  if( VCS ) activateCheatCode(UP, UP, RIGHT, LEFT, TRIANGLE, CIRCLE, CIRCLE, SQUARE);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(SQUARE, SQUARE, R, CROSS, CROSS, L, CIRCLE, CIRCLE);
+  else activateCheatCode(UP, UP, RIGHT, LEFT, TRIANGLE, CIRCLE, CIRCLE, SQUARE);
 }
 
 void bttncht_traffichrome() {
-  if( LCS ) activateCheatCode(TRIANGLE, R, L, DOWN, DOWN, R, R, TRIANGLE);
-  if( VCS ) activateCheatCode(RIGHT, UP, LEFT, DOWN, TRIANGLE, TRIANGLE, L, R);
+  if( GameManager.game == GTA_LCS ) activateCheatCode(TRIANGLE, R, L, DOWN, DOWN, R, R, TRIANGLE);
+  else activateCheatCode(RIGHT, UP, LEFT, DOWN, TRIANGLE, TRIANGLE, L, R);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5334,18 +5335,18 @@ void *teleporter(int calltype, int keypress, bool defaultstatus UNUSED, int defa
       return (int*)(int)i;
 
     case FUNC_GET_STRING:
-      return (void *)(_t(LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
+      return (void *)(_t(GameManager.game == GTA_LCS ? lcs_teleports[i].name : vcs_teleports[i].name));
 
     case FUNC_CHANGE_VALUE:
       if ( keypress == PSP_CTRL_LEFT && i > 1 ) { // LEFT
         i--;
 
       } else if ( keypress == PSP_CTRL_RIGHT ) { // RIGHT
-        if( LCS && i < lcs_teleportersize ) i++;
-        else if( VCS && i < vcs_teleportersize ) i++;
+        if( GameManager.game == GTA_LCS && i < lcs_teleportersize ) i++;
+        else if( i < vcs_teleportersize ) i++;
 
       } else if ( keypress == PSP_CTRL_CROSS ) { // CROSS
-        const Vector3D *teleport_position = LCS ? &lcs_teleports[i].position : &vcs_teleports[i].position;
+        const Vector3D *teleport_position = GameManager.game == GTA_LCS ? &lcs_teleports[i].position : &vcs_teleports[i].position;
         SetPlayerPosition(teleport_position->x, teleport_position->y, teleport_position->z);
         closeMenu();
 
@@ -5361,10 +5362,10 @@ void *teleporter(int calltype, int keypress, bool defaultstatus UNUSED, int defa
       break;
 
     case FUNC_SET:
-      if( defaultval >= 0 && defaultval <= (LCS ? lcs_teleportersize : vcs_teleportersize) )
+      if( defaultval >= 0 && defaultval <= (GameManager.game == GTA_LCS ? lcs_teleportersize : vcs_teleportersize) )
         i = defaultval;
       else
-        i = LCS ? 26 : 27; // default teleport location in list
+        i = GameManager.game == GTA_LCS ? 26 : 27; // default teleport location in list
 
       break;
   }
@@ -5427,7 +5428,7 @@ u8str readMissionNameFromSCM(int mission_number) {
   if( previous == mission_number ) //
     return ret;
 
-  SceUID fd; fd = sceIoOpen(LCS ? "disc0:/PSP_GAME/USRDIR/DATA/MAIN.SCM" : "disc0:/PSP_GAME/USRDIR/RUNDATA/MAIN.SCM", PSP_O_RDONLY, 0777);
+  SceUID fd; fd = sceIoOpen(GameManager.game == GTA_LCS ? "disc0:/PSP_GAME/USRDIR/DATA/MAIN.SCM" : "disc0:/PSP_GAME/USRDIR/RUNDATA/MAIN.SCM", PSP_O_RDONLY, 0777);
   if( fd < 0  ) {
     snprintf(ret, sizeof(ret), "ERROR");
     return ret;
@@ -5489,7 +5490,7 @@ u8str readMissionNameFromSCM(int mission_number) {
   sceIoRead(fd, &buf, 256); // read in some script data (256 should be enough)
   snprintf(ret, sizeof(ret), "NONAME");
   for( int i = 0; i < 256; i++ ) { // search the first instructions for name_thread
-    if( buf[i] == (LCS ? 0xA9 : 0x38) && buf[i+1] == (LCS ? 0x03 : 0x02) ) { // name_thread opcode
+    if( buf[i] == (GameManager.game == GTA_LCS ? 0xA9 : 0x38) && buf[i+1] == (GameManager.game == GTA_LCS ? 0x03 : 0x02) ) { // name_thread opcode
       snprintf(ret, sizeof(ret), "%s", getString((int)&buf[i+2], 0)); // ugly but I was lazy
       //snprintf(ret, sizeof(ret), "%s", "DONE");
       break;
@@ -5551,7 +5552,7 @@ void *mission_select(int calltype, int keypress, bool defaultstatus UNUSED, int 
           0x4E, 0x00
         }; *(byte*)&script_startmission[3] = (byte)i;
 
-        if( VCS ) {
+        if( GameManager.game == GTA_VCS ) {
           writeShort(&script_startmission[0], 0x0289);
           writeShort(&script_startmission[4], 0x0023);
         }
@@ -5596,15 +5597,15 @@ void mission_selector() {
 
   static byte script[10];
   int pos = 0, temp = 0, address = 0;
-  int main_size = getInt(global_MainScriptSize + (LCS ? 0 : gp));
-  int script_space = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+  int main_size = getInt(global_MainScriptSize + gp_);
+  int script_space = getInt(global_ScriptSpace + gp_);
   for(address = script_space; address < script_space + main_size; address++) {
     if( *(u8char*)address == 'L' && *(u8char*)(address+1) == 'E' ) { // first because faster
       if( strcmp("LEVSKIP", getString(address, 0)) == 0 ) {
         DEBUG_LOG("LEVSKIP found @ 0x%08X in mainscript", address - script_space);
 
         temp = address - script_space - 2; // 2 is opcode length
-        if( VCS ) temp--; // vcs has additional 0xA as string identifier
+        if( GameManager.game == GTA_VCS ) temp--; // vcs has additional 0xA as string identifier
         address = (int)&temp; // fugglyyy
 
         /// Opcode
@@ -6167,10 +6168,11 @@ void *disable_textures(int calltype, int keypress, bool defaultstatus) {
     case FUNC_APPLY:
 
       /// WRLD textures (from eg: commer.lvz/.img)
-      if( LCS ) offs = getInt(getInt(getInt(render) + 0x10)) + 0x4;
-      if( VCS ) offs = getInt(getInt(getInt(render+gp) + 0x18)) + 0x4;
+      if( GameManager.game == GTA_LCS ) offs = getInt(getInt(getInt(render) + 0x10)) + 0x4;
+      else offs = getInt(getInt(getInt(render+gp) + 0x18)) + 0x4;
+
       while( true ) { // missing first ptr but whatever
-        offs += (LCS ? 0x8 : 0xC); // VCS has additional counter Integer
+        offs += (GameManager.game == GTA_LCS ? 0x8 : 0xC); // VCS has additional counter Integer
 
         if( getInt(offs) == 0 ) // not visible so not loaded.. nothing here
           continue;
@@ -6246,10 +6248,10 @@ void *godmode(int calltype, int keypress, bool defaultstatus) {
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(pplayer+(LCS ? 0x4B8 : 0x4E4), sizeof(float)); // health value
-        hex_marker_addx(pplayer+(LCS ? 0x4BC : 0x4E8), sizeof(float)); // armor value
-        hex_marker_addx(pplayer+(LCS ? 0x6DC : 0x6B0), sizeof(int));   // on-fire boolean
-        hexeditor_create(pplayer + (LCS ? 0x4B8 : 0x4E4), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> pplayer health & armor");
+        hex_marker_addx(GTA_ADDR(pplayer, 0x4B8, 0x4E4), sizeof(float)); // health value
+        hex_marker_addx(GTA_ADDR(pplayer, 0x4BC, 0x4E8), sizeof(float)); // armor value
+        hex_marker_addx(GTA_ADDR(pplayer, 0x6DC, 0x6B0), sizeof(int));   // on-fire boolean
+        hexeditor_create(GTA_ADDR(pplayer, 0x4B8, 0x4E4), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> pplayer health & armor");
         #endif
       } break;
 
@@ -6277,24 +6279,24 @@ void *powerjump(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_APPLY:
       if( !pcar && !flag_menu_running ) {
-        if( getByte(pplayer+(LCS?0x10A:136)) == 0 ) { // TODO: player not touching ground (better check)
+        if( isPedInAir(pplayer) ) { // TODO: player not touching ground (better check)
 
           /// calc current speed
-          float speed = sqrtf((getFloat(pplayer+(LCS?0x70:0x140)) * getFloat(pplayer+(LCS?0x70:0x140))) + (getFloat(pplayer+(LCS?0x74:0x144)) * getFloat(pplayer+(LCS?0x74:0x144)))); // sqrtf( x^2 + y^2 )
+          float speed = sqrtf((getFloat(GTA_ADDR(pplayer, 0x70, 0x140)) * getFloat(GTA_ADDR(pplayer, 0x70, 0x140))) + (getFloat(GTA_ADDR(pplayer, 0x74, 0x144)) * getFloat(GTA_ADDR(pplayer, 0x74, 0x144)))); // sqrtf( x^2 + y^2 )
 
           /// forward-thrust
-          setFloat(pplayer+(LCS?0x70:0x140), -getFloat(pplayer+4) * speed);
-          setFloat(pplayer+(LCS?0x74:0x144), getFloat(pplayer) * speed);
+          setFloat(GTA_ADDR(pplayer, 0x70, 0x140), -getFloat(pplayer+4) * speed);
+          setFloat(GTA_ADDR(pplayer, 0x74, 0x144), getFloat(pplayer) * speed);
 
           /// up-thrust
           if( current_buttons & PSP_CTRL_SQUARE ) // SQUARE pressed
-            setFloat(pplayer+(LCS?0x98:0x148), getFloat(pplayer+(LCS?0x98:0x148)) + 0.02f );
+            setFloat(GTA_ADDR(pplayer, 0x98, 0x148), getFloat(GTA_ADDR(pplayer, 0x98, 0x148)) + 0.02f );
 
           /// turn
-          setFloat(pplayer+(LCS?0x88:0x78), (LCS?-0.02:-0.02) * xstick);
+          setFloat(GTA_ADDR(pplayer, 0x88, 0x78), -0.02f * xstick);
 
           /// set rolling after landing animation in the current direction
-          setFloat(pplayer+(LCS?0x4E0:0x8D0), getFloat(pplayer+(LCS?0x4E4:0x8D4))); // continuously setting current dir
+          setFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0), getFloat(GTA_ADDR(pplayer, 0x4E4, 0x8D4))); // continuously setting current dir
         }
       }
       break;
@@ -6337,9 +6339,9 @@ void *invisible(int calltype, int keypress, bool defaultstatus) {
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        if( LCS ) hex_marker_addx(pplayer+0x19A, sizeof(byte));
-        if( VCS ) hex_marker_addx(pplayer+0x4C, sizeof(int16));
-        hexeditor_create(pplayer + (LCS ? 0x19A : 0x4C), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> pplayer invisible");
+        if( GameManager.game == GTA_LCS ) hex_marker_addx(pplayer+0x19A, sizeof(byte));
+        if( GameManager.game == GTA_VCS ) hex_marker_addx(pplayer+0x4C, sizeof(int16));
+        hexeditor_create(GTA_ADDR(pplayer, 0x19A, 0x4C), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> pplayer invisible");
         #endif
       } break;
 
@@ -6376,7 +6378,7 @@ void *ignored(int calltype, int keypress, bool defaultstatus) {
         setPedIgnoredByEveryone(pplayer, status);
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
-        int temp = pplayer + (LCS ? 0x82E : 0x90E);
+        int temp = GTA_ADDR(pplayer, 0x82E, 0x90E);
         hex_marker_clear();
         hex_marker_addx(temp, sizeof(bool));
         hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "");
@@ -6669,8 +6671,8 @@ void *powerbrake(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_APPLY:
       if( pcar && (current_buttons & PSP_CTRL_SQUARE) && (getVehicleCurrentGear( pcar ) >= 0x2) ) { // activate power brake only if gear is 2 or higher
-        setFloat(pcar + (LCS ? 0x70 : 0x140), 0.0f);
-        setFloat(pcar + (LCS ? 0x74 : 0x144), 0.0f);
+        setFloat(GTA_ADDR(pcar, 0x70, 0x140), 0.0f);
+        setFloat(GTA_ADDR(pcar, 0x74, 0x144), 0.0f);
 
       }
       break;
@@ -6717,9 +6719,9 @@ void *nitro(int calltype, int keypress, bool defaultstatus) {
         int exhaust_offs = getParticleOffsetFor("EXHAUST_FUMES");
         if( exhaust_offs != -1 ) {
           if( exhaust_backup == 0 ) {
-            exhaust_backup = getInt(exhaust_offs + (LCS ? 0x70 : 0x60) );
+            exhaust_backup = getInt(GTA_ADDR(exhaust_offs, 0x70, 0x60));
           }
-          setInt( exhaust_offs + (LCS ? 0x70 : 0x60), 0x00CC1111 ); // blue-ish
+          setInt(GTA_ADDR(exhaust_offs, 0x70, 0x60), 0x00CC1111 ); // blue-ish
         }
 
         if( pcar && (current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS)) && !flag_menu_running && isVehicleInAir( pcar ) == 0 && isVehicleUpsideDown( pcar ) == 0 ) {
@@ -6728,16 +6730,16 @@ void *nitro(int calltype, int keypress, bool defaultstatus) {
           setFieldOfView( getFieldOfView() + 4.0f);
 
           /// SPEED
-          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * thrust );
-          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * thrust );
-          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * thrust );
+          setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(GTA_ADDR(pcar, 0x70, 0x140)) + getFloat(pcar+0x10) * thrust );
+          setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(GTA_ADDR(pcar, 0x74, 0x144)) + getFloat(pcar+0x14) * thrust );
+          setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(GTA_ADDR(pcar, 0x78, 0x148)) + getFloat(pcar+0x18) * thrust );
         }
 
 
       }
       if( nos_time != 0 && gametimer > nos_time ) {
         /// Reset Exhaust Color
-        setInt( getParticleOffsetFor("EXHAUST_FUMES") + (LCS ? 0x70 : 0x60), exhaust_backup ); // blue-ish
+        setInt(GTA_ADDR(getParticleOffsetFor("EXHAUST_FUMES"), 0x70, 0x60), exhaust_backup ); // blue-ish
         exhaust_backup = 0;
 
         /// Reset Nos Timer
@@ -6750,7 +6752,7 @@ void *nitro(int calltype, int keypress, bool defaultstatus) {
         if( status ) { // reset
           /// Reset Exhaust Color
           if( exhaust_backup ) {
-            setInt( getParticleOffsetFor("EXHAUST_FUMES") + (LCS ? 0x70 : 0x60), exhaust_backup ); // blue-ish
+            setInt(GTA_ADDR(getParticleOffsetFor("EXHAUST_FUMES"), 0x70, 0x60), exhaust_backup ); // blue-ish
             exhaust_backup = 0;
           }
           /// Reset Nos Timer
@@ -6798,9 +6800,9 @@ void *rocketboost(int calltype, int keypress, bool defaultstatus, int defaultval
         if( (isVehicleInAir( pcar ) == 0) /*|| driveonwater(FUNC_GET_STATUS, -1, -1)*/ /*|| ((pcar_type == VEHICLE_BOAT) && isVehicleInWater( pcar )*/ ) { // boats behave uncontrollable with boost and for VCS the "isVehicleInWater" is no bool? Sometimes 2 or 3 even?!
 
           /// SPEED
-          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * ((boost+1) * thrust) );
-          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * ((boost+1) * thrust) );
-          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * ((boost+1) * thrust) );
+          setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(GTA_ADDR(pcar, 0x70, 0x140)) + getFloat(pcar+0x10) * ((boost+1) * thrust) );
+          setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(GTA_ADDR(pcar, 0x74, 0x144)) + getFloat(pcar+0x14) * ((boost+1) * thrust) );
+          setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(GTA_ADDR(pcar, 0x78, 0x148)) + getFloat(pcar+0x18) * ((boost+1) * thrust) );
         }
       }
       break;
@@ -6878,9 +6880,9 @@ void *untouchable(int calltype, int keypress, bool defaultstatus) {
               float x_obj = (x2 - x1) / forcemult;
               float y_obj = (y2 - y1) / forcemult;
               //float z_obj = (z2 - z1) / forcemult;
-              setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
-              setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
-              //setFloat(base+(LCS?0x78:0x148), z_obj);
+              setFloat(GTA_ADDR(base, 0x70, 0x140), getFloat(GTA_ADDR(base, 0x70, 0x140)) + x_obj);
+              setFloat(GTA_ADDR(base, 0x74, 0x144), getFloat(GTA_ADDR(base, 0x74, 0x144)) + y_obj);
+              //setFloat(GTA_ADDR(base, 0x78, 0x148), z_obj);
             }
           }
         }
@@ -6903,14 +6905,12 @@ void *untouchable(int calltype, int keypress, bool defaultstatus) {
               float x_obj = ((x2 - x1) / forcemult) * 1.5f;
               float y_obj = ((y2 - y1) / forcemult) * 1.5f;
 
-              if (VCS)
-                setShort(base+0x1c8, 0x1020); // Get player off ground
-              else
-                setBit(base+0x194, 0, false); // bIsStanding set to false
+              if (GameManager.game == GTA_LCS) setBit(base+0x194, 0, false); // bIsStanding set to false
+              else setShort(base+0x1c8, 0x1020); // Get player off ground
 
-              setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
-              setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
-              setFloat(base+(LCS?0x78:0x148), getFloat(base+(LCS?0x78:0x148)) + 0.05f);
+              setFloat(GTA_ADDR(base, 0x70, 0x140), getFloat(GTA_ADDR(base, 0x70, 0x140)) + x_obj);
+              setFloat(GTA_ADDR(base, 0x74, 0x144), getFloat(GTA_ADDR(base, 0x74, 0x144)) + y_obj);
+              setFloat(GTA_ADDR(base, 0x78, 0x148), getFloat(GTA_ADDR(base, 0x78, 0x148)) + 0.05f);
             }
           }
         }
@@ -7100,8 +7100,10 @@ void *indestr_vehicle(int calltype, int keypress, bool defaultstatus) {
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         if( pcar ) {
           #ifdef HEXEDITOR
-          int temp = pcar + (VCS ? 0x27c : 0x268);
-          if( VCS && mod_text_size == 0x00377D30 ) temp = pcar + 0x29C; // ULUS v1.01
+
+          uaddr temp = GTA_ADDR(pcar, 0x268, 0x27c);
+          if (GameManager.gameEboot == GTA_VCS_ULUS10160_1_01) temp = pcar + 0x29C; // ULUS v1.01
+
           hex_marker_clear();
           hex_marker_addx(temp, sizeof(float));
           hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> vehicle health value");
@@ -7155,7 +7157,7 @@ void *lockdoors(int calltype, int keypress, bool defaultstatus) {
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         if( pcar ) {
           #ifdef HEXEDITOR
-          int temp = pcar + (LCS ? 0x294 : 0x2A8);
+          int temp = GTA_ADDR(pcar, 0x294, 0x2A8);
           hex_marker_clear();
           hex_marker_addx(temp, sizeof(bool));
           hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> vehicle lock doors");
@@ -7208,7 +7210,7 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
     case FUNC_CHECK:
 
       /// The Delorean
-      if( LCS && pcar && pcar_id == 187 ) { // its a V8 Ghost
+      if( GameManager.game == GTA_LCS && pcar && pcar_id == 187 ) { // its a V8 Ghost
         if( lcs_getVehicleColorBase( pcar ) == 13 && lcs_getVehicleColorStripe( pcar ) == 0 ) { // color
           setInt(global_m_pVehicleNameToPrint, (int)&delo[0]); // redirect m_pVehicleNameToPrint
 
@@ -7226,7 +7228,7 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
 
         }
       }
-      if( LCS && !pcar && lastcar ) { // not in car anymore -> reset old car's values
+      if( GameManager.game == GTA_LCS && !pcar && lastcar ) { // not in car anymore -> reset old car's values
         setVehicleGravityApplies(lastcar, true); // restore gravity for vehicle
         setVehicleWheelCamber(lastcar, wheels); // restore wheels camber to default value
         wheels = 0;
@@ -7250,7 +7252,7 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
       if( pcar && (pcar_type == VEHICLE_CAR || pcar_type == VEHICLE_BIKE || pcar_type == VEHICLE_BOAT) ) { // in vehicle!
         /// get speed
         speed = getVehicleSpeed();
-        xyspeed = sqrtf((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144)))); // sqrtf( x^2 + y^2 )
+        xyspeed = sqrtf((getFloat(GTA_ADDR(pcar, 0x70, 0x140)) * getFloat(GTA_ADDR(pcar, 0x70, 0x140))) + (getFloat(GTA_ADDR(pcar, 0x74, 0x144)) * getFloat(GTA_ADDR(pcar, 0x74, 0x144)))); // sqrtf( x^2 + y^2 )
 
         /// disable world gravity for vehicle
         setVehicleGravityApplies(pcar, false);
@@ -7264,23 +7266,23 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
 
         /// always keep car level #OK
         // flip vehicle forward/backward + up/down with analog
-        setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
-        setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+0x4) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
-        setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+0x8) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
+        setFloat(GTA_ADDR(pcar, 0x80, 0x70), getFloat(pcar) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
+        setFloat(GTA_ADDR(pcar, 0x84, 0x74), getFloat(pcar+0x4) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
+        setFloat(GTA_ADDR(pcar, 0x88, 0x78), getFloat(pcar+0x8) * (-(getFloat(pcar+0x18)-(ystick/2)) * 0.1) );
 
         // flip adjustments + ///roll vehicle left/right  + left/right leaning with analog
-        setFloat(pcar+(LCS?0x80:0x70), getFloat(pcar+(LCS?0x80:0x70)) + getFloat(pcar+0x10) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
-        setFloat(pcar+(LCS?0x84:0x74), getFloat(pcar+(LCS?0x84:0x74)) + getFloat(pcar+0x14) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
-        setFloat(pcar+(LCS?0x88:0x78), getFloat(pcar+(LCS?0x88:0x78)) + getFloat(pcar+0x18) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
+        setFloat(GTA_ADDR(pcar, 0x80, 0x70), getFloat(GTA_ADDR(pcar, 0x80, 0x70)) + getFloat(pcar+0x10) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
+        setFloat(GTA_ADDR(pcar, 0x84, 0x74), getFloat(GTA_ADDR(pcar, 0x84, 0x74)) + getFloat(pcar+0x14) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
+        setFloat(GTA_ADDR(pcar, 0x88, 0x78), getFloat(GTA_ADDR(pcar, 0x88, 0x78)) + getFloat(pcar+0x18) * ( (getFloat(pcar+0x8)+(xstick/2)) * 0.1) );
 
         /// turning left/right #OK
-        setFloat(pcar + (LCS?0x88:0x78), -0.04 * xstick); // spin vehicle around Z world axis (slow turning -0.02 | -0.05 faster turning)
+        setFloat(GTA_ADDR(pcar, 0x88, 0x78), -0.04f * xstick); // spin vehicle around Z world axis (slow turning -0.02 | -0.05 faster turning)
 
         ///manual hovering up/down
         if( (current_buttons & PSP_CTRL_UP) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && !flag_menu_running )
-          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) + 0.02); // 0.015 for LCS?
+          setFloat(GTA_ADDR(pcar, 0x98, 0x148), getFloat(GTA_ADDR(pcar, 0x98, 0x148)) + 0.02); // 0.015 for LCS?
         if( (current_buttons & PSP_CTRL_DOWN) && ((xyspeed < 0.1f) || (current_buttons & (flag_swapxr ? PSP_CTRL_CROSS : PSP_CTRL_RTRIGGER))) && !flag_menu_running ) {
-          setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148)) - 0.02);
+          setFloat(GTA_ADDR(pcar, 0x98, 0x148), getFloat(GTA_ADDR(pcar, 0x98, 0x148)) - 0.02);
         }
 
         /// hovering animation #could be smoother
@@ -7289,12 +7291,12 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
             if( gametimer >= hovermation_time + msec(1) ) { // 1 sec
                hovermation_time = gametimer;
                hovermation = 2;
-            } else setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))+0.001);
+            } else setFloat(GTA_ADDR(pcar, 0x98, 0x148), getFloat(GTA_ADDR(pcar, 0x98, 0x148))+0.001);
           } else if( hovermation == 2 ) { // animation down
             if( gametimer >= hovermation_time + msec(1) ) { // 1 sec
                hovermation_time = gametimer;
                hovermation = 1;
-            } else setFloat(pcar+(LCS?0x98:0x148), getFloat(pcar+(LCS?0x98:0x148))-0.001);
+            } else setFloat(GTA_ADDR(pcar, 0x98, 0x148), getFloat(GTA_ADDR(pcar, 0x98, 0x148))-0.001);
           }
         }
 
@@ -7304,35 +7306,35 @@ void *hover_vehicle(int calltype, int keypress, bool defaultstatus) {
           if( xyspeed > 0.1f ) { // to allow hover animation without force forward
             if( getVehicleCurrentGear(pcar) > 0 ) { // not in reverse
               /// keep the momentum in the direction the vehicle
-              setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+0x10) * speed);
-              setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+0x14) * speed);
-              setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+0x18) * speed);
+              setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(pcar+0x10) * speed);
+              setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(pcar+0x14) * speed);
+              setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(pcar+0x18) * speed);
             } else {
               /// keep the momentum in the reverse direction the vehicle
-              setFloat(pcar+(LCS?0x70:0x140), -getFloat(pcar+0x10) * speed);
-              setFloat(pcar+(LCS?0x74:0x144), -getFloat(pcar+0x14) * speed);
-              setFloat(pcar+(LCS?0x78:0x148), -getFloat(pcar+0x18) * speed);
+              setFloat(GTA_ADDR(pcar, 0x70, 0x140), -getFloat(pcar+0x10) * speed);
+              setFloat(GTA_ADDR(pcar, 0x74, 0x144), -getFloat(pcar+0x14) * speed);
+              setFloat(GTA_ADDR(pcar, 0x78, 0x148), -getFloat(pcar+0x18) * speed);
             }
           }
         }
 
         /// thrust, reverse & automatically slowing down (could also be done by setting lower/higher speed but I'd like to keep the "handbrake feature")
         if( current_buttons & (flag_swapxr ? PSP_CTRL_RTRIGGER : PSP_CTRL_CROSS) && !flag_menu_running ) {  /// forward
-          setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) + getFloat(pcar+0x10) * 0.010);
-          setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) + getFloat(pcar+0x14) * 0.010);
-          setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) + getFloat(pcar+0x18) * 0.022);
+          setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(GTA_ADDR(pcar, 0x70, 0x140)) + getFloat(pcar+0x10) * 0.010);
+          setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(GTA_ADDR(pcar, 0x74, 0x144)) + getFloat(pcar+0x14) * 0.010);
+          setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(GTA_ADDR(pcar, 0x78, 0x148)) + getFloat(pcar+0x18) * 0.022);
 
         } else if( current_buttons & PSP_CTRL_SQUARE && !flag_menu_running ) { /// break & reverse
           if( getVehicleCurrentGear(pcar) > 0 || speed < 0.5f ) { /// limit reverse speed
-            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - getFloat(pcar+0x10) * 0.02);
-            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - getFloat(pcar+0x14) * 0.02);
-            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - getFloat(pcar+0x18) * 0.05);
+            setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(GTA_ADDR(pcar, 0x70, 0x140)) - getFloat(pcar+0x10) * 0.02);
+            setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(GTA_ADDR(pcar, 0x74, 0x144)) - getFloat(pcar+0x14) * 0.02);
+            setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(GTA_ADDR(pcar, 0x78, 0x148)) - getFloat(pcar+0x18) * 0.05);
           }
         } else { /// stopping in air (because there is no ground that would do that normally)
           if( speed > 0.01f ) { /// stopping depending on speed (the slower the faster)
-            setFloat(pcar+(LCS?0x70:0x140), getFloat(pcar+(LCS?0x70:0x140)) - (getFloat(pcar+(LCS?0x70:0x140)) * (0.01/speed))); // 0.0003 the higher the faster
-            setFloat(pcar+(LCS?0x74:0x144), getFloat(pcar+(LCS?0x74:0x144)) - (getFloat(pcar+(LCS?0x74:0x144)) * (0.01/speed)));
-            setFloat(pcar+(LCS?0x78:0x148), getFloat(pcar+(LCS?0x78:0x148)) - (getFloat(pcar+(LCS?0x78:0x148)) * (0.01/speed)));
+            setFloat(GTA_ADDR(pcar, 0x70, 0x140), getFloat(GTA_ADDR(pcar, 0x70, 0x140)) - (getFloat(GTA_ADDR(pcar, 0x70, 0x140)) * (0.01/speed))); // 0.0003 the higher the faster
+            setFloat(GTA_ADDR(pcar, 0x74, 0x144), getFloat(GTA_ADDR(pcar, 0x74, 0x144)) - (getFloat(GTA_ADDR(pcar, 0x74, 0x144)) * (0.01/speed)));
+            setFloat(GTA_ADDR(pcar, 0x78, 0x148), getFloat(GTA_ADDR(pcar, 0x78, 0x148)) - (getFloat(GTA_ADDR(pcar, 0x78, 0x148)) * (0.01/speed)));
           }
         }
 
@@ -7409,7 +7411,7 @@ void *aim_of_death(int calltype, int keypress, bool defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      uaddr ped = getInt(pplayer+(LCS ? 0x6BC : 0x81C));
+      uaddr ped = getInt(GTA_ADDR(pplayer, 0x6BC, 0x81C));
 
       if( ped > 0 ) { // addr of ped aimed at
         setPedHealthAndArmor(ped, 0, 0);
@@ -7439,8 +7441,8 @@ void *aim_of_death(int calltype, int keypress, bool defaultstatus) {
  **************************************************************************************************************************************/
 void stepthroughwall() {
   if( pplayer ) {
-    setFloat(pobj+0x30, getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2f ) );
-    setFloat(pobj+0x34, getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 1.2f ) );
+    setFloat(pobj+0x30, getFloat(pplayer+0x30) + ( cosf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * 1.2f ) );
+    setFloat(pobj+0x34, getFloat(pplayer+0x34) + ( sinf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * 1.2f ) );
   }
 }
 
@@ -7598,13 +7600,13 @@ void *driveonwalls(int calltype, int keypress, bool defaultstatus) {
           setVehicleGravityApplies(pcar, false); // set gravity false
 
           if( gravity_reverse && (current_buttons & PSP_CTRL_UP) && !flag_menu_running ) { // reverse button from worldgravity cheat is pressed
-            setFloat(pcar + (LCS?0x70:0x140),  getFloat(pcar + (LCS?0x70:0x140)) + getFloat(pcar + 0x20) * 0.01 );
-            setFloat(pcar + (LCS?0x74:0x144),  getFloat(pcar + (LCS?0x74:0x144)) + getFloat(pcar + 0x24) * 0.01 );
-            setFloat(pcar + (LCS?0x78:0x148),  getFloat(pcar + (LCS?0x78:0x148)) + getFloat(pcar + 0x28) * 0.01 );
+            setFloat(GTA_ADDR(pcar, 0x70, 0x140),  getFloat(GTA_ADDR(pcar, 0x70, 0x140)) + getFloat(pcar + 0x20) * 0.01 );
+            setFloat(GTA_ADDR(pcar, 0x74, 0x144),  getFloat(GTA_ADDR(pcar, 0x74, 0x144)) + getFloat(pcar + 0x24) * 0.01 );
+            setFloat(GTA_ADDR(pcar, 0x78, 0x148),  getFloat(GTA_ADDR(pcar, 0x78, 0x148)) + getFloat(pcar + 0x28) * 0.01 );
           } else {
-            setFloat(pcar + (LCS?0x70:0x140),  getFloat(pcar + (LCS?0x70:0x140)) - getFloat(pcar + 0x20) * 0.01 );
-            setFloat(pcar + (LCS?0x74:0x144),  getFloat(pcar + (LCS?0x74:0x144)) - getFloat(pcar + 0x24) * 0.01 );
-            setFloat(pcar + (LCS?0x78:0x148),  getFloat(pcar + (LCS?0x78:0x148)) - getFloat(pcar + 0x28) * 0.01 );
+            setFloat(GTA_ADDR(pcar, 0x70, 0x140),  getFloat(GTA_ADDR(pcar, 0x70, 0x140)) - getFloat(pcar + 0x20) * 0.01 );
+            setFloat(GTA_ADDR(pcar, 0x74, 0x144),  getFloat(GTA_ADDR(pcar, 0x74, 0x144)) - getFloat(pcar + 0x24) * 0.01 );
+            setFloat(GTA_ADDR(pcar, 0x78, 0x148),  getFloat(GTA_ADDR(pcar, 0x78, 0x148)) - getFloat(pcar + 0x28) * 0.01 );
           }
         }
       }
@@ -7649,28 +7651,28 @@ void *vehicle_base_color(int calltype, int keypress, bool defaultstatus UNUSED) 
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING:
-        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%u", lcs_color);
-        else if( VCS ) snprintf(retbuf, sizeof(retbuf), vehicle_color_strings[color_channel], vcs_color.r, vcs_color.g, vcs_color.b);
+        if( GameManager.game == GTA_LCS ) snprintf(retbuf, sizeof(retbuf), "%u", lcs_color);
+        else if( GameManager.game == GTA_VCS ) snprintf(retbuf, sizeof(retbuf), vehicle_color_strings[color_channel], vcs_color.r, vcs_color.g, vcs_color.b);
 
         return (void *)retbuf;
 
       case FUNC_CHECK:
-        if( LCS ) lcs_color = lcs_getVehicleColorBase( pcar );
-        else if( VCS ) vcs_color = vcs_getVehicleColorBase( pcar );
+        if( GameManager.game == GTA_LCS ) lcs_color = lcs_getVehicleColorBase( pcar );
+        else if( GameManager.game == GTA_VCS ) vcs_color = vcs_getVehicleColorBase( pcar );
         break;
 
       case FUNC_CHANGE_VALUE:
         if( keypress == PSP_CTRL_TRIANGLE ) {
           #ifdef HEXEDITOR
-          uaddr temp = pcar + (LCS ? 0x1F0 : 0x224);
+          uaddr temp = GTA_ADDR(pcar, 0x1F0, 0x224);
           hex_marker_clear();
-          hex_marker_addx(temp, (LCS ? sizeof(uint8) : sizeof(CRGBA)));
+          hex_marker_addx(temp, (GameManager.game == GTA_LCS ? sizeof(uint8) : sizeof(CRGBA)));
           hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> Primary Color");
           #endif
           break;
         }
 
-        if( VCS ) {
+        if( GameManager.game == GTA_VCS ) {
           if( keypress == PSP_CTRL_CROSS ) { // CROSS
             color_channel++; color_channel %= (sizeof(CRGBA) - 1);
             break;
@@ -7683,7 +7685,7 @@ void *vehicle_base_color(int calltype, int keypress, bool defaultstatus UNUSED) 
 
           vcs_setVehicleColorBase(pcar, vcs_color);
         }
-        else if( LCS ) {
+        else if( GameManager.game == GTA_LCS ) {
           if( keypress == PSP_CTRL_LEFT && lcs_color > 0 )
             lcs_color--;
           else if( keypress == PSP_CTRL_RIGHT && lcs_color < 127 )
@@ -7708,28 +7710,28 @@ void *vehicle_stripe_color(int calltype, int keypress, bool defaultstatus UNUSED
   if( pcar ) {
     switch( calltype ) {
       case FUNC_GET_STRING:
-        if( LCS ) snprintf(retbuf, sizeof(retbuf), "%u", lcs_color);
-        else if( VCS ) snprintf(retbuf, sizeof(retbuf), vehicle_color_strings[pos], vcs_color.r, vcs_color.g, vcs_color.b);
+        if( GameManager.game == GTA_LCS ) snprintf(retbuf, sizeof(retbuf), "%u", lcs_color);
+        else if( GameManager.game == GTA_VCS ) snprintf(retbuf, sizeof(retbuf), vehicle_color_strings[pos], vcs_color.r, vcs_color.g, vcs_color.b);
 
         return (void *)retbuf;
 
       case FUNC_CHECK:
-        if( LCS ) lcs_color = lcs_getVehicleColorStripe( pcar );
-        else if( VCS ) vcs_color = vcs_getVehicleColorStripe( pcar );
+        if( GameManager.game == GTA_LCS ) lcs_color = lcs_getVehicleColorStripe( pcar );
+        else if( GameManager.game == GTA_VCS ) vcs_color = vcs_getVehicleColorStripe( pcar );
         break;
 
       case FUNC_CHANGE_VALUE:
         if( keypress == PSP_CTRL_TRIANGLE ) {
           #ifdef HEXEDITOR
-          uaddr temp = pcar + (LCS ? 0x1F1 : 0x228);
+          uaddr temp = GTA_ADDR(pcar, 0x1F1, 0x228);
           hex_marker_clear();
-          hex_marker_addx(temp, (LCS ? sizeof(uint8) : sizeof(CRGBA)));
+          hex_marker_addx(temp, (GameManager.game == GTA_LCS ? sizeof(uint8) : sizeof(CRGBA)));
           hexeditor_create(temp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> Secondary Color");
           #endif
           break;
         }
 
-        if( VCS ) {
+        if( GameManager.game == GTA_VCS ) {
           if( keypress == PSP_CTRL_CROSS ) { // CROSS
             pos++; pos %= (sizeof(CRGBA) - 1);
             break;
@@ -7742,7 +7744,7 @@ void *vehicle_stripe_color(int calltype, int keypress, bool defaultstatus UNUSED
 
           vcs_setVehicleColorStripe(pcar, vcs_color);
         }
-        else if( LCS ) {
+        else if( GameManager.game == GTA_LCS ) {
           if( keypress == PSP_CTRL_LEFT && lcs_color > 0 )
             lcs_color--;
           else if( keypress == PSP_CTRL_RIGHT && lcs_color < 127 )
@@ -7794,7 +7796,7 @@ void *world_weather(int calltype, int keypress, bool defaultstatus, int defaultv
       break;
 
     case FUNC_GET_STRING:
-      return (void*)(LCS ? weather_lcs[i] : weather_vcs[i]);
+      return (void*)(GameManager.game == GTA_LCS ? weather_lcs[i] : weather_vcs[i]);
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_CROSS ) { // CROSS
@@ -7890,9 +7892,9 @@ void *traffic_freeze(int calltype, int keypress, bool defaultstatus) {
 
           // @ 0x44 -> make 44 82 19 to 44 8A 19 will disable / freeze in place until touched
 
-          //setFloat(base+(LCS?0x70:0x140), 0.00f); // zero moving vectors -> results in slow-mo
-          //setFloat(base+(LCS?0x74:0x144), 0.00f);
-          //setFloat(base+(LCS?0x78:0x148), 0.00f);
+          //setFloat(GTA_ADDR(base, 0x70, 0x140), 0.00f); // zero moving vectors -> results in slow-mo
+          //setFloat(GTA_ADDR(base, 0x74, 0x144), 0.00f);
+          //setFloat(GTA_ADDR(base, 0x78, 0x148), 0.00f);
 
         } else { // reset when player entered already frozen vehicle
           setPedOrVehicleFreezePosition(base, false); // reset
@@ -7980,8 +7982,8 @@ void *peds_density(int calltype, int keypress, bool defaultstatus) {
 void *onmission(int calltype, int keypress, bool defaultstatus, int defaultval) {
   static bool status;
   static bool option;
-  static uaddr offsetinspace = 0; // getInt(global_OnAMissionFlag + (LCS ? 0 : gp));
-  static uaddr scriptspace = 0; // getInt(global_ScriptSpace + (LCS ? 0 : gp));
+  static uaddr offsetinspace = 0; // getInt(global_OnAMissionFlag + gp_);
+  static uaddr scriptspace = 0; // getInt(global_ScriptSpace + gp_);
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -7992,8 +7994,8 @@ void *onmission(int calltype, int keypress, bool defaultstatus, int defaultval) 
       return ( BOOLSTR(option) );
 
     case FUNC_CHECK:
-      offsetinspace = getInt(global_OnAMissionFlag + (LCS ? 0 : gp));
-      scriptspace = getInt(global_ScriptSpace + (LCS ? 0 : gp));
+      offsetinspace = getInt(global_OnAMissionFlag + gp_);
+      scriptspace = getInt(global_ScriptSpace + gp_);
       if( !status && offsetinspace > 0 && isInMemBounds(scriptspace) )
         option = getByte(scriptspace + offsetinspace);
       break;
@@ -8029,7 +8031,7 @@ void *onmission(int calltype, int keypress, bool defaultstatus, int defaultval) 
       }
 
       //if( status == 0 && offsetinspace > 0 ) {
-      //  setByte(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + offsetinspace, 0); //we could be on a mission though
+      //  setByte(getInt(global_ScriptSpace + gp_) + offsetinspace, 0); //we could be on a mission though
       //}
       break;
 
@@ -8124,7 +8126,7 @@ void *peds_killaiming(int calltype, int keypress, bool defaultstatus) {
       //snprintf(buffer, sizeof(buffer), "Debug: %i, 0x%08X = 0x%08X", peds_max, base, pobj);
       //setTimedTextbox(buffer, 7.00f);
       for( uint32 j = 0; j < peds_max; j++, base += var_pedobjsize ) {
-        if( (uaddr)getInt(base+(LCS?0x6BC:0x81C)) == pobj ) { // can be pplayer or pcar -> use pobj
+        if( (uaddr)getInt(GTA_ADDR(base, 0x6BC, 0x81C)) == pobj ) { // can be pplayer or pcar -> use pobj
           setPedHealthAndArmor(base, 0, 0);
         }
       }
@@ -8222,7 +8224,7 @@ void *peds_freeze(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_APPLY:
       base = peds_base;
-      curped = getInt(pplayer+(LCS?0x6BC:0x81C));
+      curped = getInt(GTA_ADDR(pplayer, 0x6BC, 0x81C));
 
       if( curped > 0 ) {
         for( j = 0; j < peds_max; j++, base += var_pedobjsize ) {
@@ -8367,7 +8369,7 @@ void *unlimited_sprinting(int calltype, int keypress, bool defaultstatus) {
       return (int*)(status || locked_bool);
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
+      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, " (Locked)", ""));
       return (void*)retbuf;
 
     case FUNC_CHECK:
@@ -8421,7 +8423,7 @@ void *unlimited_swimming(int calltype, int keypress, bool defaultstatus) {
       return (int*)(status || locked_bool);
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
+      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, " (Locked)", ""));
       return (void*)retbuf;
 
     case FUNC_CHECK:
@@ -8475,7 +8477,7 @@ void *fireproof_cheat(int calltype, int keypress, bool defaultstatus) {
       return (int*)(status || locked_bool);
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, "", " (Locked)"));
+      snprintf(retbuf, sizeof(retbuf), BOOLSTRCUSTOM(locked_bool, " (Locked)", ""));
       return (void*)retbuf;
 
     case FUNC_CHECK:
@@ -8538,7 +8540,7 @@ void *wanted_level(int calltype, int keypress, bool defaultstatus, int defaultva
       return (int*)(int)stars;
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), _t("%u Stars (%u max)"), stars, getByte(global_maxwantedlevel+(LCS ? 0 : gp)));
+      snprintf(retbuf, sizeof(retbuf), _t("%u Stars (%u max)"), stars, getByte(global_maxwantedlevel+gp_));
       return (void*)retbuf;
 
     case FUNC_APPLY:
@@ -8622,16 +8624,16 @@ void UpdatePosition_patched(u32 handle) {
   if( walking_speed(FUNC_GET_STATUS,-1,-1,-1) != 0 ) { // only if CHEAT status is ON
     //DEBUG_LOG("walking_speed is enabled");
     if( handle == pplayer && walkspd_mult != 1.00f ) { // only for Player
-      setFloat(handle+(LCS?0x4d8:0x794), getFloat(handle+(LCS?0x4d8:0x794)) * walkspd_mult);
-      setFloat(handle+(LCS?0x4dc:0x798), getFloat(handle+(LCS?0x4dc:0x798)) * walkspd_mult);
+      setFloat(GTA_ADDR(handle, 0x4d8, 0x794), getFloat(GTA_ADDR(handle, 0x4d8, 0x794)) * walkspd_mult);
+      setFloat(GTA_ADDR(handle, 0x4dc, 0x798), getFloat(GTA_ADDR(handle, 0x4dc, 0x798)) * walkspd_mult);
     }
   }
 
   if( pedwalking_speed(FUNC_GET_STATUS,-1,-1,-1) ) { // only if CHEAT status is ON
     //DEBUG_LOG("pedwalking_speed is enabled");
     if( handle != pplayer && pedwalkspd_mult != 1.00f ) { // only for non Player
-      setFloat(handle+(LCS?0x4d8:0x794), getFloat(handle+(LCS?0x4d8:0x794)) * pedwalkspd_mult);
-      setFloat(handle+(LCS?0x4dc:0x798), getFloat(handle+(LCS?0x4dc:0x798)) * pedwalkspd_mult);
+      setFloat(GTA_ADDR(handle, 0x4d8, 0x794), getFloat(GTA_ADDR(handle, 0x4d8, 0x794)) * pedwalkspd_mult);
+      setFloat(GTA_ADDR(handle, 0x4dc, 0x798), getFloat(GTA_ADDR(handle, 0x4dc, 0x798)) * pedwalkspd_mult);
     }
   }
 
@@ -8800,7 +8802,7 @@ void *world_time(int calltype, int keypress, bool defaultstatus, int defaultval 
         setClockTime(current_hour, 0x00, 0x00);
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        //int gp_tmp = (LCS ? 0 : gp);
+        //int gp_tmp = gp_;
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_clockmultiplier + gp_ + 0x4, sizeof(uint8)); // hour value
@@ -8934,7 +8936,7 @@ void *world_realtimeclock(int calltype, int keypress, bool defaultstatus) {
         setClockTime((uint8)timetest.hour, (uint8)timetest.minute, (uint8)timetest.second);
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
-        //int gp_tmp = (LCS ? 0 : gp);
+        //int gp_tmp = gp_;
         #ifdef HEXEDITOR
         hex_marker_clear();
         hex_marker_addx(global_clockmultiplier + gp_, sizeof(int));
@@ -8964,7 +8966,7 @@ void *world_realtimeclock(int calltype, int keypress, bool defaultstatus) {
  **************************************************************************************************************************************/
 void *no_cheating_warning(int calltype, int keypress, bool defaultstatus UNUSED) {
   static bool status;
-  //int gp_tmp = (LCS ? 0 : gp); //to minimize code
+  //int gp_tmp = gp_; //to minimize code
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
@@ -9115,12 +9117,12 @@ void *world_waterlevel(int calltype, int keypress, bool defaultstatus, int defau
 
       } else if( keypress == PSP_CTRL_CIRCLE ) {
         status = false;
-        level = LCS ? 0.00f : 6.00f;
+        level = GameManager.game == GTA_LCS ? 0.00f : 6.00f;
         resetWaterLevel();
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
-        hexeditor_create(LCS ? global_ptr_water : global_ptr_water+gp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> water level");
+        hexeditor_create(global_ptr_water+gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> water level");
         #endif
       }
 
@@ -9138,7 +9140,7 @@ void *world_waterlevel(int calltype, int keypress, bool defaultstatus, int defau
           if( status ) onetimeapply = 1;
 
       } else {
-        level = LCS ? 0.00f : 6.00f; // set default height
+        level = GameManager.game == GTA_LCS ? 0.00f : 6.00f; // set default height
         if( !status && pplayer ) // only reset when game active and cheat off
           resetWaterLevel();
       }
@@ -9174,7 +9176,7 @@ void *world_waveheight(int calltype, int keypress, bool defaultstatus, int defau
       return (int*) (int)((level*100)+1000.00f); // so that its positive and both .XX are saved in int (ugly) but whatever -> 1000 +- value
 
     case FUNC_GET_STRING:
-      snprintf(retbuf, sizeof(retbuf), "%.2f", level + (LCS ? 0.50f : 0)); // so that no waves is at 0
+      snprintf(retbuf, sizeof(retbuf), "%.2f", level + (GameManager.game == GTA_LCS ? 0.50f : 0)); // so that no waves is at 0
       return (void *)retbuf;
 
     case FUNC_APPLY:
@@ -9193,11 +9195,11 @@ void *world_waveheight(int calltype, int keypress, bool defaultstatus, int defau
       break;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_LEFT && level > (LCS ? -0.50f : 0.00f) ) { // LEFT
+      if( keypress == PSP_CTRL_LEFT && level > (GameManager.game == GTA_LCS ? -0.50f : 0.00f) ) { // LEFT
         level -= 0.05f;
         status = true;
-        if( LCS && level <= -0.50f ) level = -0.50f; // small fix
-        if( VCS && level <= 0.00f ) level = 0.00f; // small fix
+        if( GameManager.game == GTA_LCS && level <= -0.50f ) level = -0.50f; // small fix
+        else if( level <= 0.00f ) level = 0.00f; // small fix
 
       } else if( keypress == PSP_CTRL_RIGHT && level < 50.00f ) { // RIGHT
         level += 0.05f;
@@ -9211,7 +9213,7 @@ void *world_waveheight(int calltype, int keypress, bool defaultstatus, int defau
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
-        hexeditor_create(LCS ? global_WindClipped : global_WindClipped+gp, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> wave height");
+        hexeditor_create(global_WindClipped+gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> wave height");
         #endif
       }
 
@@ -9245,33 +9247,33 @@ void *pickup_spawner(int calltype, int keypress, bool defaultstatus UNUSED, int 
       return (int*)i;
 
     case FUNC_GET_STRING:
-      return (void *)(LCS ? lcs_pickups[i].name : vcs_pickups[i].name);
+      return (void *)(GameManager.game == GTA_LCS ? lcs_pickups[i].name : vcs_pickups[i].name);
 
     case FUNC_CHANGE_VALUE:
       if( keypress == PSP_CTRL_LEFT && i > 0 ) { // LEFT
         i--;
 
       } else if( keypress == PSP_CTRL_RIGHT ) { // RIGHT
-        if( LCS && i < lcs_pickupsize ) i++;
-        if( VCS && i < vcs_pickupsize ) i++;
+        if( GameManager.game == GTA_LCS && i < lcs_pickupsize ) i++;
+        else if( i < vcs_pickupsize ) i++;
 
       } else if( keypress == PSP_CTRL_CROSS || keypress == PSP_CTRL_SQUARE ) {
 
         /// calculate coordinate in front of player
-        x = getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
-        y = getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * 2 );
+        x = getFloat(pplayer+0x30) + ( cosf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * 2 );
+        y = getFloat(pplayer+0x34) + ( sinf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * 2 );
         z = getFloat(pplayer+0x38);
 
-        char type = 0x3; // (LCS ? lcs_pickups[i].type : vcs_pickups[i].type);
+        char type = 0x3; // (GameManager.game == GTA_LCS ? lcs_pickups[i].type : vcs_pickups[i].type);
         if( keypress == PSP_CTRL_SQUARE ) {
-          type = LCS ? 0xF : 0xB; /// to NOT make it re-appear / a permanent pickup
+          type = GameManager.game == GTA_LCS ? 0xF : 0xB; /// to NOT make it re-appear / a permanent pickup
         }
 
         /// money needs to be type 0x8 to work though
-        if( (LCS && lcs_pickups[i].id == 0x20A) || (VCS && vcs_pickups[i].id == 0x1B5) )
+        if( (GameManager.game == GTA_LCS && lcs_pickups[i].id == 0x20A) || (GameManager.game == GTA_VCS && vcs_pickups[i].id == 0x1B5) )
           type = 0x8;
 
-        spawnPickup(LCS ? lcs_pickups[i].id : vcs_pickups[i].id, type, LCS ? lcs_pickups[i].amount : vcs_pickups[i].amount, x, y, z); //spawn it!
+        spawnPickup(GameManager.game == GTA_LCS ? lcs_pickups[i].id : vcs_pickups[i].id, type, GameManager.game == GTA_LCS ? lcs_pickups[i].amount : vcs_pickups[i].amount, x, y, z); //spawn it!
 
       }
       break;
@@ -9280,7 +9282,7 @@ void *pickup_spawner(int calltype, int keypress, bool defaultstatus UNUSED, int 
       if( defaultval >= 0 )
         i = defaultval;
       else i = 0; // default
-      if( i > (LCS ? lcs_pickupsize : vcs_pickupsize) )
+      if( i > (GameManager.game == GTA_LCS ? lcs_pickupsize : vcs_pickupsize) )
         i = 0; // fix for bad config value
       break;
   }
@@ -9295,7 +9297,7 @@ void *pickup_spawner(int calltype, int keypress, bool defaultstatus UNUSED, int 
  *
  * Notes:
  ******************************************************************************************************************************************************/
-char *lcs_playerModels[] = {  // 8 chars max
+static const u8str lcs_playerModels[] = {  // 8 chars max
   "plr",     //     "Leone Suit"
   "plr2",    // 128 "Lawyer"
   "plr3",    // 129 "Casual"
@@ -9388,7 +9390,7 @@ void *player_model(int calltype, int keypress, bool defaultstatus UNUSED, int de
       return (int*)i;
 
     case FUNC_GET_STRING:
-      snprintf(buf, sizeof(buf), "%s", LCS ? lcs_playerModels[i] : vcs_getNameForPedViaID(i));
+      snprintf(buf, sizeof(buf), "%s", GameManager.game == GTA_LCS ? lcs_playerModels[i] : vcs_getNameForPedViaID(i));
       return (void *)(buf);
 
 
@@ -9414,13 +9416,13 @@ void *player_model(int calltype, int keypress, bool defaultstatus UNUSED, int de
 
       } else if( keypress == PSP_CTRL_LEFT && i > 0) { // LEFT
         i--;
-        if( VCS )
+        if( GameManager.game == GTA_VCS )
           while( getAddressOfIdeSlotForID(i) <= 0 ) // no address means empty IDE slot
             i--;
 
-      } else if( keypress == PSP_CTRL_RIGHT && i < (LCS ? list_size : 0xA7) ) { // RIGHT (using getLastIdeOfType(MODELINFO_PED) will make SetActorSkinTo crash the game ?!?!?!?!?)
+      } else if( keypress == PSP_CTRL_RIGHT && i < (GameManager.game == GTA_LCS ? list_size : 0xA7) ) { // RIGHT (using getLastIdeOfType(MODELINFO_PED) will make SetActorSkinTo crash the game ?!?!?!?!?)
         i++;
-        if( VCS )
+        if( GameManager.game == GTA_VCS )
           while( getAddressOfIdeSlotForID(i) <= 0 ) // no address means empty IDE slot
             i++;
 
@@ -9430,7 +9432,7 @@ void *player_model(int calltype, int keypress, bool defaultstatus UNUSED, int de
       if( defaultval >= 0 )
         i = defaultval;
       else i = 0; // first ped is first IDE for both games
-      if( i > (LCS ? list_size : 0xA7) )
+      if( i > (GameManager.game == GTA_LCS ? list_size : 0xA7) )
         i = 0; // fix for bad config value
       break;
   }
@@ -9464,7 +9466,7 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
   /// reset to original type after spawn - If not you can no longer enter trains in LCS for example
   static bool typebackup = false;
   if( typebackup ) {
-	  setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), typebackup); // set original type
+	  setInt(GTA_ADDR(getAddressOfIdeSlotForID(id), 0x38, 0x54), typebackup); // set original type
 	  typebackup = false;
   }
   #endif
@@ -9486,8 +9488,8 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
       if( keypress == PSP_CTRL_LEFT && id > getFirstIdeOfType(MODELINFO_VEHICLE) ) { // LEFT
         id--;
         #ifndef SPECIAL_VEHICLES
-        for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) { // skip blacklisted
-          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+        for( i = 0; i < (GameManager.game == GTA_LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) { // skip blacklisted
+          if( id == (GameManager.game == GTA_LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id--;
             i = 0;
           }
@@ -9497,8 +9499,8 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
       } else if( keypress == PSP_CTRL_RIGHT && id < getLastIdeOfType(MODELINFO_VEHICLE) ) {
         id++;
         #ifndef SPECIAL_VEHICLES
-        for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) { // skip blacklisted
-          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+        for( i = 0; i < (GameManager.game == GTA_LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) { // skip blacklisted
+          if( id == (GameManager.game == GTA_LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
             id++;
             i = 0;
           }
@@ -9601,7 +9603,7 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
             0x4E, 0x00 // Opcode: 004E
           };
 
-          if( VCS ) { // overwrite opcodes
+          if( GameManager.game == GTA_VCS ) { // overwrite opcodes
             writeShort(&script_becomevehicle[0], 0x0160);
             writeShort(&script_becomevehicle[5], 0x0228);
             writeShort(&script_becomevehicle[7], 0x0043);
@@ -9619,14 +9621,14 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
             writeShort(&script_becomevehicle[40], 0x0ED0);
           }
 
-          if( VCS && mod_text_size == 0x00377D30 ) { // fix for ULUS 1.01
+          if( GameManager.gameEboot == GTA_VCS_ULUS10160_1_01 ) { // fix for ULUS 1.01
             /// update $PLAYER_CHAR (is $759)
             writeShort(&script_becomevehicle[9], 0xF7CF);
             writeShort(&script_becomevehicle[16], 0xF7CF);
             writeShort(&script_becomevehicle[40], 0xF7CF);
           }
 
-          if( LCS && mod_text_size == 0x00320A34 ) { // fix for ULUS 1.02
+          if( GameManager.gameEboot == GTA_LCS_ULUS10041_1_02 ) { // fix for ULUS 1.02
             /// update $PLAYER_CHAR (is $534)
             writeShort(&script_becomevehicle[9], 0x16CE);
             writeShort(&script_becomevehicle[16], 0x16CE);
@@ -9638,10 +9640,10 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
 
           /// if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
           #ifdef SPECIAL_VEHICLES
-          for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) {
-            if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-              typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
-              setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
+          for( i = 0; i < (GameManager.game == GTA_LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) {
+            if( id == (GameManager.game == GTA_LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+              typebackup = getInt(GTA_ADDR(getAddressOfIdeSlotForID(id), 0x38, 0x54)); // backup type
+              setInt(GTA_ADDR(getAddressOfIdeSlotForID(id), 0x38, 0x54), 1); // set type boat
             }
           } // HAS to be reset after spawn
           #endif
@@ -9655,21 +9657,21 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
 
         /// if special vehicles set the IDE type to "BOAT" to make them spawn without crashing
         #ifdef SPECIAL_VEHICLES
-        for( i = 0; i < (LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) {
-          if( id == (LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
-            typebackup = getInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54)); // backup type
-            setInt(getAddressOfIdeSlotForID(id) + (LCS ? 0x38 : 0x54), 1); // set type boat
+        for( i = 0; i < (GameManager.game == GTA_LCS ? blacklist_lcs_size : blacklist_vcs_size); i++ ) {
+          if( id == (GameManager.game == GTA_LCS ? blacklist_lcs[i] : blacklist_vcs[i]) ) {
+            typebackup = getInt(GTA_ADDR(getAddressOfIdeSlotForID(id), 0x38, 0x54)); // backup type
+            setInt(GTA_ADDR(getAddressOfIdeSlotForID(id), 0x38, 0x54), 1); // set type boat
           }
         } // HAS to be reset after spawn
         #endif
 
         /// calculate coordinate in front of player
-        x = getFloat(pplayer+0x30) + ( cosf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
-        y = getFloat(pplayer+0x34) + ( sinf( getFloat(pplayer+(LCS?0x4E0:0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
+        x = getFloat(pplayer+0x30) + ( cosf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // 4 adjusts distance
+        y = getFloat(pplayer+0x34) + ( sinf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * (pcar ? 6 : 4) ); // more disctance when in vehicle
         z = getFloat(pplayer+0x38); // z will be calculated by game though (via find ground)
 
         /// calc degree (with driver door facing player!)
-        deg = (180.0f / M_PI) * getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + ((getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f);
+        deg = (180.0f / M_PI) * getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + ((getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) < 0.00f) ?  360.0f : 0.0f);
         deg += 90.0f;
         if( deg > 360.0f )
           deg -= 360.0f;
@@ -9753,7 +9755,7 @@ void *vehicle_spawner(int calltype, int keypress, bool defaultstatus, int defaul
           0x4E, 0x00 // Opcode: 004E
         };
 
-        if( VCS ) { // overwrite opcodes
+        if( GameManager.game == GTA_VCS ) { // overwrite opcodes
           writeShort(&script_spawnvehicle[0], 0x0160);
           writeShort(&script_spawnvehicle[5], 0x0228);
           writeShort(&script_spawnvehicle[7], 0x01BB);
@@ -9815,7 +9817,7 @@ if( no destination icons && pay'n'spray icon is global map visible bool )  ?
 
 void teleport_next_sub() {
   uint32 i;
-  int type, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int type, objbase, base = GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   array_uidx slot;
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
@@ -9865,8 +9867,8 @@ void teleport_next_sub() {
 
 
         default: // use coordinates in blip slot
-          if( getFloat(base+(LCS ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
-            SetPlayerPosition(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
+          if( getFloat(GTA_ADDR(base, 0x14, 0x18)) != 0.0f ) { // z coordinate must be != 0
+            SetPlayerPosition(getFloat(GTA_ADDR(base, 0xC, 0x10)), getFloat(GTA_ADDR(base, 0x10, 0x14)), getFloat(GTA_ADDR(base, 0x14, 0x18)) + 1.00f);
             return;
           }
 
@@ -9904,16 +9906,16 @@ void *teleport_next(int calltype, int keypress) {
 
 void teleport_mission() { // gets next mission host location from mapicon
   uint32 i;
-  int base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  uaddr base = GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(base) && getMapiconType(base) == 0x05 ) {
 
       char icn = getMapiconID(base);
 
-      if( (LCS && icn >= 31 && icn <= 40) || (VCS && icn >= 0x23 && icn <= 0x2E) ) {
-        if( getFloat(base+(LCS ? 0x14 : 0x18)) != 0.0f ) { // z coordinate must be != 0
-          SetPlayerPosition(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), getFloat(base+(LCS ? 0x14 : 0x18)) + 1.00f);
+      if( (GameManager.game == GTA_LCS && icn >= 31 && icn <= 40) || (GameManager.game == GTA_VCS && icn >= 0x23 && icn <= 0x2E) ) {
+        if( getFloat(GTA_ADDR(base, 0x14, 0x18)) != 0.0f ) { // z coordinate must be != 0
+          SetPlayerPosition(getFloat(GTA_ADDR(base, 0xC, 0x10)), getFloat(GTA_ADDR(base, 0x10, 0x14)), getFloat(GTA_ADDR(base, 0x14, 0x18)) + 1.00f);
           return;
         }
       }
@@ -9925,12 +9927,12 @@ void teleport_mission() { // gets next mission host location from mapicon
 /// TODO: get_ground_z_for_3d_coord (opcode: 02D3)
 void teleport_marker() {
   uint32 i;
-  int base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  uaddr base = GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++) {
-    if( getMapiconIsActive(base) && getMapiconID(base) == (LCS ? 49 : 0x10) ) {
+    if( getMapiconIsActive(base) && getMapiconID(base) == (GameManager.game == GTA_LCS ? 49 : 0x10) ) {
       // TODO: find z coordinate like debug build
-      SetPlayerPosition(getFloat(base+(LCS ? 0xC : 0x10)), getFloat(base+(LCS ? 0x10 : 0x14)), (LCS ? -150.0f : -250.0f)); // z is always 0 for marker sadly -> telep under map will reset player by game on street
+      SetPlayerPosition(getFloat(GTA_ADDR(base, 0xC, 0x10)), getFloat(GTA_ADDR(base, 0x10, 0x14)), (GameManager.game == GTA_LCS ? -150.0f : -250.0f)); // z is always 0 for marker sadly -> telep under map will reset player by game on street
       return;
     }
   }
@@ -9946,7 +9948,9 @@ green    green  = Object / !pickup
 */
 void kill_all_targets() {
   uint32 i;
-  int type, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int type;
+  uaddr objbase;
+  uaddr base = GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   array_uidx slot;
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
@@ -9995,7 +9999,8 @@ void kill_all_targets() {
 
 void freeze_all_targets() {
   uint32 i;
-  int type, objbase, base = LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
+  int type;
+  uaddr objbase, base = GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding);
   array_uidx slot;
 
   for( i = 0; i < var_radarblipslots; base+=var_radarblipslotsize, i++ ) {
@@ -10082,12 +10087,12 @@ void buttonApplyOnce(int i) { // apply once on button press
 
   } else if( i == 5 ) { // toggle fps
     if( pcar ){
-      if( getByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8) == (LCS ? 0x1 : 0xB) ) { // custom tracks toggle is ON
-        setByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, LCS ? 0x0 : 0xA); // disable custom tracks toggle
-        if( VCS ) setRadioStationNow(0); // TODO: re-enable radio playback -> instead of 0 get last radio station played?
+      if( getByte(getInt((global_custrackarea+gp_)) + 0x8) == (GameManager.game == GTA_LCS ? 0x1 : 0xB) ) { // custom tracks toggle is ON
+        setByte(getInt((GameManager.game == GTA_LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, GameManager.game == GTA_LCS ? 0x0 : 0xA); // disable custom tracks toggle
+        if( GameManager.game == GTA_VCS ) setRadioStationNow(0); // TODO: re-enable radio playback -> instead of 0 get last radio station played?
       } else {
-        setByte(getInt((LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, LCS ? 0x1 : 0xB); // enable custom tracks toogle
-        setByte(global_radioarea + (LCS ? 0x350 : 0x578), 0x0); // trigger playback
+        setByte(getInt((GameManager.game == GTA_LCS ? global_custrackarea : global_custrackarea+gp)) + 0x8, GameManager.game == GTA_LCS ? 0x1 : 0xB); // enable custom tracks toogle
+        setByte(GTA_ADDR(global_radioarea, 0x350, 0x578), 0x0); // trigger playback
       }
     }
 
@@ -10143,10 +10148,10 @@ void buttonApplyOnce(int i) { // apply once on button press
         float x_obj = (x2 - x1) / forcemult;
         float y_obj = (y2 - y1) / forcemult;
         //float z_obj = (z2 - z1) / forcemult;
-        setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
-        setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
-        //setFloat(base+(LCS?0x78:0x148), getFloat(base+(LCS?0x78:0x148)) + z_obj);
-        setFloat(base+(LCS?0x78:0x148), 0.2f);
+        setFloat(GTA_ADDR(base, 0x70, 0x140), getFloat(GTA_ADDR(base, 0x70, 0x140)) + x_obj);
+        setFloat(GTA_ADDR(base, 0x74, 0x144), getFloat(GTA_ADDR(base, 0x74, 0x144)) + y_obj);
+        //setFloat(GTA_ADDR(base, 0x78, 0x148), getFloat(GTA_ADDR(base, 0x78, 0x148)) + z_obj);
+        setFloat(GTA_ADDR(base, 0x78, 0x148), 0.2f);
       }
     }
   }
@@ -10164,10 +10169,10 @@ void buttonApplyOnce(int i) { // apply once on button press
       float x_obj = (x2 - x1) / forcemult;
       float y_obj = (y2 - y1) / forcemult;
       //float z_obj = (z2 - z1) / forcemult;
-      setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
-      setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
-      //setFloat(base+(LCS?0x78:0x148), getFloat(base+(LCS?0x74:0x144)) + 0.2f);
-      setFloat(base+(LCS?0x78:0x148), 0.2f);
+      setFloat(GTA_ADDR(base, 0x70, 0x140), getFloat(GTA_ADDR(base, 0x70, 0x140)) + x_obj);
+      setFloat(GTA_ADDR(base, 0x74, 0x144), getFloat(GTA_ADDR(base, 0x74, 0x144)) + y_obj);
+      //setFloat(GTA_ADDR(base, 0x78, 0x148), getFloat(GTA_ADDR(base, 0x74, 0x144)) + 0.2f);
+      setFloat(GTA_ADDR(base, 0x78, 0x148), 0.2f);
     }
     }
   }*/
@@ -10187,17 +10192,17 @@ void buttonApplyOnce(int i) { // apply once on button press
       float x_obj = (x2 - x1) / forcemult;
       float y_obj = (y2 - y1) / forcemult;
       //float z_obj = (z2 - z1) / forcemult;
-      setFloat(base+(LCS?0x70:0x140), getFloat(base+(LCS?0x70:0x140)) + x_obj);
-      setFloat(base+(LCS?0x74:0x144), getFloat(base+(LCS?0x74:0x144)) + y_obj);
-      //setFloat(base+(LCS?0x78:0x148), getFloat(base+(LCS?0x74:0x144)) + 0.2f);
-      setFloat(base+(LCS?0x78:0x148), 0.2f);
+      setFloat(GTA_ADDR(base, 0x70, 0x140), getFloat(GTA_ADDR(base, 0x70, 0x140)) + x_obj);
+      setFloat(GTA_ADDR(base, 0x74, 0x144), getFloat(GTA_ADDR(base, 0x74, 0x144)) + y_obj);
+      //setFloat(GTA_ADDR(base, 0x78, 0x148), getFloat(GTA_ADDR(base, 0x74, 0x144)) + 0.2f);
+      setFloat(GTA_ADDR(base, 0x78, 0x148), 0.2f);
     }
     }
   }*/
 
   } else if( i == 14 ) {
     if( pcar && !isVehicleInAir( pcar ) && !isVehicleUpsideDown( pcar ) )
-      setFloat(pcar+(LCS?0x78:0x148), 0.3f);
+      setFloat(GTA_ADDR(pcar, 0x78, 0x148), 0.3f);
 
   } else if( i == 15 ) { // lock vehicle doors
     if( pcar )
@@ -10353,8 +10358,8 @@ void *touch_pedestrian(int calltype, int keypress, bool defaultstatus, int defau
           setPedOrVehicleFreezePosition(addr, false);
 
         } else if( i == 4 ) { // 4
-          if( LCS ) setPedFlagToUnload(addr);
-          if( VCS ) {
+          if( GameManager.game == GTA_LCS ) setPedFlagToUnload(addr);
+          if( GameManager.game == GTA_VCS ) {
             setFloat(addr+0x30, 2000.0f); // move far away
             setFloat(addr+0x34, 2000.0f); //
             setFloat(addr+0x38, -250.0f); // move map bottom limit to make game take care of it automatically
@@ -10444,8 +10449,8 @@ void *touch_vehicle(int calltype, int keypress, bool defaultstatus, int defaultv
           makeVehicleExplode(addr);
 
         } else if( i == 3 ) { // unload it
-          if( LCS ) setVehicleFlagToUnload(addr);
-          if( VCS ) {
+          if( GameManager.game == GTA_LCS ) setVehicleFlagToUnload(addr);
+          if( GameManager.game == GTA_VCS ) {
             setFloat(addr+0x30, 2000.0f); // move far away
             setFloat(addr+0x34, 2000.0f); //
             setFloat(addr+0x38, -250.0f); // move map bottom limit to make game take care of it automatically
@@ -10613,7 +10618,7 @@ void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) 
 
     case FUNC_GET_STRING:
       if( j == 0 ) { // pickups
-        snprintf(retbuf, sizeof(retbuf), _t("Pickups - %s (%i)"), _t((LCS ? lcs_pickups[i].name : vcs_pickups[i].name)), getPickupsActiveObjectsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
+        snprintf(retbuf, sizeof(retbuf), _t("Pickups - %s (%i)"), _t((GameManager.game == GTA_LCS ? lcs_pickups[i].name : vcs_pickups[i].name)), getPickupsActiveObjectsWithID((GameManager.game == GTA_LCS ? lcs_pickups[i].id : vcs_pickups[i].id)) );
 
       } else if( j == 1 ) { // weapons in range
         if( status )
@@ -10638,7 +10643,7 @@ void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) 
     case FUNC_APPLY:
       removeAllCustomMapIcons(); // remove all custom created ones
       if( j == 0 ) { // pickups
-        createCustomMapIconsForPickupsWithID((LCS ? lcs_pickups[i].id : vcs_pickups[i].id), 0, COLOR32(4)); //3 is white, 4 is yellow
+        createCustomMapIconsForPickupsWithID((GameManager.game == GTA_LCS ? lcs_pickups[i].id : vcs_pickups[i].id), 0, COLOR32(4)); //3 is white, 4 is yellow
 
       } else if( j == 1 ) { // TODO: weapons in range
         //drawStringNoTvarg(ALIGN_CENTER, FONT_DIALOG, SIZE_SMALL, SHADOW_OFF, 240.0f, 10.0f, AZURE, "todo - weapons in range");
@@ -10668,7 +10673,7 @@ void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) 
         if( j < 1 )
           j++; // adjust max options here
         else j = 0;
-        if( LCS && j == 3 ) // skip VCS only stuff
+        if( GameManager.game == GTA_LCS && j == 3 ) // skip VCS only stuff
           j++;
         removeAllCustomMapIcons();
 
@@ -10677,7 +10682,7 @@ void *markonmap(int calltype, int keypress, bool defaultstatus, int defaultval) 
           i--;
         //removeAllCustomMapIcons();
       } else if( keypress == PSP_CTRL_RIGHT /* && i < something */ ) { // TODO:
-        if( j == 0 && i < (LCS ? lcs_pickupsize : vcs_pickupsize) ) // pickups
+        if( j == 0 && i < (GameManager.game == GTA_LCS ? lcs_pickupsize : vcs_pickupsize) ) // pickups
           i++;
         //removeAllCustomMapIcons();
       }
@@ -10721,8 +10726,8 @@ void *camera_centered(int calltype, int keypress, bool defaultstatus) {
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_camera + (LCS ? 0x1AA : 0x113), sizeof(float)); // not ulux
-        hexeditor_create( global_camera + (LCS ? 0x1AA : 0x113), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> centered");
+        hex_marker_addx(GTA_ADDR(global_camera, 0x1AA, 0x113), sizeof(float)); // not ulux
+        hexeditor_create(GTA_ADDR(global_camera, 0x1AA, 0x113), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> centered");
         #endif
       }
       break;
@@ -10786,8 +10791,8 @@ void *fieldofview(int calltype, int keypress, bool defaultstatus, int defaultval
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_camera + (LCS ? 0x254 : 0x198), sizeof(float));
-        hexeditor_create( global_camera + (LCS ? 0x254 : 0x198), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> FOV");
+        hex_marker_addx(GTA_ADDR(global_camera, 0x254, 0x198), sizeof(float));
+        hexeditor_create(GTA_ADDR(global_camera, 0x254, 0x198), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> FOV");
         #endif
       }
       break;
@@ -10812,14 +10817,14 @@ void *camera_topdown(int calltype, int keypress, bool defaultstatus) {
       return (int*)status;
 
     case FUNC_APPLY:
-      setFloat(global_camera + (LCS ? 0x0D4 : 0x854), 30.00f); // camera distance in Vehicle
-      setFloat(global_camera + (LCS ? 0x13C : 0x890), 30.00f); // camera distance on foot
-      if( LCS && mod_text_size == 0x0031F854 ) { // ULUX v0.02
+      setFloat(GTA_ADDR(global_camera, 0x0D4, 0x854), 30.00f); // camera distance in Vehicle
+      setFloat(GTA_ADDR(global_camera, 0x13C, 0x890), 30.00f); // camera distance on foot
+      if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 ) { // ULUX v0.02
         setFloat(global_camera + 0x23C, -2.00f); // keep camera highest point possible
         setFloat(global_camera + 0x240, -0.03f); // simulate camera move(necessary for vehicle)
       } else {
-        setFloat(global_camera + (LCS ? 0x24C : 0x0E8), -2.00f); // keep camera highest point possible
-        setFloat(global_camera + (LCS ? 0x250 : 0x194), -0.03f); // simulate camera move(necessary for vehicle)
+        setFloat(GTA_ADDR(global_camera, 0x24C, 0x0E8), -2.00f); // keep camera highest point possible
+        setFloat(GTA_ADDR(global_camera, 0x250, 0x194), -0.03f); // simulate camera move(necessary for vehicle)
       } break;
 
     case FUNC_CHANGE_VALUE:
@@ -10829,11 +10834,11 @@ void *camera_topdown(int calltype, int keypress, bool defaultstatus) {
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_camera + (LCS ? 0x0D4 : 0x854), sizeof(float));
-        hex_marker_addx(global_camera + (LCS ? 0x13C : 0x890), sizeof(float));
-        hex_marker_addx(global_camera + (LCS ? 0x24C : 0x0E8), sizeof(float)); // not ulux
-        hex_marker_addx(global_camera + (LCS ? 0x250 : 0x194), sizeof(float)); // not ulux
-        hexeditor_create( global_camera + (LCS ? 0x24C : 0x194), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> TopDown camera");
+        hex_marker_addx(GTA_ADDR(global_camera, 0x0D4, 0x854), sizeof(float));
+        hex_marker_addx(GTA_ADDR(global_camera, 0x13C, 0x890), sizeof(float));
+        hex_marker_addx(GTA_ADDR(global_camera, 0x24C, 0x0E8), sizeof(float)); // not ulux
+        hex_marker_addx(GTA_ADDR(global_camera, 0x250, 0x194), sizeof(float)); // not ulux
+        hexeditor_create( GTA_ADDR(global_camera, 0x24C, 0x194), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> TopDown camera");
         #endif
       }
       break;
@@ -10866,17 +10871,17 @@ void *dev_flag(int calltype, int keypress, bool defaultstatus) {
       if( keypress == PSP_CTRL_CROSS ) {
         if( status ) {
           devflag_disable:
-          setByte(global_developerflag + (LCS ? 0 : gp), 0);
+          setByte(global_developerflag + gp_, 0);
         } else {
           devflag_enable:
-          setByte(global_developerflag + (LCS ? 0 : gp), 1);
+          setByte(global_developerflag + gp_, 1);
         }
         status = !status;
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
         hex_marker_clear();
-        hex_marker_addx(global_developerflag+(VCS?gp:0), sizeof(char));
-        hexeditor_create(global_developerflag+(VCS?gp:0), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> developer flag");
+        hex_marker_addx(global_developerflag+gp_, sizeof(char));
+        hexeditor_create(global_developerflag+gp_, 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> developer flag");
         #endif
       }
       break;
@@ -10906,7 +10911,7 @@ void *dev_flag(int calltype, int keypress, bool defaultstatus) {
  *
  * Notes:
  ******************************************************************************************************************************************************/
-void gather_helper(int base, float x, float y, float z) {
+void gather_helper(uaddr base, float x, float y, float z) {
   int speed = 30; // the lower the faster
 
   /// calculate vectors
@@ -10915,10 +10920,11 @@ void gather_helper(int base, float x, float y, float z) {
   float z_obj = (getFloat(base+0x38) - z) / speed;
 
   /// set vectors
-  setFloat(base+(LCS?0x70:0x140), -x_obj);
-  setFloat(base+(LCS?0x74:0x144), -y_obj);
-  setFloat(base+(LCS?0x78:0x148), -z_obj);
+  setFloat(GTA_ADDR(base, 0x70, 0x140), -x_obj);
+  setFloat(GTA_ADDR(base, 0x74, 0x144), -y_obj);
+  setFloat(GTA_ADDR(base, 0x78, 0x148), -z_obj);
 }
+
 void *gather_spell(int calltype, int keypress, bool defaultstatus) {
   static bool status = false;
 
@@ -10931,8 +10937,8 @@ void *gather_spell(int calltype, int keypress, bool defaultstatus) {
 
     case FUNC_APPLY:
       /// calculate position to gather too
-      x = getFloat(pobj+0x30) + ( cosf( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
-      y = getFloat(pobj+0x34) + ( sinf( getFloat(pplayer + (LCS ? 0x4E0 : 0x8D0)) + (M_PI/2) ) * 20);
+      x = getFloat(pobj+0x30) + ( cosf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * 20);
+      y = getFloat(pobj+0x34) + ( sinf( getFloat(GTA_ADDR(pplayer, 0x4E0, 0x8D0)) + (M_PI/2) ) * 20);
       z = getFloat(pobj+0x38) + 6.00f;
 
       /// Vehicles
@@ -11092,7 +11098,7 @@ void *policechaseheli(int calltype, int keypress, bool defaultstatus, int defaul
         strcpy(retbuf, "Disabled");
         return (void*)retbuf;
       }
-      strcpy(retbuf, LCS ? getGxtIdentifierForVehicleViaID(list_value_lcs[pos]) : getRealVehicleNameViaID(list_value_vcs[pos])); // LCS doesn't have translations for all vehicles so we use the GXT name here
+      strcpy(retbuf, GameManager.game == GTA_LCS ? getGxtIdentifierForVehicleViaID(list_value_lcs[pos]) : getRealVehicleNameViaID(list_value_vcs[pos])); // LCS doesn't have translations for all vehicles so we use the GXT name here
       if( pos == 1 ) strcat(retbuf, " (default)");
 
       return (void*)retbuf;
@@ -11106,7 +11112,7 @@ void *policechaseheli(int calltype, int keypress, bool defaultstatus, int defaul
         pos--;
         status = true;
 
-      } else if( keypress == PSP_CTRL_RIGHT && pos < (LCS ? list_size_lcs : list_size_vcs) ) { // RIGHT
+      } else if( keypress == PSP_CTRL_RIGHT && pos < (GameManager.game == GTA_LCS ? list_size_lcs : list_size_vcs) ) { // RIGHT
         pos++;
         status = true;
 
@@ -11121,8 +11127,8 @@ void *policechaseheli(int calltype, int keypress, bool defaultstatus, int defaul
       if( pos == 1 )
         status = false;
 
-      setPoliceChaseHeliModel(LCS ? list_value_lcs[pos] : list_value_vcs[pos]);
-      RequestModel(LCS ? list_value_lcs[pos] : list_value_vcs[pos], 1);
+      setPoliceChaseHeliModel(GameManager.game == GTA_LCS ? list_value_lcs[pos] : list_value_vcs[pos]);
+      RequestModel(GameManager.game == GTA_LCS ? list_value_lcs[pos] : list_value_vcs[pos], 1);
       LoadAllModelsNow(1);
       break;
 
@@ -11222,7 +11228,7 @@ void test_func() { //for testing only
 
   ///  VCS: Backup water level areas
   /*DEBUG_LOG("Water: ");
-  int startofwater = getInt(LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
+  int startofwater = getInt(GameManager.game == GTA_LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
   for( int i = startofwater, j = 0; i < startofwater+0x5000; i += 0x01, j++ ) //set water everywhere
     if( *(unsigned char*)i == 0x80 )
       DEBUG_LOG("0x%X, ", j);
@@ -11474,7 +11480,7 @@ void *test_switch(int calltype, int keypress, bool defaultstatus) {
       }*/
 
 
-    //  setFloat(mod_text_addr + 0x37F4DC, -0.75f);
+    //  setFloat(TEXTADDR(0x37F4DC), -0.75f);
 
     //drawGameLog();
 
@@ -11492,18 +11498,18 @@ void *test_switch(int calltype, int keypress, bool defaultstatus) {
 
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
-        //if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
+        //if( isInMemBounds(savedatakey + gp_) ) {
           //hex_marker_clear();
-          //hex_marker_addx(savedatakey + (LCS ? 0 : gp), 0x10);
-          hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_ScriptSpace");
+          //hex_marker_addx(savedatakey + gp_, 0x10);
+          hexeditor_create(getInt(global_ScriptSpace + gp_), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_ScriptSpace");
         //}
         #endif
       } else if( keypress == PSP_CTRL_SQUARE ) {
         #ifdef HEXEDITOR
-        //if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
+        //if( isInMemBounds(savedatakey + gp_) ) {
           //hex_marker_clear();
-          //hex_marker_addx(savedatakey + (LCS ? 0 : gp), 0x10);
-          hexeditor_create(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + getInt(global_MainScriptSize + (LCS ? 0 : gp)), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_ScriptSpace + global_MainScriptSize");
+          //hex_marker_addx(savedatakey + gp_, 0x10);
+          hexeditor_create(getInt(global_ScriptSpace + gp_) + getInt(global_MainScriptSize + gp_), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_ScriptSpace + global_MainScriptSize");
         //}
         #endif
       }
@@ -11560,9 +11566,9 @@ void *mp_test(int calltype, int keypress, bool defaultstatus) {
         status = !status; // CROSS
       } else if( keypress == PSP_CTRL_TRIANGLE ) {
         #ifdef HEXEDITOR
-        //if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
+        //if( isInMemBounds(savedatakey + gp_) ) {
           //hex_marker_clear();
-          //hex_marker_addx(savedatakey + (LCS ? 0 : gp), 0x10);
+          //hex_marker_addx(savedatakey + gp_, 0x10);
           hexeditor_create(getInt(global_mp_parameters), 0, pluginMemory.LowestMemoryAddr, pluginMemory.HighestMemoryAddr, "> global_mp_parameters");
         //}
         #endif

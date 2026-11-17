@@ -38,13 +38,10 @@
 #include "blitn.h"
 #include "logs.h"
 #include "storiesrwsdk.h"
+#include "game.h"
 
 register uaddr gp __asm__("gp");
-
-extern usize mod_text_size; // for ulux fix
-
-/// externs from main.c
-extern bool LCS, VCS;
+extern uaddr gp_;
 
 /// externs from cheats.c
 extern uaddr pplayer;
@@ -1471,7 +1468,7 @@ void setBit(uaddr adr, uint8 bit, bool boolean) { // 1bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setBit()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setBit(0x%X, 0x%X, 0x%X)", getGametime(), adr, bit, boolean);
+    MEM_LOG("[ERROR] setBit(0x%X, 0x%X, 0x%X)", adr, bit, boolean);
   }
   #endif
 }
@@ -1484,7 +1481,7 @@ uint8 getBit(uaddr adr, uint8 bit) {
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getBit()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getBit(0x%X, %i)", getGametime(), adr, bit);
+    MEM_LOG("[ERROR] getBit(0x%X, %i)", adr, bit);
   }
   return 0;
   #endif
@@ -1498,7 +1495,7 @@ void setByte(uaddr adr, byte value) { // 8bit (unsigned 0-255)
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setByte()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setByte(0x%X, 0x%X)", getGametime(), adr, value);
+    MEM_LOG("[ERROR] setByte(0x%X, 0x%X)", adr, value);
   }
   #endif
 }
@@ -1511,7 +1508,7 @@ byte getByte(uaddr adr) { // 8bit (unsigned 0-255)
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getByte()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getByte(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] getByte(0x%X)", adr);
   }
   return 0;
   #endif
@@ -1525,7 +1522,7 @@ void setNibbleLow(uaddr adr, uint8 value) { // set 4bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setNibbleLow()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setNibbleLow(0x%X, 0x%X)", getGametime(), adr, value);
+    MEM_LOG("[ERROR] setNibbleLow(0x%X, 0x%X)", adr, value);
   }
   #endif
 }
@@ -1538,7 +1535,7 @@ uint8 getNibbleLow(uaddr adr) { //get lower 4bit converted to char
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getNibbleLow()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getNibbleLow(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] getNibbleLow(0x%X)", adr);
   }
   return 0;
   #endif
@@ -1552,7 +1549,7 @@ void setNibbleHigh(uaddr adr, uint8 value) { //set 4bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setNibbleHigh()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setNibbleHigh(0x%X, 0x%X)", getGametime(), adr, value);
+    MEM_LOG("[ERROR] setNibbleHigh(0x%X, 0x%X)", adr, value);
   }
   #endif
 }
@@ -1565,7 +1562,7 @@ uint8 getNibbleHigh(uaddr adr) {
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getNibbleHigh()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getNibbleHigh(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] getNibbleHigh(0x%X)", adr);
   }
   return 0;
   #endif
@@ -1579,7 +1576,7 @@ void setShort(uaddr adr, short value) { // 16bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setShort()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setShort(0x%X, 0x%X)", getGametime(), adr, value);
+    MEM_LOG("[ERROR] setShort(0x%X, 0x%X)", adr, value);
   }
   #endif
 }
@@ -1592,7 +1589,7 @@ short getShort(uaddr adr) { // 16bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getShort()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getShort(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] getShort(0x%X)", adr);
   }
   return 0;
   #endif
@@ -1606,7 +1603,7 @@ void setInt(uaddr adr, int value) { // 32bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setInt()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setInt(0x%X, 0x%X)", getGametime(), adr, value);
+    MEM_LOG("[ERROR] setInt(0x%X, 0x%X)", adr, value);
   }
   #endif
 }
@@ -1619,7 +1616,7 @@ int getInt(uaddr adr) { // 32bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getInt()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getInt(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] getInt(0x%X)", adr);
   }
   return 0;
   #endif
@@ -1633,7 +1630,7 @@ void setFloat(uaddr adr, float value) { // 32bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setFloat()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setFloat(0x%X, %f)", getGametime(), adr, value);
+    MEM_LOG("[ERROR] setFloat(0x%X, %f)", adr, value);
   }
   #endif
 }
@@ -1646,7 +1643,7 @@ float getFloat(uaddr adr) { // 32bit
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getFloat()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getFloat(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] getFloat(0x%X)", adr);
   }
   return 0.0f;
   #endif
@@ -1666,7 +1663,7 @@ void setString(uaddr adr, u8str string, bool unicode) { // unicode -> (where eve
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: setString()", 5.00f);
-    MEM_LOG("[ERROR] %lu: setString(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] setString(0x%X)", adr);
   }
   #endif
 }
@@ -1685,7 +1682,7 @@ u8str getString(uaddr adr, bool unicode) { // mode = 1 (where every second is a 
   #if MEMCHECK
   } else {
     setTimedTextbox("~r~Error: getString()", 5.00f);
-    MEM_LOG("[ERROR] %lu: getString(0x%X)", getGametime(), adr);
+    MEM_LOG("[ERROR] getString(0x%X)", adr);
   }
   #endif
   return str;
@@ -1698,9 +1695,9 @@ u8char *getSavedataKey() {
 
   extern u32 savedatakey;
 
-  if( isInMemBounds(savedatakey + (LCS ? 0 : gp)) ) {
+  if( isInMemBounds(savedatakey + gp_) ) {
     for( int i = 0; i < 0x10; i++ )
-      key[i] = *(u8char*)(savedatakey + (LCS ? 0 : gp) + i);
+      key[i] = *(u8char*)(savedatakey + gp_ + i);
     key[0x10] = 0x00;
   }
 
@@ -1726,7 +1723,7 @@ void SetPlayerPosition(float x, float y, float z) {
     setFloat(pcar+0x30, x);
     setFloat(pcar+0x34, y);
     setFloat(pcar+0x38, z + 1.0); // a little higher so that car doesn't get stuck in ground or/and bounce away
-    setFloat(pcar + (LCS ? 0x78 : 0x148), 0.0f); // up/down drifting to zero
+    setFloat(GTA_ADDR(pcar, 0x78, 0x148), 0.0f); // up/down drifting to zero
 
     after_teleport_fix = 1;
     after_teleport_fix_time = getGametime();
@@ -1750,13 +1747,13 @@ void SetPlayerPositionFixForVehicle() { // teleporting with vehicle behaviour fi
       setFloat(pcar + 0x70, 0.0f);
       setFloat(pcar + 0x74, 0.0f);
 
-    if( LCS ) {
+    if( GameManager.game == GTA_LCS ) {
         //setFloat(pcar + 0x78, 0.0f); // not allowed so that vehicle falls to ground while other vectors are still zeroed
         setFloat(pcar + 0x80, 0.0f);
         setFloat(pcar + 0x84, 0.0f);
         setFloat(pcar + 0x88, 0.0f);
 
-      } else if( VCS ) {
+      } else if( GameManager.game == GTA_VCS ) {
         setFloat(pcar + 0x78, 0.0f);
         setFloat(pcar + 0x140, 0.0f);
         setFloat(pcar + 0x144, 0.0f);
@@ -1769,7 +1766,7 @@ void SetPlayerPositionFixForVehicle() { // teleporting with vehicle behaviour fi
 /// Pedestrian ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 float getPedFacingDirectionInDegree(uaddr ped_base_adr) {
-  return ((180.0f / M_PI) * getFloat(ped_base_adr + (LCS ? 0x4E0 : 0x8D0)) + ((getFloat(ped_base_adr + (LCS ? 0x4E0 : 0x8D0)) < 0.00f) ?  360.0f : 0.0f) ); //rad -pi through 0 to +pi !!!!!   -> degree
+  return ((180.0f / M_PI) * getFloat(GTA_ADDR(ped_base_adr, 0x4E0, 0x8D0)) + ((getFloat(GTA_ADDR(ped_base_adr, 0x4E0, 0x8D0)) < 0.00f) ?  360.0f : 0.0f) ); //rad -pi through 0 to +pi !!!!!   -> degree
 }
 
 uint8 getMaxHealthMultiplier() {
@@ -1813,11 +1810,11 @@ void setFireproofStatus(bool value) {
 }
 
 int getWantedLevel(uaddr ped_base_adr) {
-  return getInt(ped_base_adr + (LCS ? 0x830 : 0x910));
+  return getInt(GTA_ADDR(ped_base_adr, 0x830, 0x910));
 }
 
 int getMediaAttentionValue(uaddr ped_base_adr) {
-  return getInt(ped_base_adr + (LCS ? 0x810 : 0x8F0));
+  return getInt(GTA_ADDR(ped_base_adr, 0x810, 0x8F0));
 }
 
 
@@ -1831,43 +1828,43 @@ int getMediaAttentionValue(uaddr ped_base_adr) {
  * Notes:   Setting health value to 0.0f will kill PED!
 **********************************************************************************************************************************/
 void setPedHealthAndArmor(uaddr ped_base_adr, float health, float armor) {
-  if( health >= 0 ) setFloat(ped_base_adr+(LCS ? 0x4b8 : 0x4E4), health); // health
-  if( armor >= 0 ) setFloat(ped_base_adr+(LCS ? 0x4bc : 0x4E8), armor); // armor
+  if( health >= 0 ) setFloat(GTA_ADDR(ped_base_adr, 0x4b8, 0x4E4), health); // health
+  if( armor >= 0 ) setFloat(GTA_ADDR(ped_base_adr, 0x4bc, 0x4E8), armor); // armor
 }
 
 float getPedHealth(uaddr ped_base_adr) {
-  return getFloat(ped_base_adr + (LCS ? 0x4B8 : 0x4E4));
+  return getFloat(GTA_ADDR(ped_base_adr, 0x4B8, 0x4E4));
 }
 
 float getPedArmor(uaddr ped_base_adr) {
-  return getFloat(ped_base_adr + (LCS ? 0x4BC : 0x4E8));
+  return getFloat(GTA_ADDR(ped_base_adr, 0x4BC, 0x4E8));
 }
 
 void setPedNeverOnFire(uaddr ped_base_adr) {
-  setInt(ped_base_adr + (LCS ? 0x6DC : 0x6B0), 0); // zero out addr to fire
+  setInt(GTA_ADDR(ped_base_adr, 0x6DC, 0x6B0), 0); // zero out addr to fire
 }
 
 void setPedInvisible(uaddr ped_base_adr, bool boolean) {
-  if( LCS ) setBit(ped_base_adr+0x19A, 7, boolean ? ON : OFF); // old: setByte(ped_base_adr+0x19A, (boolean) ? 0x82 : 0x02 );
-  if( VCS ) setShort(ped_base_adr+0x4C, boolean ? 0x2010 : 0x0); // bitflags pendant to LCS would be at 0x1CF but behaves differently in VCS!
+  if( GameManager.game == GTA_LCS ) setBit(ped_base_adr+0x19A, 7, boolean ? ON : OFF); // old: setByte(ped_base_adr+0x19A, (boolean) ? 0x82 : 0x02 );
+  if( GameManager.game == GTA_VCS ) setShort(ped_base_adr+0x4C, boolean ? 0x2010 : 0x0); // bitflags pendant to LCS would be at 0x1CF but behaves differently in VCS!
 }
 
 void setPedIgnoredByEveryone(uaddr ped_base_adr, bool boolean) {
-  setByte(ped_base_adr + (LCS ? 0x82E : 0x90E), boolean ? 0x2 : 0x0);
+  setByte(GTA_ADDR(ped_base_adr, 0x82E, 0x90E), boolean ? 0x2 : 0x0);
 }
 
 void setPedCanBeTargeted(uaddr ped_base_adr, bool boolean) {
-  setByte(ped_base_adr + (LCS ? 0x1a0 : 0x0), boolean ? 0x0 : 0x2); // TODO: vcs
+  setByte(GTA_ADDR(ped_base_adr, 0x1a0, 0x0), boolean ? 0x0 : 0x2); // TODO: vcs
 }
 
 void setPedFlagToUnload(uaddr ped_base_adr) {
-  if( LCS ) setByte(ped_base_adr+0x48, 1);
+  if( GameManager.game == GTA_LCS ) setByte(ped_base_adr+0x48, 1);
   // TODO: VCS
 }
 
 void setPedOrVehicleFreezePosition(uaddr base_adr, bool boolean) {
-  if( LCS ) setByte(base_adr + 0x143, boolean ? 0x1 : 0x0);
-  if( VCS ) setByte(base_adr + 0xEF, boolean ? 0x80 : 0x0);
+  if( GameManager.game == GTA_LCS ) setByte(base_adr + 0x143, boolean ? 0x1 : 0x0);
+  if( GameManager.game == GTA_VCS ) setByte(base_adr + 0xEF, boolean ? 0x80 : 0x0);
 }
 
 
@@ -1890,42 +1887,42 @@ void setPedAmmoForWeapon(uaddr ped_base_adr, int type, int loaded, int total) {
     switch(type) {
 
     case WEAPON_GRENADE:
-        setInt(ped_base_adr + (LCS ? 0x5D8: 0x5BC), total); // (int) grenades total
+        setInt(ped_base_adr + (GameManager.game == GTA_LCS ? 0x5D8: 0x5BC), total); // (int) grenades total
         break;
 
     case WEAPON_HANDGUN:
-        setInt(ped_base_adr + (LCS ? 0x5f0 : 0x5D4), loaded); // (int) handgun ammo loaded
-        setInt(ped_base_adr + (LCS ? 0x5f4 : 0x5D8), total);  // (int) handgun ammo total
+        setInt(GTA_ADDR(ped_base_adr, 0x5f0, 0x5D4), loaded); // (int) handgun ammo loaded
+        setInt(GTA_ADDR(ped_base_adr, 0x5f4, 0x5D8), total);  // (int) handgun ammo total
         break;
 
       case WEAPON_SHOTGUN:
-        setInt(ped_base_adr + (LCS ? 0x60c : 0x5f0), loaded); // (int) shotgun ammo loaded
-        setInt(ped_base_adr + (LCS ? 0x610 : 0x5f4), total);  // (int) shotgun ammo total
+        setInt(GTA_ADDR(ped_base_adr, 0x60c, 0x5f0), loaded); // (int) shotgun ammo loaded
+        setInt(GTA_ADDR(ped_base_adr, 0x610, 0x5f4), total);  // (int) shotgun ammo total
         break;
 
       case WEAPON_SMG:
-        setInt(ped_base_adr + (LCS ? 0x628 : 0x60c), loaded); // (int) smg ammo loaded
-        setInt(ped_base_adr + (LCS ? 0x62c : 0x610), total);  // (int) smg ammo total
+        setInt(GTA_ADDR(ped_base_adr, 0x628, 0x60c), loaded); // (int) smg ammo loaded
+        setInt(GTA_ADDR(ped_base_adr, 0x62c, 0x610), total);  // (int) smg ammo total
         break;
 
       case WEAPON_ASSAULT:
-        setInt(ped_base_adr + (LCS ? 0x644 : 0x628), loaded); // (int) asault ammo loaded
-        setInt(ped_base_adr + (LCS ? 0x648 : 0x62c), total);  // (int) asault ammo total
+        setInt(GTA_ADDR(ped_base_adr, 0x644, 0x628), loaded); // (int) asault ammo loaded
+        setInt(GTA_ADDR(ped_base_adr, 0x648, 0x62c), total);  // (int) asault ammo total
         break;
 
       case WEAPON_ROCKET:
-        setInt(ped_base_adr + (LCS ? 0x660 : 0x644), loaded); // (int) rocket ammo loaded
-        setInt(ped_base_adr + (LCS ? 0x664 : 0x648), total);  // (int) rocket ammo total
+        setInt(GTA_ADDR(ped_base_adr, 0x660, 0x644), loaded); // (int) rocket ammo loaded
+        setInt(GTA_ADDR(ped_base_adr, 0x664, 0x648), total);  // (int) rocket ammo total
         break;
 
       case WEAPON_SNIPER:
-        setInt(ped_base_adr + (LCS ? 0x67c : 0x660), loaded); // (int) sniper ammo loaded
-        setInt(ped_base_adr + (LCS ? 0x680 : 0x664), total);  // (int) sniper ammo total
+        setInt(GTA_ADDR(ped_base_adr, 0x67c, 0x660), loaded); // (int) sniper ammo loaded
+        setInt(GTA_ADDR(ped_base_adr, 0x680, 0x664), total);  // (int) sniper ammo total
         break;
 
       case WEAPON_CAMERA:
-        setInt(ped_base_adr + (LCS ? 0x698 : 0x67C), loaded); // (int) camera ammo loaded
-        setInt(ped_base_adr + (LCS ? 0x69C : 0x680), total);  // (int) camera ammo total
+        setInt(GTA_ADDR(ped_base_adr, 0x698, 0x67C), loaded); // (int) camera ammo loaded
+        setInt(GTA_ADDR(ped_base_adr, 0x69C, 0x680), total);  // (int) camera ammo total
         break;
 
     }
@@ -1933,12 +1930,12 @@ void setPedAmmoForWeapon(uaddr ped_base_adr, int type, int loaded, int total) {
 }
 
 uint8 getPedsCurrentAnimation() { // eg: 0x12 is entering vehicle
-  return getByte(pplayer + (LCS ? 0x250 : 0x894));
+  return getByte(GTA_ADDR(pplayer, 0x250, 0x894));
 }
 
 int getPedsCurrentWeapon(uaddr ped_base_adr) {
-  int currentWeaponSlot = getByte(ped_base_adr + (LCS ? 0x6B8 : 0x789));
-  return getInt(ped_base_adr + (LCS ? 0x594 : 0x578) + (currentWeaponSlot * 0x1C));
+  int currentWeaponSlot = getByte(GTA_ADDR(ped_base_adr, 0x6B8, 0x789));
+  return getInt(GTA_ADDR(ped_base_adr, 0x594, 0x578) + (currentWeaponSlot * 0x1C));
 }
 
 ushort getPedID(uaddr ped_base_adr) {
@@ -1947,11 +1944,11 @@ ushort getPedID(uaddr ped_base_adr) {
 }
 
 uaddr getPedsVehicleObjectAddress(uaddr base_adr) { // there will be address if ped is inside a vehicle
-  return (uaddr)getInt(base_adr + (LCS ? 0x534 : 0x480));
+  return (uaddr)getInt(GTA_ADDR(base_adr, 0x534, 0x480));
 }
 
 uaddr getObjectsTouchedObjectAddress(uaddr base_adr) { // there will be address if ped/vehicle touches other object (0 if nothing touched)
-  return (uaddr)getInt(base_adr + (LCS ? 0x12C : 0x150));
+  return (uaddr)getInt(GTA_ADDR(base_adr, 0x12C, 0x150));
 }
 
 uint8 getTypeFromAddress(uaddr address) { // eg: if the address belongs to a vehicle object it returns VEHICLE
@@ -1969,17 +1966,17 @@ uint8 getTypeFromAddress(uaddr address) { // eg: if the address belongs to a veh
 
 /// replaced by IDE names
 /* char *getPedModelByID(char id) { // 0x00 player, 0x01 Cop...
-  for( int i = 0; i <= (LCS ? lcs_charactersize : vcs_charactersize); i++ ) {
-    if( id == (char)(LCS ? lcs_characters[i].id : vcs_characters[i].id) )
-      return (void *)(LCS ? lcs_characters[i].model : vcs_characters[i].model);
+  for( int i = 0; i <= (GameManager.game == GTA_LCS ? lcs_charactersize : vcs_charactersize); i++ ) {
+    if( id == (char)(GameManager.game == GTA_LCS ? lcs_characters[i].id : vcs_characters[i].id) )
+      return (void *)(GameManager.game == GTA_LCS ? lcs_characters[i].model : vcs_characters[i].model);
   }
   return "unknown";
 
 }
 char *getPedNameByID(char id) { // 0x00 "Toni Cipriani", 0x17 "Mona Lott"...
-  for( int i = 0; i <= (LCS ? lcs_charactersize : vcs_charactersize); i++ ) {
-    if( id == (char)(LCS ? lcs_characters[i].id : vcs_characters[i].id) )
-      return (void *)(LCS ? lcs_characters[i].name : vcs_characters[i].name);
+  for( int i = 0; i <= (GameManager.game == GTA_LCS ? lcs_charactersize : vcs_charactersize); i++ ) {
+    if( id == (char)(GameManager.game == GTA_LCS ? lcs_characters[i].id : vcs_characters[i].id) )
+      return (void *)(GameManager.game == GTA_LCS ? lcs_characters[i].name : vcs_characters[i].name);
   }
   return "unknown";
 } */
@@ -2000,13 +1997,13 @@ usize getPedActiveObjects(uaddr peds_base, usize peds_max, usize peds_size) {
 }
 
 bool checkPedIsInWater(uaddr ped_base_adr) {
-  return LCS ? ((getByte(ped_base_adr + 0x142) & 0x10) != 0) : /* VCS */ getBit(ped_base_adr + 0xEF, 2); // true
+  return GameManager.game == GTA_LCS ? ((getByte(ped_base_adr + 0x142) & 0x10) != 0) : /* VCS */ getBit(ped_base_adr + 0xEF, 2); // true
 }
 
 bool getPedDrowning(uaddr ped_base_adr) { // not in car!
-  if( LCS )
+  if( GameManager.game == GTA_LCS )
     return (getInt(ped_base_adr + 0x19c) & 0x10000) != 0;
-  if( VCS )
+  if( GameManager.game == GTA_VCS )
     return getInt(ped_base_adr + 0x8b4) == 0x44; // 0x3A if drowned ?!
 
   return false;
@@ -2020,7 +2017,7 @@ uint16 getVehicleID(uaddr vehicle_base_adr) {
 }
 
 uint16 getVehicleTypeByID(uint16 id) { // pcar_type
-  uint8 flag = getNibbleLow( getAddressOfHandlingSlotForID(id) + (LCS ? 0xD2 : 0xD3) );
+  uint8 flag = getNibbleLow( getAddressOfHandlingSlotForID(id) + (GameManager.game == GTA_LCS ? 0xD2 : 0xD3) );
   switch( flag ) { // 1: IS_BIKE    2: IS_HELI        4: IS_PLANE      8: IS_BOAT
     case 1: return VEHICLE_BIKE;
     case 2: return VEHICLE_HELI;
@@ -2067,27 +2064,27 @@ void vcs_setVehicleColorStripe(uaddr vehicle_base_adr, CRGBA color) {
 }
 
 void setVehicleHealth(uaddr vehicle_base_adr, float value) {
-  if( VCS && mod_text_size == 0x00377D30 ) { // ULUS v1.01
+  if( GameManager.gameEboot == GTA_VCS_ULUS10160_1_01 ) { // ULUS v1.01
     setFloat(vehicle_base_adr + 0x29C, value);
 	return;
   }
-  setFloat(vehicle_base_adr + (LCS ? 0x268 : 0x27C), value);
+  setFloat(GTA_ADDR(vehicle_base_adr, 0x268, 0x27C), value);
 }
 
 float getVehicleHealth(uaddr vehicle_base_adr) {
-  if( VCS && mod_text_size == 0x00377D30 ) { // ULUS v1.01
+  if( GameManager.gameEboot == GTA_VCS_ULUS10160_1_01 ) { // ULUS v1.01
     return getFloat(vehicle_base_adr + 0x29C);
   }
-  return getFloat(vehicle_base_adr + (LCS ? 0x268 : 0x27C));
+  return getFloat(GTA_ADDR(vehicle_base_adr, 0x268, 0x27C));
 }
 
 void setVehicleNoPhysicalDamage(uaddr vehicle_base_adr) {
-  setByte(vehicle_base_adr + (LCS ? 0x140 : 0x132), 0x0);
+  setByte(GTA_ADDR(vehicle_base_adr, 0x140, 0x132), 0x0);
 }
 
 void makeVehicleExplode(uaddr vehicle_base_adr) {
   void (*makeVehExplode)(int vehicle_obj, int player_or_zero, int vcs_only); // if pplayer: it counts for stats
-  makeVehExplode = (void*)( getInt(getInt(vehicle_base_adr + 0x5c) + (LCS ? 0x11c : 0x14C)));
+  makeVehExplode = (void*)( getInt(getInt(vehicle_base_adr + 0x5c) + (GameManager.game == GTA_LCS ? 0x11c : 0x14C)));
   makeVehExplode(vehicle_base_adr, 0 /*or pplayer*/, 0);
 
   // ghidra code (game uses different functions for different vehicle types)
@@ -2096,89 +2093,89 @@ void makeVehicleExplode(uaddr vehicle_base_adr) {
 }
 
 void setVehicleRadioStation(uaddr vehicle_base_adr, uint8 id) {
-  if( LCS && mod_text_size == 0x0031F854 ) { // ULUX v0.02
+  if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 ) { // ULUX v0.02
     setByte(vehicle_base_adr + 0x29C, id);
     return;
   }
-  setByte(vehicle_base_adr + (LCS ? 0x2A0 : 0x2B7), id);
+  setByte(GTA_ADDR(vehicle_base_adr, 0x2A0, 0x2B7), id);
 }
 
 void setRadioStationNow(uint8 id) {
-  setByte(global_radioarea + (LCS ? 0x345 : 0x56D), id); // station id
-  setByte(global_radioarea + (LCS ? 0x344 : 0x56C), 1); // do it now
+  setByte(GTA_ADDR(global_radioarea, 0x345, 0x56D), id); // station id
+  setByte(GTA_ADDR(global_radioarea, 0x344, 0x56C), 1); // do it now
 }
 
 void setVehicleGravityApplies(uaddr vehicle_base_adr, bool boolean) { // 0xX2 = gravity = true, 0xX1 = no gravity = false
-  setNibbleLow(vehicle_base_adr + (LCS ? 0x142 : 0xEC), boolean ? 0x2 : 0x1);
+  setNibbleLow(GTA_ADDR(vehicle_base_adr, 0x142, 0xEC), boolean ? 0x2 : 0x1);
 }
 
 void setVehicleWheelCamber(uaddr vehicle_base_adr, float val) {
-  setFloat(vehicle_base_adr + (LCS ? 0x618 : 0x6A8), val);
+  setFloat(GTA_ADDR(vehicle_base_adr, 0x618, 0x6A8), val);
 }
 
 float getVehicleWheelCamber(uaddr vehicle_base_adr) {
-  return getFloat(vehicle_base_adr + (LCS ? 0x618 : 0x6A8));
+  return getFloat(GTA_ADDR(vehicle_base_adr, 0x618, 0x6A8));
 }
 
 float getVehicleSpeed() {
-  //return getFloat(vehicle_base_adr + (LCS ? 0x124 : 0x108)); // calculated by game (up/down counts too) (has some weird multiplier?! (probably gamespeed) Which is also different for LCS vs VCS?!?! its ALSO not consistent and is calculated wrong with higher speeds sometimes...)
-  return sqrtf((getFloat(pcar+(LCS?0x70:0x140)) * getFloat(pcar+(LCS?0x70:0x140))) + (getFloat(pcar+(LCS?0x74:0x144)) * getFloat(pcar+(LCS?0x74:0x144))) + (getFloat(pcar+(LCS?0x78:0x148)) * getFloat(pcar+(LCS?0x78:0x148)))); // doing it myself then!! sqrtf( x^2 + y^2 + z^2 )
+  //return getFloat(GTA_ADDR(vehicle_base_adr, 0x124, 0x108)); // calculated by game (up/down counts too) (has some weird multiplier?! (probably gamespeed) Which is also different for LCS vs VCS?!?! its ALSO not consistent and is calculated wrong with higher speeds sometimes...)
+  return sqrtf((getFloat(GTA_ADDR(pcar, 0x70, 0x140)) * getFloat(GTA_ADDR(pcar, 0x70, 0x140))) + (getFloat(GTA_ADDR(pcar, 0x74, 0x144)) * getFloat(GTA_ADDR(pcar, 0x74, 0x144))) + (getFloat(GTA_ADDR(pcar, 0x78, 0x148)) * getFloat(GTA_ADDR(pcar, 0x78, 0x148)))); // doing it myself then!! sqrtf( x^2 + y^2 + z^2 )
 }
 
 uint8 getVehicleCurrentGear(uaddr vehicle_base_adr) {
-  if( LCS && mod_text_size == 0x0031F854 ) // ULUX v0.02
+  if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 ) // ULUX v0.02
     return getByte(vehicle_base_adr + 0x26C);
 
-  return getByte(vehicle_base_adr + (LCS ? 0x270 : 0x284));
+  return getByte(GTA_ADDR(vehicle_base_adr, 0x270, 0x284));
 }
 
 void setVehicleFlagToUnload(uaddr vehicle_base_adr) { // aka: mark no longer needed
-  if( LCS ) setByte(vehicle_base_adr+0x48, 1);
+  if( GameManager.game == GTA_LCS ) setByte(vehicle_base_adr+0x48, 1);
 }
 
 void setVehicleDoorsLocked(uaddr vehicle_base_adr, bool boolean) { // TODO: vcs proto
-  setByte(vehicle_base_adr + (LCS ? 0x294 : 0x2A8), (boolean) ? 0x02 : 0x01); // 0x2 is locked, 0x1 is normal
+  setByte(GTA_ADDR(vehicle_base_adr, 0x294, 0x2A8), (boolean) ? 0x02 : 0x01); // 0x2 is locked, 0x1 is normal
 }
 
 int getVehicleAiStatus(uaddr vehicle_base_adr) { // 3 = "Physiscs", 2 = "floating" / AI controlled
-  return (getInt(vehicle_base_adr + (LCS ? 0x44 : 0x48)) & 0x1f0) >> 4;
+  return (getInt(GTA_ADDR(vehicle_base_adr, 0x44, 0x48)) & 0x1f0) >> 4;
 }
 
 void setVehicleMakePhysical(uaddr vehicle_base_adr) { // like game does it "FLOATING CAR TURNED INTO PHYSICS CAR"
-  setInt(vehicle_base_adr + (LCS ? 0x44 : 0x48), (getInt(vehicle_base_adr + (LCS ? 0x44 : 0x48)) & 0xfffffe0f) | 0x30 ); // set 3x xx xx xx
+  setInt(GTA_ADDR(vehicle_base_adr, 0x44, 0x48), (getInt(GTA_ADDR(vehicle_base_adr, 0x44, 0x48)) & 0xfffffe0f) | 0x30 ); // set 3x xx xx xx
 }
 
 void setVehicleRepairTyres(uint16 vehicle_type) {
   // short vehicle_type = getVehicleTypeByID(getVehicleID(vehicle_base_adr)); //use gloabl instead? -> yes
   if( vehicle_type == VEHICLE_CAR ) {
     // indeflatable  car tyres
-    setByte(pcar + (LCS ? 0x356 : 0x3B6), 0x00);
-    setByte(pcar + (LCS ? 0x357 : 0x3B7), 0x00);
-    setByte(pcar + (LCS ? 0x358 : 0x3B8), 0x00);
-    setByte(pcar + (LCS ? 0x359 : 0x3B9), 0x00);
+    setByte(GTA_ADDR(pcar, 0x356, 0x3B6), 0x00);
+    setByte(GTA_ADDR(pcar, 0x357, 0x3B7), 0x00);
+    setByte(GTA_ADDR(pcar, 0x358, 0x3B8), 0x00);
+    setByte(GTA_ADDR(pcar, 0x359, 0x3B9), 0x00);
 
   } else if( vehicle_type == VEHICLE_BIKE ) {
     // indeflatable  bike tyres
-    setByte(pcar + (LCS ? 0x3F8 : 0x434), 0x00);
-    setByte(pcar + (LCS ? 0x3F9 : 0x435), 0x00);
+    setByte(GTA_ADDR(pcar, 0x3F8, 0x434), 0x00);
+    setByte(GTA_ADDR(pcar, 0x3F9, 0x435), 0x00);
   }
 }
 
 void setPedExitVehicleNow(uaddr ped_base_adr) {
-  if( LCS )
+  if( GameManager.game == GTA_LCS )
     if( getByte(ped_base_adr+0x538) == 0x1 ) // is in vehicle bool
       setByte(ped_base_adr+0x250, 0x10); // trigger exiting
 
-  if( VCS )
+  if( GameManager.game == GTA_VCS )
     setByte(ped_base_adr+0x894, 0x10); // trigger exiting
 }
 
 bool isVehicleInWater(uaddr vehicle_base_adr) {
-  return LCS ? getByte(vehicle_base_adr+0x142) & 0x10 : /* VCS */ getBit(vehicle_base_adr+0xED, 0);
+  return GameManager.game == GTA_LCS ? getByte(vehicle_base_adr+0x142) & 0x10 : /* VCS */ getBit(vehicle_base_adr+0xED, 0);
 }
 
 bool isVehicleInAir(uaddr vehicle_base_adr) {
-  return getByte(vehicle_base_adr+ (LCS ? 0x10A : 0x136)) == 0;
+  return getByte(vehicle_base_adr+ (GameManager.game == GTA_LCS ? 0x10A : 0x136)) == 0;
 }
 
 bool isVehicleUpsideDown(uaddr vehicle_base_adr UNUSED) {
@@ -2221,19 +2218,19 @@ usize getWorldActiveObjects(uaddr worldobjs_base, usize worldobjs_max, usize wor
 }
 
 int getVehicleDriverHandle(uaddr vehicle_base_adr) {
-  return getInt(vehicle_base_adr + (LCS ? 0x1F8 : 0x384) );
+  return getInt(GTA_ADDR(vehicle_base_adr, 0x1F8, 0x384) );
 }
 
 int getVehiclePassengerHandle(uaddr vehicle_base_adr) {
-  return getInt(vehicle_base_adr + (LCS ? 0x1FC : 0x388) );
+  return getInt(GTA_ADDR(vehicle_base_adr, 0x1FC, 0x388) );
 }
 
 int getVehicleBackseatLeftHandle(uaddr vehicle_base_adr) {
-  return getInt(vehicle_base_adr + (LCS ? 0x200 : 0x38C) );
+  return getInt(GTA_ADDR(vehicle_base_adr, 0x200, 0x38C) );
 }
 
 int getVehicleBackseatRightHandle(uaddr vehicle_base_adr) {
-  return getInt(vehicle_base_adr + (LCS ? 0x204 : 0x390) );
+  return getInt(GTA_ADDR(vehicle_base_adr, 0x204, 0x390) );
 }
 
 void setHeliHeightLimit(float height) {
@@ -2270,15 +2267,15 @@ void setPoliceChaseHeliModel(short model) {
 
 /// Pickups ///////////
 bool getPickupIsActive(uaddr pickup_base_adr) { // slot is in use (some pickups are one-time pickups others like weapons respawn after some time! -> slot is still used although nothing in world)
-  return getByte(pickup_base_adr+(LCS?0x32:0x38)) != 0; // just like ghidra
+  return getByte(GTA_ADDR(pickup_base_adr, 0x32, 0x38)) != 0; // just like ghidra
 }
 
 bool getPickupIsCollectable(uaddr pickup_base_adr) { // slot is used by pickup currently collectable in world
-  return (bool)getInt(pickup_base_adr+(LCS?0x14:0x20)) != 0 || getInt(pickup_base_adr+(LCS?0x18:0x24)) != 0; // just like ghidra
+  return (bool)getInt(GTA_ADDR(pickup_base_adr, 0x14, 0x20)) != 0 || getInt(GTA_ADDR(pickup_base_adr, 0x18, 0x24)) != 0; // just like ghidra
 }
 
 uint16 getPickupID(uaddr pickup_base_adr) {
-  return getShort(pickup_base_adr+(LCS?0x26:0x34));
+  return getShort(GTA_ADDR(pickup_base_adr, 0x26, 0x34));
 }
 
 float getPickupCoordX(uaddr pickup_base_adr) {
@@ -2294,9 +2291,9 @@ float getPickupCoordZ(uaddr pickup_base_adr) {
 }
 
 u8str getPickupNameByID(uint16 id) {
-  for( array_uidx i = 0; i <= (LCS ? lcs_pickupsize : vcs_pickupsize); i++ ) {
-    if( id == (LCS ? lcs_pickups[i].id : vcs_pickups[i].id) )
-      return LCS ? lcs_pickups[i].name : vcs_pickups[i].name;
+  for( array_uidx i = 0; i <= (GameManager.game == GTA_LCS ? lcs_pickupsize : vcs_pickupsize); i++ ) {
+    if( id == (GameManager.game == GTA_LCS ? lcs_pickups[i].id : vcs_pickups[i].id) )
+      return GameManager.game == GTA_LCS ? lcs_pickups[i].name : vcs_pickups[i].name;
   }
   return "unknown";
 }
@@ -2335,21 +2332,21 @@ iaddr spawnPickup(uint16 id, uint8 type, int16 amount, float x, float y, float z
       setFloat(cur_offset+0x4, y); // world y coordinate
       setFloat(cur_offset+0x8, z); // world z coordinate
 
-      setShort(cur_offset+(LCS?0x1C:0x2C), amount); // amount
+      setShort(GTA_ADDR(cur_offset, 0x1C, 0x2C), amount); // amount
 
-      setShort(cur_offset+(LCS?0x26:0x34), id); // ID
+      setShort(GTA_ADDR(cur_offset, 0x26, 0x34), id); // ID
 
-      setByte(cur_offset+(LCS?0x32:0x38), type); // type 0x3 means one time pickup only
+      setByte(GTA_ADDR(cur_offset, 0x32, 0x38), type); // type 0x3 means one time pickup only
 
       setInt(cur_offset+0xC, 0); // zero out old pointer to be sure
-      setByte(cur_offset+(LCS?0x33:0x39), 0x00); // not yet collected
-      setByte(cur_offset+(LCS?0x50:0x3C), 0xFF); // flag?
+      setByte(GTA_ADDR(cur_offset, 0x33, 0x39), 0x00); // not yet collected
+      setByte(GTA_ADDR(cur_offset, 0x50, 0x3C), 0xFF); // flag?
 
       if( type == 0x8 ) { // money pickup additional stuff
         setFloat(cur_offset+0xC, 1.0f);
-        setByte(cur_offset+(LCS?0x20:0x30), 0x88); // TODO: why? whats this?
-        setByte(cur_offset+(LCS?0x21:0x31), 0x88);
-        setByte(cur_offset+(LCS?0x22:0x32), 0x88);
+        setByte(GTA_ADDR(cur_offset, 0x20, 0x30), 0x88); // TODO: why? whats this?
+        setByte(GTA_ADDR(cur_offset, 0x21, 0x31), 0x88);
+        setByte(GTA_ADDR(cur_offset, 0x22, 0x32), 0x88);
       }
 
       return (iaddr)cur_offset;
@@ -2374,14 +2371,14 @@ VCS: FUN_0000a03c      iGp000016dc ptr + 0x270
 */
 
 bool getMapiconIsActive(uaddr mapicon_base_adr) { // aka. slot is in use (there can be inactive mission icons though!!)
-  return (LCS && getByte(mapicon_base_adr+0x33) != 0) || (VCS && getByte(mapicon_base_adr+0x28) != 0); // TODO: like ghidra
+  return (GameManager.game == GTA_LCS && getByte(mapicon_base_adr+0x33) != 0) || (GameManager.game == GTA_VCS && getByte(mapicon_base_adr+0x28) != 0); // TODO: like ghidra
 }
 
 // aka. something is displayed!
 bool getMapiconIsVisible(uaddr mapicon_base_adr) { // TODO: like ghidra
   return ( getMapiconIsActive(mapicon_base_adr) &&
-      ((LCS && getByte(mapicon_base_adr+0x3E) > 0)  // display bool: 1 = arrow, 2 = on map, 3 = both
-      || (VCS && (getBit(mapicon_base_adr+0x20, 5) ||  // show arrow
+      ((GameManager.game == GTA_LCS && getByte(mapicon_base_adr+0x3E) > 0)  // display bool: 1 = arrow, 2 = on map, 3 = both
+      || (GameManager.game == GTA_VCS && (getBit(mapicon_base_adr+0x20, 5) ||  // show arrow
             getBit(mapicon_base_adr+0x20, 6)       // display on map
             ) ) ) );
 }
@@ -2396,7 +2393,7 @@ usize getMapiconsActiveObjects(uaddr mapicon_base, usize mapicons_max, usize map
 }
 
 uint8 getMapiconID(uaddr mapicon_base_adr) {
-  return getByte(mapicon_base_adr+(LCS?0x40:0x29));
+  return getByte(GTA_ADDR(mapicon_base_adr, 0x40, 0x29));
 }
 
 u8str getMapiconNameByID(uint16 id) {
@@ -2404,8 +2401,8 @@ u8str getMapiconNameByID(uint16 id) {
   uaddr offset = 0;
 
   id--; // first ptr in table has id 1
-  if( LCS ) offset = (uaddr)getInt(ptr_radarIconList + (id*0x4));
-  if( VCS ) offset = (uaddr)getInt(getInt(global_radarblips+gp) + ptr_radarIconList + (id*0x4));
+  if( GameManager.game == GTA_LCS ) offset = (uaddr)getInt(ptr_radarIconList + (id*0x4));
+  if( GameManager.game == GTA_VCS ) offset = (uaddr)getInt(getInt(global_radarblips+gp) + ptr_radarIconList + (id*0x4));
 
   if( isInMemBounds(offset) ) {
     snprintf(ret, sizeof(ret), "%s", getString(offset + 0x10, 0));
@@ -2462,34 +2459,34 @@ void removeMapIcon(uaddr mapicon_base_adr) {
   for( ; i < mapicon_base_adr+var_radarblipslotsize; i++ )
     setByte(i,0x00);
 
-  setByte(i+(LCS ? 0x30 : 0x2A), 0x01); // set default empty
-  setByte(i+(LCS ? 0x35 : 0x2C), 0xFF); // set default empty
+  setByte(GTA_ADDR(i, 0x30, 0x2A), 0x01); // set default empty
+  setByte(GTA_ADDR(i, 0x35, 0x2C), 0xFF); // set default empty
 
   // DEBUG_LOG("removeMapIcon() 0x%08X", mapicon_base_adr);
 }
 
 void removeAllMapIcons() {
-  for( uaddr i = 0, j = (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
+  for( uaddr i = 0, j = (GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
     removeMapIcon(j);
   }
 }
 
 void removeAllCustomMapIcons() { // zeroes only the custom created ones!!!
-  for( uaddr i = 0, j = (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
+  for( uaddr i = 0, j = (GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
     // DEBUG_LOG("removeAllCustomMapIcons() loop %i 0x%08X", i, j);
-    if( getByte(j+(LCS ? 0x4F : 0x2F)) == 0x01 ) { // my watermark to be a custom
-      // DEBUG_LOG("its a custom %X", getByte(j+(LCS ? 0x4F : 0x2F)));
+    if( getByte(GTA_ADDR(j, 0x4F, 0x2F)) == 0x01 ) { // my watermark to be a custom
+      // DEBUG_LOG("its a custom %X", getByte(GTA_ADDR(j, 0x4F, 0x2F)));
       removeMapIcon(j);
     }
   }
 }
 
 iaddr createCustomMapIcon(uint8 icon, CRGBA color, bool onlywhenclose, uint8 size, float x, float y, float z) {
-  for( uaddr i = 0, j = (LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
+  for( uaddr i = 0, j = (GameManager.game == GTA_LCS ? global_radarblips : (getInt(global_radarblips+gp)+var_radarblipspadding)); i < var_radarblipslots; j+=var_radarblipslotsize, i++ ) {
     if( getMapiconIsActive(j) )
       continue;
 
-    if( LCS ) {
+    if( GameManager.game == GTA_LCS ) {
       setInt(j+0x00, color.color32); // color
       setInt(j+0x4, 4); // MapiconType -> 4 = coordinate
 
@@ -2510,7 +2507,7 @@ iaddr createCustomMapIcon(uint8 icon, CRGBA color, bool onlywhenclose, uint8 siz
       setByte(j+0x4F, 0x01); // my indicator that this is a custom icon set by me (for use with lcs_removeAllCustomMapIcons() for example)
     }
 
-    if( VCS ) {
+    if( GameManager.game == GTA_VCS ) {
       setInt(j+0x00, color.color32); // color
       setInt(j+0x4, 4); // MapiconType -> 4 = coordinate
       setFloat(j+0x10, x); // display x coordinate
@@ -2551,14 +2548,14 @@ usize createCustomMapIconsForWeaponsInRange(float range) {
 
   uaddr addr = global_pickups;
   for( uaddr i = 0; i < var_pickupslots; i++, addr+= var_pickupslotsize ) {
-    if( getPickupID(addr) <= (LCS ? 0x124 : 0x16F ) && getPickupIsCollectable(addr) ) { // check if active
+    if( getPickupID(addr) <= (GameManager.game == GTA_LCS ? 0x124 : 0x16F ) && getPickupIsCollectable(addr) ) { // check if active
 
       float x = getPickupCoordX(addr);
       float y = getPickupCoordY(addr);
 
       if( (px > x-range && px < x+range) && (py > y-range && py < y+range) ) { // check in range to display
 
-        // if( LCS ) { // TODO: VCS
+        // if( GameManager.game == GTA_LCS ) { // TODO: VCS
 
         switch( getPickupID(addr) ) { // decide color
 
@@ -2645,47 +2642,47 @@ usize createCustomMapIconsForWeaponsInRange(float range) {
 /// Misc ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint8 getClockHours() {
-  return getByte(global_clockmultiplier + (LCS ? 0 : gp) + 0x4);
+  return getByte(global_clockmultiplier + gp_ + 0x4);
 }
 
 uint8 getClockMinutes() {
-  return getByte(global_clockmultiplier + (LCS ? 0 : gp) + 0x5);
+  return getByte(global_clockmultiplier + gp_ + 0x5);
 }
 
 uint8 getClockSeconds() {
-  return getByte(global_clockmultiplier + (LCS ? 0 : gp) + 0x6);
+  return getByte(global_clockmultiplier + gp_ + 0x6);
 }
 
 int16 getClockMultiplier() { // actually int (but we use upper bits for "time freezing")
-  return getShort(global_clockmultiplier + (LCS ? 0 : gp));
+  return getShort(global_clockmultiplier + gp_);
 }
 
 void setClockMultiplier(int16 val) { // actually int (but we use upper bits for "time freezing")
-  setShort(global_clockmultiplier + (LCS ? 0 : gp), val);
+  setShort(global_clockmultiplier + gp_, val);
 }
 
 void setClockFreeze(bool boolean) {
   if( !boolean )
-    setInt(global_clockmultiplier + (LCS ? 0x74 : gp+0x4E8), getGametime()); // copy back current gametime to some clock global (fix for time skipping after freeze)
-  setByte(global_clockmultiplier + (LCS ? 0x3 : gp+0x3), (boolean) ? 0xFF : 0x00); // set huge clock multiplier value so it basically is frozen
+    setInt(global_clockmultiplier + (GameManager.game == GTA_LCS ? 0x74 : gp+0x4E8), getGametime()); // copy back current gametime to some clock global (fix for time skipping after freeze)
+  setByte(global_clockmultiplier + (GameManager.game == GTA_LCS ? 0x3 : gp+0x3), (boolean) ? 0xFF : 0x00); // set huge clock multiplier value so it basically is frozen
 }
 
 void setClockTime(uint8 hours, uint8 minutes, uint8 seconds) {
-  setByte(global_clockmultiplier + 0x4 + (LCS ? 0 : gp), hours);
-  setByte(global_clockmultiplier + 0x5 + (LCS ? 0 : gp), minutes);
-  setByte(global_clockmultiplier + 0x6 + (LCS ? 0 : gp), seconds);
+  setByte(global_clockmultiplier + 0x4 + gp_, hours);
+  setByte(global_clockmultiplier + 0x5 + gp_, minutes);
+  setByte(global_clockmultiplier + 0x6 + gp_, seconds);
 }
 
 void setClockHours(uint8 hours) {
-  setByte(global_clockmultiplier + 0x4 + (LCS ? 0 : gp), hours);
+  setByte(global_clockmultiplier + 0x4 + gp_, hours);
 }
 
 uint32 getGametime() {
-  return getInt(global_gametimer + (LCS ? 0 : gp));
+  return getInt(global_gametimer + gp_);
 }
 
 uint16 getWeather() {
-  return getShort(global_weather + (LCS ? 0 : gp)); // first of three only!!!
+  return getShort(global_weather + gp_); // first of three only!!!
 }
 
 
@@ -2696,51 +2693,51 @@ LCS has globals for this
 VCS uses global to address!! (address + 0x13 is radar) (address + 0x18 is HUD)
 ******************************************************/
 void setDisplaySettingsToggleRadar(bool boolean) {
-  if( LCS ) setByte(global_radarbool, (boolean ? 0x00 : 0x02) ); // set 2 to hide minimap
-  if( VCS && getInt(global_displaysettings+gp) > 0)
+  if( GameManager.game == GTA_LCS ) setByte(global_radarbool, (boolean ? 0x00 : 0x02) ); // set 2 to hide minimap
+  else if( getInt(global_displaysettings+gp) > 0)
     setByte(getInt(global_displaysettings+gp)+0x13, (boolean ? 0x00 : 0x02) ); // set 0 to show minimap
 }
 
 bool getDisplaySettingsToggleRadar() {
-  if( LCS ) return !getByte(global_radarbool);
+  if( GameManager.game == GTA_LCS ) return !getByte(global_radarbool);
 
-  if( VCS && getInt(global_displaysettings+gp) > 0)
+  else if( getInt(global_displaysettings+gp) > 0 )
     return !getByte(getInt(global_displaysettings+gp)+0x13);
 
   return false;
 }
 
 void setDisplaySettingsToggleHUD(bool boolean) {
-  if( LCS ) setByte(global_hudbool, boolean); // set 0 to hide hud
+  if( GameManager.game == GTA_LCS ) setByte(global_hudbool, boolean); // set 0 to hide hud
 
-  if( VCS && getInt(global_displaysettings+gp) > 0)
+  else if( getInt(global_displaysettings+gp) > 0 )
     setByte(getInt(global_displaysettings+gp)+0x18, boolean); // set 1 to show hud
 }
 
 bool getDisplaySettingsToggleHUD() {
-  if( LCS ) return getByte(global_hudbool);
+  if( GameManager.game == GTA_LCS ) return getByte(global_hudbool);
 
-  if( VCS && getInt(global_displaysettings+gp) > 0)
+  else if( getInt(global_displaysettings+gp) > 0)
     return getByte(getInt(global_displaysettings+gp)+0x18);
 
   return false;
 }
 
 void setFreezeGame(bool boolean) {
-  setByte(global_freezegame + (LCS ? 0 : gp), boolean); // set 1 to freeze game
+  setByte(global_freezegame + gp_, boolean); // set 1 to freeze game
 }
 
 void setMapLegendToggle(bool boolean) {
-  if( LCS ) setByte(global_maplegendbool, boolean); // set 0 to hide
+  if( GameManager.game == GTA_LCS ) setByte(global_maplegendbool, boolean); // set 0 to hide
 
-  if( VCS && getInt(global_displaysettings+gp) > 0)
+  else if( getInt(global_displaysettings+gp) > 0 )
     setByte(getInt(global_displaysettings+gp)+0x10, boolean); // set 1 to show hud
 }
 
 bool getMapLegendToggle() {
-  if( LCS ) return getByte(global_maplegendbool);
+  if( GameManager.game == GTA_LCS ) return getByte(global_maplegendbool);
 
-  if( VCS && getInt(global_displaysettings+gp) > 0)
+  else if( getInt(global_displaysettings+gp) > 0)
     return getByte(getInt(global_displaysettings+gp)+0x10);
 
   return false;
@@ -2758,21 +2755,34 @@ bool getMapLegendToggle() {
  * Calling the game function crashes so i made it this way..
  */
 void setTimedTextbox(u8str sentence, float duration) {
+  if ( !GameManager.Initialised ||
+       (GameManager.game != GTA_LCS && GameManager.game != GTA_VCS) )
+    return;
+
   uaddr base = 0;
 
-  if( LCS ) base = global_helpbox_string; // DAT_00649dc0_string (0x8E4DDC0)
-  if( VCS ) base = getInt(global_helpbox+gp) + 0x243C; // iGp000016d8 + 0x243C
+  if( GameManager.game == GTA_LCS ) {
+    if ( !isInMemBounds(global_helpbox_string) ) return;
+    base = global_helpbox_string; // DAT_00649dc0_string (0x8E4DDC0)
+  }
+  if( GameManager.game == GTA_VCS ) {
+    if ( global_helpbox == 0 ) return;
+    if ( !isInMemBounds(global_helpbox+gp) ) return;
+    uaddr helpbox = (uaddr)getInt(global_helpbox+gp);
+    if ( helpbox == 0 || !isInMemBounds(helpbox+0x243C) ) return;
+    base = helpbox + 0x243C; // iGp000016d8 + 0x243C
+  }
 
   Utf8ToGameEncoding(sentence, (wstring)(base));
 
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     setInt(global_helpbox_timedisplayed, 0);     // reset displaying time                  DAT_0035a808 (0x08B5E808)
     setByte(global_helpbox_displaybool, 0x1);    // display bool                           DAT_0035a810 (0x08B5E810)
     setByte(global_helpbox_permboxbool, 0x0);    // clear permanent box if there is any    DAT_0035a815 (0x08B5E815)
     setFloat(global_helpbox_duration, duration); // set duration                           DAT_0035a818 (0x08B5E818)
     //setByte(global_helpbox_duration, 0xAA);    // set my indicator (to allow custom textbox while in menu and blocked flag) see blockTextBox()
   }
-  if( VCS ) {
+  if( GameManager.game == GTA_VCS ) {
     setInt(getInt(global_helpbox+gp) + 0x2A3C, 0);          // reset displaying time
     setByte(getInt(global_helpbox+gp) + 0x2a44, 0x1);       // display bool + 0x2a44
     setByte(getInt(global_helpbox+gp) + 0x2a49, 0x0);       // clear permanent box if there is any + 0x2a49
@@ -2781,85 +2791,79 @@ void setTimedTextbox(u8str sentence, float duration) {
 }
 
 bool isTextboxShowing() {
-  if( LCS ) return getByte(global_helpbox_displaybool);
-  if( VCS ) return getByte(getInt(global_helpbox+gp) + 0x2a44);
-
-  return false;
+  if( GameManager.game == GTA_LCS ) return getByte(global_helpbox_displaybool);
+  else return getByte(getInt(global_helpbox+gp) + 0x2a44);
 }
 
 void blockTextBox() {
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     // check if its my custom textbox (allow those)
     //if( getByte(global_helpbox_duration) != 0xAA )  // TODO: WHY DOES THIS NOT WORK?!
       setByte(global_helpbox_displaybool, 0x0);
   }
-  if( VCS ) setByte(getInt(global_helpbox+gp) + 0x2a44, 0x0);
+  if( GameManager.game == GTA_VCS ) setByte(getInt(global_helpbox+gp) + 0x2a44, 0x0);
 }
 
 bool isDialogShowing() {
-  if( LCS ) if( getByte(global_dialog_string) != 0 ) return true; // yes
-  if( VCS ) if( getByte(getInt(global_helpbox+gp) + 0x18) != 0 ) return true; // yes
-
-  return false; //no
+  if( GameManager.game == GTA_LCS ) return getByte(global_dialog_string) != 0;
+  return getByte(getInt(global_helpbox+gp) + 0x18) != 0;
 }
 
 void blockDialogs() {
-  if( LCS ) return setByte(global_dialog_string, 0x0);
-  if( VCS ) return setByte(getInt(global_helpbox+gp) + 0x18, 0x0);
+  if( GameManager.game == GTA_LCS ) return setByte(global_dialog_string, 0x0);
+  else return setByte(getInt(global_helpbox+gp) + 0x18, 0x0);
 }
 
 bool isHudDisabledWhileCutsceneCamera() { // returns 1 if HUD is disabled while cutscene is playing
-  if( LCS ) return !getByte(global_hudincutscene); // is 0x0 when in cutscene to disable HUD (in normal mode 0x1)
-  if( VCS ) return getByte(global_hudincutscene); // is 0x1 when in cutscene to disable HUD (in normal mode 0x0)
-
-  return false;
+  if( GameManager.game == GTA_LCS ) return !getByte(global_hudincutscene); // is 0x0 when in cutscene to disable HUD (in normal mode 0x1)
+  else return getByte(global_hudincutscene); // is 0x1 when in cutscene to disable HUD (in normal mode 0x0)
 }
 
 int32 getIsland() {
   // 1 = Portland, 2 = Staunton, 3 = ShoresideVale
   // 1 = Vice Beach (right), 2 = Mainland (left), 3 = Stadium
-  return getInt(global_currentisland + (LCS ? 0 : gp));
+  return getInt(global_currentisland + gp_);
 }
 
 int32 getLanguage() { // 0 = English, 1 = French, 2 = German, ....
-  return getInt(global_systemlanguage + (LCS ? 0 : gp));
+  return getInt(global_systemlanguage + gp_);
 }
 
 bool getMultiplayer() {
-  return (bool)getInt(global_ismultiplayer + (LCS ? 0 : gp));
+  return (bool)getInt(global_ismultiplayer + gp_);
 }
 
 void setWindClipped(float wind) {
-  setFloat(global_WindClipped + (LCS ? 0 : gp), wind);
+  setFloat(global_WindClipped + gp_, wind);
 }
 
 float getWind() {
-  return getFloat(global_Wind + (LCS ? 0 : gp));
+  return getFloat(global_Wind + gp_);
 }
 
 void setWaterLevel(float level) {
-  uaddr levels = (uaddr)getInt(getInt(LCS ? global_ptr_water : global_ptr_water+gp)); // number of floats in waterlevel area
-  uaddr waterlevels = (uaddr)getInt(getInt( (LCS ? global_ptr_water : global_ptr_water+gp))+0x4 ); // water level height floats
-  uaddr startofwater = (uaddr)getInt(LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
+  uaddr levels = (uaddr)getInt(getInt(GameManager.game == GTA_LCS ? global_ptr_water : global_ptr_water+gp)); // number of floats in waterlevel area
+  uaddr waterlevels = (uaddr)getInt(getInt( (GameManager.game == GTA_LCS ? global_ptr_water : global_ptr_water+gp))+0x4 ); // water level height floats
+  uaddr startofwater = (uaddr)getInt(GameManager.game == GTA_LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
 
   for( uaddr i = waterlevels, j = 0; j < levels; i += 0x04, j++ )  // set waterlevel(s)
     setFloat(i, level);
 
   for( uaddr i = startofwater; i < startofwater+0x5000; i += 0x01 ) // set water everywhere
     if( *(uint8*)i == 0x80 )
-      *(uint8*)i = LCS ? 0x1F : 0x00; // TODO: reset for VCS
+      *(uint8*)i = GameManager.game == GTA_LCS ? 0x1F : 0x00; // TODO: reset for VCS
 }
 
 void resetWaterLevel() {
-  uaddr levels = (uaddr)getInt(getInt(LCS ? global_ptr_water : global_ptr_water+gp)); // number of floats in waterlevel area
-  uaddr waterlevels = (uaddr)getInt(getInt( (LCS ? global_ptr_water : global_ptr_water+gp))+0x4 ); // water level height floats
-  uaddr startofwater = (uaddr)getInt(LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
+  uaddr levels = (uaddr)getInt(getInt(GameManager.game == GTA_LCS ? global_ptr_water : global_ptr_water+gp)); // number of floats in waterlevel area
+  uaddr waterlevels = (uaddr)getInt(getInt( (GameManager.game == GTA_LCS ? global_ptr_water : global_ptr_water+gp))+0x4 ); // water level height floats
+  uaddr startofwater = (uaddr)getInt(GameManager.game == GTA_LCS ? global_ptr_water : global_ptr_water+gp) + 0xC;
 
   for( uaddr i = waterlevels, j = 0; j < levels; i += 0x04, j++ ) { // set waterlevel(s)
-    if( LCS && j >= 12 && j <= 17 )
+    if( GameManager.game == GTA_LCS && j >= 12 && j <= 17 )
       setFloat(i, 63.20f); // water behind dam 0x427CCCCD
     else
-      setFloat(i, LCS ? 0.00f : 6.00f); // VCS = 0x40C00000
+      setFloat(i, GameManager.game == GTA_LCS ? 0.00f : 6.00f); // VCS = 0x40C00000
   }
 
   for( uaddr i = startofwater; i < startofwater+0x5000; i += 0x01 ) // set water everywhere
@@ -2870,13 +2874,13 @@ void resetWaterLevel() {
 
 void setLastButtonPressedInHistory(uint8 button) {
   for( int i = 11; i >= 0; i-- )
-    setByte(global_buttoninput + (LCS ? 0x95 : 0xA9) + i, getByte(global_buttoninput + (LCS ? 0x95 : 0xA9) + i - 1)); // move previous
+    setByte(GTA_ADDR(global_buttoninput, 0x95, 0xA9) + i, getByte(GTA_ADDR(global_buttoninput, 0x95, 0xA9) + i - 1)); // move previous
 
-  setByte(global_buttoninput + (LCS ? 0x95 : 0xA9), button); // write newest
+  setByte(GTA_ADDR(global_buttoninput, 0x95, 0xA9), button); // write newest
 }
 
 void activateCheatCode(uint8 a, uint8 b, uint8 c, uint8 d, uint8 e, uint8 f, uint8 g, uint8 h) {
-  DEBUG_LOG("activateCheatCode(%X %X %X %X %X %X %X %X )", a, b, c, d, e, f, g, h);
+  DEBUG_LOG("activateCheatCode(%X %X %X %X %X %X %X %X)", a, b, c, d, e, f, g, h);
   setLastButtonPressedInHistory(a);
   setLastButtonPressedInHistory(b);
   setLastButtonPressedInHistory(c);
@@ -2913,7 +2917,7 @@ uaddr getVehicleWorldSpawnSlotAddress(uint32 slot) { // slots start with 0!!!
 
 bool isCustomParkedVehicleSpawnViaSlot(uint32 slot) {
   uaddr addr = getVehicleWorldSpawnSlotAddress(slot);
-  return (getByte(addr + (LCS ? 0x2B : 0x2F)) == 0x42);
+  return (getByte(GTA_ADDR(addr, 0x2B, 0x2F)) == 0x42);
 }
 
 uaddr createParkedVehicleSpawnViaSlot(uint32 slot, uint16 id, float x, float y, float z, float deg, int16 color1, int16 color2, bool alarm, int16 door_lock) {
@@ -2927,38 +2931,38 @@ uaddr createParkedVehicleSpawnViaSlot(uint32 slot, uint16 id, float x, float y, 
   setFloat(addr+0xC, z);
   setFloat(addr+0x10, deg);
 
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     setShort(addr+0x14, color1); // -1 for random
     setShort(addr+0x16, color2); // -1 for random
 
   }
-  if( VCS ) {
+  if( GameManager.game == GTA_VCS ) {
     setInt(addr+0x14, (int)color1); // -1 for random
     setInt(addr+0x18, (int)color2); // -1 for random
 
   }
 
-  setByte(addr + (LCS ? 0x19 : 0x1D), alarm); // LCS: 0, 10, 20, 30, .. 100
-  setShort(addr + (LCS ? 0x1A : 0x1E), door_lock); // LCS: 0, 1, 2, 5, 10, 20, 30, 40, 50, 70
+  setByte(GTA_ADDR(addr, 0x19, 0x1D), alarm); // LCS: 0, 10, 20, 30, .. 100
+  setShort(GTA_ADDR(addr, 0x1A, 0x1E), door_lock); // LCS: 0, 1, 2, 5, 10, 20, 30, 40, 50, 70
 
 
   /// LCS 0x24 >> 8 = slot number when spawned
   ////////////////////////////////////////
-  setByte(addr + (LCS ? 0x18 : 0x1C), 0x01); // force_spawn
+  setByte(GTA_ADDR(addr, 0x18, 0x1C), 0x01); // force_spawn
   ////////////////////////////////////////
 
   // these are set by game but /////////////////
-  setInt(addr + (LCS ? 0x20 : 0x24), 0x00000000); // later gametime difference until respawn
-  setInt(addr + (LCS ? 0x24 : 0x28), 0xFFFFFFFF); // once vehicle is spawned this will be the slot number the vehicle is loaded to ( >> 8 )
+  setInt(GTA_ADDR(addr, 0x20, 0x24), 0x00000000); // later gametime difference until respawn
+  setInt(GTA_ADDR(addr, 0x24, 0x28), 0xFFFFFFFF); // once vehicle is spawned this will be the slot number the vehicle is loaded to ( >> 8 )
 
-  setShort(addr + (LCS ? 0x28 : 0x2C), 0xFFFF); // allowed to spawn (inside time window which is different for slots)
-  setByte(addr + (LCS ? 0x2A : 0x2E), 0x00); // allowed to spawn (enough time since last spawn passed and nothing blocking in world)
+  setShort(GTA_ADDR(addr, 0x28, 0x2C), 0xFFFF); // allowed to spawn (inside time window which is different for slots)
+  setByte(GTA_ADDR(addr, 0x2A, 0x2E), 0x00); // allowed to spawn (enough time since last spawn passed and nothing blocking in world)
   //////////////////////////////////////////////
 
   if( id > 0 )
-    setByte(addr + (LCS ? 0x2B : 0x2F), 0x42); // my custom flag indicator
+    setByte(GTA_ADDR(addr, 0x2B, 0x2F), 0x42); // my custom flag indicator
   else
-    setByte(addr + (LCS ? 0x2B : 0x2F), 0x00); // clear
+    setByte(GTA_ADDR(addr, 0x2B, 0x2F), 0x00); // clear
 
   return addr;
 }
@@ -2996,16 +3000,16 @@ void createGarageVehicle(uaddr garage_base_adr, uint16 id, float x, float y, flo
   setFloat(garage_base_adr+0x1C, 1.00f); // traction mult
   setByte(garage_base_adr+0x20, flags1);
   setByte(garage_base_adr+0x21, flags2);
-  if( LCS ) { // colors
+  if( GameManager.game == GTA_LCS ) { // colors
     setByte(garage_base_adr+0x24, 0); // black
     setByte(garage_base_adr+0x25, 0); // black
   } else {
     setInt(garage_base_adr+0x24, 0xFFFFFFFF); // white
     setInt(garage_base_adr+0x28, 0xFFFFFFFF); // white
   }
-  setByte(garage_base_adr+(LCS ? 0x26 : 0x2C), radio);
-  setByte(garage_base_adr+(LCS ? 0x27 : 0x2D), var1);
-  setByte(garage_base_adr+(LCS ? 0x28 : 0x2E), var2);
+  setByte(GTA_ADDR(garage_base_adr, 0x26, 0x2C), radio);
+  setByte(GTA_ADDR(garage_base_adr, 0x27, 0x2D), var1);
+  setByte(GTA_ADDR(garage_base_adr, 0x28, 0x2E), var2);
 }
 
 int8 getIdeType(array_uidx id) {
@@ -3029,18 +3033,18 @@ u8str getIdeTypeName(uint8 no) {
 
 usize getIdeSlotSizeByType(uint8 no) {
   switch( no ) {
-    case 1: return LCS ? 0x3C  :  0x40;
-    case 3: return LCS ? 0x48  :  0x4C;
-    case 4: return LCS ? 0x40  :  0x44;
-    case 5: return LCS ? 0x2C  :  0x30;
-    case 6: return LCS ? 0x190 : 0x2A0;
-    case 7: return LCS ? 0x44  :  0xFC;
+    case 1: return GameManager.game == GTA_LCS ? 0x3C  :  0x40;
+    case 3: return GameManager.game == GTA_LCS ? 0x48  :  0x4C;
+    case 4: return GameManager.game == GTA_LCS ? 0x40  :  0x44;
+    case 5: return GameManager.game == GTA_LCS ? 0x2C  :  0x30;
+    case 6: return GameManager.game == GTA_LCS ? 0x190 : 0x2A0;
+    case 7: return GameManager.game == GTA_LCS ? 0x44  :  0xFC;
   }
-  return LCS ? 0x28 : 0x30; // LCS: default size is 0x28 + x (depending on type)
+  return GameManager.game == GTA_LCS ? 0x28 : 0x30; // LCS: default size is 0x28 + x (depending on type)
 }
 
 array_idx getFirstIdeOfType(int8 type) { // LCS: first for type 'cars' 6 would be 130 (aka Deimos SP)
-  array_size slots = getInt(ptr_IDEs+(LCS?0x0:gp));
+  array_size slots = getInt(ptr_IDEs+gp_);
   for(array_uidx i = 0; i < slots; i++) {
     if( getIdeType(i) == type )
       return (array_idx)i;
@@ -3048,7 +3052,7 @@ array_idx getFirstIdeOfType(int8 type) { // LCS: first for type 'cars' 6 would b
   return FUNC_ERROR; // error
 }
 int getLastIdeOfType(int8 type) { // LCS: last for type 'cars' 6 would be 0xD8 (aka VCN Maverick)
-  int slots = getInt(ptr_IDEs+(LCS?0x0:gp));
+  int slots = getInt(ptr_IDEs+gp_);
   for(int i = slots; i > 0; i--) {
     if( getIdeType(i) == type )
       return i;
@@ -3057,8 +3061,8 @@ int getLastIdeOfType(int8 type) { // LCS: last for type 'cars' 6 would be 0xD8 (
 }
 
 uaddr getAddressOfIdeSlotForID(array_uidx id) {
-  uaddr idetable = getInt(ptr_IDETable+(LCS?0x0:gp));
-  array_size slots = getInt(ptr_IDEs+(LCS?0x0:gp));
+  uaddr idetable = getInt(ptr_IDETable+gp_);
+  array_size slots = getInt(ptr_IDEs+gp_);
 
   if( id > slots )
     return FUNC_ERROR; // error
@@ -3072,25 +3076,25 @@ uaddr getAddressOfIdeSlotForID(array_uidx id) {
 
 iaddr getAddressOfHandlingSlotForID(array_uidx id) { // via IDE-table
   /*
-  for ( int i = 0; i < (LCS ? lcs_vehiclessize : vcs_vehiclessize); i++ ) {
-    if ( id == (LCS ? lcs_vehicles[i].id : vcs_vehicles[i].id) ) {
-      return getInt(ptr_handlingCFG) + 0x20 + (var_handlingcfgslotsize * (LCS ? lcs_vehicles[i].hndlng_no : vcs_vehicles[i].hndlng_no));
+  for ( int i = 0; i < (GameManager.game == GTA_LCS ? lcs_vehiclessize : vcs_vehiclessize); i++ ) {
+    if ( id == (GameManager.game == GTA_LCS ? lcs_vehicles[i].id : vcs_vehicles[i].id) ) {
+      return getInt(ptr_handlingCFG) + 0x20 + (var_handlingcfgslotsize * (GameManager.game == GTA_LCS ? lcs_vehicles[i].hndlng_no : vcs_vehicles[i].hndlng_no));
     }
   } */
 
-  uaddr idetable = getInt(ptr_IDETable+(LCS?0x0:gp));
+  uaddr idetable = getInt(ptr_IDETable+gp_);
 
-  if( VCS ) return (iaddr)getInt(getInt(idetable+(id*0x4))+0x38); // VCS has direct pointer to address in ide
-  if( LCS ) return (iaddr)getInt(ptr_handlingCFG) + 0x20 + (getByte(getInt(idetable+(id*0x4))+0x42) * 0xF0); // 0x20 is some padding
+  if( GameManager.game == GTA_VCS ) return (iaddr)getInt(getInt(idetable+(id*0x4))+0x38); // VCS has direct pointer to address in ide
+  if( GameManager.game == GTA_LCS ) return (iaddr)getInt(ptr_handlingCFG) + 0x20 + (getByte(getInt(idetable+(id*0x4))+0x42) * 0xF0); // 0x20 is some padding
 
   return FUNC_ERROR; // error
 }
 
 u8str getModelNameViaHash(uint32 hash, uint32 time) {
   /*
-  for( int i = 0; i < (LCS ? lcs_namesize : vcs_namesize); i++) {
-    if( hash == (LCS ? lcs_names[i].hash : vcs_names[i].hash) )
-      return LCS ? lcs_names[i].name : vcs_names[i].name;
+  for( int i = 0; i < (GameManager.game == GTA_LCS ? lcs_namesize : vcs_namesize); i++) {
+    if( hash == (GameManager.game == GTA_LCS ? lcs_names[i].hash : vcs_names[i].hash) )
+      return GameManager.game == GTA_LCS ? lcs_names[i].name : vcs_names[i].name;
   }
   return "unknown"; */
 
@@ -3121,8 +3125,8 @@ u8str getModelNameViaHash(uint32 hash, uint32 time) {
 }
 
 u8str getModelNameViaID(uint32 id, uint32 time) {
-  //int slots = getInt(ptr_IDEs+(LCS?0x0:gp));
-  uaddr idetable = getInt(ptr_IDETable+(LCS?0x0:gp));
+  //int slots = getInt(ptr_IDEs+gp_);
+  uaddr idetable = getInt(ptr_IDETable+gp_);
   return getModelNameViaHash( getInt( getInt(idetable+(id*0x4))+0x8), time); // time = 0 means resolve immediately
 }
 
@@ -3130,7 +3134,7 @@ u8str getModelNameViaID(uint32 id, uint32 time) {
 
 u8str getGxtTranslation(u8str identifier) { // entering "MAFIACR" returns "Leone Sentinel"
   // TODO: understand ARGS??
-  return getString(LoadStringFromGXT(getInt(ptr_gxtloadadr + (LCS ? 0 : gp)), identifier, 0x00000002, 0x000000FF, 0x000000FF, 0x00000000, 0x00FF0000, 0x00FFFFFF), 1); // mode 1 -> wide char
+  return getString(LoadStringFromGXT(getInt(ptr_gxtloadadr + gp_), identifier, 0x00000002, 0x000000FF, 0x000000FF, 0x00000000, 0x00FF0000, 0x00FFFFFF), 1); // mode 1 -> wide char
 }
 
 u8str getRealVehicleNameViaID(uint16 id) { // 0x82 "Deimos", 0x83 "Landstalker" ...
@@ -3138,8 +3142,8 @@ u8str getRealVehicleNameViaID(uint16 id) { // 0x82 "Deimos", 0x83 "Landstalker" 
 }
 
 u8str getGxtIdentifierForVehicleViaID(uint16 id) { // eg: returns "MAFIACR" for entered id 172 (Leone Sentinel)
-  uaddr idetable = getInt(ptr_IDETable+(LCS?0x0:gp));
-  return getString( getInt(idetable+(id*0x4)) + (LCS ? 0x2E : 0x158), 0 ); //gxt name is inside IDE
+  uaddr idetable = getInt(ptr_IDETable+gp_);
+  return getString( getInt(idetable+(id*0x4)) + (GameManager.game == GTA_LCS ? 0x2E : 0x158), 0 ); //gxt name is inside IDE
 }
 
 u8str vcs_getNameForPedViaID(uint16 id) { // eg: returns "PHCOL" for entered id 0x92 (Phil Collins)
@@ -3172,56 +3176,56 @@ u8str getRadioStationName(uint32 no) { // for LCS: 0 = Head Radio, 1 = Double Cl
 } */
 
 void setCameraCenterBehindPlayer() {
-  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) { // ULUX v0.02 & ULUS v1.02
+  if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 || GameManager.gameEboot == GTA_LCS_ULUS10041_1_02 ) { // ULUX v0.02 & ULUS v1.02
     setByte(global_camera + 0x19A, 0x1);
     return;
   }
 
-  setByte(global_camera + (LCS ? 0x1AA : 0x113), 0x1);
+  setByte(GTA_ADDR(global_camera, 0x1AA, 0x113), 0x1);
 }
 
 void setFieldOfView(float fov) {
-  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) { // ULUX v0.02 & ULUS v1.02
+  if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 || GameManager.gameEboot == GTA_LCS_ULUS10041_1_02 ) { // ULUX v0.02 & ULUS v1.02
     setFloat(global_camera + 0x244, fov);
     return;
   }
 
-  setFloat(global_camera + (LCS ? 0x254 : 0x198), fov);
+  setFloat(GTA_ADDR(global_camera, 0x254, 0x198), fov);
 }
 
 float getFieldOfView() {
-  if( LCS && (mod_text_size == 0x0031F854 || mod_text_size == 0x00320A34) ) // ULUX v0.02 & ULUS v1.02
+  if( GameManager.gameEboot == GTA_LCS_ULUX80146_0_02 || GameManager.gameEboot == GTA_LCS_ULUS10041_1_02 ) // ULUX v0.02 & ULUS v1.02
     return getFloat(global_camera + 0x244);
 
-  return getFloat(global_camera + (LCS ? 0x254 : 0x198));
+  return getFloat(GTA_ADDR(global_camera, 0x254, 0x198));
 }
 
 void setGamespeed(float val) {
-  setFloat(global_timescale + (LCS ? 0 : gp), val);
+  setFloat(global_timescale + gp_, val);
 }
 
 float getGamespeed() {
-  return getFloat(global_timescale + (LCS ? 0 : gp));
+  return getFloat(global_timescale + gp_);
 }
 
 bool isPedInAir(uaddr ped_base_addr) {
-  if ( LCS ) return getBit(ped_base_addr + 0x195, 3);
+  if ( GameManager.game == GTA_LCS ) return getBit(ped_base_addr + 0x195, 3);
 
   // We have to check if ped is in water as well as "IsInAir" is false there, just to replicate LCS
   /* if VCS */ return getBit(ped_base_addr + 0x1C9, 4) || getBit(ped_base_addr + 0xED, 0);
 }
 
 bool isPedCrouching(uaddr ped_base_addr) {
-  return getInt( ped_base_addr + (LCS ? 0x198 : 0x1CC)) & (LCS ? 0x10 : 0x2000);
+  return getInt( GTA_ADDR(ped_base_addr, 0x198, 0x1CC)) & (GameManager.game == GTA_LCS ? 0x10 : 0x2000);
 }
 
 void TaskDuck() {
-  if( LCS ) {
+  if( GameManager.game == GTA_LCS ) {
     // *(uint32 *)(pplayer + 0x198) = *(uint32 *)(pplayer + 0x198) | 8;
     setInt(pplayer + 0x198, getInt(pplayer + 0x198) | 8);
     TaskDuckLCS(pplayer); //duck
   } else {
-    //if( VCS ) {
+    //if( GameManager.game == GTA_VCS ) {
     // *(uint32 *)(pplayer + 0x1cc) = *(uint32 *)(pplayer + 0x1cc) | 0x1000;
     setInt(pplayer + 0x1cc, getInt(pplayer + 0x1cc) | 0x1000);
     TaskDuckVCS(pplayer, -1, 1); // duck (duration -1 for forever)
@@ -3250,7 +3254,7 @@ usize removeIPLObjectsCollision(uint16 id) {
 
 
 uaddr getParticleOffsetFor(const u8str name) {
-  uaddr offset = getInt(ptr_particleCFG+(LCS?0x0:gp)); // PARTICLE.CFG
+  uaddr offset = getInt(ptr_particleCFG+gp_); // PARTICLE.CFG
   for( uaddr i = 0; i < var_particleCFGslots; i++, offset += var_particleCFGslotsize ) {
     if( strcmp(name, getString(offset+0x4, 0)) == 0 ){
       return offset;
@@ -3260,11 +3264,11 @@ uaddr getParticleOffsetFor(const u8str name) {
 }
 
 u8str getPedstatName(uint32 no) {
-  uaddr adr = getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp))) + (no * var_pedstatDATslotsize);
+  uaddr adr = getInt(getInt(ptr_pedstatTable+gp_)) + (no * var_pedstatDATslotsize);
   if( no > var_pedstatDATslots - 1 ) {
     return "ERROR";
   }
-  return getString(adr + (LCS ? 0x4 : 0x1A), 0);
+  return getString(GTA_ADDR(adr, 0x4, 0x1A), 0);
 }
 
 
@@ -3305,13 +3309,13 @@ void CustomScriptExecute(uaddr address) {
     = 0xBF56647 is where custom script will be placed!
   ****************************************/
 
-  uaddr loadadr = address - (uaddr)getInt(global_ScriptSpace + (LCS ? 0 : gp)); // address of script relative to script space (negative not intended but works! as long as no jumps!!!)
+  uaddr loadadr = address - (uaddr)getInt(global_ScriptSpace + gp_); // address of script relative to script space (negative not intended but works! as long as no jumps!!!)
   //DEBUG_LOG("StartNewScript @ 0x%08X (0x%08X)", loadadr, address);
   StartNewScript(loadadr);
 }
 
 int getScriptGlobalValue(uint32 var) {
-	return getInt(getInt(global_ScriptSpace + (LCS ? 0 : gp)) + (var * 4));
+	return getInt(getInt(global_ScriptSpace + gp_) + (var * 4));
 }
 
 void setRandomPedCheat(int8 id) {

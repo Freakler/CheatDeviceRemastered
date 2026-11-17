@@ -29,8 +29,8 @@
 
 #include "main.h"
 
-extern bool PatchLCS(uaddr addr, uaddr text_addr);
-extern bool PatchVCS(uaddr addr, uaddr text_addr);
+extern bool PatchLCS(uaddr addr);
+extern bool PatchVCS(uaddr addr);
 
 #define MAKE_CALL(a, f) _sw(0x0C000000 | (((uaddr)(f) >> 2) & 0x03FFFFFF), a);
 #define MAKE_JUMP(a, f) _sw(0x08000000 | (((uaddr)(f) & 0x0FFFFFFC) >> 2), a);

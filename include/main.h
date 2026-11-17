@@ -97,8 +97,6 @@
 
 /**********************************************************************************************************************/
 
-extern bool LCS, VCS;
-
 typedef struct {
   u8str path;
   uint8 cat;
@@ -191,6 +189,8 @@ enum {
   CAT_COUNTER // my little counter (must be last)
 };
 
+typedef bool (*PatchFunc)(uaddr addr);
+
 extern void draw();
 extern void stopMenu();
 extern void closeMenu();
@@ -256,7 +256,5 @@ extern void hex_marker_clear();
 #endif
 
 extern void free_alloc_mem_cdr();
-
-extern bool LCS;
 
 #endif

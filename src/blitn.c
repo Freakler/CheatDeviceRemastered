@@ -47,6 +47,7 @@ Draw Rectangles via:
 #include "cheats.h"
 #include "mctypes.h"
 #include "lang.h"
+#include "game.h"
 
 /***********
 ~w~ = white
@@ -110,8 +111,6 @@ void (*CSprite2d_DrawRect_2)(const CRect *r, const CRGBA *col, bool screenUnits)
 static menu_blit_text main_blit_texts[MAX_TEXTS]  = {0};
 static menu_blit_box  main_blit_boxes[MAX_BOXES]  = {0};
 
-static int gta_version = -1;
-
 // It must be sorted by (unicode, gamecode) for binary search.
 static const uint16 LCS_UNICODES[] = {
   0x00A1, 0x00A2, 0x00A3, 0x00A4, 0x00A5, 0x00A6, 0x00A7, 0x00A8,
@@ -169,11 +168,11 @@ static const uint8 VCS_GAMECODES[] = {
   0x83, 0x88, 0x98, 0xB4, 0xB5, 0x95, 0x8B, 0x9B, 0x99, 0x80  // ƒ ˆ ˜ ΄ μ • ₍ ₎ ™ �
 };
 
-static const uint16 *UNICODES[] = { VCS_UNICODES, LCS_UNICODES };
-static const uint8 *GAMECODES[] = { VCS_GAMECODES, LCS_GAMECODES };
+static const uint16 *UNICODES[] = { LCS_UNICODES, VCS_UNICODES };
+static const uint8 *GAMECODES[] = { LCS_GAMECODES, VCS_GAMECODES };
 static const array_size CHARMAP_LENS[] = {
-  ARRAY_SIZE(VCS_UNICODES),
   ARRAY_SIZE(LCS_UNICODES),
+  ARRAY_SIZE(VCS_UNICODES),
 };
 
 // Using question mark because replacement character is missing in FONT_HEADING.
@@ -245,14 +244,14 @@ static void PutReplacementChar(wstring *out)
 
 void Utf8ToGameEncoding(u8str in, wstring out)
 {
-  if (gta_version != 0 && gta_version != 1) {
+  if ( !GameManager.Initialised || (GameManager.game != GTA_LCS && GameManager.game != GTA_VCS) ) {
     *out = '\0';
     return;
   }
 
-  const uint16 *unicodes = UNICODES[gta_version];
-  const uint8 *gamecodes = GAMECODES[gta_version];
-  const usize charmap_len = CHARMAP_LENS[gta_version];
+  const uint16 *unicodes = UNICODES[GameManager.game];
+  const uint8 *gamecodes = GAMECODES[GameManager.game];
+  const usize charmap_len = CHARMAP_LENS[GameManager.game];
 
   while (*in != '\0') {
     uchar c1 = (uchar)*in++;
@@ -707,7 +706,7 @@ static void mymenurender_VCS_patched() {
 }
 
 
-static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
+static bool FindPatchLCS(uaddr addr) {
   /*************************************
    * ULUS-10041 v1.02 | 0x0010dfa8 | OK!
    * ULUS-10041 v1.05 | 0x001BEF40 | OK!
@@ -724,7 +723,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x00077AA0 | OK!
    **************************************/
   if( !mymenurender_LCS && _lw(addr + 0x34) == 0x24C5FEE0 && _lw(addr + 0x24) == 0x00C02025 ) { // 0x001BEE84
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_LCS_patched", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_LCS_patched", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, mymenurender_LCS_patched, mymenurender_LCS);
     return true;
   }
@@ -744,7 +743,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C3F10 | OK!
    **************************************/
   if( !CFont_SetScaleLCS && _lw(addr - 0x4) == 0xA080001F && _lw(addr + 0x8) == 0xE48C0004 && _lw(addr + 0x10) == 0xE48D0008 && _lw(addr + 0x20) == 0xE48C000C ) { // 0x00250DF8
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetScale", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetScale", FROMTEXTADDR(addr), addr);
     CFont_SetScaleLCS       = (void(*)(float x, float y))(addr);
     CFont_SetSlant          = (void(*)(float s))(addr+0x14); // FUN_00250e0c_SetSlant
     CFont_SetSlantRefPoint  = (void(*)(float x, float y))(addr+0x24); // FUN_00250e1c_SetSlantRefPoint
@@ -766,7 +765,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C3F48 | OK!
    **************************************/
   if( !CFont_SetColor && _lw(addr - 0x4) == 0xE48D0014 && _lw(addr) == 0x00802825 && _lw(addr + 0x4) == 0x90A40000 && _lw(addr + 0x10) == 0x90A70001 ) { // 0x00250E30
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetColor", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetColor", FROMTEXTADDR(addr), addr);
     CFont_SetColor = (void(*)(CRGBA *col))(addr);
     return true;
   }
@@ -786,7 +785,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C402C | OK!
    **************************************/
   if( !CFont_SetRightJustifyOff && _lw(addr + 0xC) == 0xA0800018 && _lw(addr + 0x10) == 0x03E00008 && _lw(addr + 0x14) == 0xA0800019 && _lw(addr + 0x18) == 0x44807000 && _lw(addr + 0x1C) == 0x3C0443F0 ) { // 0x00250F14
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetJustify(s)", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetJustify(s)", FROMTEXTADDR(addr), addr);
     CFont_SetRightJustifyOff = (void(*)(void))(addr);
     CFont_SetRightJustifyOn  = (void(*)(void))(addr - 0x1C); //FUN_00250ef8_
     CFont_SetCentreOff       = (void(*)(void))(addr - 0x2C); //FUN_00250ee8_
@@ -811,7 +810,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C40E8 | OK!
    **************************************/
   if( !CFont_SetBackgroundOff && _lw(addr - 0x4) == 0xA0A4001B && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0xC) == 0xA080001B && _lw(addr + 0x10) == 0x90850000 && _lw(addr + 0x1C) == 0xA0C50028 ) { // 0x00250FD0
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetBackgroundOff", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetBackgroundOff", FROMTEXTADDR(addr), addr);
     CFont_SetBackgroundOff = (void(*)(void))(addr);
     return true;
   }
@@ -831,7 +830,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C4148 | OK!
    **************************************/
   if( !CFont_SetPropOn && _lw(addr - 0x4) == 0xA080001C && _lw(addr + 0x4) == 0x34040001 && _lw(addr + 0xC) == 0x03E00008 && _lw(addr + 0x10) == 0xA0A4001D ) { // 0x00251030
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetPropOn", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetPropOn", FROMTEXTADDR(addr), addr);
     CFont_SetPropOn   = (void(*)(void))(addr);
     CFont_SetPropOff  = (void(*)(void))(addr + 0x14);
     return true;
@@ -852,7 +851,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C416C | OK!
    **************************************/
   if( !CFont_SetFontStyle && _lw(addr) == 0x00042C00 && _lw(addr + 0xc) == 0x34060002 && _lw(addr + 0x10) == 0x14A60005 && _lw(addr + 0x18) == 0xA4850038 ) { // 0x00251054
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetFontStyle", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetFontStyle", FROMTEXTADDR(addr), addr);
     CFont_SetFontStyle = (void(*)(int16 style))(addr);
     return true;
   }
@@ -872,7 +871,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C41B4 | OK!
    **************************************/
   if( !CFont_SetDropShadowPosition && _lw(addr - 0x3C) == 0x34060002 && _lw(addr + 0x10) == 0x00802825 &&  _lw(addr + 0xB4) == 0x00000000 ) { // 0x0025109c
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetDropShadowPosition & CFont::SetDropColor", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetDropShadowPosition & CFont::SetDropColor", FROMTEXTADDR(addr), addr);
     CFont_SetDropShadowPosition = (void(*)(int16 pos))(addr);
     CFont_SetDropColor          = (void(*)(CRGBA *col))(addr + 0x10);
     return true;
@@ -893,7 +892,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x001C54B8 | OK!
    **************************************/
   if( !CFont_PrintStringLCS && _lw(addr - 0x6C) == 0x0211A02B && _lw(addr - 0xD8) == 0x0211A02B ) { // 0x00252AD4
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::PrintString", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::PrintString", FROMTEXTADDR(addr), addr);
     CFont_PrintStringLCS = (void(*)(float x, float y, wchar *s, int* unk))(addr);
     return true;
   }
@@ -913,7 +912,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 | 0x0017C10C | OK!
    **************************************/
   if( !CSprite2d_DrawRect_2 && _lw(addr+0x20) == 0x02004025 && _lw(addr + 0x8) == 0x30C900FF && _lw(addr + 0x64) == 0x3404000C /*0x3404000A for VCS*/ ) {  // 0x002CFDD0
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CSprite2d::DrawRect", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CSprite2d::DrawRect", FROMTEXTADDR(addr), addr);
     CSprite2d_DrawRect_2 = (void(*)(const CRect *r, const CRGBA *col, bool screenUnits))(addr);
     return true;
   }
@@ -933,8 +932,8 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULUX-80146 v0.02 |
    **************************************/
   if( !CFont_SetRightJustifyWrap && _lw(addr+0x4) == 0x3C0443F0 && _lw(addr + 0x44) == 0x3C0443F0 && _lw(addr + 0x68) == 0x00000000 ) {
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetRightJustifyWrap", addr-text_addr, addr);
-    DEBUG_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetWrapx", addr+0x40-text_addr, addr+0x40);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetRightJustifyWrap", FROMTEXTADDR(addr), addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetWrapx", FROMTEXTADDR(addr + 0x40), addr+0x40);
     CFont_SetRightJustifyWrap       = (void(*)(float wrap))(addr); // 0x00250F2C
     CFont_SetWrapx                  = (void(*)(float x))(addr+0x40); // 0x00250f6c
     CFont_SetCentreSize             = (void(*)(float s))(addr+0x80); // FUN_00250fac_SetCentreSize
@@ -950,7 +949,7 @@ static bool FindPatchLCS(uaddr addr, uaddr text_addr UNUSED) {
 }
 
 
-static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
+static bool FindPatchVCS(uaddr addr) {
   /*************************************
    * ULUS-10160 v1.03 | 0x001325BC | OK!
    * ULES-00502 v1.02 | 0x001324E8 | OK!
@@ -959,7 +958,7 @@ static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULET-00417 v0.06 | 0x0012A07C | OK!
    **************************************/
   if( !mymenurender_VCS && _lw(addr - 0xB0) == 0x34060001 && _lw(addr + 0x98) == 0x28A60000  && _lw(addr + 0xD0) == 0x00003825 ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_VCS_patched", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> mymenurender_VCS_patched", FROMTEXTADDR(addr), addr);
     HIJACK_FUNCTION(addr, mymenurender_VCS_patched, mymenurender_VCS); // 0x01325bc
     return true;
   }
@@ -972,7 +971,7 @@ static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULET-00417 v0.06 | 0x002FF87C | OK!
    **************************************/
   if( !ResetFontStyling && _lw(addr - 0x4) == 0x27BD0010 && _lw(addr) == 0x27BDFFE0 && _lw(addr + 0x4) == 0xAFB00014 && _lw(addr + 0x8) == 0x341000FF ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> ResetFontStyling", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> ResetFontStyling", FROMTEXTADDR(addr), addr);
     ResetFontStyling = (void*)(addr); // 0x0030805C
     return true;
   }
@@ -985,7 +984,7 @@ static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULET-00417 v0.06 | 0x002FF958 | OK!
    **************************************/
   if( !CFont_PrintStringVCS && _lw(addr + 0x30) == 0x00409825 && _lw(addr + 0x54) == 0x00404825 ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::PrintString", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::PrintString", FROMTEXTADDR(addr), addr);
     CFont_PrintStringVCS = (void(*)(wchar *text, int x, int y))(addr); // 0x00308138
     return true;
   }
@@ -998,7 +997,7 @@ static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULET-00417 v0.06 | 0x002FFCB8 | OK!
    **************************************/
   if( !CFont_SetFontStyle && _lw(addr) == 0x03E00008 && _lw(addr + 0x8) == 0x03E00008 && _lw(addr + 0x20) == 0x90840003 ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetFontStyle, CFont::SetColor, CFont::SetScale, ...", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CFont::SetFontStyle, CFont::SetColor, CFont::SetScale, ...", FROMTEXTADDR(addr), addr);
     CFont_SetFontStyle  = (void(*)(int16 style))(addr); // 0x308498
     CFont_SetColor      = (void(*)(CRGBA *col))(addr+0x10); // 0x3084A8
     SetTextBounds       = (void(*)(CRect *bounds))(addr+0x3C); // 0x3084d4
@@ -1008,7 +1007,7 @@ static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
     return true;
   }
   if( !SetTextSpaceing && _lw(addr+0x20) == 0x00052880 && _lw(addr + 0x68) == 0x00052880 && _lw(addr + 0x6C) == 0x00852021 ) { // JP only: 0x000FCE10
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetTextSpaceing, SetTextOriginPoint (JP only)", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> SetTextSpaceing, SetTextOriginPoint (JP only)", FROMTEXTADDR(addr), addr);
     SetTextSpaceing     = (void(*)(int option))(addr); // sub_000FCE10
     SetTextOriginPoint  = (void(*)(int origin))(addr+0x48); // sub_000FCE58
     return true;
@@ -1022,7 +1021,7 @@ static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
    * ULET-00417 v0.06 | 0x002EBC20 | OK!
    **************************************/
   if( !CSprite2d_DrawRect_2 && _lw(addr+0x20) == 0x02004025 && _lw(addr+0x8) == 0x30C900FF && _lw(addr+0x64) == 0x3404000A /* 0x3404000C for LCS*/ ) {
-    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CSprite2d::DrawRect", addr-text_addr, addr);
+    PATCH_LOG("blitn: 0x%08X (0x%08X) -> CSprite2d::DrawRect", FROMTEXTADDR(addr), addr);
     CSprite2d_DrawRect_2 = (void(*)(const CRect *r, const CRGBA *col, bool screenUnits))(addr);
     return true;
   }
@@ -1030,30 +1029,19 @@ static bool FindPatchVCS(uaddr addr, uaddr text_addr UNUSED) {
   return false;
 }
 
+static PatchFunc const GameBlitPatchFuncs[GTA_TOTAL_GAMES] =
+{
+  FindPatchLCS,
+  FindPatchVCS,
+};
 
-func_stat initTextBlit(uaddr text_addr, usize text_size) {
+func_stat initTextBlit() {
   DEBUG_LOG("Starting blitn...");
 
-  gta_version = -1;
-
-  for( uaddr i = 0; i < text_size; i += sizeof(uaddr) ) {
-    uaddr addr = text_addr + i;
-    if ((gta_version == -1 || gta_version == 0) && FindPatchVCS(addr, text_addr)) {
-      gta_version = 0;
-      continue;
-    }
-    if ((gta_version == -1 || gta_version == 1) && FindPatchLCS(addr, text_addr)) {
-      gta_version = 1;
-      continue;
-    }
+  for( uaddr offset = 0; offset < GameManager.modInfo.TextSize; offset += sizeof(uaddr) ) {
+    ((GameBlitPatchFuncs[GameManager.game]))(TEXTADDR(offset));
   }
 
-  if( gta_version == -1 )
-  {
-    ERROR_LOG("Error!");
-    return FUNC_ERROR; // error
-  }
-
-  DEBUG_LOG("Success! (%s)", gta_version ? "LCS" : "VCS");
+  DEBUG_LOG("Success!");
   return FUNC_OK;
 }

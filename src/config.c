@@ -32,15 +32,15 @@
 #include "functions.h"
 #include "config.h"
 #include "logs.h"
+#include "game.h"
 
 #ifdef CONFIG
-extern int gp_; // a thread has its own gp register obviously
+extern uaddr gp_; // a thread has its own gp register obviously
 extern int gametimer;
 
 extern const CDRMenuItem main_menu[];
 
 extern const array_size menu_size;
-extern bool LCS, VCS;
 extern bool flag_coll_cats;
 extern bool category_index[];
 
@@ -178,7 +178,7 @@ static int save_thread(SceSize args UNUSED, void *argp UNUSED) {
       break; // error - type unknown
     }
 
-    if( STR_STARTSWITH_CHAR(magicbuf, (LCS ? 'V' : 'L')) ) { // select everything specific to THE OTHER stories game
+    if( STR_STARTSWITH_CHAR(magicbuf, (GameManager.game == GTA_LCS ? 'V' : 'L')) ) { // select everything specific to THE OTHER stories game
       //DEBUG_LOG("do stuff with %s", magicbuf);
 
       if( type == 0 ) { // pure memory block
@@ -341,37 +341,37 @@ func_stat create_config(const CDRMenuItem *menu_list, usize menu_max) {
   }
 
   /// Menu Settings
-  writeCategoryHeader(file, "SETT"); // LCS ? "LSET" : "VSET"
+  writeCategoryHeader(file, "SETT"); // GameManager.game == GTA_LCS ? "LSET" : "VSET"
   counter = workBlock(file, menu_list, menu_max, 0x3, 0); // 0x3xxx is for CDR Settings
   ret = fillBlock(file, counter * 3, 0x00); // 3 because "id" (short) 2 +  "bool" (char) 1
   setHeader(file, counter, ret, 1); // 1 = char (saves booleans)
 
   /// Hex Editor Address
-  writeCategoryHeader(file, LCS ? "LHEX" : "VHEX");
+  writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LHEX" : "VHEX");
   sceIoWrite(file, &hex_adr, sizeof(hex_adr));
   ret = fillBlock(file, sizeof(hex_adr), 0x00); // 4 because int
   setHeader(file, sizeof(hex_adr), ret, 0); // ret is whole blocksize, 0 for memory
 
   /// Categories
-  writeCategoryHeader(file, LCS ? "LCAT" : "VCAT");
+  writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LCAT" : "VCAT");
   counter = workBlock(file, menu_list, menu_max, 0x2, 0); // 0x2xxx is for Categories
   ret = fillBlock(file, counter * 3, 0x00); // 3 because "id" (short) 2 +  "bool" (char) 1
   setHeader(file, counter, ret, 1); // 1 = char
 
   /// Cheats
-  writeCategoryHeader(file, LCS ? "LCHT" : "VCHT");
+  writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LCHT" : "VCHT");
   counter = workBlock(file, menu_list, menu_max, 0x1, 0); // 0x1xxx is for Cheats & 0 triggers "FUNC_GET_STATUS"
   ret = fillBlock(file, counter * 3, 0x00); // 3 because "id" (short) 2 +  "bool" (char) 1
   setHeader(file, counter, ret, 1); // 1 = char
 
   /// Cheats (Values)
-  writeCategoryHeader(file, LCS ? "LVAL" : "VVAL");
+  writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LVAL" : "VVAL");
   counter = workBlock(file, menu_list, menu_max, 0x1, 1); // 0x1xxx is for Cheats & 1 triggers "FUNC_GET_VALUE"
   ret = fillBlock(file, counter * 6, 0x00); // 6 because "id" (short) 2 +  "value" (int) 4
   setHeader(file, counter, ret, 4); // 4 = int (saves values)
 
   /// Editor Positions
-  writeCategoryHeader(file, LCS ? "LEDT" : "VEDT");
+  writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LEDT" : "VEDT");
   counter = workBlock(file, menu_list, menu_max, 0x4, 1); // 0x4xxx is for Cheats & 1 triggers "FUNC_GET_VALUE"
   ret = fillBlock(file, counter * 6, 0x00); // 6 because "id" (short) 2 +  "value" (int) 4
   setHeader(file, counter, ret, 4); // 4 = int (position value)
@@ -383,19 +383,19 @@ func_stat create_config(const CDRMenuItem *menu_list, usize menu_max) {
     //DEBUG_LOG("gp_ = 0x%08X", gp_);
 
     /// Vehicle Spawns
-    writeCategoryHeader(file, LCS ? "LVEH" : "VVEH");
+    writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LVEH" : "VVEH");
     counter = writeMemory(file, addr_vehiclesworldspawn, var_vehiclesworldspawnslots, var_vehiclesworldspawnslotsize);
     ret = fillBlock(file, counter, 0x00); // counter holds bytes
     setHeader(file, counter, ret, 0); // counter is bytes, ret is whole blocksize, 0 for memory
 
     /// Car Colors
-    writeCategoryHeader(file, LCS ? "LVCO" : "VVCO");
+    writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LVCO" : "VVCO");
     counter = writeMemory(file, carcolsDAT_base, var_carcolsdatslots, var_carcolsdatslotsize);
     ret = fillBlock(file, counter, 0x00); //counter holds bytes
     setHeader(file, counter, ret, 0); //counter is bytes, ret is whole blocksize, 0 for memory
 
     /// Ped Colors (VCS only)
-    if( VCS ) {
+    if( GameManager.game == GTA_VCS ) {
       writeCategoryHeader(file, "VPCO");
       counter = writeMemory(file, pedcolsDAT_base, var_carcolsdatslots, var_carcolsdatslotsize);
       ret = fillBlock(file, counter, 0x00); // counter holds bytes
@@ -403,27 +403,27 @@ func_stat create_config(const CDRMenuItem *menu_list, usize menu_max) {
     }
 
     /// Handling
-    if( LCS ) { // TODO: VCS
-      writeCategoryHeader(file, LCS ? "LHND" : "VHND");
-      counter = writeMemory(file, getInt(ptr_handlingCFG + (LCS ? 0 : gp_)) + 0x20, var_handlingcfgslots, var_handlingcfgslotsize);
+    if( GameManager.game == GTA_LCS ) { // TODO: VCS
+      writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LHND" : "VHND");
+      counter = writeMemory(file, getInt(ptr_handlingCFG + (GameManager.game == GTA_LCS ? 0 : gp_)) + 0x20, var_handlingcfgslots, var_handlingcfgslotsize);
       ret = fillBlock(file, counter, 0x00); // counter holds bytes
       setHeader(file, counter, ret, 0); // counter is bytes, ret is whole blocksize, 0 for memory
     }
 
     /// Particles
-    writeCategoryHeader(file, LCS ? "LPTC" : "VPTC");
-    counter = writeMemory(file, getInt(ptr_particleCFG + (LCS ? 0 : gp_)), var_particleCFGslots, var_particleCFGslotsize);
+    writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LPTC" : "VPTC");
+    counter = writeMemory(file, getInt(ptr_particleCFG + (GameManager.game == GTA_LCS ? 0 : gp_)), var_particleCFGslots, var_particleCFGslotsize);
     ret = fillBlock(file, counter, 0x00); // counter holds bytes
     setHeader(file, counter, ret, 0); // counter is bytes, ret is whole blocksize, 0 for memory
 
     /// pedstats.dat
-    writeCategoryHeader(file, LCS ? "LPST" : "VPST");
+    writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LPST" : "VPST");
     counter = writeMemory(file, getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp_))), var_pedstatDATslots, var_pedstatDATslotsize);
     ret = fillBlock(file, counter, 0x00); // counter holds bytes
     setHeader(file, counter, ret, 0); // counter is bytes, ret is whole blocksize, 0 for memory
 
     /// weapon.dat (singleplayer only)
-    writeCategoryHeader(file, LCS ? "LWPN" : "VWPN");
+    writeCategoryHeader(file, GameManager.game == GTA_LCS ? "LWPN" : "VWPN");
     counter = writeMemory(file, getInt(getInt(ptr_weaponTable+(LCS?0x0:gp_)) + 4), var_weaponDATslots, var_weaponDATslotsize);
     ret = fillBlock(file, counter, 0x00); // counter holds bytes
     setHeader(file, counter, ret, 0); // counter is bytes, ret is whole blocksize, 0 for memory
@@ -517,7 +517,7 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
   }
 
   for( array_uidx i = 0; i < menu_max; i++ ) {
-    if( (LCS && menu_list[i].LC) || (VCS && menu_list[i].VC) ) { // only if this is meant for the game version
+    if( (GameManager.game == GTA_LCS && menu_list[i].LC) || (GameManager.game == GTA_VCS && menu_list[i].VC) ) { // only if this is meant for the game version
       func = (void *)(menu_list[i].value);
 
       CONFIG_LOG("for: 0x%04X", menu_list[i].conf_id);
@@ -526,8 +526,8 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
 
         /// CHEATS //////////////////////////////
         if( (menu_list[i].conf_id >> 12) == 1 ) {
-          int status = getValueFromConfigFor(file, LCS ? "LCHT" : "VCHT", menu_list[i].conf_id);
-          int valuee = getValueFromConfigFor(file, LCS ? "LVAL" : "VVAL", menu_list[i].conf_id);
+          int status = getValueFromConfigFor(file, GameManager.game == GTA_LCS ? "LCHT" : "VCHT", menu_list[i].conf_id);
+          int valuee = getValueFromConfigFor(file, GameManager.game == GTA_LCS ? "LVAL" : "VVAL", menu_list[i].conf_id);
           //CONFIG_LOG("id 0x%04X -> status %d, valuee %d", menu_list[i].conf_id, status, valuee);
           func(FUNC_SET, keypress, status < 0 ? menu_list[i].def_stat : status, valuee < 0 ? 0x0EADBEEF : valuee);
         }
@@ -535,7 +535,7 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
         /// CATEGORIES //////////////////////////
         if( (menu_list[i].conf_id >> 12) == 2 ) {
           if( flag_coll_cats ) { // only set categories if they are set to be able to collapse/expandable
-            ret = getValueFromConfigFor(file, LCS ? "LCAT" : "VCAT", menu_list[i].conf_id);
+            ret = getValueFromConfigFor(file, GameManager.game == GTA_LCS ? "LCAT" : "VCAT", menu_list[i].conf_id);
             func(FUNC_SET, menu_list[i].cat, ret < 0 ? menu_list[i].def_stat : ret, 0); // set def_stat from CDRMenuItem if not found in config
           }
         }
@@ -553,7 +553,7 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
 
         /// EDITOR POSITIONS ////////////////////
         if( (menu_list[i].conf_id >> 12) == 4 ) {
-          ret = getValueFromConfigFor(file, LCS ? "LEDT" : "VEDT", menu_list[i].conf_id);
+          ret = getValueFromConfigFor(file, GameManager.game == GTA_LCS ? "LEDT" : "VEDT", menu_list[i].conf_id);
           if( ret == -1 ) // value not found..
             ret = 0; // ..pass zero to set as default for those
           func(FUNC_SET, ret, 0, 0);
@@ -566,7 +566,7 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
   sceIoClose(file); // "load_config_block" opens config again
 
   /// Hex Editor Address
-  load_config_block(LCS ? "LHEX" : "VHEX", (int)&hex_adr);
+  load_config_block(GameManager.game == GTA_LCS ? "LHEX" : "VHEX", (int)&hex_adr);
   CONFIG_LOG("hex_adr done (0x%08X)", hex_adr);
 
   /// Editor stuff --> files get too big to handle on PSP.. scrap all this :(
@@ -585,31 +585,31 @@ func_stat load_config(const CDRMenuItem *menu_list, usize menu_max) { // loads m
 
     /// WorldSpawns (reset on newgame)
     if(  addr_vehiclesworldspawn > 0 )
-      load_config_block(LCS ? "LVEH" : "VVEH", addr_vehiclesworldspawn);
+      load_config_block(GameManager.game == GTA_LCS ? "LVEH" : "VVEH", addr_vehiclesworldspawn);
 
     /// CarColors
     if( carcolsDAT_base > 0 )
-      load_config_block(LCS ? "LVCO" : "VVCO", carcolsDAT_base);
+      load_config_block(GameManager.game == GTA_LCS ? "LVCO" : "VVCO", carcolsDAT_base);
 
     /// Pedcols.dat (VCS only)
     if( VCS && pedcolsDAT_base > 0 )
       load_config_block("VPCO", pedcolsDAT_base);
 
     /// handling.dat
-    if( LCS && getInt(ptr_handlingCFG + (LCS ? 0 : gp_)) > 0 )
-      load_config_block(LCS ? "LHND" : "VHND", getInt(ptr_handlingCFG + (LCS ? 0 : gp_)) + 0x20);
+    if( LCS && getInt(ptr_handlingCFG + (GameManager.game == GTA_LCS ? 0 : gp_)) > 0 )
+      load_config_block(GameManager.game == GTA_LCS ? "LHND" : "VHND", getInt(ptr_handlingCFG + (GameManager.game == GTA_LCS ? 0 : gp_)) + 0x20);
 
     /// particles.cfg
-    if( getInt(ptr_particleCFG + (LCS ? 0 : gp_)) > 0 )
-      load_config_block(LCS ? "LPTC" : "VPTC", getInt(ptr_particleCFG + (LCS ? 0 : gp_)));
+    if( getInt(ptr_particleCFG + (GameManager.game == GTA_LCS ? 0 : gp_)) > 0 )
+      load_config_block(GameManager.game == GTA_LCS ? "LPTC" : "VPTC", getInt(ptr_particleCFG + (GameManager.game == GTA_LCS ? 0 : gp_)));
 
     /// pedstats.dat
     if( getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp_))) > 0 )
-      load_config_block(LCS ? "LPST" : "VPST", getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp_))));
+      load_config_block(GameManager.game == GTA_LCS ? "LPST" : "VPST", getInt(getInt(ptr_pedstatTable+(LCS?0x0:gp_))));
 
     /// weapon.dat
     if( getInt(getInt(ptr_weaponTable+(LCS?0x0:gp_)) + 4) > 0 )
-      load_config_block(LCS ? "LWPN" : "VWPN", getInt(getInt(ptr_weaponTable+(LCS?0x0:gp_)) + 4));
+      load_config_block(GameManager.game == GTA_LCS ? "LWPN" : "VWPN", getInt(getInt(ptr_weaponTable+(LCS?0x0:gp_)) + 4));
 
 
   }*/

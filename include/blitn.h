@@ -113,6 +113,6 @@ extern void Utf8ToGameEncoding(const u8str in, wstring out);
 // extern void cWorldStream_Render_LCS_Patched(void *this, int mode);
 // extern void cWorldStream_Render_VCS_Patched(void *this, int mode);
 
-extern func_stat initTextBlit(uaddr text_addr, usize text_size);
+extern func_stat initTextBlit();
 
 #endif
