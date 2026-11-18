@@ -8274,7 +8274,7 @@ void *max_health(int calltype, int keypress) {
 
   switch( calltype ) {
     case FUNC_GET_STATUS:
-      status = healthval > 100;
+      status = healthval != 100;
       return (int*)status;
 
     case FUNC_GET_STRING:
@@ -8283,7 +8283,7 @@ void *max_health(int calltype, int keypress) {
       return (void*)retbuf;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_LEFT && healthval > 100 ) {
+      if( keypress == PSP_CTRL_LEFT && healthval > 2 ) {
         healthval--;
         setMaxHealthMultiplier(healthval);
         setPedHealthAndArmor(pplayer, (float)(healthval), -1);
@@ -8320,7 +8320,7 @@ void *max_armor(int calltype, int keypress) {
   switch( calltype ) {
 
     case FUNC_GET_STATUS:
-      status = armorval > 100;
+      status = armorval != 100;
       return (int*)status;
 
     case FUNC_GET_STRING:
@@ -8329,7 +8329,7 @@ void *max_armor(int calltype, int keypress) {
       return (void*)retbuf;
 
     case FUNC_CHANGE_VALUE:
-      if( keypress == PSP_CTRL_LEFT && armorval > 100 ) {
+      if( keypress == PSP_CTRL_LEFT && armorval > 2 ) {
         armorval--;
         setMaxArmorMultiplier(armorval);
         setPedHealthAndArmor(pplayer, -1, (float)armorval);
